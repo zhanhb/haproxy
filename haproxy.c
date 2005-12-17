@@ -2591,6 +2591,7 @@ int event_accept(int fd) {
 	tv_eternity(&s->cnexpire);
 	tv_eternity(&s->srexpire);
 	tv_eternity(&s->swexpire);
+	tv_eternity(&s->crexpire);
 	tv_eternity(&s->cwexpire);
 
 	if (s->proxy->clitimeout) {
