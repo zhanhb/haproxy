@@ -2,9 +2,9 @@
                              H A - P r o x y
                            Manuel de référence
                            -------------------
-         		      version 1.1.31
-			      willy tarreau
-			        2005/04/24
+                              version 1.1.32
+                              willy tarreau
+                                2005/08/07
 
 ================
 | Introduction |
@@ -13,18 +13,18 @@
 HA-Proxy est un relais TCP/HTTP offrant des facilités d'intégration en
 environnement hautement disponible. En effet, il est capable de :
   - effectuer un aiguillage statique défini par des cookies ;
-  - effectuer une répartition de charge avec création de cookies pour assurer la
-    persistence de session ; 
+  - effectuer une répartition de charge avec création de cookies pour assurer
+    la persistence de session ; 
   - fournir une visibilité externe de son état de santé ;
   - s'arrêter en douceur sans perte brutale de service ;
-  - modifier/ajouter/supprimer des entêtes dans la requête et la réponse ;
+  - modifier/ajouter/supprimer des en-têtes dans la requête et la réponse ;
   - interdire des requêtes qui vérifient certaines conditions ;
   - utiliser des serveurs de secours lorsque les serveurs principaux sont hors
     d'usage.
 
-Il requiert peu de ressources, et son architecture événementielle mono-processus
-lui permet facilement de gérer plusieurs milliers de connexions simultanées sur
-plusieurs relais sans effondrer le système.
+Il requiert peu de ressources, et son architecture événementielle mono-
+processus lui permet facilement de gérer plusieurs milliers de connexions
+simultanées sur plusieurs relais sans effondrer le système.
 
 
 ===========================
@@ -49,16 +49,17 @@ Les options de lancement sont peu nombreuses :
     -s affiche les statistiques (si option compilée)
     -l ajoute des informations aux statistiques
 
-Le nombre maximal de connexion simultanées par proxy est le paramètre par défaut
-pour les proxies pour lesquels ce paramètre n'est pas précisé dans le fichier de
-configuration. Il s'agit du paramètre 'maxconn' dans les sections 'listen'.
+Le nombre maximal de connexion simultanées par proxy est le paramètre par
+défaut pour les proxies pour lesquels ce paramètre n'est pas précisé dans le
+fichier de configuration. Il s'agit du paramètre 'maxconn' dans les sections
+'listen'.
 
-Le nombre maximal total de connexions simultanées limite le nombre de connexions
-TCP utilisables à un instant donné par le processus, tous proxies confondus. Ce
-paramètre remplace le paramètre 'maxconn' de la section 'global'.
+Le nombre maximal total de connexions simultanées limite le nombre de
+connexions TCP utilisables à un instant donné par le processus, tous proxies
+confondus. Ce paramètre remplace le paramètre 'maxconn' de la section 'global'.
 
 Le mode debug correspond à l'option 'debug' de la section 'global'. Dans ce
-mode, toutes les connexions, déconnexions, et tous les échanges d'entêtes HTTP
+mode, toutes les connexions, déconnexions, et tous les échanges d'en-têtes HTTP
 sont affichés.
 
 Les statistiques ne sont disponibles que si le programme a été compilé avec
@@ -74,8 +75,8 @@ Structure
 =========
 
 L'analyseur du fichier de configuration ignore des lignes vides, les espaces,
-les tabulations, et tout ce qui est compris entre le symbole '#' (s'il n'est pas
-précédé d'un '\'), et la fin de la ligne, ce qui constitue un commentaire.
+les tabulations, et tout ce qui est compris entre le symbole '#' (s'il n'est
+pas précédé d'un '\'), et la fin de la ligne, ce qui constitue un commentaire.
 
 Le fichier de configuration est découpé en sections répérées par des mots clés
 tels que :
@@ -105,6 +106,8 @@ supportés sont :
   - debug
   - quiet
   - pidfile <fichier>
+  - ulimit-n <nombre>
+
 
 1.1) Journalisation des événements
 ----------------------------------
@@ -117,9 +120,9 @@ syslog vers un ou deux serveurs. La syntaxe est la suivante :
 Les connexions sont envoyées en niveau "info". Les démarrages de service et de
 serveurs seront envoyés en "notice", les signaux d'arrêts en "warning" et les
 arrêts définitifs de services et de serveurs en "alert". Ceci est valable aussi
-bien pour les proxies que pour les serveurs testés par les proxies. Le paramètre
-optionnel <niveau_max> définit le niveau maximal de traces émises parmi les 8
-valeurs suivantes  :
+bien pour les proxies que pour les serveurs testés par les proxies. Le
+paramètre optionnel <niveau_max> définit le niveau maximal de traces émises
+parmi les 8 valeurs suivantes  :
     emerg, alert, crit, err, warning, notice, info, debug
 
 Par compatibilité avec les versions 1.1.16 et antérieures, la valeur par défaut
@@ -135,27 +138,42 @@ Conformément à la RFC3164, les messages émis sont limités à 1024 caractères.
 Exemple :
 ---------
     global
-	log 192.168.2.200 local3
-	log 127.0.0.1     local4 notice
+        log 192.168.2.200 local3
+        log 127.0.0.1     local4 notice
 
 1.2) limitation du nombre de connexions
 ---------------------------------------
 Il est possible et conseillé de limiter le nombre global de connexions par
-processus. Les connexions sont comprises au sens 'acceptation de connexion',
-donc il faut s'attendre en règle général à avoir un peu plus du double de
-sessions TCP que le maximum de connexions fixé. C'est important pour fixer le
-paramètre 'ulimit -n' avant de lancer le proxy. Pour comptabiliser le nombre
-de sockets nécessaires, il faut prendre en compte ces paramètres :
+processus à l'aide du mot clé global 'maxconn'. Les connexions sont comprises
+au sens 'acceptation de connexion', donc il faut s'attendre en règle général à
+avoir un peu plus du double de sessions TCP que le maximum de connexions fixé.
+C'est important pour fixer le paramètre 'ulimit -n' avant de lancer le proxy.
+Pour comptabiliser le nombre de sockets nécessaires, il faut prendre en compte
+ces paramètres :
+
   - 1 socket par connexion entrante
   - 1 socket par connexion sortante
   - 1 socket par couple adresse/port d'écoute par proxy
   - 1 socket pour chaque serveur en cours de health-check
   - 1 socket pour les logs (tous serveurs confondus)
 
-Dans le cas où chaque proxy n'écoute que sur un couple adresse/port, positionner
-la limite du nombre de descripteurs de fichiers (ulimit -n) à 
-(2 * maxconn + nbproxy + nbserveurs + 1). Dans une future version, haproxy sera
-capable de positionner lui-même cette limite.
+Dans le cas où chaque proxy n'écoute que sur un couple adresse/port,
+positionner la limite du nombre de descripteurs de fichiers (ulimit -n) à 
+(2 * maxconn + nbproxy + nbserveurs + 1). A partir des versions 1.1.32/1.2.6,
+il est possible de spécifier cette limite dans la configuration à l'aide du
+mot-clé global 'ulimit-n', à condition bien entendu que le proxy ait été
+démarré sous le compte root (ou avec des droits suffisants pour élever le
+nombre de descripteurs de fichiers). Cette solution met un terme au problème
+récurrent d'incertitude de l'adéquation entre les limites systèmes lors de la
+dernière relance du proxessus et les limites en nombre de connexions. Noter que
+cette limite s'applique par processus.
+
+Exemple :
+---------
+    global
+        maxconn 32000
+        ulimit-n 65536
+
 
 1.3) Diminution des privilèges
 ------------------------------
@@ -184,20 +202,23 @@ plusieurs services de nature différente. Pour rendre l'isolement plus robuste,
 il est conseillé d'utiliser un répertoire vide, sans aucun droit, et de changer
 l'uid du processus de sorte qu'il ne puisse rien faire dans ledit répertoire.
 
-Remarque: dans le cas où une telle faille serait mise en évidence, il est fort
-probable que les premières tentatives de son exploitation provoquent un arrêt du
+Remarque importante :
+---------------------
+Dans le cas où une telle faille serait mise en évidence, il est fort probable
+que les premières tentatives de son exploitation provoquent un arrêt du
 programme, à cause d'un signal de type 'Segmentation Fault', 'Bus Error' ou
-encore 'Illegal Instruction'. Même s'il est vrai que faire tourner le serveur en
-environnement limité réduit les risques d'intrusion, il est parfois bien utile
-dans ces circonstances de connaître les conditions d'apparition du problème, via
-l'obtention d'un fichier 'core'. La plupart des systèmes, pour des raisons de
-sécurité, désactivent la génération du fichier 'core' après un changement
-d'identifiant pour le processus. Il faudra donc soit lancer le processus à
-partir d'un compte utilisateur aux droits réduits (mais ne pouvant pas effectuer
-le chroot), ou bien le faire en root sans réduction des droits (uid 0). Dans ce
-cas, le fichier se trouvera soit dans le répertoire de lancement, soit dans le
-répertoire spécifié après l'option 'chroot'. Ne pas oublier la commande suivante
-pour autoriser la génération du fichier avant de lancer le programme :
+encore 'Illegal Instruction'. Même s'il est vrai que faire tourner le serveur
+en environnement limité réduit les risques d'intrusion, il est parfois bien
+utile dans ces circonstances de connaître les conditions d'apparition du
+problème, via l'obtention d'un fichier 'core'. La plupart des systèmes, pour
+des raisons de sécurité, désactivent la génération du fichier 'core' après un
+changement d'identifiant pour le processus. Il faudra donc soit lancer le
+processus à partir d'un compte utilisateur aux droits réduits (mais ne pouvant
+pas effectuer le chroot), ou bien le faire en root sans réduction des droits
+(uid 0). Dans ce cas, le fichier se trouvera soit dans le répertoire de
+lancement, soit dans le répertoire spécifié après l'option 'chroot'. Ne pas
+oublier la commande suivante pour autoriser la génération du fichier avant de
+lancer le programme :
 
 # ulimit -c unlimited
 
@@ -205,9 +226,9 @@ Exemple :
 ---------
 
     global
-	uid	30000
-	gid	30000
-	chroot  /var/chroot/haproxy
+        uid        30000
+        gid        30000
+        chroot  /var/chroot/haproxy
 
 1.4) Modes de fonctionnement
 ----------------------------
@@ -215,9 +236,9 @@ Le service peut fonctionner dans plusieurs modes :
   - avant- / arrière-plan
   - silencieux / normal / debug
 
-Le mode par défaut est normal, avant-plan, c'est à dire que le programme ne rend
-pas la main une fois lancé. Il ne faut surtout pas le lancer comme ceci dans un
-script de démarrage du système, sinon le système ne finirait pas son
+Le mode par défaut est normal, avant-plan, c'est à dire que le programme ne
+rend pas la main une fois lancé. Il ne faut surtout pas le lancer comme ceci
+dans un script de démarrage du système, sinon le système ne finirait pas son
 initialisation. Il faut le mettre en arrière-plan, de sorte qu'il rende la main
 au processus appelant. C'est ce que fait l'option 'daemon' de la section
 'global', et qui est l'équivalent du paramètre '-D' de la ligne de commande.
@@ -249,9 +270,9 @@ Exemple :
 ---------
 
     global
-	daemon
-	quiet
-	nbproc	2
+        daemon
+        quiet
+        nbproc        2
 
 1.6) Simplification de la gestion des processus
 -----------------------------------------------
@@ -285,9 +306,9 @@ Les sections de service débutent par le mot clé "listen" :
     listen <nom_instance> [ <adresse_IP>:<plage_ports>[,...] ]
 
 - <nom_instance> est le nom de l'instance décrite. Ce nom sera envoyé dans les
-  logs, donc il est souhaitable d'utiliser un nom relatif au service relayé. Aucun
-  test n'est effectué concernant l'unicité de ce nom, qui n'est pas obligatoire,
-  mais fortement recommandée.
+  logs, donc il est souhaitable d'utiliser un nom relatif au service relayé.
+  Aucun test n'est effectué concernant l'unicité de ce nom, qui n'est pas
+  obligatoire, mais fortement recommandée.
 
 - <adresse_IP> est l'adresse IP sur laquelle le relais attend ses connexions.
   L'absence d'adresse ainsi que l'adresse 0.0.0.0 signifient que les connexions
@@ -304,8 +325,8 @@ Les sections de service débutent par le mot clé "listen" :
   <adresse_IP>:<port> consomme une socket, donc un descripteur de fichier.
   Le couple <adresse_IP>:<port> doit être unique pour toutes les  instances
   d'une même machine. L'attachement à un port inférieur à 1024 nécessite un
-  niveau de privilège particulier lors du lancement du programme (indépendamment
-  du paramètre 'uid' de la section 'global').
+  niveau de privilège particulier lors du lancement du programme
+  (indépendamment du paramètre 'uid' de la section 'global').
 
 - le couple <adresse_IP>:<plage_ports> peut être répété indéfiniment pour
   demander au relais d'écouter également sur d'autres adresses et/ou d'autres
@@ -329,7 +350,7 @@ Exemples :
 ----------
     listen http_proxy
         bind :80,:443
-	bind 10.0.0.1:10080,10.0.0.1:10443
+        bind 10.0.0.1:10080,10.0.0.1:10443
 
 2.1) Inhibition d'un service
 ----------------------------
@@ -338,11 +359,11 @@ commenter toute une partie du fichier. Il suffit de positionner le mot clé
 "disabled" dans sa section :
 
     listen smtp_proxy 0.0.0.0:25
-	disabled
+        disabled
 
 Remarque: le mot clé 'enabled' permet de réactiver un service préalablement
-	  désactivé par le mot clé 'disabled', par exemple à cause d'une
-	  configuration par défaut.
+          désactivé par le mot clé 'disabled', par exemple à cause d'une
+          configuration par défaut.
 
 2.2) Mode de fonctionnement
 ---------------------------
@@ -353,21 +374,22 @@ Un service peut fonctionner dans trois modes différents :
 
 Mode TCP
 --------
-Dans ce mode, le service relaye, dès leur établissement, les connexions TCP vers
-un ou plusieurs serveurs. Aucun traitement n'est effectué sur le flux. Il s'agit
-simplement d'une association source<adresse:port> -> destination<adresse:port>.
+Dans ce mode, le service relaye, dès leur établissement, les connexions TCP
+vers un ou plusieurs serveurs. Aucun traitement n'est effectué sur le flux. Il
+s'agit simplement d'une association
+     source<adresse:port> -> destination<adresse:port>.
 Pour l'utiliser, préciser le mode TCP sous la déclaration du relais.
 
 Exemple :
 ---------
     listen smtp_proxy 0.0.0.0:25
-	mode tcp
+        mode tcp
 
 Mode HTTP
 ---------
 Dans ce mode, le service relaye les connexions TCP vers un ou plusieurs
 serveurs, une fois qu'il dispose d'assez d'informations pour en prendre la
-décision. Les entêtes HTTP sont analysés pour y trouver un éventuel cookie, et
+décision. Les en-têtes HTTP sont analysés pour y trouver un éventuel cookie, et
 certains d'entre-eux peuvent être modifiés par le biais d'expressions
 régulières. Pour activer ce mode, préciser le mode HTTP sous la déclaration du
 relais.
@@ -375,7 +397,7 @@ relais.
 Exemple :
 ---------
     listen http_proxy 0.0.0.0:80
-	mode http
+        mode http
 
 Mode supervision
 ----------------
@@ -391,12 +413,44 @@ Exemple :
 ---------
     # réponse simple : 'OK'
     listen health_check 0.0.0.0:60000
-	mode health
+        mode health
 
     # réponse HTTP : 'HTTP/1.0 200 OK'
     listen http_health_check 0.0.0.0:60001
-	mode health
-	option httpchk
+        mode health
+        option httpchk
+
+
+Les versions 1.1.32 et 1.2.6 apportent une nouvelle solution pour valider le
+bon fonctionnement du proxy sans perturber le service. Le mot-clé 'monitor-net'
+a été créé dans le butd de spécifier un réseau d'équipements qui ne PEUVENT PAS
+utiliser le service pour autre chose que des tests de fonctionnement. C'est
+particulièrement adapté aux proxies TCP, car cela empêche le proxy de relayer
+des établissements de connexion émis par un outil de surveillance.
+
+Lorsque c'est utilisé sur un proxy TCP, la connexion est acceptée puis refermée
+et rien n'est logué. C'est suffisant pour qu'un répartiteur de charge en amont
+détecte que le service est disponible.
+
+Lorsque c'est utilisé sur un proxy HTTP, la connexion est acceptée, rien n'est
+logué, puis la réponse suivante est envoyée et la session refermée :
+"HTTP/1.0 200 OK". C'est normalement suffisant pour qu'un répartiteur de charge
+HTTP en amont détecte le service comme opérationnel, aussi bien à travers des
+tests TCP que HTTP.
+
+Les proxies utilisant le mot-clé 'monitor-net' peuvent accessoirement se passer
+de l'option 'dontlognull', ce qui permettra de loguer les connexions vides
+émises depuis d'autres adresses que celles du réseau de tests.
+
+Exemple :
+---------
+
+    listen tse-proxy
+       bind :3389,:1494,:5900  # TSE, ICA and VNC at once.
+       mode tcp
+       balance roundrobin
+       server tse-farm 192.168.1.10
+       monitor-net 192.168.1.252/31   # L4 load-balancers on .252 and .253
 
 
 2.3) Limitation du nombre de connexions simultanées
@@ -414,28 +468,32 @@ Exemple :
 
 2.4) Arrêt en douceur
 ---------------------
-Il est possible d'arrêter les services en douceur en envoyant un signal SIG_USR1
-au processus relais. Tous les services seront alors mis en phase d'arrêt, mais
-pourront continuer d'accepter des connexions pendant un temps défini par le
-paramètre 'grace' (en millisecondes). Cela permet par exemple, de faire savoir
-rapidement à un répartiteur de charge qu'il ne doit plus utiliser un relais,
-tout en continuant d'assurer le service le temps qu'il s'en rende compte.
-Remarque : les connexions actives ne sont jamais cassées. Dans le pire des cas,
-il faudra attendre en plus leur expiration avant l'arrêt total du processus. La
-valeur par défaut est 0 (pas de grâce, arrêt immédiat de l'écoute).
+Il est possible d'arrêter les services en douceur en envoyant un signal
+SIG_USR1 au processus relais. Tous les services seront alors mis en phase
+d'arrêt, mais pourront continuer d'accepter des connexions pendant un temps
+défini par le paramètre 'grace' (en millisecondes). Cela permet par exemple,
+de faire savoir rapidement à un répartiteur de charge qu'il ne doit plus
+utiliser un relais, tout en continuant d'assurer le service le temps qu'il
+s'en rende compte.
+
+Remarque :
+----------
+Les connexions actives ne sont jamais cassées. Dans le pire des cas, il faudra
+attendre en plus leur expiration avant l'arrêt total du processus. La valeur
+par défaut est 0 (pas de grâce, arrêt immédiat de l'écoute).
 
 Exemple :
 ---------
     # arrêter en douceur par 'killall -USR1 haproxy'
     # le service tournera encore 10 secondes après la demande d'arrêt
     listen http_proxy 0.0.0.0:80
-	mode http
-	grace 10000
+        mode http
+        grace 10000
 
     # ce port n'est testé que par un répartiteur de charge.
     listen health_check 0.0.0.0:60000
-	mode health
-	grace 0
+        mode health
+        grace 0
 
 
 2.5) Temps d'expiration des connexions
@@ -448,31 +506,32 @@ session est terminée à chaque extrémité.
   - temps d'attente d'une donnée de la part du client, ou de la
     possibilité de lui envoyer des données : "clitimeout" :
 
-	# time-out client à 2mn30.
-	clitimeout	150000
+        # time-out client à 2mn30.
+        clitimeout        150000
 
   - temps d'attente d'une donnée de la part du serveur, ou de la
     possibilité de lui envoyer des données : "srvtimeout" :
 
-	# time-out serveur à 30s.
-	srvtimeout	30000
+        # time-out serveur à 30s.
+        srvtimeout        30000
 
   - temps d'attente de l'établissement d'une connexion vers un serveur
     "contimeout" :
 
         # on abandonne si la connexion n'est pas établie après 4 secondes
-	contimeout	4000
+        contimeout        4000
 
 Remarques :
 -----------
   - "contimeout" et "srvtimeout" n'ont pas d'utilité dans le cas du serveur de
     type "health".
   - sous de fortes charges, ou sur un réseau saturé ou défectueux, il est
-    possible de perdre des paquets. Du fait que la première retransmission TCP
-    n'ait lieu qu'au bout de 3 secoudes, fixer un timeout de connexion inférieur
-    à 3 secondes ne permet pas de se rattraper sur la perte de paquets car la
-    session aura été abandonnée avant la première retransmission. Une valeur de
-    4 secondes réduira considérablement le nombre d'échecs de connexion.
+    possible de perdre des paquets. Du fait que la première retransmission
+    TCP n'ait lieu qu'au bout de 3 secoudes, fixer un timeout de connexion
+    inférieur à 3 secondes ne permet pas de se rattraper sur la perte
+    de paquets car la session aura été abandonnée avant la première
+    retransmission. Une valeur de 4 secondes réduira considérablement
+    le nombre d'échecs de connexion.
 
 2.6) Tentatives de reconnexion
 ------------------------------
@@ -483,8 +542,8 @@ abandon est fourni par le paramètre "retries".
 
 Exemple :
 ---------
-	# on essaie encore trois fois maxi
-	retries 3
+        # on essaie encore trois fois maxi
+        retries 3
 
 
 2.7) Adresse du serveur
@@ -499,8 +558,8 @@ le mode 'balance'.
 
 Exemple :
 ---------
-   	# on envoie toutes les nouvelles connexions ici
-	dispatch 192.168.1.2:80
+           # on envoie toutes les nouvelles connexions ici
+        dispatch 192.168.1.2:80
 
 Remarque :
 ----------
@@ -514,22 +573,22 @@ Il est possible de forcer l'adresse utilisée pour établir les connexions vers
 les serveurs à l'aide du paramètre "source". Il est même possible de forcer le
 port, bien que cette fonctionnalité se limite à des usages très spécifiques.
 C'est particulièrement utile en cas d'adressage multiple, et plus généralement
-pour permettre aux serveurs de trouver le chemin de retour dans des contextes de
-routage difficiles. Si l'adresse est '0.0.0.0' ou '*' ou vide, elle sera choisie
-librement par le systeme. Si le port est '0' ou vide, il sera choisi librement
-par le système. Il est à noter que depuis la version 1.1.18, les tests de bon
-fonctionnement des serveurs seront aussi effectués à partir de la source
-spécifiée par ce paramètre.
+pour permettre aux serveurs de trouver le chemin de retour dans des contextes
+de routage difficiles. Si l'adresse est '0.0.0.0' ou '*' ou vide, elle sera
+choisie librement par le systeme. Si le port est '0' ou vide, il sera choisi
+librement par le système. Il est à noter que depuis la version 1.1.18, les
+tests de bon fonctionnement des serveurs seront aussi effectués à partir de la
+source spécifiée par ce paramètre.
 
 Exemples :
 ----------
     listen http_proxy *:80
-   	# toutes les connexions prennent l'adresse 192.168.1.200
-	source 192.168.1.200:0
+           # toutes les connexions prennent l'adresse 192.168.1.200
+        source 192.168.1.200:0
 
     listen rlogin_proxy *:513
-   	# utiliser l'adresse 192.168.1.200 et le port réservé 900
-	source 192.168.1.200:900
+           # utiliser l'adresse 192.168.1.200 et le port réservé 900
+        source 192.168.1.200:900
 
 
 2.9) Définition du nom du cookie
@@ -541,8 +600,8 @@ par le paramètre "cookie".
 Exemple :
 ---------
     listen http_proxy :80
-	mode http
-	cookie SERVERID
+        mode http
+        cookie SERVERID
 
 On peut modifier l'utilisation du cookie pour la rendre plus intelligente
 vis-à-vis des applications relayées. Il est possible, notamment de supprimer ou
@@ -558,19 +617,19 @@ Pour ne conserver le cookie qu'en accès indirect, donc à travers le
 dispatcheur, et supprimer toutes ses éventuelles occurences lors des accès
 directs :
 
-	cookie SERVERID indirect
+        cookie SERVERID indirect
 
 Pour remplacer la valeur d'un cookie existant par celle attribuée à un serveur,
 lors d'un accès direct :
 
-	cookie SERVERID rewrite
+        cookie SERVERID rewrite
 
-Pour créer un cookie comportant la valeur attribuée à un serveur lors d'un accès
-en répartition de charge interne. Dans ce cas, il est souhaitable que tous les
-serveurs aient un cookie renseigné. Un serveur non assigné d'un cookie
+Pour créer un cookie comportant la valeur attribuée à un serveur lors d'un
+accès en répartition de charge interne. Dans ce cas, il est souhaitable que
+tous les serveurs aient un cookie renseigné. Un serveur non assigné d'un cookie
 retournera un cookie vide (cookie de suppression) :
 
-	cookie SERVERID insert
+        cookie SERVERID insert
 
 Pour réutiliser un cookie applicatif et lui préfixer l'identifiant du serveur,
 puis le supprimer dans les requêtes suivantes, utiliser l'option 'prefix'. Elle
@@ -583,19 +642,19 @@ plus d'un cookie :
 Pour insérer un cookie, en s'assurant qu'un cache en amont ne le stockera pas,
 ajouter le mot clé 'nocache' après 'insert' :
 
-	cookie SERVERID insert nocache
+        cookie SERVERID insert nocache
 
-Pour insérer un cookie seulement suite aux requêtes de type POST, ajouter le mot
-clé 'postonly' après 'insert' :
+Pour insérer un cookie seulement suite aux requêtes de type POST, ajouter le
+mot clé 'postonly' après 'insert' :
 
-	cookie SERVERID insert postonly
+        cookie SERVERID insert postonly
 
 
 Remarques :
 -----------
-- Il est possible de combiner 'insert' avec 'indirect' ou 'rewrite' pour s'adapter
-  à des applications générant déjà le cookie, avec un contenu invalide. Il suffit
-  pour cela de les spécifier sur la même ligne.
+- Il est possible de combiner 'insert' avec 'indirect' ou 'rewrite' pour
+  s'adapter à des applications générant déjà le cookie, avec un contenu
+  invalide. Il suffit pour cela de les spécifier sur la même ligne.
 
 - dans le cas où 'insert' et 'indirect' sont spécifiés, le cookie n'est jamais
   transmis au serveur vu qu'il n'en a pas connaissance et ne pourrait pas le
@@ -636,11 +695,11 @@ par le paramètre 'server'. La syntaxe est :
 Exemple : le cookie SERVERID peut contenir server01 ou server02
 ---------
     listen http_proxy :80
-	mode http
-	cookie SERVERID
-	dispatch 192.168.1.100:80
-	server web1 192.168.1.1:80 cookie server01
-	server web2 192.168.1.2:80 cookie server02
+        mode http
+        cookie SERVERID
+        dispatch 192.168.1.100:80
+        server web1 192.168.1.1:80 cookie server01
+        server web2 192.168.1.2:80 cookie server02
 
 Attention : la syntaxe a changé depuis la version 1.0.
 -----------
@@ -660,11 +719,11 @@ Exemple : même que précédemment en répartition interne
 ---------
 
     listen http_proxy :80
-	mode http
-	cookie SERVERID
-	balance roundrobin
-	server web1 192.168.1.1:80 cookie server01
-	server web2 192.168.1.2:80 cookie server02
+        mode http
+        cookie SERVERID
+        balance roundrobin
+        server web1 192.168.1.1:80 cookie server01
+        server web2 192.168.1.2:80 cookie server02
 
 Depuis la version 1.1.22, il est possible de déterminer automatiquement le port
 du serveur vers lequel sera envoyée la connexion, en fonction du port d'écoute
@@ -693,66 +752,67 @@ Exemples :
 # même que précédemment
 
     listen http_proxy :80
-	mode http
-	cookie SERVERID
-	balance roundrobin
-	server web1 192.168.1.1 cookie server01
-	server web2 192.168.1.2 cookie server02
+        mode http
+        cookie SERVERID
+        balance roundrobin
+        server web1 192.168.1.1 cookie server01
+        server web2 192.168.1.2 cookie server02
 
 # relayage simultané des ports 80 et 81 et 8080-8089
 
     listen http_proxy :80,:81,:8080-8089
-	mode http
-	cookie SERVERID
-	balance roundrobin
-	server web1 192.168.1.1 cookie server01
-	server web2 192.168.1.2 cookie server02
+        mode http
+        cookie SERVERID
+        balance roundrobin
+        server web1 192.168.1.1 cookie server01
+        server web2 192.168.1.2 cookie server02
 
 # relayage TCP des ports 25, 389 et 663 vers les ports 1025, 1389 et 1663
 
     listen http_proxy :25,:389,:663
-	mode tcp
-	balance roundrobin
-	server srv1 192.168.1.1:+1000
-	server srv2 192.168.1.2:+1000
+        mode tcp
+        balance roundrobin
+        server srv1 192.168.1.1:+1000
+        server srv2 192.168.1.2:+1000
 
 
 3.1) Surveillance des serveurs
 ------------------------------
-Il est possible de tester l'état des serveurs par établissement de connexion TCP
-ou par envoi d'une requête HTTP. Un serveur hors d'usage ne sera pas utilisé
-dans le processus de répartition de charge interne. Pour activer la surveillance,
-ajouter le mot clé 'check' à la fin de la déclaration du serveur. Il est
-possible de spécifier l'intervalle (en millisecondes) séparant deux tests du
-serveur par le paramètre "inter", le nombre d'échecs acceptés par le paramètre
-"fall", et le nombre de succès avant reprise par le paramètre "rise". Les
-paramètres non précisés prennent les valeurs suivantes par défaut :
+Il est possible de tester l'état des serveurs par établissement de connexion
+TCP ou par envoi d'une requête HTTP. Un serveur hors d'usage ne sera pas
+utilisé dans le processus de répartition de charge interne. Pour activer la
+surveillance, ajouter le mot clé 'check' à la fin de la déclaration du serveur.
+Il est possible de spécifier l'intervalle (en millisecondes) séparant deux
+tests du serveur par le paramètre "inter", le nombre d'échecs acceptés par le
+paramètre "fall", et le nombre de succès avant reprise par le paramètre "rise".
+Les paramètres non précisés prennent les valeurs suivantes par défaut :
  - inter : 2000
  - rise  : 2
  - fall  : 3
  - port  : port de connexion du serveur
 
 Le mode par défaut consiste à établir des connexions TCP uniquement. Dans
-certains cas de pannes, des serveurs peuvent continuer à accepter les connexions
-sans les traiter. Depuis la version 1.1.16, haproxy est en mesure d'envoyer des
-requêtes HTTP courtes et très peu coûteuses. Les versions 1.1.16 et 1.1.17
-utilisent "OPTIONS / HTTP/1.0". Dans les versions 1.1.18 à 1.1.20, les requêtes
-ont été changées en "OPTIONS * HTTP/1.0" pour des raisons de contrôle d'accès aux
-ressources. Cependant, cette requête documentée dans la RFC2068 n'est pas
-comprise par tous les serveurs. Donc à partir de la version 1.1.21, la requête
-par défaut est revenue à "OPTIONS / HTTP/1.0", mais il est possible de
-paramétrer la partie URI. Les requêtes OPTIONS présentent l'avantage d'être
-facilement extractibles des logs, et de ne pas induire d'accès aux fichiers côté
-serveur. Seules les réponses 2xx et 3xx sont considérées valides, les autres (y
-compris non-réponses) aboutissent à un échec. Le temps maximal imparti pour une
-réponse est égal à l'intervalle entre deux tests (paramètre "inter"). Pour
-activer ce mode, spécifier l'option "httpchk", éventuellement suivie d'une
-méthode et d'une URI. L'option "httpchk" accepte donc 4 formes :
+certains cas de pannes, des serveurs peuvent continuer à accepter les
+connexions sans les traiter. Depuis la version 1.1.16, haproxy est en mesure
+d'envoyer des requêtes HTTP courtes et très peu coûteuses. Les versions 1.1.16
+et 1.1.17 utilisent "OPTIONS / HTTP/1.0". Dans les versions 1.1.18 à 1.1.20,
+les requêtes ont été changées en "OPTIONS * HTTP/1.0" pour des raisons de
+contrôle d'accès aux ressources. Cependant, cette requête documentée dans la
+RFC2068 n'est pas comprise par tous les serveurs. Donc à partir de la version
+1.1.21, la requête par défaut est revenue à "OPTIONS / HTTP/1.0", mais il est
+possible de paramétrer la partie URI. Les requêtes OPTIONS présentent
+l'avantage d'être facilement extractibles des logs, et de ne pas induire
+d'accès aux fichiers côté serveur. Seules les réponses 2xx et 3xx sont
+considérées valides, les autres (y compris non-réponses) aboutissent à un
+échec. Le temps maximal imparti pour une réponse est égal à l'intervalle entre
+deux tests (paramètre "inter"). Pour activer ce mode, spécifier l'option
+"httpchk", éventuellement suivie d'une méthode et d'une URI. L'option "httpchk"
+accepte donc 4 formes :
   - option httpchk               -> OPTIONS / HTTP/1.0
   - option httpchk URI           -> OPTIONS <URI> HTTP/1.0
   - option httpchk METH URI      -> <METH> <URI> HTTP/1.0
   - option httpchk METH URI VER  -> <METH> <URI> <VER>
-Voir les exemples ci-après.	
+Voir les exemples ci-après.        
 
 Depuis la version 1.1.17, il est possible de définir des serveurs de secours,
 utilisés uniquement lorsqu'aucun des autres serveurs ne fonctionne. Pour cela,
@@ -772,12 +832,12 @@ pour les configurations où le serveur n'a pas de port prédéfini, par exemple
 lorsqu'il est déduit du port d'acceptation de la connexion. Pour cela, utiliser
 le paramètre 'port' suivi du numéro de port devant répondre aux requêtes.
 
-Enfin, depuis la version 1.1.17, il est possible de visualiser rapidement l'état
-courant de tous les serveurs. Pour cela, il suffit d'envoyer un signal SIGHUP au
-processus proxy. L'état de tous les serveurs de tous les proxies est envoyé dans
-les logs en niveau "notice", ainsi que sur la sortie d'erreurs si elle est
-active. C'est une bonne raison pour avoir au moins un serveur de logs local en
-niveau notice.
+Enfin, depuis la version 1.1.17, il est possible de visualiser rapidement
+l'état courant de tous les serveurs. Pour cela, il suffit d'envoyer un signal
+SIGHUP au processus proxy. L'état de tous les serveurs de tous les proxies est
+envoyé dans les logs en niveau "notice", ainsi que sur la sortie d'erreurs si
+elle est active. C'est une bonne raison pour avoir au moins un serveur de logs
+local en niveau notice.
 
 Depuis la version 1.1.18 (et 1.2.1), un message d'urgence est envoyé dans les
 logs en niveau 'emerg' si tous les serveurs d'une même instance sont tombés,
@@ -798,38 +858,38 @@ Exemples :
 ----------
 # conf du paragraphe 3) avec surveillance TCP
     listen http_proxy 0.0.0.0:80
-	mode http
-	cookie SERVERID
-	balance roundrobin
-	server web1 192.168.1.1:80 cookie server01 check
-	server web2 192.168.1.2:80 cookie server02 check inter 500 rise 1 fall 2
+        mode http
+        cookie SERVERID
+        balance roundrobin
+        server web1 192.168.1.1:80 cookie server01 check
+        server web2 192.168.1.2:80 cookie server02 check inter 500 rise 1 fall 2
 
 # même que précédemment avec surveillance HTTP par 'OPTIONS / HTTP/1.0'
     listen http_proxy 0.0.0.0:80
-	mode http
-	cookie SERVERID
-	balance roundrobin
-	option httpchk
-	server web1 192.168.1.1:80 cookie server01 check
-	server web2 192.168.1.2:80 cookie server02 check inter 500 rise 1 fall 2
+        mode http
+        cookie SERVERID
+        balance roundrobin
+        option httpchk
+        server web1 192.168.1.1:80 cookie server01 check
+        server web2 192.168.1.2:80 cookie server02 check inter 500 rise 1 fall 2
 
 # même que précédemment avec surveillance HTTP par 'OPTIONS /index.html HTTP/1.0'
     listen http_proxy 0.0.0.0:80
-	mode http
-	cookie SERVERID
-	balance roundrobin
-	option httpchk /index.html
-	server web1 192.168.1.1:80 cookie server01 check
-	server web2 192.168.1.2:80 cookie server02 check inter 500 rise 1 fall 2
+        mode http
+        cookie SERVERID
+        balance roundrobin
+        option httpchk /index.html
+        server web1 192.168.1.1:80 cookie server01 check
+        server web2 192.168.1.2:80 cookie server02 check inter 500 rise 1 fall 2
 
 # idem avec surveillance HTTP par 'HEAD /index.jsp? HTTP/1.1\r\nHost: www'
     listen http_proxy 0.0.0.0:80
-	mode http
-	cookie SERVERID
-	balance roundrobin
-	option httpchk HEAD /index.jsp? HTTP/1.1\r\nHost:\ www
-	server web1 192.168.1.1:80 cookie server01 check
-	server web2 192.168.1.2:80 cookie server02 check inter 500 rise 1 fall 2
+        mode http
+        cookie SERVERID
+        balance roundrobin
+        option httpchk HEAD /index.jsp? HTTP/1.1\r\nHost:\ www
+        server web1 192.168.1.1:80 cookie server01 check
+        server web2 192.168.1.2:80 cookie server02 check inter 500 rise 1 fall 2
 
 # répartition avec persistence basée sur le préfixe de cookie, et arrêt en
 # douceur utilisant un second port (81) juste pour les health-checks.
@@ -847,29 +907,29 @@ Exemples :
 # automatique dans la requête, tout en indiquant aux caches de ne pas garder
 # ce cookie.
     listen web_appl 0.0.0.0:80
-	mode http
-	cookie SERVERID insert nocache indirect
-	balance roundrobin
-	server web1 192.168.1.1:80 cookie server01 check
-	server web2 192.168.1.2:80 cookie server02 check
+        mode http
+        cookie SERVERID insert nocache indirect
+        balance roundrobin
+        server web1 192.168.1.1:80 cookie server01 check
+        server web2 192.168.1.2:80 cookie server02 check
 
 # idem avec serveur applicatif de secours sur autre site, et serveur de pages d'erreurs
     listen web_appl 0.0.0.0:80
-	mode http
-	cookie SERVERID insert nocache indirect
-	balance roundrobin
-	server web1 192.168.1.1:80 cookie server01 check
-	server web2 192.168.1.2:80 cookie server02 check
-	server web-backup 192.168.2.1:80 cookie server03 check backup
-	server web-excuse 192.168.3.1:80 check backup
+        mode http
+        cookie SERVERID insert nocache indirect
+        balance roundrobin
+        server web1 192.168.1.1:80 cookie server01 check
+        server web2 192.168.1.2:80 cookie server02 check
+        server web-backup 192.168.2.1:80 cookie server03 check backup
+        server web-excuse 192.168.3.1:80 check backup
 
 # relayage SMTP+TLS avec test du serveur et serveur de backup
 
     listen http_proxy :25,:587
-	mode tcp
-	balance roundrobin
-	server srv1 192.168.1.1 check port 25 inter 30000 rise 1 fall 2
-	server srv2 192.168.1.2 backup
+        mode tcp
+        balance roundrobin
+        server srv1 192.168.1.1 check port 25 inter 30000 rise 1 fall 2
+        server srv2 192.168.1.2 backup
 
 
 3.2) Reconnexion vers un répartiteur en cas d'échec direct
@@ -883,28 +943,28 @@ autorise dans ce cas à renvoyer les connexions échouées vers le répartiteur
 Exemple :
 ---------
     listen http_proxy 0.0.0.0:80
-	mode http
-	cookie SERVERID
-	dispatch 192.168.1.100:80
-	server web1 192.168.1.1:80 cookie server01
-	server web2 192.168.1.2:80 cookie server02
-	redispatch # renvoyer vers dispatch si refus de connexion.
+        mode http
+        cookie SERVERID
+        dispatch 192.168.1.100:80
+        server web1 192.168.1.1:80 cookie server01
+        server web2 192.168.1.2:80 cookie server02
+        redispatch # renvoyer vers dispatch si refus de connexion.
 
-Par défaut (et dans les versions 1.1.16 et antérieures), le paramètre redispatch
-ne s'applique qu'aux échecs de connexion au serveur. Depuis la version 1.1.17,
-il s'applique aussi aux connexions destinées à des serveurs identifiés comme
-hors d'usage par la surveillance. Si l'on souhaite malgré tout qu'un client
-disposant d'un cookie correspondant à un serveur défectueux tente de s'y
-connecter, il faut préciser l'option "persist" :
+Par défaut (et dans les versions 1.1.16 et antérieures), le paramètre
+redispatch ne s'applique qu'aux échecs de connexion au serveur. Depuis la
+version 1.1.17, il s'applique aussi aux connexions destinées à des serveurs
+identifiés comme hors d'usage par la surveillance. Si l'on souhaite malgré
+tout qu'un client disposant d'un cookie correspondant à un serveur défectueux
+tente de s'y connecter, il faut préciser l'option "persist" :
 
     listen http_proxy 0.0.0.0:80
-	mode http
-	option persist
-	cookie SERVERID
-	dispatch 192.168.1.100:80
-	server web1 192.168.1.1:80 cookie server01
-	server web2 192.168.1.2:80 cookie server02
-	redispatch # renvoyer vers dispatch si serveur HS.
+        mode http
+        option persist
+        cookie SERVERID
+        dispatch 192.168.1.100:80
+        server web1 192.168.1.1:80 cookie server01
+        server web2 192.168.1.2:80 cookie server02
+        redispatch # renvoyer vers dispatch si serveur HS.
 
 
 4) Fonctionnalités additionnelles
@@ -912,42 +972,43 @@ connecter, il faut préciser l'option "persist" :
 
 D'autres fonctionnalités d'usage moins courant sont disponibles. Il s'agit
 principalement du mode transparent, de la journalisation des connexions, et de
-la réécriture des entêtes.
+la réécriture des en-têtes.
 
 4.1) Fonctionnalités réseau
 ---------------------------
 4.1.1) Fonctionnement en mode transparent
 ---------------------------------------
-En mode HTTP, le mot clé 'transparent' permet d'intercepter des sessions routées
-à travers la machine hébergeant le proxy. Dans ce mode, on ne précise pas
-l'adresse de répartition 'dispatch', car celle-ci est tirée de l'adresse
+En mode HTTP, le mot clé 'transparent' permet d'intercepter des sessions
+routées à travers la machine hébergeant le proxy. Dans ce mode, on ne précise
+pas l'adresse de répartition 'dispatch', car celle-ci est tirée de l'adresse
 destination de la session détournée. Le système doit permettre de rediriger les
 paquets vers un processus local.
 
 Exemple :
 ---------
     listen http_proxy 0.0.0.0:65000
-	mode http
-	transparent
-	cookie SERVERID
-	server server01 192.168.1.1:80
-	server server02 192.168.1.2:80
+        mode http
+        transparent
+        cookie SERVERID
+        server server01 192.168.1.1:80
+        server server02 192.168.1.2:80
 
     # iptables -t nat -A PREROUTING -i eth0 -p tcp -d 192.168.1.100 \
       --dport 80 -j REDIRECT --to-ports 65000
 
 Remarque :
 ----------
-Si le port n'est pas spécifié sur le serveur, c'est le port auquel s'est adressé
-le client qui sera utilisé. Cela permet de relayer tous les ports TCP d'une même
-adresse avec une même instance et sans utiliser directement le mode transparent.
+Si le port n'est pas spécifié sur le serveur, c'est le port auquel s'est
+adressé le client qui sera utilisé. Cela permet de relayer tous les ports TCP
+d'une même adresse avec une même instance et sans utiliser directement le mode
+transparent.
 
 Exemple :
 ---------
     listen http_proxy 0.0.0.0:65000
-	mode tcp
-	server server01 192.168.1.1 check port 60000
-	server server02 192.168.1.2 check port 60000
+        mode tcp
+        server server01 192.168.1.1 check port 60000
+        server server02 192.168.1.2 check port 60000
 
     # iptables -t nat -A PREROUTING -i eth0 -p tcp -d 192.168.1.100 \
       -j REDIRECT --to-ports 65000
@@ -1002,6 +1063,35 @@ Exemple :
 
 4.2) Journalisation des connexions
 ----------------------------------
+
+L'un des points forts de HAProxy est indéniablement la précision de ses logs.
+Il fournit probablement le plus fin niveau d'information disponible pour un
+tel outil, ce qui est très important pour les diagnostics en environnements
+complexes. En standard, les informations journalisées incluent le port client,
+les chronométrages des états TCP/HTTP, des états de session précis au moment de
+la terminaison et sa cause, des informations sur les décisions d'aiguillage du
+trafic vers un serveur, et bien sûr la possibilité de capturer des en-têtes
+arbitraires.
+
+Dans le but d'améliorer la réactivité des administrateurs, il offre une grande
+transparence sur les problèmes rencontrés, à la fois internes et externes, et
+il est possible d'envoyer les logs vers des serveurs différents en même temps
+avec des niveaux de filtrage différents :
+
+  - logs globaux au niveau processus (erreurs système, arrêts/démarrages, ...)
+  - erreurs système et internes par instance (manque de ressources, bugs, ...)
+  - problèmes externes par instance (arrêts/relance serveurs, limites, ...)
+  - activité par instance (connexions clients), aussi bien lors de leur
+    établissement qu'à leur terminaison.
+
+La possibilité de distribuer différents niveaux de logs à différents serveurs
+permet à plusieurs équipes de production d'intéragir et de corriger leurs
+problèmes le plus tôt possible. Par exemple, l'équipe système peut surveiller
+occasionnellement les erreurs système, pendant que l'équipe application
+surveille les alertes d'arrêts/démarrages de ses serveurs en temps réel, et
+que l'équipe sécurité analyse l'activité en différé d'une heure.
+
+
 4.2.1) Niveaux de log
 ---------------------
 Les connexions TCP et HTTP peuvent donner lieu à une journalisation sommaire ou
@@ -1026,9 +1116,9 @@ paramètres de journalisation définis dans la section 'global'.
 Exemple :
 ---------
     listen http_proxy 0.0.0.0:80
-	mode http
-	log 192.168.2.200 local3
-	log 192.168.2.201 local4
+        mode http
+        log 192.168.2.200 local3
+        log 192.168.2.201 local4
 
 4.2.2) Format des logs
 ----------------------
@@ -1038,14 +1128,26 @@ la connexion ne sera journalisée qu'en fin de session, ajoutant des précisions
 sur son état lors de la déconnexion, ainsi que le temps de connexion et la
 durée totale de la session.
 
-Exemple :
----------
+Exemple de journalisation TCP :
+-------------------------------
     listen relais-tcp 0.0.0.0:8000
-	mode tcp
-	option tcplog
-	log 192.168.2.200 local3
+        mode tcp
+        option tcplog
+        log 192.168.2.200 local3
 
->>> haproxy[18989]: 127.0.0.1:34550 [15/Oct/2003:15:24:28] relais-tcp Srv1 0/5007 0 --
+>>> haproxy[18989]: 127.0.0.1:34550 [15/Oct/2003:15:24:28] relais-tcp Srv1 0/5007 0 -- 1/1
+  
+    Champ  Format / Description                  Exemple
+      
+        1  nom_processus '[' pid ']:'            haproxy[18989]:
+        2  ip_client ':' port_client             127.0.0.1:34550
+        3  '[' date ']'                          [15/Oct/2003:15:24:28]
+        4  nom_instance                          relais-tcp
+        5  nom_serveur                           Srv1
+        6  temps_connect '/' temps_total         0/5007
+        7  octets lus                            0
+        8  etat_terminaison                      --
+        9  conns_instance '/' conns_processus    1/1
 
 Une autre option, 'httplog', fournit plus de détails sur le protocole HTTP,
 notamment la requête et l'état des cookies. Dans les cas où un mécanisme de
@@ -1054,41 +1156,66 @@ les logs, il suffit d'ajouter l'option 'dontlognull', pour ne plus obtenir une
 ligne de log pour les sessions n'ayant pas donné lieu à un échange de données
 (requête ou réponse).
 
-Exemple :
----------
+Exemple de journalisation HTTP :
+--------------------------------
     listen http_proxy 0.0.0.0:80
-	mode http
-	option httplog
-	option dontlognull
-	log 192.168.2.200 local3
+        mode http
+        option httplog
+        option dontlognull
+        log 192.168.2.200 local3
 
->>> haproxy[674]: 127.0.0.1:33319 [15/Oct/2003:08:31:57] relais-http Srv1 9/7/147/723 200 243 - - ---- "HEAD / HTTP/1.0"
+>>> haproxy[674]: 127.0.0.1:33319 [15/Oct/2003:08:31:57] relais-http Srv1 9/7/147/723 200 243 - - ---- 3/3 "HEAD / HTTP/1.0"
+
+Exemple plus complet :
+
+    haproxy[18989]: 10.0.0.1:34552 [15/Oct/2003:15:26:31] relais-http Srv1 3183/-1/-1/11215 503 0 - - SC-- 202/205 {w.ods.org|Mozilla} {} "HEAD / HTTP/1.0" 
+
+    Champ  Format / Description                  Exemple
+      
+        1  nom_processus '[' pid ']:'            haproxy[18989]:
+        2  ip_client ':' port_client             10.0.0.1:34552
+        3  '[' date ']'                          [15/Oct/2003:15:26:31]
+        4  nom_instance                          relais-http
+        5  nom_serveur                           Srv1
+        6  Tq '/' Tc '/' Tr '/' Tt               3183/-1/-1/11215
+        7  Code_retour_HTTP                      503
+        8  octets lus                            0
+        9  cookies_requête_capturés              -
+       10  cookies_reponse_capturés              -
+       11  etat_terminaison                      SC--
+       12  conns_instance '/' conns_processus    202/205
+       13  '{' entetes_requête_capturés '}'      {w.ods.org|Mozilla}
+       14  '{' entetes_reponse_capturés '}'      {}
+       15  '"' requête_HTTP '"'                  "HEAD / HTTP/1.0"
+  
+Note pour les analyseurs de logs : l'URI est TOUJOURS le dernier champ de la ligne, et
+                                   commence par un guillemet '"'.
 
 Le problème de loguer uniquement en fin de session, c'est qu'il est impossible
 de savoir ce qui se passe durant de gros transferts ou des sessions longues.
 Pour pallier à ce problème, une nouvelle option 'logasap' a été introduite dans
-la version 1.1.28 (1.2.1). Lorsqu'elle est activée, le proxy loguera le plus tôt
-possible, c'est à dire juste avant que ne débutent les transferts de données.
-Cela signifie, dans le cas du TCP, qu'il loguera toujours le résultat de la
-connexion vers le serveur, et dans le cas HTTP, qu'il loguera en fin de
-traitement des entêtes de la réponse du serveur, auquel cas le nombre d'octets
-représentera la taille des entêtes retournés au client.
+la version 1.1.28 (1.2.1). Lorsqu'elle est activée, le proxy loguera le plus
+tôt possible, c'est à dire juste avant que ne débutent les transferts de
+données. Cela signifie, dans le cas du TCP, qu'il loguera toujours le résultat
+de la connexion vers le serveur, et dans le cas HTTP, qu'il loguera en fin de
+traitement des en-têtes de la réponse du serveur, auquel cas le nombre d'octets
+représentera la taille des en-têtes retournés au client.
 
-Afin d'éviter toute confusion avec les logs normaux, le temps total de transfert
-et le nombre d'octets transférés sont préfixés d'un signe '+' rappeleant que les
-valeurs réelles sont certainement plus élevées.
+Afin d'éviter toute confusion avec les logs normaux, le temps total de
+transfert et le nombre d'octets transférés sont préfixés d'un signe '+'
+rappelant que les valeurs réelles sont certainement plus élevées.
 
 Exemple :
 ---------
 
     listen http_proxy 0.0.0.0:80
-	mode http
-	option httplog
-	option dontlognull
-	option logasap
-	log 192.168.2.200 local3
+        mode http
+        option httplog
+        option dontlognull
+        option logasap
+        log 192.168.2.200 local3
 
->>> haproxy[674]: 127.0.0.1:33320 [15/Oct/2003:08:32:17] relais-http Srv1 9/7/14/+30 200 +243 - - ---- "GET /image.iso HTTP/1.0"
+>>> haproxy[674]: 127.0.0.1:33320 [15/Oct/2003:08:32:17] relais-http Srv1 9/7/14/+30 200 +243 - - ---- 3/3 "GET /image.iso HTTP/1.0"
 
 
 4.2.3) Chronométrage des événements
@@ -1112,10 +1239,10 @@ la forme Tq/Tc/Tr/Tt :
     vers le serveur.
 
   - Tr: temps de réponse du serveur. C'est le temps que le serveur a mis pour
-    renvoyer la totalité des entêtes HTTP à partir du moment où il a acquitté
+    renvoyer la totalité des en-têtes HTTP à partir du moment où il a acquitté
     la connexion. Ca représente exactement le temps de traitement de la
     transaction sans le transfert des données associées. Une valeur '-1'
-    indique que le serveur n'a pas envoyé la totalité de l'entête HTTP.
+    indique que le serveur n'a pas envoyé la totalité de l'en-tête HTTP.
 
   - Tt: durée de vie totale de la session, entre le moment où la demande de
     connexion du client a été acquittée et le moment où la connexion a été
@@ -1157,74 +1284,207 @@ Cas les plus fréquents :
 
 Autres cas ('xx' représentant une valeur quelconque à ignorer) :
     -1/xx/xx/Tt : le client n'a pas envoyé sa requête dans le temps imparti ou
-		  a refermé sa connexion sans compléter la requête.
+                  a refermé sa connexion sans compléter la requête.
     Tq/-1/xx/Tt : la connexion n'a pas pu s'établir vers le serveur (refus ou
                   time-out au bout de Tt-Tq ms).
     Tq/Tc/-1/Tt : le serveur a accepté la connexion mais n'a pas répondu dans
-		  les temps ou bien a refermé sa connexion trop tôt, au bout
-		  de Tt-(Tq+Tc) ms.
+                  les temps ou bien a refermé sa connexion trop tôt, au bout
+                  de Tt-(Tq+Tc) ms.
      
 4.2.4) Conditions de déconnexion
 --------------------------------
-Les logs TCP et HTTP fournissent un indicateur de complétude de la session.
-C'est un champ de 4 caractères (2 en TCP) précédant la requête HTTP, indiquant :
+Les logs TCP et HTTP fournissent un indicateur de complétude de la session dans
+le champ 'etat_terminaison', juste avant le nombre de connexions actives. C'est
+un champ long de 2 caractères en TCP et de 4 caractères en HTTP, chacun ayant
+une signification précise :
+
   - sur le premier caractère, un code précisant le premier événement qui a causé
     la terminaison de la session :
 
-        C : fermeture de la session TCP de la part du client
-	S : fermeture de la session TCP de la part du serveur, ou refus de connexion
-	P : terminaison prématurée des sessions par le proxy, pour cas d'erreur
-	    interne, de configuration (ex: filtre d'URL), ou parce qu'un
-	    contrôle de sécurité a détecté une anomalie dans la réponse du
-	    serveur.
-	c : expiration du délai d'attente côté client : clitimeout
-	s : expiration du délai d'attente côté serveur: srvtimeout et contimeout
-	- : terminaison normale.
+        C : fermeture inattendue de la session TCP de la part du client.
 
-  - sur le second caractère, l'état d'avancement de la session HTTP lors de la
-    fermeture :
+        S : fermeture inattendue de la session TCP de la part du serveur, ou
+            refus explicite de connexion de la part de ce dernier.
 
-        R : terminaison en attendant la réception totale de la requête du client
-	C : terminaison en attendant la connexion vers le serveur
-	H : terminaison en traitant les entêtes du serveur
-	D : terminaison durant le transfert des données du serveur vers le client
-	L : terminaison durant le transfert des dernières données du proxy vers
-	    le client, alors que le serveur a déjà fini.
-	- : terminaison normale, après fin de transfert des données
+        P : terminaison prématurée des sessions par le proxy, pour cause
+            d'imposition d'une limite sur le nombre de connexions, pour cause
+            de configuration (ex: filtre d'URL), ou parce qu'un contrôle de
+            sécurité a détecté et bloqué une anomalie dans la réponse du
+            serveur qui aurait pu causer une fuite d'informations (par exemple,
+            un cookie cachable).
+
+        R : une ressource sur le proxy a été épuisée (mémoire, sockets, ports
+            source, ...). Généralement, cela arrive au cours de l'établissement
+            d'une connexion, et les logs système doivent contenir une copie de
+            l'érreur précise.
+
+        I : une erreur interne a été identifiée par le proxy à la suite d'un
+            auto-contrôle. Ceci ne doit JAMAIS arriver, et vous êtes encouragés
+            à remonter n'importe quel log contenant ceci car il s'agira un bug.
+
+        c : le délai maximal d'attente du client a expiré (clitimeout).
+
+        s : le délai maximal d'attente du serveur a expiré (srvtimeout et contimeout)
+
+        - : terminaison normale de session.
+
+  - sur le second caractère, l'état d'avancement de la session TCP/HTTP lors de
+    la fermeture :
+
+        R : attente d'une REQUETE HTTP complète de la part du client. Rien n'a
+            été transmis au serveur.
+
+        C : attente de l'établissement d'une CONNEXION vers le serveur. Le
+            serveur peut au plus avoir vu la tentative de connexion, mais
+            aucune donnée n'a été échangée.
+
+        H : attente, réception ou traitement des en-têtes HTTP ("HEADERS").
+
+        D : transfert des DONNEES du serveur vers le client.
+
+        L : transfert des dernières ("LAST") données du proxy vers le client,
+            alors que le serveur a déjà fini.
+
+        - : terminaison normale, après fin de transfert des données.
 
   - le troisième caractère indique l'éventuelle identification d'un cookie de
     persistence (uniquement en mode HTTP) :
 
-        N : aucun cookie de persistence n'a été présenté.
-	I : le client a présenté un cookie ne correspondant à aucun serveur
-	    connu.
-	D : le client a présenté un cookie correspondant à un serveur hors
-	    d'usage. Suivant l'option 'persist', il a été renvoyé vers un
-	    autre serveur ou a tout de même tenté de se connecter sur celui
-	    correspondant au cookie.
-	V : le client a présenté un cookie valide et a pu se connecter au
-	    serveur correspondant.
-	- : non appliquable
+        N : aucun cookie de persistence n'a été présenté. C'est généralement le
+            cas sur les NOUVELLES connexions clients.
+
+        I : le client a présenté un cookie INVALIDE ne correspondant à aucun
+            serveur connu. Ceci peut être dû à un changement de configuration
+            récent, à des mélanges de noms de cookies entre sites HTTP/HTTPS,
+            ou à une attaque.
+
+        D : le client a présenté un cookie correspondant à un serveur hors
+            d'usage ("DOWN"). Suivant l'option 'persist', il a été renvoyé vers
+            un autre serveur ou a tout de même tenté de se connecter sur celui
+            correspondant au cookie.
+
+        V : le client a présenté un cookie VALIDE et a pu se connecter au
+            serveur correspondant.
+
+        - : non appliquable (pas de cookie positionné dans la configuration).
 
   - le dernier caractère indique l'éventuel traitement effectué sur un cookie de
     persistence retrourné par le serveur (uniquement en mode HTTP) :
 
-        N : aucun cookie de persistence n'a été fourni par le serveur.
-        P : un cookie de persistence a été fourni par le serveur et transmis
-	    tel quel.
-	I : aucun cookie n'a été fourni par le serveur, il a été inséré par le
-	    proxy.
-	D : le cookie présenté par le serveur a été supprimé par le proxy pour
-	    ne pas être retourné au client.
-	R : le cookie retourné par le serveur a été modifié par le proxy.
-	- : non appliquable
+        N : aucun cookie de persistance n'a été fourni par le serveur, et aucun
+            n'a été inséré.
 
-Le mot clé "capture" permet d'ajouter dans des logs HTTP des informations
-capturées dans les échanges. La version 1.1.17 supporte uniquement une capture
-de cookies client et serveur, ce qui permet dans bien des cas, de reconstituer
-la session d'un utilisateur. La syntaxe est la suivante :
+        I : aucun cookie de persistance n'a été fourni par le serveur, et le
+            proxy en a INSERE un.
+
+        P : un cookie de persistence a été fourni par le serveur et transmis
+            tel quel ("PASSIF").
+
+        R : le cookie retourné par le serveur a été REECRIT par le proxy.
+
+        D : le cookie présenté par le serveur a été DETRUIT par le proxy pour
+            ne pas être retourné au client.
+
+        - : non appliquable
+
+
+La combinaison des deux premiers indicateurs fournit une grande quantitié
+d'informations sur ce qui se passait lorsque la session s'est terminée. Cela
+peut notamment aider à détecter une saturation de serveur, des troubles réseau,
+des épuisements de ressources système locales, des attaques, etc...
+
+Les combinaisons d'indicateurs les plus fréquentes sont énumérées ici.
+
+   Indic  Raison
+      CR  Le client a abandonné avant d'émettre une requête complète. Il est
+          très probable que la requête ait été tapée à la main dans un client
+          telnet et abortée trop tôt.
+
+      cR  Le temps imparti au client a expiré avant réception d'une requête
+          complète. Ceci est parfois causé par un paramètre TCP MSS trop élevé
+          sur le client pour des réseaux PPPoE sur ADSL qui ne peuvent pas
+          transporter des paquets entiers, ou par des clients qui énvoient des
+          requêtes à la main et ne tapent pas assez vite.
+
+      SC  Le serveur a explicitement refusé la connexion (le proxy a reçu un
+          RST TCP ou un message ICMP en retour). Dans certains cas, cela peut
+          être la couche réseau qui indique au proxy que le serveur n'est pas
+          joignable (p.ex: pas de route, pas de réponse ARP en local, etc...)
+
+      sC  La connexion au serveur n'a pas pu s'établir dans le temps imparti.
+
+      PC  Le proxy a refusé d'établir une connexion au serveur parce que le
+          nombre de connexions a atteint la limite 'maxconn' (global ou de
+          l'instance). Le paramètre 'maxconn' de l'instance pourrait être
+          augmenté, tout comme le paramètre 'maxconn' global.
+
+      RC  Une ressource locale a été épuisée (mémoire, sockets, ports source),
+          empêchant la connexion au serveur de s'établir. Les logs d'erreurs
+          diront précisément ce qui manquait. Dans tous les cas, le seul remède
+          consiste à affiner le paramétrage système.
+
+      cH  Le temps imparti au client a expiré au cours d'une requête POST. Ceci
+          est parfois causé par un paramètre TCP MSS trop élevé sur le client
+          pour des réseaux PPPoE sur ADSL qui ne peuvent pas transporter des
+          paquets entiers.
+
+      SH  Le serveur a aborté brutalement alors qu'il devait envoyer ses
+          en-têtes. En général, cela indique qu'il a crashé.
+
+      sH  Le serveur n'a pas pu répondre durant le temps imparti, ce qui montre
+          des transactions trop longues, probablement causées par un back-end
+          saturé. Les seules solutions sont de corriger le problème sur
+          l'application, d'accroître le paramètre 'srvtimeout' pour supporter
+          des attentes plus longues au risque que les clients abandonnent à
+          leur tour, ou bien d'ajouter des serveurs.
+      
+      PR  Le proxy a bloqué une requête du client, soit à cause d'une syntaxe
+          HTTP invalide, auquel cas il a renvoyé une erreur HTTP 400 au client,
+          soit à cause d'une requête validant un filtre d'interdiction, auquel
+          cas le proxy a renvoyé une erreur HTTP 403.
+
+      PH  Le proxy a bloqué la réponse du serveur parce qu'elle était invalide,
+          incomplète, dangereuse ('cache control'), ou parce qu'elle validait
+          un filtre de sécurité. Dans tous les cas, une erreur HTTP 502 est
+          renvoyée au client.
+
+      cD  Le client n'a pas lu de données pendant le temps qui lui était
+          imparti. Ceci est souvent causé par des problèmes réseau côté client.
+
+      CD  Le client a aborté sa connection de manière inattendue pendant le
+          transfert des données. Ceci est provoqué soit par le crash d'un
+          navigateur, ou par une session en HTTP keep-alive entre le serveur
+          et le client terminée en premier par le client.
+
+      sD  Le serveur n'a rien fait durant le temps imparti par le paramètre
+          'srvtimeout'. Ceci est souvent causé par des timeouts trop courts
+          sur des équipements de niveau 4 (firewalls, répartiteurs de charge)
+          situés entre le proxy et le serveur.
+
+4.2.5) Caractères non-imprimables
+---------------------------------
+Depuis la version 1.1.29, les caractères non-imprimables ne sont plus envoyés
+tels quels dans les lignes de logs, mais inscrits sous la forme de deux chiffres
+hexadécimaux, préfixés du caractère d'échappement '#'. Les seuls caractères
+dorénavant logués tels quels sont compris entre 32 et 126. Bien évidemment, le
+caractère d'échappement '#' est lui-même encodé afin de lever l'ambiguité. Il en
+est de même pour le caractère '"', ainsi que les caractères '{', '|' et '}' pour
+les en-têtes.
+
+4.2.6) Capture d'en-têtes HTTP et de cookies
+--------------------------------------------
+La version 1.1.23 a apporté la capture des cookies, et la version 1.1.29 la
+capture d'en-têtes. Tout ceci est effectué en utilisant le mot-clé 'capture'.
+
+Les captures de cookies facilitent le suivi et la reconstitution d'une session
+utilisateur. La syntaxe est la suivante :
 
     capture cookie <préfixe_cookie> len <longueur_capture>
+
+Ceci activera la capture de cookies à la fois dans les requêtes et dans les
+réponses. De cette manière, il devient facile de détecter lorsqu'un utilisateur
+bascule sur une nouvelle session par exemple, car le serveur lui réassignera un
+nouveau cookie.
 
 Le premier cookie dont le nom commencera par <préfixe_cookie> sera capturé, et
 transmis sous la forme "NOM=valeur", sans toutefois, excéder <longueur_capture>
@@ -1241,69 +1501,19 @@ Exemples :
     capture cookie vgnvisitor= len 32
 
 Dans les logs, le champ précédant l'indicateur de complétude contient le cookie
-positionné par le serveur, précédé du cookie positionné par le client. Chacun de
-ces champs est remplacé par le signe "-" lorsqu'aucun cookie n'est fourni par le
-client ou le serveur.
+positionné par le serveur, précédé du cookie positionné par le client. Chacun
+de ces champs est remplacé par le signe "-" lorsqu'aucun cookie n'est fourni
+par le client ou le serveur, ou lorsque l'option est désactivée..
 
-4.2.5) Exemples de logs
------------------------
-- haproxy[674]: 127.0.0.1:33319 [15/Oct/2003:08:31:57] relais-http Srv1 6559/7/147/6723 200 243 - - ---- "HEAD / HTTP/1.0"
-  => requête longue (6.5s) saisie à la main avec un client telnet. Le serveur a
-     répondu en 147 ms et la session s'est terminée normalement ('----')
-
-- haproxy[674]: 127.0.0.1:33320 [15/Oct/2003:08:32:17] relais-http Srv1 9/7/14/+30 200 +243 - - ---- "GET /image.iso HTTP/1.0"
-  => requête pour un long transfert. L'option 'logasap' était spécifiée donc le
-     log a été généré juste avant le transfert de données. Le serveur a répondu
-     en 14 ms, 243 octets d'entêtes ont été transférés au client, et le temps
-     total entre l'accept() et le premier octet de donnée est de 30 ms.
-
-- haproxy[674]: 127.0.0.1:33320 [15/Oct/2003:08:32:17] relais-http Srv1 9/7/14/30 502 243 - - PH-- "GET /cgi-bin/bug.cgi? HTTP/1.0"
-  => le proxy a bloqué une réponse du serveur soit à cause d'un filtre 'rspdeny'
-     ou 'rspideny', soit parce qu'il a détecté un risque de fuite sensible
-     d'informations risquant d'être cachées. Dans ce cas, la réponse est
-     remplacée par '502 bad gateway'.
-
-- haproxy[18113]: 127.0.0.1:34548 [15/Oct/2003:15:18:55] relais-http <NOSRV> -1/-1/-1/8490 -1 0 - - CR-- "" 
-  => Le client n'a pas envoyé sa requête et a refermé la connexion lui-même
-     ('C---') au bout de 8.5s, alors que le relais attendait l'entête ('-R--').
-     Aucune connexion n'a été envoyée vers le serveur.
-
-- haproxy[18113]: 127.0.0.1:34549 [15/Oct/2003:15:19:06] relais-http <NOSRV> -1/-1/-1/50001 408 0 - - cR-- "" 
-  => Le client n'a pas envoyé sa requête et son time-out a expiré ('c---') au
-     bout de 50s, alors que le relais attendait l'entête ('-R--'). Aucune
-     connexion n'a été envoyée vers le serveur, mais le relais a tout de même
-     pu renvoyer un message 408 au client.
-
-- haproxy[18989]: 127.0.0.1:34550 [15/Oct/2003:15:24:28] relais-tcp Srv1 0/5007 0 cD 
-  => log en mode 'tcplog'. Expiration du time-out côté client ('c----') au bout
-     de 5s.
-
-- haproxy[18989]: 10.0.0.1:34552 [15/Oct/2003:15:26:31] relais-http Srv1 3183/-1/-1/11215 503 0 - - SC-- "HEAD / HTTP/1.0" 
-  => La requête client met 3s à entrer (peut-être un problème réseau), et la
-     connexion ('SC--') vers le serveur échoue au bout de 4 tentatives de 2
-     secondes (retries 3 dans la conf), puis un code 503 est retourné au client.
-
-4.2.6) Caractères non-imprimables
----------------------------------
-Depuis la version 1.1.29, les caractères non-imprimables ne sont plus envoyés
-tels quels dans les lignes de logs, mais inscrits sous la forme de deux chiffres
-hexadécimaux, préfixés du caractère d'échappement '#'. Les seuls caractères
-dorénavant logués tels quels sont compris entre 32 et 126. Bien évidemment, le
-caractère d'échappement '#' est lui-même encodé afin de lever l'ambiguité. Il en
-est de même pour le caractère '"', ainsi que les caractères '{', '|' et '}' pour
-les en-têtes.
-
-4.2.7) Journalisation d'en-têtes
---------------------------------
-Depuis la version 1.1.29, il est désormais possible de conserver des extraits
-d'en-têtes HTTP dans les logs. On peut aussi bien extraire des en-têtes de la
-requête que de la réponse. C'est particulièrement pratique pour savoir à quel
-serveur virtuel une requête s'adressait, pour connaitre la longueur des données
-émises lors d'un POST, ou encore loguer un identifiant unique de requête
-positionné en amont. Dans la réponse, on peut chercher également à conserver des
-informations relatives à la taille annoncée de la réponse, le fonctionnement
-attendu du cache, ou encore la localisation d'un objet en cas de redirection.
-La syntaxe est la suivante :
+Les captures d'en-têtes ont un rôle complètement différent. Elles sont utiles
+pour suivre un identifiant de requête globalement unique positionné par un
+autre proxy en amont, pour journaliser les noms de serveurs virtuels, les types
+de clients web, la longueur des POST, les 'referrers', etc. Dans la réponse, on
+peut chercher des informations relatives à la longueur annoncée de la réponse,
+le fonctionnement attendu du cache, ou encore la localisation d'un objet en cas
+de redirection. Tout comme pour les captures de cookies, il est possible
+d'inclure les en-têtes de requêtes et de réponse simultanément. La syntaxe est
+la suivante :
 
     capture request  header <nom> len <longueur max>
     capture response header <nom> len <longueur max>
@@ -1329,29 +1539,71 @@ chacun séparés par une barre verticale '|', sans aucun espace. Les en-têtes de
 réponse sont présentés de la même manière, mais après un espace suivant le bloc
 d'en-tête de requête. Le tout précède la requête HTTP. Exemple :
 
-Config:
+  Config:
 
-     capture request  header Host len 20
-     capture request  header Content-Length len 10
-     capture request  header Referer len 20
-     capture response header Server len 20
-     capture response header Content-Length len 10
-     capture response header Cache-Control len 8
-     capture response header Via len 20
-     capture response header Location len 20
+    capture request  header Host len 20
+    capture request  header Content-Length len 10
+    capture request  header Referer len 20
+    capture response header Server len 20
+    capture response header Content-Length len 10
+    capture response header Cache-Control len 8
+    capture response header Via len 20
+    capture response header Location len 20
 
-Log :
+  Log :
 
-Aug  9 20:26:09 localhost haproxy[2022]: 127.0.0.1:34014 [09/Aug/2004:20:26:09] relais-http netcache 0/0/162/+162 200 +350 - - ---- {fr.adserver.yahoo.co||http://fr.f416.mail.} {|864|private||} "GET http://fr.adserver.yahoo.com/"
-Aug  9 20:30:46 localhost haproxy[2022]: 127.0.0.1:34020 [09/Aug/2004:20:30:46] relais-http netcache 0/0/182/+182 200 +279 - - ---- {w.ods.org||} {Formilux/0.1.8|3495|||} "GET http://w.ods.org/sytadin.html HTTP/1.1" 
-Aug  9 20:30:46 localhost haproxy[2022]: 127.0.0.1:34028 [09/Aug/2004:20:30:46] relais-http netcache 0/2/126/+128 200 +223 - - ---- {www.infotrafic.com||http://w.ods.org/syt} {Apache/2.0.40 (Red H|9068|||} "GET http://www.infotrafic.com/images/live/cartesidf/grandes/idf_ne.png HTTP/1.1" 
+    Aug  9 20:26:09 localhost haproxy[2022]: 127.0.0.1:34014 [09/Aug/2004:20:26:09] relais-http netcache 0/0/162/+162 200 +350 - - ---- {fr.adserver.yahoo.co||http://fr.f416.mail.} {|864|private||} "GET http://fr.adserver.yahoo.com/"
+    Aug  9 20:30:46 localhost haproxy[2022]: 127.0.0.1:34020 [09/Aug/2004:20:30:46] relais-http netcache 0/0/182/+182 200 +279 - - ---- {w.ods.org||} {Formilux/0.1.8|3495|||} "GET http://w.ods.org/sytadin.html HTTP/1.1" 
+    Aug  9 20:30:46 localhost haproxy[2022]: 127.0.0.1:34028 [09/Aug/2004:20:30:46] relais-http netcache 0/2/126/+128 200 +223 - - ---- {www.infotrafic.com||http://w.ods.org/syt} {Apache/2.0.40 (Red H|9068|||} "GET http://www.infotrafic.com/images/live/cartesidf/grandes/idf_ne.png HTTP/1.1" 
 
-4.3) Modification des entêtes HTTP
+4.2.7) Exemples de logs
+-----------------------
+- haproxy[674]: 127.0.0.1:33319 [15/Oct/2003:08:31:57] relais-http Srv1 6559/7/147/6723 200 243 - - ---- 3/5 "HEAD / HTTP/1.0"
+  => requête longue (6.5s) saisie à la main avec un client telnet. Le serveur a
+     répondu en 147 ms et la session s'est terminée normalement ('----')
+
+- haproxy[674]: 127.0.0.1:33320 [15/Oct/2003:08:32:17] relais-http Srv1 9/7/14/+30 200 +243 - - ---- 3/3 "GET /image.iso HTTP/1.0"
+  => requête pour un long transfert. L'option 'logasap' était spécifiée donc le
+     log a été généré juste avant le transfert de données. Le serveur a répondu
+     en 14 ms, 243 octets d'en-têtes ont été transférés au client, et le temps
+     total entre l'accept() et le premier octet de donnée est de 30 ms.
+
+- haproxy[674]: 127.0.0.1:33320 [15/Oct/2003:08:32:17] relais-http Srv1 9/7/14/30 502 243 - - PH-- 2/3 "GET /cgi-bin/bug.cgi? HTTP/1.0"
+  => le proxy a bloqué une réponse du serveur soit à cause d'un filtre 'rspdeny'
+     ou 'rspideny', soit parce qu'il a détecté un risque de fuite sensible
+     d'informations risquant d'être cachées. Dans ce cas, la réponse est
+     remplacée par '502 bad gateway'.
+
+- haproxy[18113]: 127.0.0.1:34548 [15/Oct/2003:15:18:55] relais-http <NOSRV> -1/-1/-1/8490 -1 0 - - CR-- 2/2 "" 
+  => Le client n'a pas envoyé sa requête et a refermé la connexion lui-même
+     ('C---') au bout de 8.5s, alors que le relais attendait l'en-tête ('-R--').
+     Aucune connexion n'a été envoyée vers le serveur.
+
+- haproxy[18113]: 127.0.0.1:34549 [15/Oct/2003:15:19:06] relais-http <NOSRV> -1/-1/-1/50001 408 0 - - cR-- 2/2 "" 
+  => Le client n'a pas envoyé sa requête et son time-out a expiré ('c---') au
+     bout de 50s, alors que le relais attendait l'en-tête ('-R--'). Aucune
+     connexion n'a été envoyée vers le serveur, mais le relais a tout de même
+     pu renvoyer un message 408 au client.
+
+- haproxy[18989]: 127.0.0.1:34550 [15/Oct/2003:15:24:28] relais-tcp Srv1 0/5007 0 cD
+  => log en mode 'tcplog'. Expiration du time-out côté client ('cD') au bout de
+     5s.
+
+- haproxy[18989]: 10.0.0.1:34552 [15/Oct/2003:15:26:31] relais-http Srv1 3183/-1/-1/11215 503 0 - - SC-- 202/205 "HEAD / HTTP/1.0" 
+  => La requête client met 3s à entrer (peut-être un problème réseau), et la
+     connexion ('SC--') vers le serveur échoue au bout de 4 tentatives de 2
+     secondes (retries 3 dans la conf), puis un code 503 est retourné au client.
+     Il y avait 202 connexions sur cette instance, et 205 sur l'ensemble des
+     instances pour ce processus. Il est possible que le serveur ait refusé la
+     connexion parce qu'il y en avait déjà trop d'établies.
+
+
+4.3) Modification des en-têtes HTTP
 ----------------------------------
 En mode HTTP uniquement, il est possible de remplacer certains en-têtes dans la
 requête et/ou la réponse à partir d'expressions régulières. Il est également
-possible de bloquer certaines requêtes en fonction du contenu des en-têtes ou de
-la requête. Une limitation cependant : les en-têtes fournis au milieu de
+possible de bloquer certaines requêtes en fonction du contenu des en-têtes ou
+de la requête. Une limitation cependant : les en-têtes fournis au milieu de
 connexions persistentes (keep-alive) ne sont pas vus car ils sont considérés
 comme faisant partie des échanges de données consécutifs à la première requête.
 Les données ne sont pas affectées, ceci ne s'applique qu'aux en-têtes. 
@@ -1362,11 +1614,11 @@ La syntaxe est :
    reqirep   <search> <replace>   idem sans distinction majuscules/minuscules
    reqdel    <search>             pour supprimer un en-tête dans la requête
    reqidel   <search>             idem sans distinction majuscules/minuscules
-   reqallow  <search>             autoriser la requête si un entête valide <search>
+   reqallow  <search>             autoriser la requête si un en-tête valide <search>
    reqiallow <search>             idem sans distinction majuscules/minuscules
-   reqdeny   <search>             interdire la requête si un entête valide <search>
+   reqdeny   <search>             interdire la requête si un en-tête valide <search>
    reqideny  <search>             idem sans distinction majuscules/minuscules
-   reqpass   <search>             inhibe ces actions sur les entêtes validant <search>
+   reqpass   <search>             inhibe ces actions sur les en-têtes validant <search>
    reqipass  <search>             idem sans distinction majuscules/minuscules
 
    rspadd   <string>              pour ajouter un en-tête dans la réponse
@@ -1375,7 +1627,7 @@ La syntaxe est :
    rspdel   <search>              pour supprimer un en-tête dans la réponse
    rspidel  <search>              idem sans distinction majuscules/minuscules
    rspdeny  <search>              remplace la réponse par un HTTP 502 si un
-				  entête valide <search>
+                                  en-tête valide <search>
    rspideny <search>              idem sans distinction majuscules/minuscules
 
 
@@ -1416,24 +1668,24 @@ Remarques :
     une requête ou une réponse est limité à 4096 depuis la version 1.1.5 (cette
     limite était à 256 auparavant). Cette valeur est modifiable dans le code.
     Pour un usage temporaire, on peut gagner de la place en supprimant quelques
-    entêtes inutiles avant les ajouts.
+    en-têtes inutiles avant les ajouts.
   - une requête bloquée produira une réponse "HTTP 403 forbidden" tandis qu'une
     réponse bloquée produira une réponse "HTTP 502 Bad gateway".
 
 Exemples :
 ----------
-	###### a few examples ######
+        ###### a few examples ######
 
-	# rewrite 'online.fr' instead of 'free.fr' for GET and POST requests
-	reqrep	^(GET\ .*)(.free.fr)(.*) \1.online.fr\3
-	reqrep	^(POST\ .*)(.free.fr)(.*) \1.online.fr\3
+        # rewrite 'online.fr' instead of 'free.fr' for GET and POST requests
+        reqrep        ^(GET\ .*)(.free.fr)(.*) \1.online.fr\3
+        reqrep        ^(POST\ .*)(.free.fr)(.*) \1.online.fr\3
 
-	# force proxy connections to close
-	reqirep	^Proxy-Connection:.*	Proxy-Connection:\ close
-	# rewrite locations
-	rspirep	^(Location:\ )([^:]*://[^/]*)(.*) \1\3
+        # force proxy connections to close
+        reqirep        ^Proxy-Connection:.*        Proxy-Connection:\ close
+        # rewrite locations
+        rspirep        ^(Location:\ )([^:]*://[^/]*)(.*) \1\3
 
-	###### A full configuration being used on production ######
+        ###### A full configuration being used on production ######
 
         # Every header should end with a colon followed by one space.
         reqideny        ^[^:\ ]*[\ ]*$
@@ -1454,9 +1706,9 @@ Exemples :
         reqideny        ^[^:\ ]*\ 
 
         # force connection:close, thus disabling HTTP keep-alive
-	option		httpclos
+        option                httpclos
 
-	# change the server name
+        # change the server name
         rspidel         ^Server:\ 
         rspadd          Server:\ Formilux/0.1.8
 
@@ -1466,19 +1718,19 @@ De plus, l'option 'forwardfor' ajoute l'adresse IP du client dans un champ
 connaître l'adresse IP du client initial.
 
 Enfin, l'option 'httpclose' apparue dans la version 1.1.28/1.2.1 supprime tout
-entête de type 'Connection:' et ajoute 'Connection: close' dans les deux sens.
+en-tête de type 'Connection:' et ajoute 'Connection: close' dans les deux sens.
 Ceci simplifie la désactivation du keep-alive HTTP par rapport à l'ancienne
 méthode impliquant 4 règles.
 
 Exemple :
 ---------
     listen http_proxy 0.0.0.0:80
-	mode http
-	log  global
-	option httplog
-	option dontlognull
-	option forwardfor
-	option httpclose
+        mode http
+        log  global
+        option httplog
+        option dontlognull
+        option forwardfor
+        option httpclose
 
 4.4) Répartition avec persistence
 ---------------------------------
@@ -1494,11 +1746,11 @@ pratiquement transparente pour les applications. Le principe est simple :
 Exemple :
 ---------
     listen application 0.0.0.0:80
-	mode http
-	cookie SERVERID insert nocache indirect
-	balance roundrobin
-	server srv1 192.168.1.1:80 cookie server01 check
-	server srv2 192.168.1.2:80 cookie server02 check
+        mode http
+        cookie SERVERID insert nocache indirect
+        balance roundrobin
+        server srv1 192.168.1.1:80 cookie server01 check
+        server srv2 192.168.1.2:80 cookie server02 check
 
 L'autre solution apportée par les versions 1.1.30 et 1.2.3 est de réutiliser un
 cookie en provenance du serveur et de lui préfixer l'identifiant du serveur.
@@ -1517,31 +1769,31 @@ puisse corriger le nom du cookie dans toutes les futures requêtes.
 
 4.5) Protection contre les fuites d'informations du serveur
 -----------------------------------------------------------
-Dans les versions 1.1.28 et 1.2.1, une nouvelle option 'checkcache' a été créée.
-Elle sert à inspecter minutieusement les entêtes 'Cache-control', 'Pragma', et
-'Set-cookie' dans les réponses serveur pour déterminer s'il y a un risque de
-cacher un cookie sur un proxy côté client. Quand cette option est activée, les
-seules réponses qui peuvent être retournées au client sont :
-  - toutes celles qui n'ont pas d'entête 'Set-cookie' ;
+Dans les versions 1.1.28 et 1.2.1, une nouvelle option 'checkcache' a été
+créée. Elle sert à inspecter minutieusement les en-têtes 'Cache-control',
+'Pragma', et 'Set-cookie' dans les réponses serveur pour déterminer s'il y a
+un risque de cacher un cookie sur un proxy côté client. Quand cette option est
+activée, les seules réponses qui peuvent être retournées au client sont :
+  - toutes celles qui n'ont pas d'en-tête 'Set-cookie' ;
   - toutes celles qui ont un code de retour autre que 200, 203, 206, 300, 301, 
-    410, sauf si le server a positionné un entête 'Cache-control: public' ;
+    410, sauf si le serveur a positionné un en-tête 'Cache-control: public' ;
   - celles qui font suite à une requête POST, sauf si le serveur a positionné
-    un entête 'Cache-control: public' ;
-  - celles qui ont un entête 'Pragma: no-cache' ;
-  - celles qui ont un entête 'Cache-control: private' ; 
-  - celles qui ont un entête 'Cache-control: no-store' ; 
-  - celles qui ont un entête 'Cache-control: max-age=0' ;
-  - celles qui ont un entête 'Cache-control: s-maxage=0' ;
-  - celles qui ont un entête 'Cache-control: no-cache' ;
-  - celles qui ont un entête 'Cache-control: no-cache="set-cookie"' ;
-  - celles qui ont un entête 'Cache-control: no-cache="set-cookie,'
+    un en-tête 'Cache-control: public' ;
+  - celles qui ont un en-tête 'Pragma: no-cache' ;
+  - celles qui ont un en-tête 'Cache-control: private' ; 
+  - celles qui ont un en-tête 'Cache-control: no-store' ; 
+  - celles qui ont un en-tête 'Cache-control: max-age=0' ;
+  - celles qui ont un en-tête 'Cache-control: s-maxage=0' ;
+  - celles qui ont un en-tête 'Cache-control: no-cache' ;
+  - celles qui ont un en-tête 'Cache-control: no-cache="set-cookie"' ;
+  - celles qui ont un en-tête 'Cache-control: no-cache="set-cookie,'
     (autorisant d'autres champs après set-cookie).
 
 Si une réponse ne respecte pas ces pré-requis, alors elle sera bloquée de la
 même manière que s'il s'agissait d'un filtre 'rspdeny', avec en retour un
 message "HTTP 502 bad gateway". L'état de session montre "PH--" ce qui veut
 dire que c'est le proxy qui a bloqué la réponse durant le traitement des
-entêtes. De plus, un message d'alerte sera envoyé dans les logs de sorte que
+en-têtes. De plus, un message d'alerte sera envoyé dans les logs de sorte que
 l'administrateur sache qu'il y a une action correctrice à entreprendre.
 
 4.6) Personalisation des erreurs
@@ -1557,7 +1809,7 @@ Certaines situations conduisent à retourner une erreur HTTP au client :
 
 Un message d'erreur succint tiré de la RFC accompagne ces codes de retour.
 Cependant, en fonction du type de clientèle, on peut préférer retourner des
-pages personnalisées. Ceci est possible par le biais de la commande "errorloc" :
+pages personnalisées. Ceci est possible par le biais de la commande "errorloc":
 
     errorloc <code_HTTP> <location>
 
@@ -1573,7 +1825,7 @@ Exemple :
         errorloc 400 /badrequest.html
         errorloc 403 /forbidden.html
         errorloc 408 /toolong.html
-	errorloc 500 http://haproxy.domain.net/bugreport.html
+        errorloc 500 http://haproxy.domain.net/bugreport.html
         errorloc 502 http://192.168.114.58/error50x.html
         errorloc 503 http://192.168.114.58/error50x.html
         errorloc 504 http://192.168.114.58/error50x.html
@@ -1586,8 +1838,8 @@ dans le champ Location avec la méthode GET uniquement. Seulement, certains
 navigateurs antérieurs à HTTP/1.1 ne connaissent pas ce code de retour. De
 plus, la plupart des navigateurs se comportent déjà avec le code 302 comme ils
 devraient le faire avec le 303. Donc, dans le but de laisser le choix à
-l'utilisateur, la version 1.1.31 apporte deux nouvelles commandes visant à
-remplacer 'errorloc' : 'errorloc302' et 'errorloc303'.
+l'utilisateur, les versions 1.1.31 et 1.2.5 apportent deux nouvelles commandes
+visant à remplacer 'errorloc' : 'errorloc302' et 'errorloc303'.
 
 Leur usage non ambigü est recommandé à la place de la commande 'errorloc' (qui
 utilise toujours 302). Dans le doute, préférez l'utilisation de 'errorloc303'
@@ -1595,9 +1847,9 @@ dès que vous savez que vos clients supportent le code de retour HTTP 303.
 
 4.7) Changement des valeurs par défaut
 --------------------------------------
-Dans la version 1.1.22 est apparue la notion de valeurs par défaut, ce qui évite
-de répéter des paramètres communs à toutes les instances, tels que les timeouts,
-adresses de log, modes de fonctionnement, etc.
+Dans la version 1.1.22 est apparue la notion de valeurs par défaut, ce qui
+évite de répéter des paramètres communs à toutes les instances, tels que les
+timeouts, adresses de log, modes de fonctionnement, etc.
 
 Les valeurs par défaut sont positionnées dans la dernière section 'defaults'
 précédent l'instance qui les utilisera. On peut donc mettre autant de sections
@@ -1637,43 +1889,43 @@ paramètres par défaut avant la déclaration de l'instance.
 Exemples :
 ----------
     defaults applications TCP
-	log global
-	mode tcp
-	balance roundrobin
-	clitimeout 180000
-	srvtimeout 180000
-	contimeout 4000
-	retries 3
-	redispatch
+        log global
+        mode tcp
+        balance roundrobin
+        clitimeout 180000
+        srvtimeout 180000
+        contimeout 4000
+        retries 3
+        redispatch
 
     listen app_tcp1 10.0.0.1:6000-6063
-	server srv1 192.168.1.1 check port 6000 inter 10000
-	server srv2 192.168.1.2 backup
+        server srv1 192.168.1.1 check port 6000 inter 10000
+        server srv2 192.168.1.2 backup
 
     listen app_tcp2 10.0.0.2:6000-6063
-	server srv1 192.168.2.1 check port 6000 inter 10000
-	server srv2 192.168.2.2 backup
+        server srv1 192.168.2.1 check port 6000 inter 10000
+        server srv2 192.168.2.2 backup
     
     defaults applications HTTP
-	log global
-	mode http
-	option httplog
-	option forwardfor
-	option dontlognull
-	balance roundrobin
-	clitimeout 20000
-	srvtimeout 20000
-	contimeout 4000
-	retries 3
+        log global
+        mode http
+        option httplog
+        option forwardfor
+        option dontlognull
+        balance roundrobin
+        clitimeout 20000
+        srvtimeout 20000
+        contimeout 4000
+        retries 3
 
     listen app_http1 10.0.0.1:80-81
-	cookie SERVERID postonly insert indirect
-	capture cookie userid= len 10
-	server srv1 192.168.1.1:+8000 cookie srv1 check port 8080 inter 1000
-	server srv1 192.168.1.2:+8000 cookie srv2 check port 8080 inter 1000
+        cookie SERVERID postonly insert indirect
+        capture cookie userid= len 10
+        server srv1 192.168.1.1:+8000 cookie srv1 check port 8080 inter 1000
+        server srv1 192.168.1.2:+8000 cookie srv2 check port 8080 inter 1000
 
     defaults
-	# section vide qui annule tous les paramètes par défaut.
+        # section vide qui annule tous les paramètes par défaut.
 
 =======================
 | Paramétrage système |
@@ -1690,15 +1942,15 @@ echo $MAXFILES > /proc/sys/fs/file-max
 ulimit -n $MAXFILES
 
 if [ -e /proc/sys/net/ipv4/ip_conntrack_max ]; then
-	echo 65536 > /proc/sys/net/ipv4/ip_conntrack_max
+        echo 65536 > /proc/sys/net/ipv4/ip_conntrack_max
 fi
 
 if [ -e /proc/sys/net/ipv4/netfilter/ip_ct_tcp_timeout_fin_wait ]; then
-	# 30 seconds for fin, 15 for time wait
-	echo 3000 > /proc/sys/net/ipv4/netfilter/ip_ct_tcp_timeout_fin_wait
-	echo 1500 > /proc/sys/net/ipv4/netfilter/ip_ct_tcp_timeout_time_wait
-	echo 0 > /proc/sys/net/ipv4/netfilter/ip_ct_tcp_log_invalid_scale
-	echo 0 > /proc/sys/net/ipv4/netfilter/ip_ct_tcp_log_out_of_window
+        # 30 seconds for fin, 15 for time wait
+        echo 3000 > /proc/sys/net/ipv4/netfilter/ip_ct_tcp_timeout_fin_wait
+        echo 1500 > /proc/sys/net/ipv4/netfilter/ip_ct_tcp_timeout_time_wait
+        echo 0 > /proc/sys/net/ipv4/netfilter/ip_ct_tcp_log_invalid_scale
+        echo 0 > /proc/sys/net/ipv4/netfilter/ip_ct_tcp_log_out_of_window
 fi
 
 echo 1024 60999 > /proc/sys/net/ipv4/ip_local_port_range
@@ -1710,7 +1962,7 @@ echo 300 > /proc/sys/net/ipv4/tcp_keepalive_time
 echo 1 > /proc/sys/net/ipv4/tcp_tw_recycle
 echo 0 > /proc/sys/net/ipv4/tcp_timestamps
 echo 0 > /proc/sys/net/ipv4/tcp_ecn
-echo 0 > /proc/sys/net/ipv4/tcp_sack
+echo 1 > /proc/sys/net/ipv4/tcp_sack
 echo 0 > /proc/sys/net/ipv4/tcp_dsack
 
 # auto-tuned on 2.4

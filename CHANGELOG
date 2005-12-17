@@ -1,6 +1,9 @@
 ChangeLog :
 ===========
 
+2005/07/06 : 1.1.32
+  - added the number of active sessions (proxy/process) in the logs
+
 2005/07/06 : 1.1.32-pre5
   - fixed build on PPC where chars are unsigned by default (from 1.2.5.2)
 

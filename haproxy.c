@@ -59,7 +59,7 @@
 #endif
 
 #define HAPROXY_VERSION "1.1.32"
-#define HAPROXY_DATE	"2005/07/05"
+#define HAPROXY_DATE	"2005/07/06"
 
 /* this is for libc5 for example */
 #ifndef TCP_NODELAY
@@ -2269,7 +2269,7 @@ void sess_log(struct session *s) {
 	}
 	*h = '\0';
 
-	send_log(p, LOG_INFO, "%d.%d.%d.%d:%d [%02d/%s/%04d:%02d:%02d:%02d] %s %s %d/%d/%d/%s%d %d %s%lld %s %s %c%c%c%c%s\n",
+	send_log(p, LOG_INFO, "%d.%d.%d.%d:%d [%02d/%s/%04d:%02d:%02d:%02d] %s %s %d/%d/%d/%s%d %d %s%lld %s %s %c%c%c%c %d/%d%s\n",
 		 pn[0], pn[1], pn[2], pn[3], ntohs(s->cli_addr.sin_port),
 		 tm->tm_mday, monthname[tm->tm_mon], tm->tm_year+1900,
 		 tm->tm_hour, tm->tm_min, tm->tm_sec,
@@ -2286,10 +2286,10 @@ void sess_log(struct session *s) {
 		 sess_fin_state[(s->flags & SN_FINST_MASK) >> SN_FINST_SHIFT],
 		 (p->options & PR_O_COOK_ANY) ? sess_cookie[(s->flags & SN_CK_MASK) >> SN_CK_SHIFT] : '-',
 		 (p->options & PR_O_COOK_ANY) ? sess_set_cookie[(s->flags & SN_SCK_MASK) >> SN_SCK_SHIFT] : '-',
-		 tmpline);
+		 p->nbconn, actconn, tmpline);
     }
     else {
-	send_log(p, LOG_INFO, "%d.%d.%d.%d:%d [%02d/%s/%04d:%02d:%02d:%02d] %s %s %d/%s%d %s%lld %c%c\n",
+	send_log(p, LOG_INFO, "%d.%d.%d.%d:%d [%02d/%s/%04d:%02d:%02d:%02d] %s %s %d/%s%d %s%lld %c%c %d/%d\n",
 		 pn[0], pn[1], pn[2], pn[3], ntohs(s->cli_addr.sin_port),
 		 tm->tm_mday, monthname[tm->tm_mon], tm->tm_year+1900,
 		 tm->tm_hour, tm->tm_min, tm->tm_sec,
@@ -2298,7 +2298,8 @@ void sess_log(struct session *s) {
 		 (p->to_log & LW_BYTES) ? "" : "+", s->logs.t_close,
 		 (p->to_log & LW_BYTES) ? "" : "+", s->logs.bytes,
 		 sess_term_cond[(s->flags & SN_ERR_MASK) >> SN_ERR_SHIFT],
-		 sess_fin_state[(s->flags & SN_FINST_MASK) >> SN_FINST_SHIFT]);
+		 sess_fin_state[(s->flags & SN_FINST_MASK) >> SN_FINST_SHIFT],
+		 p->nbconn, actconn);
     }
 
     s->logs.logwait = 0;
