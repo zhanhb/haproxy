@@ -1595,7 +1595,7 @@ static int maintain_proxies(void);
 /* this either returns the sockname or the original destination address. Code
  * inspired from Patrick Schaaf's example of nf_getsockname() implementation.
  */
-static int get_original_dst(int fd, struct sockaddr_in *sa, int *salen) {
+static int get_original_dst(int fd, struct sockaddr_in *sa, socklen_t *salen) {
 #if defined(TPROXY) && defined(SO_ORIGINAL_DST)
     return getsockopt(fd, SOL_IP, SO_ORIGINAL_DST, (void *)sa, salen);
 #else
@@ -1709,7 +1709,8 @@ int connect_server(struct session *s) {
     }
     else if (s->proxy->options & PR_O_TRANSP) {
 	/* in transparent mode, use the original dest addr if no dispatch specified */
-	int salen = sizeof(struct sockaddr_in);
+	socklen_t salen = sizeof(s->srv_addr);
+
 	if (get_original_dst(s->cli_fd, &s->srv_addr, &salen) == -1) {
 	    qfprintf(stderr, "Cannot get original server address.\n");
 	    return SN_ERR_INTERNAL;
@@ -1720,9 +1721,8 @@ int connect_server(struct session *s) {
      * the port the client connected to with an offset. */
     if (s->srv != NULL && s->srv->state & SRV_MAPPORTS) {
 	struct sockaddr_in sockname;
-	int namelen;
+	socklen_t namelen = sizeof(sockname);
 
-	namelen = sizeof(sockname);
 	if (get_original_dst(s->cli_fd, (struct sockaddr_in *)&sockname, &namelen) == -1)
 	    getsockname(s->cli_fd, (struct sockaddr *)&sockname, &namelen);
 	s->srv_addr.sin_port = htons(ntohs(s->srv_addr.sin_port) + ntohs(sockname.sin_port));
@@ -1871,9 +1871,9 @@ int event_cli_read(int fd) {
 	    
 #ifndef MSG_NOSIGNAL
 	    {
-		int skerr, lskerr;
-		
-		lskerr = sizeof(skerr);
+		int skerr;
+		socklen_t lskerr = sizeof(skerr);
+
 		getsockopt(fd, SOL_SOCKET, SO_ERROR, &skerr, &lskerr);
 		if (skerr)
 		    ret = -1;
@@ -2348,7 +2348,8 @@ int event_accept(int fd) {
 
     while (p->nbconn < p->maxconn) {
 	struct sockaddr_in addr;
-	int laddr = sizeof(addr);
+	socklen_t laddr = sizeof(addr);
+
 	if ((cfd = accept(fd, (struct sockaddr *)&addr, &laddr)) == -1) {
 	    switch (errno) {
 	    case EAGAIN:
@@ -2495,10 +2496,9 @@ int event_accept(int fd) {
 	if ((p->mode == PR_MODE_TCP || p->mode == PR_MODE_HTTP)
 	    && (p->logfac1 >= 0 || p->logfac2 >= 0)) {
 	    struct sockaddr_in sockname;
+	    socklen_t namelen = sizeof(sockname);
 	    unsigned char *pn, *sn;
-	    int namelen;
 
-	    namelen = sizeof(sockname);
 	    if (get_original_dst(cfd, (struct sockaddr_in *)&sockname, &namelen) == -1)
 		getsockname(cfd, (struct sockaddr *)&sockname, &namelen);
 	    sn = (unsigned char *)&sockname.sin_addr;
@@ -2519,11 +2519,10 @@ int event_accept(int fd) {
 
 	if ((global.mode & MODE_DEBUG) && (!(global.mode & MODE_QUIET) || (global.mode & MODE_VERBOSE))) {
 	    struct sockaddr_in sockname;
+	    socklen_t namelen = sizeof(sockname);
 	    unsigned char *pn, *sn;
-	    int namelen;
 	    int len;
 
-	    namelen = sizeof(sockname);
 	    if (get_original_dst(cfd, (struct sockaddr_in *)&sockname, &namelen) == -1)
 		getsockname(cfd, (struct sockaddr *)&sockname, &namelen);
 	    sn = (unsigned char *)&sockname.sin_addr;
