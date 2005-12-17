@@ -1,6 +1,6 @@
 Summary: HA-Proxy is a TCP/HTTP reverse proxy for high availability environments
 Name: haproxy
-Version: 1.1.29
+Version: 1.1.30
 Release: 1
 License: GPL
 Group: System Environment/Daemons
@@ -65,13 +65,16 @@ fi
 
 %files
 %defattr(-,root,root)
-%doc CHANGELOG TODO examples
+%doc CHANGELOG TODO examples doc/haproxy-en.txt doc/haproxy-fr.txt doc/architecture.txt
 %attr(0755,root,root) %{_sbindir}/%{name}
 %dir %{_sysconfdir}/%{name}
 %attr(0644,root,root) %config(noreplace) %{_sysconfdir}/%{name}/%{name}.cfg
 %attr(0755,root,root) %config %{_sysconfdir}/rc.d/init.d/%{name}
 
 %changelog
+* Sat Jan 22 2005 Willy Tarreau <willy@w.ods.org>
+- updated to 1.1.30
+
 * Sun Nov 14 2004 Willy Tarreau <w@w.ods.org>
 - updated to 1.1.29
 - fixed path to config and init files
