@@ -1,6 +1,9 @@
 ChangeLog :
 ===========
 
+2005/04/30 : 1.1.31
+  - changed default FD_SETSIZE to 65536 on Solaris (default=1024)
+
 2005/04/24 : 1.1.31-pre2
   - implemented the HTTP 303 code for error redirection. This forces the
     browser to fetch the given URI with a GET request. The new keyword for

@@ -59,7 +59,7 @@
 #endif
 
 #define HAPROXY_VERSION "1.1.31"
-#define HAPROXY_DATE	"2005/04/24"
+#define HAPROXY_DATE	"2005/04/30"
 
 /* this is for libc5 for example */
 #ifndef TCP_NODELAY
@@ -502,7 +502,7 @@ struct proxy {
     struct server *srv, *cursrv;	/* known servers, current server */
     int nbservers;			/* # of servers */
     char *cookie_name;			/* name of the cookie to look for */
-    int  cookie_len;			/* strlen(cookie_len), computed only once */
+    int  cookie_len;			/* strlen(cookie_name), computed only once */
     char *capture_name;			/* beginning of the name of the cookie to capture */
     int  capture_namelen;		/* length of the cookie name to match */
     int  capture_len;			/* length of the string to be captured */
