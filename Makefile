@@ -15,9 +15,11 @@ CPU = generic
 #CPU = i686
 #CPU = ultrasparc
 
-# By default, we use libc's regex.
+# By default, we use libc's regex. WARNING! On Solaris 8/Sparc, group
+# references seem broken using libc ! Use pcre instead.
 REGEX=libc
 #REGEX=pcre
+#REGEX=static-pcre
 
 # tools options
 CC = gcc
@@ -57,24 +59,36 @@ LIBS.libc=
 COPTS.pcre=-DUSE_PCRE -I$(PCREDIR)/include
 LIBS.pcre=-L$(PCREDIR)/lib -lpcreposix -lpcre
 
+# options for static libpcre
+COPTS.static-pcre=-DUSE_PCRE -I$(PCREDIR)/include
+LIBS.static-pcre=-L$(PCREDIR)/lib -Wl,-Bstatic -lpcreposix -lpcre -Wl,-Bdynamic
+
 # you can enable debug arguments with "DEBUG=-g" or disable them with "DEBUG="
 #DEBUG =
 DEBUG = -g
 
 # if small memory footprint is required, you can reduce the buffer size. There
 # are 2 buffers per concurrent session, so 16 kB buffers will eat 32 MB memory
-# with 1000 concurrent sessions.
-#SMALL_OPTS = -DBUFSIZE=8192 -DMAXREWRITE=1024
+# with 1000 concurrent sessions. Putting it slightly lower than a page size
+# will avoid the additionnal paramters to overflow a page.
+#SMALL_OPTS = -DBUFSIZE=8100 -DMAXREWRITE=1000
 SMALL_OPTS =
 
+# redefine this if you want to add some special PATH to include/libs
+ADDINC =
+ADDLIB =
+
+# set some defines when needed.
+# Known ones are -DENABLE_POLL, -DENABLE_EPOLL, and -DUSE_MY_EPOLL
+DEFINE =
 
 # global options
 TARGET_OPTS=$(COPTS.$(TARGET))
 REGEX_OPTS=$(COPTS.$(REGEX))
 CPU_OPTS=$(COPTS.$(CPU))
 
-COPTS=$(CPU_OPTS) $(TARGET_OPTS) $(REGEX_OPTS) $(SMALL_OPTS)
-LIBS=$(LIBS.$(TARGET)) $(LIBS.$(REGEX))
+COPTS=$(ADDINC) $(CPU_OPTS) $(TARGET_OPTS) $(REGEX_OPTS) $(SMALL_OPTS) $(DEFINE)
+LIBS=$(LIBS.$(TARGET)) $(LIBS.$(REGEX)) $(ADDLIB)
 
 # - use -DSTATTIME=0 to disable statistics, else specify an interval in
 #   milliseconds.
