@@ -58,7 +58,7 @@
 #include <linux/netfilter_ipv4.h>
 #endif
 
-#define HAPROXY_VERSION "1.1.32-pre2"
+#define HAPROXY_VERSION "1.1.32-pre3"
 #define HAPROXY_DATE	"2005/07/05"
 
 /* this is for libc5 for example */
@@ -300,11 +300,14 @@ int strlcpy2(char *dst, const char *src, int size) {
 #define	SN_CK_MASK	0x000000C0	/* mask to get this session's cookie flags */
 #define SN_CK_SHIFT	6		/* bit shift */
 
+#define SN_ERR_NONE     0x00000000
 #define SN_ERR_CLITO	0x00000100	/* client time-out */
 #define SN_ERR_CLICL	0x00000200	/* client closed (read/write error) */
 #define SN_ERR_SRVTO	0x00000300	/* server time-out, connect time-out */
 #define SN_ERR_SRVCL	0x00000400	/* server closed (connect/read/write error) */
 #define SN_ERR_PRXCOND	0x00000500	/* the proxy decided to close (deny...) */
+#define SN_ERR_RESOURCE	0x00000600	/* the proxy encountered a lack of a local resources (fd, mem, ...) */
+#define SN_ERR_INTERNAL	0x00000700	/* the proxy encountered an internal error */
 #define SN_ERR_MASK	0x00000700	/* mask to get only session error flags */
 #define SN_ERR_SHIFT	8		/* bit shift */
 
@@ -654,7 +657,7 @@ const char *log_levels[NB_LOG_LEVELS] = {
 const char *monthname[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
 			     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
 
-const char sess_term_cond[8]  = "-cCsSP67";	/* normal, CliTo, CliErr, SrvTo, SrvErr, PxErr, unknown */
+const char sess_term_cond[8]  = "-cCsSPRI";	/* normal, CliTo, CliErr, SrvTo, SrvErr, PxErr, Resource, Internal */
 const char sess_fin_state[8]  = "-RCHDL67";	/* cliRequest, srvConnect, srvHeader, Data, Last, unknown */
 const char sess_cookie[4]     = "NIDV";		/* No cookie, Invalid cookie, cookie for a Down server, Valid cookie */
 const char sess_set_cookie[8] = "N1I3PD5R";	/* No set-cookie, unknown, Set-Cookie Inserted, unknown,
@@ -1637,8 +1640,15 @@ static inline struct server *find_server(struct proxy *px) {
 
 /*
  * This function initiates a connection to the current server (s->srv) if (s->direct)
- * is set, or to the dispatch server if (s->direct) is 0. It returns 0 if
- * it's OK, -1 if it's impossible.
+ * is set, or to the dispatch server if (s->direct) is 0.
+ * It can return one of :
+ *  - SN_ERR_NONE if everything's OK
+ *  - SN_ERR_SRVTO if there are no more servers
+ *  - SN_ERR_SRVCL if the connection was refused by the server
+ *  - SN_ERR_PRXCOND if the connection has been limited by the proxy (maxconn)
+ *  - SN_ERR_RESOURCE if a system resource is lacking (eg: fd limits, ports, ...)
+ *  - SN_ERR_INTERNAL for any other purely internal errors
+ * Additionnally, in the case of SN_ERR_RESOURCE, an emergency log will be emitted.
  */
 int connect_server(struct session *s) {
     int fd;
@@ -1655,14 +1665,14 @@ int connect_server(struct session *s) {
 	    srv = find_server(s->proxy);
 
 	    if (srv == NULL) /* no server left */
-		return -1;
+		return SN_ERR_SRVTO;
 
 	    s->srv_addr = srv->addr;
 	    s->srv = srv;
 	    s->proxy->cursrv = srv->next;
 	}
 	else /* unknown balancing algorithm */
-	    return -1;
+	    return SN_ERR_INTERNAL;
     }
     else if (*(int *)&s->proxy->dispatch_addr.sin_addr) {
 	/* connect to the defined dispatch addr */
@@ -1673,7 +1683,7 @@ int connect_server(struct session *s) {
 	int salen = sizeof(struct sockaddr_in);
 	if (get_original_dst(s->cli_fd, &s->srv_addr, &salen) == -1) {
 	    qfprintf(stderr, "Cannot get original server address.\n");
-	    return -1;
+	    return SN_ERR_INTERNAL;
 	}
     }
 
@@ -1691,20 +1701,37 @@ int connect_server(struct session *s) {
 
     if ((fd = s->srv_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) == -1) {
 	qfprintf(stderr, "Cannot get a server socket.\n");
-	return -1;
+
+	if (errno == ENFILE)
+	    send_log(s->proxy, LOG_EMERG,
+		     "Proxy %s reached system FD limit at %d. Please check system tunables.\n",
+		     s->proxy->id, maxfd);
+	else if (errno == EMFILE)
+	    send_log(s->proxy, LOG_EMERG,
+		     "Proxy %s reached process FD limit at %d. Please check 'ulimit-n' and restart.\n",
+		     s->proxy->id, maxfd);
+	else if (errno == ENOBUFS || errno == ENOMEM)
+	    send_log(s->proxy, LOG_EMERG,
+		     "Proxy %s reached system memory limit at %d sockets. Please check system tunables.\n",
+		     s->proxy->id, maxfd);
+	/* this is a resource error */
+	return SN_ERR_RESOURCE;
     }
 	
     if (fd >= global.maxsock) {
+        /* do not log anything there, it's a normal condition when this option
+	 * is used to serialize connections to a server !
+	 */
 	Alert("socket(): not enough free sockets. Raise -n argument. Giving up.\n");
 	close(fd);
-	return -1;
+	return SN_ERR_PRXCOND; /* it is a configuration limit */
     }
 
     if ((fcntl(fd, F_SETFL, O_NONBLOCK)==-1) ||
 	(setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (char *) &one, sizeof(one)) == -1)) {
 	qfprintf(stderr,"Cannot set client socket to non blocking mode.\n");
 	close(fd);
-	return -1;
+	return SN_ERR_INTERNAL;
     }
 
     /* allow specific binding :
@@ -1717,7 +1744,10 @@ int connect_server(struct session *s) {
 	    Alert("Cannot bind to source address before connect() for server %s/%s. Aborting.\n",
 		  s->proxy->id, s->srv->id);
 	    close(fd);
-	    return -1;
+	    send_log(s->proxy, LOG_EMERG,
+		     "Cannot bind to source address before connect() for server %s/%s.\n",
+		     s->proxy->id, s->srv->id);
+	    return SN_ERR_RESOURCE;
 	}
     }
     else if (s->proxy->options & PR_O_BIND_SRC) {
@@ -1725,19 +1755,36 @@ int connect_server(struct session *s) {
 	if (bind(fd, (struct sockaddr *)&s->proxy->source_addr, sizeof(s->proxy->source_addr)) == -1) {
 	    Alert("Cannot bind to source address before connect() for proxy %s. Aborting.\n", s->proxy->id);
 	    close(fd);
-	    return -1;
+	    send_log(s->proxy, LOG_EMERG,
+		     "Cannot bind to source address before connect() for server %s/%s.\n",
+		     s->proxy->id, s->srv->id);
+	    return SN_ERR_RESOURCE;
 	}
     }
 	
-    if ((connect(fd, (struct sockaddr *)&s->srv_addr, sizeof(s->srv_addr)) == -1) && (errno != EINPROGRESS)) {
-	if (errno == EAGAIN) { /* no free ports left, try again later */
-	    qfprintf(stderr,"Cannot connect, no free ports.\n");
+    if ((connect(fd, (struct sockaddr *)&s->srv_addr, sizeof(s->srv_addr)) == -1) &&
+	(errno != EINPROGRESS) && (errno != EALREADY) && (errno != EISCONN)) {
+
+	if (errno == EAGAIN || errno == EADDRINUSE) {
+	    char *msg;
+	    if (errno == EAGAIN) /* no free ports left, try again later */
+		msg = "no free ports";
+	    else
+		msg = "local address already in use";
+
+	    qfprintf(stderr,"Cannot connect: %s.\n",msg);
 	    close(fd);
-	    return -1;
-	}
-	else if (errno != EALREADY && errno != EISCONN) {
+	    send_log(s->proxy, LOG_EMERG,
+		     "Connect() failed for server %s/%s: %s.\n",
+		     s->proxy->id, s->srv->id, msg);
+	    return SN_ERR_RESOURCE;
+	} else if (errno == ETIMEDOUT) {
 	    close(fd);
-	    return -1;
+	    return SN_ERR_SRVTO;
+	} else {
+	    // (errno == ECONNREFUSED || errno == ENETUNREACH || errno == EACCES || errno == EPERM)
+	    close(fd);
+	    return SN_ERR_SRVCL;
 	}
     }
 
@@ -1754,7 +1801,7 @@ int connect_server(struct session *s) {
 	tv_delayfrom(&s->cnexpire, &now, s->proxy->contimeout);
     else
 	tv_eternity(&s->cnexpire);
-    return 0;
+    return SN_ERR_NONE;  /* connection is OK */
 }
     
 /*
@@ -2271,8 +2318,32 @@ int event_accept(int fd) {
     while (p->nbconn < p->maxconn) {
 	struct sockaddr_in addr;
 	int laddr = sizeof(addr);
-	if ((cfd = accept(fd, (struct sockaddr *)&addr, &laddr)) == -1)
-	    return 0;	    /* nothing more to accept */
+	if ((cfd = accept(fd, (struct sockaddr *)&addr, &laddr)) == -1) {
+	    switch (errno) {
+	    case EAGAIN:
+	    case EINTR:
+	    case ECONNABORTED:
+		return 0;	    /* nothing more to accept */
+	    case ENFILE:
+		send_log(p, LOG_EMERG,
+			 "Proxy %s reached system FD limit at %d. Please check system tunables.\n",
+			 p->id, maxfd);
+		return 0;
+	    case EMFILE:
+		send_log(p, LOG_EMERG,
+			 "Proxy %s reached process FD limit at %d. Please check 'ulimit-n' and restart.\n",
+			 p->id, maxfd);
+		return 0;
+	    case ENOBUFS:
+	    case ENOMEM:
+		send_log(p, LOG_EMERG,
+			 "Proxy %s reached system memory limit at %d sockets. Please check system tunables.\n",
+			 p->id, maxfd);
+		return 0;
+	    default:
+		return 0;
+	    }
+	}
 
 	if ((s = pool_alloc(session)) == NULL) { /* disable this proxy for a while */
 	    Alert("out of memory in event_accept().\n");
@@ -3458,6 +3529,7 @@ int process_srv(struct session *t) {
     int c = t->cli_state;
     struct buffer *req = t->req;
     struct buffer *rep = t->rep;
+    int conn_err;
 
 #ifdef DEBUG_FULL
     fprintf(stderr,"process_srv: c=%s, s=%s\n", cli_stnames[c], srv_stnames[s]);
@@ -3481,7 +3553,9 @@ int process_srv(struct session *t) {
 	    return 1;
 	}
 	else { /* go to SV_STCONN */
-	    if (connect_server(t) == 0) { /* initiate a connection to the server */
+	    /* initiate a connection to the server */
+	    conn_err = connect_server(t);
+	    if (conn_err == SN_ERR_NONE) {
 		//fprintf(stderr,"0: c=%d, s=%d\n", c, s);
 		t->srv_state = SV_STCONN;
 	    }
@@ -3496,7 +3570,8 @@ int process_srv(struct session *t) {
 			}
 		    }
 
-		    if (connect_server(t) == 0) {
+		    conn_err = connect_server(t);
+		    if (conn_err == SN_ERR_NONE) {
 			t->srv_state = SV_STCONN;
 			break;
 		    }
@@ -3509,7 +3584,7 @@ int process_srv(struct session *t) {
 		    if (t->proxy->mode == PR_MODE_HTTP)
 			client_return(t, t->proxy->errmsg.len503, t->proxy->errmsg.msg503);
 		    if (!(t->flags & SN_ERR_MASK))
-			t->flags |= SN_ERR_SRVCL;
+			t->flags |= conn_err;  /* report the precise connect() error */
 		    if (!(t->flags & SN_FINST_MASK))
 			t->flags |= SN_FINST_C;
 		}
@@ -3538,9 +3613,15 @@ int process_srv(struct session *t) {
 			    t->flags |= SN_CK_DOWN;
 			}
 		    }
-		    if (connect_server(t) == 0)
+		    conn_err = connect_server(t);
+		    if (conn_err == SN_ERR_NONE)
 			return 0; /* no state changed */
 	    }
+	    else if (t->res_sw == RES_SILENT)
+		conn_err = SN_ERR_SRVTO; // it was a connect timeout.
+	    else
+		conn_err = SN_ERR_SRVCL; // it was a connect error.
+
 	    /* if conn_retries < 0 or other error, let's abort */
 	    tv_eternity(&t->cnexpire);
 	    t->srv_state = SV_STCLOSE;
@@ -3548,7 +3629,7 @@ int process_srv(struct session *t) {
 	    if (t->proxy->mode == PR_MODE_HTTP)
 		client_return(t, t->proxy->errmsg.len503, t->proxy->errmsg.msg503);
 	    if (!(t->flags & SN_ERR_MASK))
-		t->flags |= SN_ERR_SRVCL;
+		t->flags |= conn_err;
 	    if (!(t->flags & SN_FINST_MASK))
 		t->flags |= SN_FINST_C;
 	    return 1;

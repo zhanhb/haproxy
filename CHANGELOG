@@ -1,6 +1,16 @@
 ChangeLog :
 ===========
 
+2005/07/05 : 1.1.32-pre3
+  - enhanced error reporting in the logs. Now the proxy will precisely detect
+    various error conditions related to the system and/or process limits, and
+    generate LOG_EMERG logs indicating that a resource has been exhausted.
+  - logs will contain two new characters for the error cause : 'R' indicates
+    a resource exhausted, and 'I' indicates an internal error, though this
+    one should never happen.
+  - server connection timeouts can now be reported in the logs (sC), as well
+    as connections refused because of maxconn limitations (PC).
+
 2005/07/05 : 1.1.32-pre2
   - new global configuration keyword "ulimit-n" may be used to raise the FD
     limit to usable values.
