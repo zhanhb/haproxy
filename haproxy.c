@@ -1,6 +1,6 @@
 /*
  * HA-Proxy : High Availability-enabled HTTP/TCP proxy
- * 2000-2003 - Willy Tarreau - willy AT meta-x DOT org.
+ * 2000-2004 - Willy Tarreau - willy AT meta-x DOT org.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -8,7 +8,10 @@
  * 2 of the License, or (at your option) any later version.
  *
  * Please refer to RFC2068 or RFC2616 for informations about HTTP protocol, and
- * RFC2965 for informations about cookies usage.
+ * RFC2965 for informations about cookies usage. More generally, the IETF HTTP
+ * Working Group's web site should be consulted for protocol related changes :
+ *
+ *     http://ftp.ics.uci.edu/pub/ietf/http/
  *
  * Pending bugs (may be not fixed because never reproduced) :
  *   - solaris only : sometimes, an HTTP proxy with only a dispatch address causes
@@ -53,8 +56,8 @@
 #include <linux/netfilter_ipv4.h>
 #endif
 
-#define HAPROXY_VERSION "1.1.27"
-#define HAPROXY_DATE	"2003/10/27"
+#define HAPROXY_VERSION "1.1.28"
+#define HAPROXY_DATE	"2004/06/06"
 
 /* this is for libc5 for example */
 #ifndef TCP_NODELAY
@@ -224,7 +227,9 @@ int strlcpy2(char *dst, const char *src, int size) {
 #define PR_O_COOK_POST	2048	/* don't insert cookies for requests other than a POST */
 #define PR_O_HTTP_CHK	4096	/* use HTTP 'OPTIONS' method to check server health */
 #define PR_O_PERSIST	8192	/* server persistence stays effective even when server is down */
-
+#define PR_O_LOGASAP	16384	/* log as soon as possible, without waiting for the session to complete */
+#define PR_O_HTTP_CLOSE	32768	/* force 'connection: close' in both directions */
+#define PR_O_CHK_CACHE	65536	/* require examination of cacheability of the 'set-cookie' field */
 
 /* various session flags */
 #define SN_DIRECT	0x00000001	/* connection made on the server matching the client cookie */
@@ -262,8 +267,12 @@ int strlcpy2(char *dst, const char *src, int size) {
 #define	SN_SCK_INSERTED	0x00020000	/* new set-cookie inserted or changed existing one */
 #define	SN_SCK_SEEN	0x00040000	/* set-cookie seen for the server cookie */
 #define	SN_SCK_MASK	0x00070000	/* mask to get the set-cookie field */
+#define	SN_SCK_ANY	0x00080000	/* at least one set-cookie seen (not to be counted) */
 #define	SN_SCK_SHIFT	16		/* bit shift */
 
+#define	SN_CACHEABLE	0x00100000	/* at least part of the response is cacheable */
+#define	SN_CACHE_COOK	0x00200000	/* a cookie in the response is cacheable */
+#define	SN_CACHE_SHIFT	20		/* bit shift */
 
 /* different possible states for the client side */
 #define CL_STHEADERS	0
@@ -293,6 +302,8 @@ int strlcpy2(char *dst, const char *src, int size) {
 #define	MODE_LOG	4
 #define	MODE_DAEMON	8
 #define	MODE_QUIET	16
+#define	MODE_CHECK	32
+#define	MODE_VERBOSE	64
 
 /* server flags */
 #define SRV_RUNNING	1	/* the server is UP */
@@ -537,6 +548,9 @@ static regmatch_t pmatch[MAX_MATCH];  /* rm_so, rm_eo for regular expressions */
 /* this is used to drain data, and as a temporary buffer for sprintf()... */
 static char trash[BUFSIZE];
 
+const int zero = 0;
+const int one = 1;
+
 /*
  * Syslog facilities and levels. Conforming to RFC3164.
  */
@@ -665,7 +679,7 @@ int process_session(struct task *t);
 
 void display_version() {
     printf("HA-Proxy version " HAPROXY_VERSION " " HAPROXY_DATE"\n");
-    printf("Copyright 2000-2003 Willy Tarreau <willy AT meta-x DOT org>\n\n");
+    printf("Copyright 2000-2004 Willy Tarreau <w@w.ods.org>\n\n");
 }
 
 /*
@@ -674,19 +688,21 @@ void display_version() {
 void usage(char *name) {
     display_version();
     fprintf(stderr,
-	    "Usage : %s -f <cfgfile> [ -vd"
+	    "Usage : %s -f <cfgfile> [ -vdV"
 #if STATTIME > 0
 	    "sl"
 #endif
 	    "D ] [ -n <maxconn> ] [ -N <maxpconn> ] [ -p <pidfile> ]\n"
 	    "        -v displays version\n"
 	    "        -d enters debug mode\n"
+	    "        -V enters verbose mode (disables quiet mode)\n"
 #if STATTIME > 0
 	    "        -s enables statistics output\n"
 	    "        -l enables long statistics format\n"
 #endif
 	    "        -D goes daemon ; implies -q\n"
 	    "        -q quiet mode : don't display messages\n"
+	    "        -c check mode : only check config file and exit\n"
 	    "        -n sets the maximum total # of connections (%d)\n"
 	    "        -N sets the default, per-proxy maximum # of connections (%d)\n"
 	    "        -p writes pids of all children to this file\n\n",
@@ -703,7 +719,7 @@ void Alert(char *fmt, ...) {
     struct timeval tv;
     struct tm *tm;
 
-    if (!(global.mode & MODE_QUIET)) {
+    if (!(global.mode & MODE_QUIET) || (global.mode & MODE_VERBOSE)) {
 	va_start(argp, fmt);
 
 	gettimeofday(&tv, NULL);
@@ -725,7 +741,7 @@ void Warning(char *fmt, ...) {
     struct timeval tv;
     struct tm *tm;
 
-    if (!(global.mode & MODE_QUIET)) {
+    if (!(global.mode & MODE_QUIET) || (global.mode & MODE_VERBOSE)) {
 	va_start(argp, fmt);
 
 	gettimeofday(&tv, NULL);
@@ -744,7 +760,7 @@ void Warning(char *fmt, ...) {
 void qfprintf(FILE *out, char *fmt, ...) {
     va_list argp;
 
-    if (!(global.mode & MODE_QUIET)) {
+    if (!(global.mode & MODE_QUIET) || (global.mode & MODE_VERBOSE)) {
 	va_start(argp, fmt);
 	vfprintf(out, fmt, argp);
 	fflush(out);
@@ -776,13 +792,7 @@ struct sockaddr_in *str2sa(char *str) {
     if (*str == '*' || *str == '\0') { /* INADDR_ANY */
 	sa.sin_addr.s_addr = INADDR_ANY;
     }
-    else if (
-#ifndef SOLARIS
-	!inet_aton(str, &sa.sin_addr)
-#else
-	!inet_pton(AF_INET, str, &sa.sin_addr)
-#endif
-	) {
+    else if (!inet_pton(AF_INET, str, &sa.sin_addr)) {
 	struct hostent *he;
 
 	if ((he = gethostbyname(str)) == NULL) {
@@ -1438,7 +1448,6 @@ static inline struct server *find_server(struct proxy *px) {
  * it's OK, -1 if it's impossible.
  */
 int connect_server(struct session *s) {
-    int one = 1;
     int fd;
 
     //    fprintf(stderr,"connect_server : s=%p\n",s);
@@ -1969,7 +1978,7 @@ void sess_log(struct session *s) {
 
     tm = localtime(&s->logs.tv_accept.tv_sec);
     if (p->to_log & LW_REQ) {
-	send_log(p, LOG_INFO, "%d.%d.%d.%d:%d [%02d/%s/%04d:%02d:%02d:%02d] %s %s %d/%d/%d/%d %d %lld %s %s %c%c%c%c \"%s\"\n",
+	send_log(p, LOG_INFO, "%d.%d.%d.%d:%d [%02d/%s/%04d:%02d:%02d:%02d] %s %s %d/%d/%d/%s%d %d %s%lld %s %s %c%c%c%c \"%s\"\n",
 		 pn[0], pn[1], pn[2], pn[3], ntohs(s->cli_addr.sin_port),
 		 tm->tm_mday, monthname[tm->tm_mon], tm->tm_year+1900,
 		 tm->tm_hour, tm->tm_min, tm->tm_sec,
@@ -1977,8 +1986,9 @@ void sess_log(struct session *s) {
 		 s->logs.t_request,
 		 (s->logs.t_connect >= 0) ? s->logs.t_connect - s->logs.t_request : -1,
 		 (s->logs.t_data >= 0) ? s->logs.t_data - s->logs.t_connect : -1,
-		 s->logs.t_close,
-		 s->logs.status, s->logs.bytes,
+		 (p->to_log & LW_BYTES) ? "" : "+", s->logs.t_close,
+		 s->logs.status,
+		 (p->to_log & LW_BYTES) ? "" : "+", s->logs.bytes,
 		 s->logs.cli_cookie ? s->logs.cli_cookie : "-",
 		 s->logs.srv_cookie ? s->logs.srv_cookie : "-",
 		 sess_term_cond[(s->flags & SN_ERR_MASK) >> SN_ERR_SHIFT],
@@ -1988,14 +1998,14 @@ void sess_log(struct session *s) {
 		 uri);
     }
     else {
-	send_log(p, LOG_INFO, "%d.%d.%d.%d:%d [%02d/%s/%04d:%02d:%02d:%02d] %s %s %d/%d %lld %c%c\n",
+	send_log(p, LOG_INFO, "%d.%d.%d.%d:%d [%02d/%s/%04d:%02d:%02d:%02d] %s %s %d/%s%d %s%lld %c%c\n",
 		 pn[0], pn[1], pn[2], pn[3], ntohs(s->cli_addr.sin_port),
 		 tm->tm_mday, monthname[tm->tm_mon], tm->tm_year+1900,
 		 tm->tm_hour, tm->tm_min, tm->tm_sec,
 		 pxid, srv,
 		 (s->logs.t_connect >= 0) ? s->logs.t_connect : -1,
-		 s->logs.t_close,
-		 s->logs.bytes,
+		 (p->to_log & LW_BYTES) ? "" : "+", s->logs.t_close,
+		 (p->to_log & LW_BYTES) ? "" : "+", s->logs.bytes,
 		 sess_term_cond[(s->flags & SN_ERR_MASK) >> SN_ERR_SHIFT],
 		 sess_fin_state[(s->flags & SN_FINST_MASK) >> SN_FINST_SHIFT]);
     }
@@ -2014,7 +2024,6 @@ int event_accept(int fd) {
     struct session *s;
     struct task *t;
     int cfd;
-    int one = 1;
 
     while (p->nbconn < p->maxconn) {
 	struct sockaddr_in addr;
@@ -2070,6 +2079,7 @@ int event_accept(int fd) {
 	s->srv_state = SV_STIDLE;
 	s->req = s->rep = NULL; /* will be allocated later */
 	s->flags = 0;
+
 	s->res_cr = s->res_cw = s->res_sr = s->res_sw = RES_SILENT;
 	s->cli_fd = cfd;
 	s->srv_fd = -1;
@@ -2115,7 +2125,7 @@ int event_accept(int fd) {
 			 p->id, (p->mode == PR_MODE_HTTP) ? "HTTP" : "TCP");
 	}
 
-	if ((global.mode & MODE_DEBUG) && !(global.mode & MODE_QUIET)) {
+	if ((global.mode & MODE_DEBUG) && (!(global.mode & MODE_QUIET) || (global.mode & MODE_VERBOSE))) {
 	    struct sockaddr_in sockname;
 	    unsigned char *pn, *sn;
 	    int namelen;
@@ -2359,7 +2369,7 @@ int exp_replace(char *dst, char *src, char *str, regmatch_t *matches) {
 		num = *str - '0';
 		str++;
 
-		if (matches[num].rm_so > -1) {
+		if (matches[num].rm_eo > -1 && matches[num].rm_so > -1) {
 		    len = matches[num].rm_eo - matches[num].rm_so;
 		    memcpy(dst, src + matches[num].rm_so, len);
 		    dst += len;
@@ -2447,8 +2457,14 @@ int process_cli(struct session *t) {
 		    buffer_replace2(req, req->h, req->h, trash, len);
 		}
 
-		if (!memcmp(req->data, "POST ", 5))
-		    t->flags |= SN_POST; /* this is a POST request */
+		/* add a "connection: close" line if needed */
+		if (t->proxy->options & PR_O_HTTP_CLOSE)
+		    buffer_replace2(req, req->h, req->h, "Connection: close\r\n", 19);
+
+		if (!memcmp(req->data, "POST ", 5)) {
+		    /* this is a POST request, which is not cacheable by default */
+		    t->flags |= SN_POST;
+		}
 		    
 		t->cli_state = CL_STDATA;
 		req->rlim = req->data + BUFSIZE; /* no more rewrite needed */
@@ -2530,7 +2546,7 @@ int process_cli(struct session *t) {
 
 	    delete_header = 0;
 
-	    if ((global.mode & MODE_DEBUG) && !(global.mode & MODE_QUIET)) {
+	    if ((global.mode & MODE_DEBUG) && (!(global.mode & MODE_QUIET) || (global.mode & MODE_VERBOSE))) {
 		int len, max;
 		len = sprintf(trash, "%08x:%s.clihdr[%04x:%04x]: ", t->uniq_id, t->proxy->id, (unsigned  short)t->cli_fd, (unsigned short)t->srv_fd);
 		max = ptr - req->h;
@@ -2540,8 +2556,16 @@ int process_cli(struct session *t) {
 		write(1, trash, len);
 	    }
 
+
+	    /* remove "connection: " if needed */
+	    if (!delete_header && (t->proxy->options & PR_O_HTTP_CLOSE)
+		&& (strncasecmp(req->h, "Connection: ", 12) == 0)) {
+		delete_header = 1;
+	    }
+
 	    /* try headers regexps */
-	    if (t->proxy->req_exp != NULL && !(t->flags & SN_CLDENY)) {
+	    if (!delete_header && t->proxy->req_exp != NULL
+		&& !(t->flags & SN_CLDENY)) {
 		struct hdr_exp *exp;
 		char term;
 		
@@ -2999,7 +3023,7 @@ int process_cli(struct session *t) {
 	return 0;
     }
     else { /* CL_STCLOSE: nothing to do */
-	if ((global.mode & MODE_DEBUG) && !(global.mode & MODE_QUIET)) {
+	if ((global.mode & MODE_DEBUG) && (!(global.mode & MODE_QUIET) || (global.mode & MODE_VERBOSE))) {
 	    int len;
 	    len = sprintf(trash, "%08x:%s.clicls[%04x:%04x]\n", t->uniq_id, t->proxy->id, (unsigned short)t->cli_fd, (unsigned short)t->srv_fd);
 	    write(1, trash, len);
@@ -3141,6 +3165,13 @@ int process_srv(struct session *t) {
 		
 		t->srv_state = SV_STDATA;
 		rep->rlim = rep->data + BUFSIZE; /* no rewrite needed */
+
+		/* if the user wants to log as soon as possible, without counting
+		   bytes from the server, then this is the right moment. */
+		if (!(t->logs.logwait & LW_BYTES)) {
+		    t->logs.t_close = t->logs.t_connect; /* to get a valid end date */
+		    sess_log(t);
+		}
 	    }
 	    else {
 		t->srv_state = SV_STHEADERS;
@@ -3166,6 +3197,50 @@ int process_srv(struct session *t) {
 		int line, len;
 
 		/* we can only get here after an end of headers */
+
+		/* first, we'll block if security checks have caught nasty things */
+		if (t->flags & SN_CACHEABLE) {
+		    if ((t->flags & SN_CACHE_COOK) &&
+			(t->flags & SN_SCK_ANY) &&
+			(t->proxy->options & PR_O_CHK_CACHE)) {
+
+			/* we're in presence of a cacheable response containing
+			 * a set-cookie header. We'll block it as requested by
+			 * the 'checkcache' option, and send an alert.
+			 */
+			tv_eternity(&t->srexpire);
+			tv_eternity(&t->swexpire);
+			fd_delete(t->srv_fd);
+			t->srv_state = SV_STCLOSE;
+			t->logs.status = 502;
+			client_return(t, t->proxy->errmsg.len502, t->proxy->errmsg.msg502);
+			if (!(t->flags & SN_ERR_MASK))
+			    t->flags |= SN_ERR_PRXCOND;
+			if (!(t->flags & SN_FINST_MASK))
+			    t->flags |= SN_FINST_H;
+
+			Alert("Blocking cacheable cookie in response from instance %s, server %s.\n", t->proxy->id, t->srv->id);
+			send_log(t->proxy, LOG_ALERT, "Blocking cacheable cookie in response from instance %s, server %s.\n", t->proxy->id, t->srv->id);
+
+			return 1;
+		    }
+		}
+
+		/* next, we'll block if an 'rspideny' or 'rspdeny' filter matched */
+		if (t->flags & SN_SVDENY) {
+		    tv_eternity(&t->srexpire);
+		    tv_eternity(&t->swexpire);
+		    fd_delete(t->srv_fd);
+		    t->srv_state = SV_STCLOSE;
+		    t->logs.status = 502;
+		    client_return(t, t->proxy->errmsg.len502, t->proxy->errmsg.msg502);
+		    if (!(t->flags & SN_ERR_MASK))
+			t->flags |= SN_ERR_PRXCOND;
+		    if (!(t->flags & SN_FINST_MASK))
+			t->flags |= SN_FINST_H;
+		    return 1;
+		}
+
 		/* we'll have something else to do here : add new headers ... */
 
 		if ((t->srv) && !(t->flags & SN_DIRECT) && (t->proxy->options & PR_O_COOK_INS) &&
@@ -3198,9 +3273,21 @@ int process_srv(struct session *t) {
 		    buffer_replace2(rep, rep->h, rep->h, trash, len);
 		}
 
+		/* add a "connection: close" line if needed */
+		if (t->proxy->options & PR_O_HTTP_CLOSE)
+		    buffer_replace2(rep, rep->h, rep->h, "Connection: close\r\n", 19);
+
 		t->srv_state = SV_STDATA;
 		rep->rlim = rep->data + BUFSIZE; /* no more rewrite needed */
 		t->logs.t_data = tv_diff(&t->logs.tv_accept, &now);
+
+		/* if the user wants to log as soon as possible, without counting
+		   bytes from the server, then this is the right moment. */
+		if (!(t->logs.logwait & LW_BYTES)) {
+		    t->logs.t_close = t->logs.t_data; /* to get a valid end date */
+		    t->logs.bytes = rep->h - rep->data;
+		    sess_log(t);
+		}
 		break;
 	    }
 
@@ -3232,14 +3319,38 @@ int process_srv(struct session *t) {
 	     */
 
 
-	    if (t->logs.logwait & LW_RESP) {
+	    if (t->logs.status == -1) {
 		t->logs.logwait &= ~LW_RESP;
 		t->logs.status = atoi(rep->h + 9);
+		switch (t->logs.status) {
+		    case 200:
+		    case 203:
+		    case 206:
+		    case 300:
+		    case 301:
+		    case 410:
+			/* RFC2616 @13.4:
+			 *   "A response received with a status code of
+			 *    200, 203, 206, 300, 301 or 410 MAY be stored
+			 *    by a cache (...) unless a cache-control
+			 *    directive prohibits caching."
+			 *   
+			 * RFC2616 @9.5: POST method :
+			 *   "Responses to this method are not cacheable,
+			 *    unless the response includes appropriate
+			 *    Cache-Control or Expires header fields."
+			 */
+			if ((!t->flags & SN_POST) && (t->proxy->options & PR_O_CHK_CACHE))
+				t->flags |= SN_CACHEABLE | SN_CACHE_COOK;
+			break;
+		    default:
+			break;
+		}
 	    }
 
 	    delete_header = 0;
 
-	    if ((global.mode & MODE_DEBUG) && !(global.mode & MODE_QUIET)) {
+	    if ((global.mode & MODE_DEBUG) && (!(global.mode & MODE_QUIET) || (global.mode & MODE_VERBOSE))) {
 		int len, max;
 		len = sprintf(trash, "%08x:%s.srvhdr[%04x:%04x]: ", t->uniq_id, t->proxy->id, (unsigned  short)t->cli_fd, (unsigned short)t->srv_fd);
 		max = ptr - rep->h;
@@ -3249,8 +3360,15 @@ int process_srv(struct session *t) {
 		write(1, trash, len);
 	    }
 
+	    /* remove "connection: " if needed */
+	    if (!delete_header && (t->proxy->options & PR_O_HTTP_CLOSE)
+		&& (strncasecmp(rep->h, "Connection: ", 12) == 0)) {
+		delete_header = 1;
+	    }
+
 	    /* try headers regexps */
-	    if (t->proxy->rsp_exp != NULL && !(t->flags & SN_SVDENY)) {
+	    if (!delete_header && t->proxy->rsp_exp != NULL
+		&& !(t->flags & SN_SVDENY)) {
 		struct hdr_exp *exp;
 		char term;
 		
@@ -3287,13 +3405,45 @@ int process_srv(struct session *t) {
 		*ptr = term; /* restore the string terminator */
 	    }
 	    
+	    /* check for cache-control: or pragma: headers */
+	    if (!delete_header && (t->flags & SN_CACHEABLE)) {
+		if (strncasecmp(rep->h, "Pragma: no-cache", 16) == 0)
+		    t->flags &= ~SN_CACHEABLE & ~SN_CACHE_COOK;
+		else if (strncasecmp(rep->h, "Cache-control: ", 15) == 0) {
+		    if (strncasecmp(rep->h + 15, "no-cache", 8) == 0) {
+			if (rep->h + 23 == ptr || rep->h[23] == ',')
+			    t->flags &= ~SN_CACHEABLE & ~SN_CACHE_COOK;
+			else {
+			    if (strncasecmp(rep->h + 23, "=\"set-cookie", 12) == 0
+				&& (rep->h[35] == '"' || rep->h[35] == ','))
+				t->flags &= ~SN_CACHE_COOK;
+			}
+		    } else if ((strncasecmp(rep->h + 15, "private", 7) == 0 &&
+				(rep->h + 22 == ptr || rep->h[22] == ','))
+			       || (strncasecmp(rep->h + 15, "no-store", 8) == 0 &&
+				   (rep->h + 23 == ptr || rep->h[23] == ','))) {
+			t->flags &= ~SN_CACHEABLE & ~SN_CACHE_COOK;
+		    } else if (strncasecmp(rep->h + 15, "max-age=0", 9) == 0 &&
+			       (rep->h + 24 == ptr || rep->h[24] == ',')) {
+			t->flags &= ~SN_CACHEABLE & ~SN_CACHE_COOK;
+		    } else if (strncasecmp(rep->h + 15, "s-maxage=0", 10) == 0 &&
+			       (rep->h + 25 == ptr || rep->h[25] == ',')) {
+			t->flags &= ~SN_CACHEABLE & ~SN_CACHE_COOK;
+		    } else if (strncasecmp(rep->h + 15, "public", 6) == 0 &&
+			       (rep->h + 21 == ptr || rep->h[21] == ',')) {
+			t->flags |= SN_CACHEABLE | SN_CACHE_COOK;
+		    }
+		}
+	    }
+
 	    /* check for server cookies */
 	    if (!delete_header /*&& (t->proxy->options & PR_O_COOK_ANY)*/
 		&& (t->proxy->cookie_name != NULL || t->proxy->capture_name != NULL)
-		&& (ptr >= rep->h + 12)
 		&& (strncasecmp(rep->h, "Set-Cookie: ", 12) == 0)) {
 		char *p1, *p2, *p3, *p4;
 		
+		t->flags |= SN_SCK_ANY;
+
 		p1 = rep->h + 12; /* first char after 'Set-Cookie: ' */
 		
 		while (p1 < ptr) { /* in fact, we'll break after the first cookie */
@@ -3376,6 +3526,13 @@ int process_srv(struct session *t) {
 		    break; /* we don't want to loop again since there cannot be another cookie on the same line */
 		} /* we're now at the end of the cookie value */
 	    } /* end of cookie processing */
+
+	    /* check for any set-cookie in case we check for cacheability */
+	    if (!delete_header && !(t->flags & SN_SCK_ANY) &&
+		(t->proxy->options & PR_O_CHK_CACHE) &&
+		(strncasecmp(rep->h, "Set-Cookie: ", 12) == 0)) {
+		t->flags |= SN_SCK_ANY;
+	    }
 
 	    /* let's look if we have to delete this header */
 	    if (delete_header && !(t->flags & SN_SVDENY))
@@ -3695,7 +3852,7 @@ int process_srv(struct session *t) {
 	return 0;
     }
     else { /* SV_STCLOSE : nothing to do */
-	if ((global.mode & MODE_DEBUG) && !(global.mode & MODE_QUIET)) {
+	if ((global.mode & MODE_DEBUG) && (!(global.mode & MODE_QUIET) || (global.mode & MODE_VERBOSE))) {
 	    int len;
 	    len = sprintf(trash, "%08x:%s.srvcls[%04x:%04x]\n", t->uniq_id, t->proxy->id, (unsigned short)t->cli_fd, (unsigned short)t->srv_fd);
 	    write(1, trash, len);
@@ -3742,7 +3899,7 @@ int process_session(struct task *t) {
     s->proxy->nbconn--;
     actconn--;
     
-    if ((global.mode & MODE_DEBUG) && !(global.mode & MODE_QUIET)) {
+    if ((global.mode & MODE_DEBUG) && (!(global.mode & MODE_QUIET) || (global.mode & MODE_VERBOSE))) {
 	int len;
 	len = sprintf(trash, "%08x:%s.closed[%04x:%04x]\n", s->uniq_id, s->proxy->id, (unsigned short)s->cli_fd, (unsigned short)s->srv_fd);
 	write(1, trash, len);
@@ -3773,7 +3930,6 @@ int process_chk(struct task *t) {
     struct server *s = t->context;
     struct sockaddr_in sa;
     int fd = s->curfd;
-    int one = 1;
 
     //fprintf(stderr, "process_chk: task=%p\n", t);
 
@@ -3839,15 +3995,17 @@ int process_chk(struct task *t) {
 	if (s->health > s->rise)
 	    s->health--; /* still good */
 	else {
-	    if (s->health == s->rise) {
-		if (!(global.mode & MODE_QUIET))
-		    Warning("server %s/%s DOWN.\n", s->proxy->id, s->id);
-
-		send_log(s->proxy, LOG_ALERT, "Server %s/%s is DOWN.\n", s->proxy->id, s->id);
-	    }
-
-	    s->health = 0; /* failure */
 	    s->state &= ~SRV_RUNNING;
+	    if (s->health == s->rise) {
+		Warning("Server %s/%s DOWN.\n", s->proxy->id, s->id);
+		send_log(s->proxy, LOG_ALERT, "Server %s/%s is DOWN.\n", s->proxy->id, s->id);
+
+		if (find_server(s->proxy) == NULL) {
+		    Alert("Proxy %s has no server available !\n", s->proxy->id);
+		    send_log(s->proxy, LOG_EMERG, "Proxy %s has no server available !\n", s->proxy->id);
+		}
+	    }
+	    s->health = 0; /* failure */
 	}
 
 	//fprintf(stderr, "process_chk: 7\n");
@@ -3862,8 +4020,7 @@ int process_chk(struct task *t) {
 	    s->health++; /* was bad, stays for a while */
 	    if (s->health >= s->rise) {
 		if (s->health == s->rise) {
-		    if (!(global.mode & MODE_QUIET))
-			Warning("server %s/%s UP.\n", s->proxy->id, s->id);
+		    Warning("server %s/%s UP.\n", s->proxy->id, s->id);
 		    send_log(s->proxy, LOG_NOTICE, "Server %s/%s is UP.\n", s->proxy->id, s->id);
 		}
 
@@ -3881,15 +4038,19 @@ int process_chk(struct task *t) {
 	    if (s->health > s->rise)
 		s->health--; /* still good */
 	    else {
-		if (s->health == s->rise) {
-		    if (!(global.mode & MODE_QUIET))
-			Warning("server %s/%s DOWN.\n", s->proxy->id, s->id);
+		s->state &= ~SRV_RUNNING;
 
+		if (s->health == s->rise) {
+		    Warning("Server %s/%s DOWN.\n", s->proxy->id, s->id);
 		    send_log(s->proxy, LOG_ALERT, "Server %s/%s is DOWN.\n", s->proxy->id, s->id);
+
+		    if (find_server(s->proxy) == NULL) {
+			Alert("Proxy %s has no server available !\n", s->proxy->id);
+			send_log(s->proxy, LOG_EMERG, "Proxy %s has no server available !\n", s->proxy->id);
+		    }
 		}
 
 		s->health = 0; /* failure */
-		s->state &= ~SRV_RUNNING;
 	    }
 	    s->curfd = -1;
 	    //FD_CLR(fd, StaticWriteEvent);
@@ -4220,6 +4381,12 @@ void sig_dump_state(int sig) {
 	    }
 	    s = s->next;
 	}
+
+	if (find_server(p) == NULL) {
+	    Warning("SIGHUP: proxy %s has no server available !\n", p);
+	    send_log(p, LOG_NOTICE, "SIGHUP: proxy %s has no server available !\n", p);
+	}
+
 	p = p->next;
     }
     signal(sig, sig_dump_state);
@@ -4696,12 +4863,21 @@ int cfg_parse_listen(char *file, int linenum, char **args) {
 	else if (!strcmp(args[1], "forwardfor"))
 	    /* insert x-forwarded-for field */
 	    curproxy->options |= PR_O_FWDFOR;
+	else if (!strcmp(args[1], "logasap"))
+	    /* log as soon as possible, without waiting for the session to complete */
+	    curproxy->options |= PR_O_LOGASAP;
+	else if (!strcmp(args[1], "httpclose"))
+	    /* force connection: close in both directions in HTTP mode */
+	    curproxy->options |= PR_O_HTTP_CLOSE;
+	else if (!strcmp(args[1], "checkcache"))
+	    /* require examination of cacheability of the 'set-cookie' field */
+	    curproxy->options |= PR_O_CHK_CACHE;
 	else if (!strcmp(args[1], "httplog"))
 	    /* generate a complete HTTP log */
-	    curproxy->to_log |= LW_DATE | LW_CLIP | LW_SVID | LW_REQ | LW_PXID | LW_RESP;
+	    curproxy->to_log |= LW_DATE | LW_CLIP | LW_SVID | LW_REQ | LW_PXID | LW_RESP | LW_BYTES;
 	else if (!strcmp(args[1], "tcplog"))
 	    /* generate a detailed TCP log */
-	    curproxy->to_log |= LW_DATE | LW_CLIP | LW_SVID | LW_PXID;
+	    curproxy->to_log |= LW_DATE | LW_CLIP | LW_SVID | LW_PXID | LW_BYTES;
 	else if (!strcmp(args[1], "dontlognull")) {
 	    /* don't log empty requests */
 	    curproxy->options |= PR_O_NULLNOLOG;
@@ -5243,6 +5419,26 @@ int cfg_parse_listen(char *file, int linenum, char **args) {
 	
 	chain_regex(&curproxy->rsp_exp, preg, ACT_REMOVE, strdup(args[2]));
     }
+    else if (!strcmp(args[0], "rspdeny")) {  /* block response header from a regex */
+	regex_t *preg;
+	if (curproxy == &defproxy) {
+	    Alert("parsing [%s:%d] : '%s' not allowed in 'defaults' section.\n", file, linenum, args[0]);
+	    return -1;
+	}
+	
+	if (*(args[1]) == 0) {
+	    Alert("parsing [%s:%d] : '%s' expects <search> as an argument.\n", file, linenum, args[0]);
+	    return -1;
+	}
+
+	preg = calloc(1, sizeof(regex_t));
+	if (regcomp(preg, args[1], REG_EXTENDED) != 0) {
+	    Alert("parsing [%s:%d] : bad regular expression '%s'.\n", file, linenum, args[1]);
+	    return -1;
+	}
+	
+	chain_regex(&curproxy->rsp_exp, preg, ACT_DENY, strdup(args[2]));
+    }
     else if (!strcmp(args[0], "rspirep")) {  /* replace response header from a regex ignoring case */
 	regex_t *preg;
 	if (curproxy == &defproxy) {
@@ -5283,6 +5479,26 @@ int cfg_parse_listen(char *file, int linenum, char **args) {
 	}
 	
 	chain_regex(&curproxy->rsp_exp, preg, ACT_REMOVE, strdup(args[2]));
+    }
+    else if (!strcmp(args[0], "rspideny")) {  /* block response header from a regex ignoring case */
+	regex_t *preg;
+	if (curproxy == &defproxy) {
+	    Alert("parsing [%s:%d] : '%s' not allowed in 'defaults' section.\n", file, linenum, args[0]);
+	    return -1;
+	}
+	
+	if (*(args[1]) == 0) {
+	    Alert("parsing [%s:%d] : '%s' expects <search> as an argument.\n", file, linenum, args[0]);
+	    return -1;
+	}
+
+	preg = calloc(1, sizeof(regex_t));
+	if (regcomp(preg, args[1], REG_EXTENDED | REG_ICASE) != 0) {
+	    Alert("parsing [%s:%d] : bad regular expression '%s'.\n", file, linenum, args[1]);
+	    return -1;
+	}
+	
+	chain_regex(&curproxy->rsp_exp, preg, ACT_DENY, strdup(args[2]));
     }
     else if (!strcmp(args[0], "rspadd")) {  /* add response header */
 	if (curproxy == &defproxy) {
@@ -5579,6 +5795,10 @@ int readcfgfile(char *file) {
 		}
 	    }
 	}
+
+	if (curproxy->options & PR_O_LOGASAP)
+	    curproxy->to_log &= ~LW_BYTES;
+
 	if (curproxy->errmsg.msg400 == NULL) {
 	    curproxy->errmsg.msg400 = (char *)HTTP_400;
 	    curproxy->errmsg.len400 = strlen(HTTP_400);
@@ -5631,9 +5851,9 @@ void init(int argc, char **argv) {
     int cfg_maxconn = 0;	/* # of simultaneous connections, (-n) */
 
     if (1<<INTBITS != sizeof(int)*8) {
-	qfprintf(stderr,
+	fprintf(stderr,
 		"Error: wrong architecture. Recompile so that sizeof(int)=%d\n",
-		sizeof(int)*8);
+		(int)(sizeof(int)*8));
 	exit(1);
     }
 
@@ -5654,8 +5874,12 @@ void init(int argc, char **argv) {
 		display_version();
 		exit(0);
 	    }
+	    else if (*flag == 'V')
+		arg_mode |= MODE_VERBOSE;
 	    else if (*flag == 'd')
 		arg_mode |= MODE_DEBUG;
+	    else if (*flag == 'c')
+		arg_mode |= MODE_CHECK;
 	    else if (*flag == 'D')
 		arg_mode |= MODE_DAEMON | MODE_QUIET;
 	    else if (*flag == 'q')
@@ -5685,6 +5909,8 @@ void init(int argc, char **argv) {
 	    argv++; argc--;
     }
 
+    global.mode = (arg_mode & (MODE_DAEMON | MODE_VERBOSE | MODE_QUIET | MODE_CHECK | MODE_DEBUG));
+
     if (!cfg_cfgfile)
 	usage(old_argv);
 
@@ -5693,6 +5919,11 @@ void init(int argc, char **argv) {
     if (readcfgfile(cfg_cfgfile) < 0) {
 	Alert("Error reading configuration file : %s\n", cfg_cfgfile);
 	exit(1);
+    }
+
+    if (global.mode & MODE_CHECK) {
+	qfprintf(stdout, "Configuration file is valid : %s\n", cfg_cfgfile);
+	exit(0);
     }
 
     if (cfg_maxconn > 0)
@@ -5713,7 +5944,8 @@ void init(int argc, char **argv) {
 	/* command line debug mode inhibits configuration mode */
 	global.mode &= ~(MODE_DAEMON | MODE_QUIET);
     }
-    global.mode |= (arg_mode & (MODE_DAEMON | MODE_QUIET | MODE_DEBUG | MODE_STATS | MODE_LOG));
+    global.mode |= (arg_mode & (MODE_DAEMON | MODE_QUIET | MODE_VERBOSE
+                                | MODE_DEBUG | MODE_STATS | MODE_LOG));
 
     if ((global.mode & MODE_DEBUG) && (global.mode & (MODE_DAEMON | MODE_QUIET))) {
 	Warning("<debug> mode incompatible with <quiet> and <daemon>. Keeping <debug> only.\n");
@@ -5754,7 +5986,6 @@ void init(int argc, char **argv) {
 int start_proxies() {
     struct proxy *curproxy;
     struct listener *listener;
-    int one = 1;
     int fd;
 
     for (curproxy = proxy; curproxy != NULL; curproxy = curproxy->next) {
