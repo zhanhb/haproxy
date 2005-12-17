@@ -1,6 +1,17 @@
 ChangeLog :
 ===========
 
+2005/10/09 : 1.1.33rc
+  - socklen_t fixes from Alexander Lazic
+  - second batch of socklen_t changes.
+  - clean-ups from Cameron Simpson.
+  - because tv_remain() does not know about eternity, using no timeout can
+    make select() spin around a null time-out. Bug reported by Cameron Simpson.
+  - client read timeout was not properly set to eternity initialized after an
+    accept() if it was not set in the config. It remained undetected so long
+    because eternity is 0 and newly allocated pages are zeroed by the system.
+  - do not call get_original_dst() when not in transparent mode.
+
 2005/07/06 : 1.1.32
   - added the number of active sessions (proxy/process) in the logs
 
