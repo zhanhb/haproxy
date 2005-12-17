@@ -137,6 +137,8 @@
  */
 #define SCHEDULER_RESOLUTION	9
 
+#define TIME_ETERNITY		-1
+/* returns the lowest delay amongst <old> and <new>, and respects TIME_ETERNITY */
 #define MINTIME(old, new)	(((new)<0)?(old):(((old)<0||(new)<(old))?(new):(old)))
 #define SETNOW(a)		(*a=now)
 
@@ -1202,6 +1204,7 @@ static inline struct timeval *tv_delayfrom(struct timeval *tv, struct timeval *f
 
 /*
  * compares <tv1> and <tv2> : returns 0 if equal, -1 if tv1 < tv2, 1 if tv1 > tv2
+ * Must not be used when either argument is eternity. Use tv_cmp2() for that.
  */
 static inline int tv_cmp(struct timeval *tv1, struct timeval *tv2) {
     if (tv1->tv_sec < tv2->tv_sec)
@@ -1218,6 +1221,7 @@ static inline int tv_cmp(struct timeval *tv1, struct timeval *tv2) {
 
 /*
  * returns the absolute difference, in ms, between tv1 and tv2
+ * Must not be used when either argument is eternity.
  */
 unsigned long tv_delta(struct timeval *tv1, struct timeval *tv2) {
     int cmp;
@@ -1242,6 +1246,7 @@ unsigned long tv_delta(struct timeval *tv1, struct timeval *tv2) {
 
 /*
  * returns the difference, in ms, between tv1 and tv2
+ * Must not be used when either argument is eternity.
  */
 static inline unsigned long tv_diff(struct timeval *tv1, struct timeval *tv2) {
     unsigned long ret;
@@ -1256,6 +1261,7 @@ static inline unsigned long tv_diff(struct timeval *tv1, struct timeval *tv2) {
 
 /*
  * compares <tv1> and <tv2> modulo 1ms: returns 0 if equal, -1 if tv1 < tv2, 1 if tv1 > tv2
+ * Must not be used when either argument is eternity. Use tv_cmp2_ms() for that.
  */
 static inline int tv_cmp_ms(struct timeval *tv1, struct timeval *tv2) {
     if (tv1->tv_sec == tv2->tv_sec) {
@@ -1279,6 +1285,7 @@ static inline int tv_cmp_ms(struct timeval *tv1, struct timeval *tv2) {
 /*
  * returns the remaining time between tv1=now and event=tv2
  * if tv2 is passed, 0 is returned.
+ * Must not be used when either argument is eternity.
  */
 static inline unsigned long tv_remain(struct timeval *tv1, struct timeval *tv2) {
     unsigned long ret;
@@ -1368,6 +1375,28 @@ static inline int tv_cmp2_ms(struct timeval *tv1, struct timeval *tv2) {
 	return -1;
     else
 	return 0;
+}
+
+/*
+ * returns the remaining time between tv1=now and event=tv2
+ * if tv2 is passed, 0 is returned.
+ * Returns TIME_ETERNITY if tv2 is eternity.
+ */
+static inline unsigned long tv_remain2(struct timeval *tv1, struct timeval *tv2) {
+    unsigned long ret;
+
+    if (tv_iseternity(tv2))
+	return TIME_ETERNITY;
+
+    if (tv_cmp_ms(tv1, tv2) >= 0)
+	return 0; /* event elapsed */
+
+    ret = (tv2->tv_sec - tv1->tv_sec) * 1000;
+    if (tv2->tv_usec > tv1->tv_usec)
+	ret += (tv2->tv_usec - tv1->tv_usec) / 1000;
+    else
+	ret -= (tv1->tv_usec - tv2->tv_usec) / 1000;
+    return (unsigned long) ret;
 }
 
 /*
@@ -2583,7 +2612,7 @@ int event_accept(int fd) {
 	actconn++;
 	totalconn++;
 
-	// fprintf(stderr, "accepting from %p => %d conn, %d total\n", p, actconn, totalconn);
+	// fprintf(stderr, "accepting from %p => %d conn, %d total, task=%p\n", p, actconn, totalconn, t);
     } /* end of while (p->nbconn < p->maxconn) */
     return 0;
 }
@@ -4444,7 +4473,8 @@ int process_srv(struct session *t) {
 /* Processes the client and server jobs of a session task, then
  * puts it back to the wait queue in a clean state, or
  * cleans up its resources if it must be deleted. Returns
- * the time the task accepts to wait, or -1 for infinity
+ * the time the task accepts to wait, or TIME_ETERNITY for
+ * infinity.
  */
 int process_session(struct task *t) {
     struct session *s = t->context;
@@ -4471,7 +4501,7 @@ int process_session(struct task *t) {
 	/* restore t to its place in the task list */
 	task_queue(t);
 
-	return tv_remain(&now, &t->expire); /* nothing more to do */
+	return tv_remain2(&now, &t->expire); /* nothing more to do */
     }
 
     s->proxy->nbconn--;
@@ -4495,14 +4525,14 @@ int process_session(struct task *t) {
     task_delete(t);
     session_free(s);
     task_free(t);
-    return -1; /* rest in peace for eternity */
+    return TIME_ETERNITY; /* rest in peace for eternity */
 }
 
 
 
 /*
  * manages a server health-check. Returns
- * the time the task accepts to wait, or -1 for infinity.
+ * the time the task accepts to wait, or TIME_ETERNITY for infinity.
  */
 int process_chk(struct task *t) {
     struct server *s = t->context;
@@ -4515,7 +4545,7 @@ int process_chk(struct task *t) {
 	//fprintf(stderr, "process_chk: 2\n");
 	if (tv_cmp2_ms(&t->expire, &now) > 0) { /* not good time yet */
 	    task_queue(t);	/* restore t to its place in the task list */
-	    return tv_remain(&now, &t->expire);
+	    return tv_remain2(&now, &t->expire);
 	}
 	
 	/* we'll initiate a new check */
@@ -4656,7 +4686,7 @@ int process_chk(struct task *t) {
     //fprintf(stderr, "process_chk: 11\n");
     s->result = 0;
     task_queue(t);	/* restore t to its place in the task list */
-    return tv_remain(&now, &t->expire);
+    return tv_remain2(&now, &t->expire);
 }
 
 
@@ -4681,7 +4711,7 @@ void select_loop() {
   tv_now(&now);
 
   while (1) {
-      next_time = -1; /* set the timer to wait eternally first */
+      next_time = TIME_ETERNITY; /* set the timer to wait eternally first */
 
       /* look for expired tasks and add them to the run queue.
        */
@@ -4691,10 +4721,13 @@ void select_loop() {
 	  if (t->state & TASK_RUNNING)
 	      continue;
 
+	  if (tv_iseternity(&t->expire))
+	      continue;
+
 	  /* wakeup expired entries. It doesn't matter if they are
 	   * already running because of a previous event
 	   */
-	  if (tv_cmp2_ms(&t->expire, &now) <= 0) {
+	  if (tv_cmp_ms(&t->expire, &now) <= 0) {
 	      //fprintf(stderr,"task_wakeup(%p, %p)\n", &rq, t);
 	      task_wakeup(&rq, t);
 	  }
@@ -4854,7 +4887,7 @@ int stats(void) {
  * this function enables proxies when there are enough free sessions,
  * or stops them when the table is full. It is designed to be called from the
  * select_loop(). It returns the time left before next expiration event
- * during stop time, -1 otherwise.
+ * during stop time, TIME_ETERNITY otherwise.
  */
 static int maintain_proxies(void) {
     struct proxy *p;
@@ -4862,7 +4895,7 @@ static int maintain_proxies(void) {
     int tleft; /* time left */
 
     p = proxy;
-    tleft = -1; /* infinite time */
+    tleft = TIME_ETERNITY; /* infinite time */
 
     /* if there are enough free sessions, we'll activate proxies */
     if (actconn < global.maxconn) {
@@ -4903,7 +4936,7 @@ static int maintain_proxies(void) {
 	while (p) {
 	    if (p->state != PR_STDISABLED) {
 		int t;
-		t = tv_remain(&now, &p->stop_time);
+		t = tv_remain2(&now, &p->stop_time);
 		if (t == 0) {
 		    Warning("Proxy %s stopped.\n", p->id);
 		    send_log(p, LOG_WARNING, "Proxy %s stopped.\n", p->id);
