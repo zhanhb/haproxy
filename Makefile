@@ -36,7 +36,7 @@ COPTS.linux22 = -DUSE_GETSOCKNAME
 LIBS.linux22 =
 
 # This is for Solaris 8
-COPTS.solaris = -fomit-frame-pointer -DSOLARIS
+COPTS.solaris = -fomit-frame-pointer
 LIBS.solaris = -lnsl -lsocket
 
 # This is for OpenBSD 3.0
