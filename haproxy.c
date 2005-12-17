@@ -1592,7 +1592,7 @@ struct task *task_queue(struct task *task) {
 /* some prototypes */
 static int maintain_proxies(void);
 
-/* this either returns the sockname or the original destination address. Code
+/* This either returns the sockname or the original destination address. Code
  * inspired from Patrick Schaaf's example of nf_getsockname() implementation.
  */
 static int get_original_dst(int fd, struct sockaddr_in *sa, socklen_t *salen) {
@@ -1723,7 +1723,8 @@ int connect_server(struct session *s) {
 	struct sockaddr_in sockname;
 	socklen_t namelen = sizeof(sockname);
 
-	if (get_original_dst(s->cli_fd, (struct sockaddr_in *)&sockname, &namelen) == -1)
+	if (!(s->proxy->options & PR_O_TRANSP) ||
+	    get_original_dst(s->cli_fd, (struct sockaddr_in *)&sockname, &namelen) == -1)
 	    getsockname(s->cli_fd, (struct sockaddr *)&sockname, &namelen);
 	s->srv_addr.sin_port = htons(ntohs(s->srv_addr.sin_port) + ntohs(sockname.sin_port));
     }
@@ -2499,7 +2500,8 @@ int event_accept(int fd) {
 	    socklen_t namelen = sizeof(sockname);
 	    unsigned char *pn, *sn;
 
-	    if (get_original_dst(cfd, (struct sockaddr_in *)&sockname, &namelen) == -1)
+	    if (!(s->proxy->options & PR_O_TRANSP) ||
+		get_original_dst(cfd, (struct sockaddr_in *)&sockname, &namelen) == -1)
 		getsockname(cfd, (struct sockaddr *)&sockname, &namelen);
 	    sn = (unsigned char *)&sockname.sin_addr;
 	    pn = (unsigned char *)&s->cli_addr.sin_addr;
@@ -2523,7 +2525,8 @@ int event_accept(int fd) {
 	    unsigned char *pn, *sn;
 	    int len;
 
-	    if (get_original_dst(cfd, (struct sockaddr_in *)&sockname, &namelen) == -1)
+	    if (!(s->proxy->options & PR_O_TRANSP) ||
+		get_original_dst(cfd, (struct sockaddr_in *)&sockname, &namelen) == -1)
 		getsockname(cfd, (struct sockaddr *)&sockname, &namelen);
 	    sn = (unsigned char *)&sockname.sin_addr;
 	    pn = (unsigned char *)&s->cli_addr.sin_addr;
