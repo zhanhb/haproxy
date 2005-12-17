@@ -1,6 +1,19 @@
 ChangeLog :
 ===========
 
+2005/04/24 : 1.1.31-pre2
+  - implemented the HTTP 303 code for error redirection. This forces the
+    browser to fetch the given URI with a GET request. The new keyword for
+    this is 'errorloc303', and a new 'errorloc302' keyword has been created
+    to make them easily distinguishable.
+  - added more controls in the parser for valid use of '\x' sequence.
+
+2005/02/17 : 1.1.31-pre1
+  - fixed a few errors in the documentation
+
+2005/02/13
+  - do not pre-initialize unused file-descriptors before select() anymore.
+
 2005/01/22 : 1.1.30
   - add an architecture guide to the documentation
   - released without any changes
