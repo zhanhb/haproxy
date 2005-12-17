@@ -566,7 +566,7 @@ struct fdtab {
 
 /*********************************************************************/
 
-int cfg_maxpconn = 2000;	/* # of simultaneous connections per proxy (-N) */
+int cfg_maxpconn = DEFAULT_MAXCONN;	/* # of simultaneous connections per proxy (-N) */
 char *cfg_cfgfile = NULL;	/* configuration file */
 char *progname = NULL;		/* program name */
 int  pid;			/* current process id */
