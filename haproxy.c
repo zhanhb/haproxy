@@ -58,7 +58,7 @@
 #include <linux/netfilter_ipv4.h>
 #endif
 
-#define HAPROXY_VERSION "1.1.32-pre3"
+#define HAPROXY_VERSION "1.1.32-pre4"
 #define HAPROXY_DATE	"2005/07/05"
 
 /* this is for libc5 for example */
@@ -2180,6 +2180,7 @@ void client_retnclose(struct session *s, int len, const char *msg) {
     FD_CLR(s->cli_fd, StaticReadEvent);
     FD_SET(s->cli_fd, StaticWriteEvent);
     tv_eternity(&s->crexpire);
+    tv_delayfrom(&s->cwexpire, &now, s->proxy->clitimeout);
     shutdown(s->cli_fd, SHUT_RD);
     s->cli_state = CL_STSHUTR;
     strcpy(s->rep->data, msg);
@@ -2563,12 +2564,14 @@ int event_accept(int fd) {
 	tv_eternity(&s->swexpire);
 	tv_eternity(&s->cwexpire);
 
-	if (s->proxy->clitimeout)
-	    tv_delayfrom(&s->crexpire, &now, s->proxy->clitimeout);
-	else
-	    tv_eternity(&s->crexpire);
+	if (s->proxy->clitimeout) {
+	    if (FD_ISSET(cfd, StaticReadEvent))
+		tv_delayfrom(&s->crexpire, &now, s->proxy->clitimeout);
+	    if (FD_ISSET(cfd, StaticWriteEvent))
+		tv_delayfrom(&s->cwexpire, &now, s->proxy->clitimeout);
+	}
 
-	t->expire = s->crexpire;
+	tv_min(&t->expire, &s->crexpire, &s->cwexpire);
 
 	task_queue(t);
 
@@ -2821,7 +2824,11 @@ int process_cli(struct session *t) {
     struct buffer *rep = t->rep;
 
 #ifdef DEBUG_FULL
-    fprintf(stderr,"process_cli: c=%s, s=%s\n", cli_stnames[c], srv_stnames[s]);
+    fprintf(stderr,"process_cli: c=%s s=%s set(r,w)=%d,%d exp(r,w)=%d.%d,%d.%d\n",
+	    cli_stnames[c], srv_stnames[s],
+	    FD_ISSET(t->cli_fd, StaticReadEvent), FD_ISSET(t->cli_fd, StaticWriteEvent),
+	    t->crexpire.tv_sec, t->crexpire.tv_usec,
+	    t->cwexpire.tv_sec, t->cwexpire.tv_usec);
 #endif
     //fprintf(stderr,"process_cli: c=%d, s=%d, cr=%d, cw=%d, sr=%d, sw=%d\n", c, s,
     //FD_ISSET(t->cli_fd, StaticReadEvent), FD_ISSET(t->cli_fd, StaticWriteEvent),
@@ -2901,6 +2908,10 @@ int process_cli(struct session *t) {
 		     * and we know for sure that it can expire, then it's cleaner to
 		     * disable the timeout on the client side so that too low values
 		     * cannot make the sessions abort too early.
+		     *
+		     * FIXME-20050705: the server needs a way to re-enable this time-out
+		     * when it switches its state, otherwise a client can stay connected
+		     * indefinitely. This now seems to be OK.
 		     */
 		    tv_eternity(&t->crexpire);
 
@@ -3339,6 +3350,11 @@ int process_cli(struct session *t) {
 	    FD_CLR(t->cli_fd, StaticWriteEvent);
 	    tv_eternity(&t->cwexpire);
 	    shutdown(t->cli_fd, SHUT_WR);
+	    /* We must ensure that the read part is still alive when switching
+	     * to shutw */
+	    FD_SET(t->cli_fd, StaticReadEvent);
+	    if (t->proxy->clitimeout)
+		tv_delayfrom(&t->crexpire, &now, t->proxy->clitimeout);
 	    t->cli_state = CL_STSHUTW;
 	    return 1;
 	}
@@ -3359,6 +3375,12 @@ int process_cli(struct session *t) {
 	    FD_CLR(t->cli_fd, StaticWriteEvent);
 	    tv_eternity(&t->cwexpire);
 	    shutdown(t->cli_fd, SHUT_WR);
+	    /* We must ensure that the read part is still alive when switching
+	     * to shutw */
+	    FD_SET(t->cli_fd, StaticReadEvent);
+	    if (t->proxy->clitimeout)
+		tv_delayfrom(&t->crexpire, &now, t->proxy->clitimeout);
+
 	    t->cli_state = CL_STSHUTW;
 	    if (!(t->flags & SN_ERR_MASK))
 		t->flags |= SN_ERR_CLITO;
@@ -3490,6 +3512,11 @@ int process_cli(struct session *t) {
 	}
 	else if (req->l >= req->rlim - req->data) {
 	    /* no room to read more data */
+
+	    /* FIXME-20050705: is it possible for a client to maintain a session
+	     * after the timeout by sending more data after it receives a close ?
+	     */
+
 	    if (FD_ISSET(t->cli_fd, StaticReadEvent)) {
 		/* stop reading until we get some space */
 		FD_CLR(t->cli_fd, StaticReadEvent);
@@ -4132,6 +4159,13 @@ int process_srv(struct session *t) {
 	else if ((/*c == CL_STSHUTR ||*/ c == CL_STCLOSE) && (req->l == 0)) {
 	    FD_CLR(t->srv_fd, StaticWriteEvent);
 	    tv_eternity(&t->swexpire);
+
+	    /* We must ensure that the read part is still alive when switching
+	     * to shutw */
+	    FD_SET(t->srv_fd, StaticReadEvent);
+	    if (t->proxy->srvtimeout)
+		tv_delayfrom(&t->srexpire, &now, t->proxy->srvtimeout);
+
 	    shutdown(t->srv_fd, SHUT_WR);
 	    t->srv_state = SV_STSHUTW;
 	    return 1;
@@ -4145,6 +4179,12 @@ int process_srv(struct session *t) {
 	    FD_CLR(t->srv_fd, StaticWriteEvent);
 	    tv_eternity(&t->swexpire);
 	    shutdown(t->srv_fd, SHUT_WR);
+	    /* We must ensure that the read part is still alive when switching
+	     * to shutw */
+	    FD_SET(t->srv_fd, StaticReadEvent);
+	    if (t->proxy->srvtimeout)
+		tv_delayfrom(&t->srexpire, &now, t->proxy->srvtimeout);
+
 	    t->srv_state = SV_STSHUTW;
 	    if (!(t->flags & SN_ERR_MASK))
 		t->flags |= SN_ERR_SRVTO;
@@ -4206,6 +4246,12 @@ int process_srv(struct session *t) {
 	    FD_CLR(t->srv_fd, StaticWriteEvent);
 	    tv_eternity(&t->swexpire);
 	    shutdown(t->srv_fd, SHUT_WR);
+	    /* We must ensure that the read part is still alive when switching
+	     * to shutw */
+	    FD_SET(t->srv_fd, StaticReadEvent);
+	    if (t->proxy->srvtimeout)
+		tv_delayfrom(&t->srexpire, &now, t->proxy->srvtimeout);
+
 	    t->srv_state = SV_STSHUTW;
 	    return 1;
 	}
@@ -4226,6 +4272,12 @@ int process_srv(struct session *t) {
 	    FD_CLR(t->srv_fd, StaticWriteEvent);
 	    tv_eternity(&t->swexpire);
 	    shutdown(t->srv_fd, SHUT_WR);
+	    /* We must ensure that the read part is still alive when switching
+	     * to shutw */
+	    FD_SET(t->srv_fd, StaticReadEvent);
+	    if (t->proxy->srvtimeout)
+		tv_delayfrom(&t->srexpire, &now, t->proxy->srvtimeout);
+
 	    t->srv_state = SV_STSHUTW;
 	    if (!(t->flags & SN_ERR_MASK))
 		t->flags |= SN_ERR_SRVTO;
