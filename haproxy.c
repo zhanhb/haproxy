@@ -58,7 +58,7 @@
 #include <linux/netfilter_ipv4.h>
 #endif
 
-#define HAPROXY_VERSION "1.1.32-pre1"
+#define HAPROXY_VERSION "1.1.32-pre2"
 #define HAPROXY_DATE	"2005/07/05"
 
 /* this is for libc5 for example */
@@ -575,6 +575,7 @@ static struct {
     int nbproc;
     int maxconn;
     int maxsock;		/* max # of sockets */
+    int rlimit_nofile;		/* default ulimit-n value : 0=unset */
     int mode;
     char *chroot;
     char *pidfile;
@@ -4964,6 +4965,17 @@ int cfg_parse_global(char *file, int linenum, char **args) {
 	}
 	global.maxconn = atol(args[1]);
     }
+    else if (!strcmp(args[0], "ulimit-n")) {
+	if (global.rlimit_nofile != 0) {
+	    Alert("parsing [%s:%d] : '%s' already specified. Continuing.\n", file, linenum, args[0]);
+	    return 0;
+	}
+	if (*(args[1]) == 0) {
+	    Alert("parsing [%s:%d] : '%s' expects an integer argument.\n", file, linenum, args[0]);
+	    return -1;
+	}
+	global.rlimit_nofile = atol(args[1]);
+    }
     else if (!strcmp(args[0], "chroot")) {
 	if (global.chroot != NULL) {
 	    Alert("parsing [%s:%d] : '%s' already specified. Continuing.\n", file, linenum, args[0]);
@@ -6697,6 +6709,7 @@ int start_proxies() {
 
 
 int main(int argc, char **argv) {
+    struct rlimit limit;
     FILE *pidfile = NULL;
     init(argc, argv);
 
@@ -6741,6 +6754,14 @@ int main(int argc, char **argv) {
 	chdir("/");
     }
 
+    /* ulimits */
+    if (global.rlimit_nofile) {
+	limit.rlim_cur = limit.rlim_max = global.rlimit_nofile;
+	if (setrlimit(RLIMIT_NOFILE, &limit) == -1) {
+	    Warning("[%s.main()] Cannot raise FD limit to %d.\n", argv[0], global.rlimit_nofile);
+	}
+    }
+
     /* setgid / setuid */
     if (global.gid && setgid(global.gid) == -1) {
 	Alert("[%s.main()] Cannot set gid %d.\n", argv[0], global.gid);
@@ -6750,6 +6771,14 @@ int main(int argc, char **argv) {
     if (global.uid && setuid(global.uid) == -1) {
 	Alert("[%s.main()] Cannot set uid %d.\n", argv[0], global.uid);
 	exit(1);
+    }
+
+    /* check ulimits */
+    limit.rlim_cur = limit.rlim_max = 0;
+    getrlimit(RLIMIT_NOFILE, &limit);
+    if (limit.rlim_cur < global.maxsock) {
+	Warning("[%s.main()] FD limit (%d) too low for maxconn=%d/maxsock=%d. Please raise 'ulimit-n' to %d or more to avoid any trouble.\n",
+		argv[0], limit.rlim_cur, global.maxconn, global.maxsock, global.maxsock);
     }
 
     if (global.mode & MODE_DAEMON) {

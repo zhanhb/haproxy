@@ -1,6 +1,12 @@
 ChangeLog :
 ===========
 
+2005/07/05 : 1.1.32-pre2
+  - new global configuration keyword "ulimit-n" may be used to raise the FD
+    limit to usable values.
+  - a warning is now displayed on startup if the FD limit is lower than the
+    configured maximum number of sockets.
+
 2005/07/05 : 1.1.32-pre1
   - new configuration keyword "monitor-net" makes it possible to be monitored
     by external devices which connect to the proxy without being logged nor
