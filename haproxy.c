@@ -1967,9 +1967,9 @@ int event_srv_read(int fd) {
 
 #ifndef MSG_NOSIGNAL
 	    {
-		int skerr, lskerr;
+		int skerr;
+		socklen_t lskerr = sizeof(skerr);
 
-		lskerr = sizeof(skerr);
 		getsockopt(fd, SOL_SOCKET, SO_ERROR, &skerr, &lskerr);
 		if (skerr)
 		    ret = -1;
@@ -2047,10 +2047,6 @@ int event_cli_write(int fd) {
 	max = b->data + BUFSIZE - b->w;
     
     if (fdtab[fd].state != FD_STERROR) {
-#ifndef MSG_NOSIGNAL
-	int skerr, lskerr;
-#endif
-
 	if (max == 0) {
 	    s->res_cw = RES_NULL;
 	    task_wakeup(&rq, t);
@@ -2060,12 +2056,16 @@ int event_cli_write(int fd) {
 	}
 
 #ifndef MSG_NOSIGNAL
-	lskerr=sizeof(skerr);
-	getsockopt(fd, SOL_SOCKET, SO_ERROR, &skerr, &lskerr);
-	if (skerr)
+	{
+	    int skerr;
+	    socklen_t lskerr = sizeof(skerr);
+
+	    getsockopt(fd, SOL_SOCKET, SO_ERROR, &skerr, &lskerr);
+	    if (skerr)
 		ret = -1;
-	else
+	    else
 		ret = send(fd, b->w, max, MSG_DONTWAIT);
+	}
 #else
 	ret = send(fd, b->w, max, MSG_DONTWAIT | MSG_NOSIGNAL);
 #endif
@@ -2134,9 +2134,6 @@ int event_srv_write(int fd) {
 	max = b->data + BUFSIZE - b->w;
     
     if (fdtab[fd].state != FD_STERROR) {
-#ifndef MSG_NOSIGNAL
-	int skerr, lskerr;
-#endif
 	if (max == 0) {
 	    /* may be we have received a connection acknowledgement in TCP mode without data */
 	    s->res_sw = RES_NULL;
@@ -2149,12 +2146,15 @@ int event_srv_write(int fd) {
 
 
 #ifndef MSG_NOSIGNAL
-	lskerr=sizeof(skerr);
-	getsockopt(fd, SOL_SOCKET, SO_ERROR, &skerr, &lskerr);
-	if (skerr)
+	{
+	    int skerr;
+	    socklen_t lskerr = sizeof(skerr);
+	    getsockopt(fd, SOL_SOCKET, SO_ERROR, &skerr, &lskerr);
+	    if (skerr)
 		ret = -1;
-	else
+	    else
 		ret = send(fd, b->w, max, MSG_DONTWAIT);
+	}
 #else
 	ret = send(fd, b->w, max, MSG_DONTWAIT | MSG_NOSIGNAL);
 #endif
@@ -2631,8 +2631,9 @@ int event_srv_chk_w(int fd) {
     struct task *t = fdtab[fd].owner;
     struct server *s = t->context;
 
-    int skerr, lskerr;
-    lskerr = sizeof(skerr);
+    int skerr;
+    socklen_t lskerr = sizeof(skerr);
+
     getsockopt(fd, SOL_SOCKET, SO_ERROR, &skerr, &lskerr);
     /* in case of TCP only, this tells us if the connection succeeded */
     if (skerr)
@@ -2678,14 +2679,16 @@ int event_srv_chk_r(int fd) {
     struct task *t = fdtab[fd].owner;
     struct server *s = t->context;
 
-    int skerr, lskerr;
-    lskerr = sizeof(skerr);
 
     s->result = len = -1;
 #ifndef MSG_NOSIGNAL
-    getsockopt(fd, SOL_SOCKET, SO_ERROR, &skerr, &lskerr);
-    if (!skerr)
-	len = recv(fd, reply, sizeof(reply), 0);
+    {
+	int skerr;
+	socklen_t lskerr = sizeof(skerr);
+	getsockopt(fd, SOL_SOCKET, SO_ERROR, &skerr, &lskerr);
+	if (!skerr)
+	    len = recv(fd, reply, sizeof(reply), 0);
+    }
 #else
     /* Warning! Linux returns EAGAIN on SO_ERROR if data are still available
      * but the connection was closed on the remote end. Fortunately, recv still
