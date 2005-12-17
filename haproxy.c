@@ -58,7 +58,7 @@
 #include <linux/netfilter_ipv4.h>
 #endif
 
-#define HAPROXY_VERSION "1.1.32-pre4"
+#define HAPROXY_VERSION "1.1.32"
 #define HAPROXY_DATE	"2005/07/05"
 
 /* this is for libc5 for example */
@@ -523,7 +523,7 @@ struct proxy {
     struct sockaddr_in source_addr;	/* the address to which we want to bind for connect() */
     struct proxy *next;
     struct sockaddr_in logsrv1, logsrv2; /* 2 syslog servers */
-    char logfac1, logfac2;		/* log facility for both servers. -1 = disabled */
+    signed char logfac1, logfac2;	/* log facility for both servers. -1 = disabled */
     int loglev1, loglev2;		/* log level for each server, 7 by default */
     int to_log;				/* things to be logged (LW_*) */
     struct timeval stop_time;		/* date to stop listening, when stopping != 0 */
