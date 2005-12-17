@@ -58,8 +58,8 @@
 #include <linux/netfilter_ipv4.h>
 #endif
 
-#define HAPROXY_VERSION "1.1.31"
-#define HAPROXY_DATE	"2005/04/30"
+#define HAPROXY_VERSION "1.1.32-pre1"
+#define HAPROXY_DATE	"2005/07/05"
 
 /* this is for libc5 for example */
 #ifndef TCP_NODELAY
@@ -291,6 +291,7 @@ int strlcpy2(char *dst, const char *src, int size) {
 #define SN_SVDENY	0x00000008	/* a server header matches a deny regex */
 #define SN_SVALLOW	0x00000010	/* a server header matches an allow regex */
 #define	SN_POST		0x00000020	/* the request was an HTTP POST */
+#define SN_MONITOR	0x00000040	/* this session comes from a monitoring system */
 
 #define	SN_CK_NONE	0x00000000	/* this session had no cookie */
 #define	SN_CK_INVALID	0x00000040	/* this session had a cookie which matches no server */
@@ -497,6 +498,7 @@ struct listener {
     
 struct proxy {
     struct listener *listen;		/* the listen addresses and sockets */
+    struct in_addr mon_net, mon_mask;	/* don't forward connections from this net (network order) */
     int state;				/* proxy state */
     struct sockaddr_in dispatch_addr;	/* the default address to connect to */
     struct server *srv, *cursrv;	/* known servers, current server */
@@ -886,6 +888,54 @@ struct sockaddr_in *str2sa(char *str) {
 
     free(str);
     return &sa;
+}
+
+/*
+ * converts <str> to a two struct in_addr* which are locally allocated.
+ * The format is "addr[/mask]", where "addr" cannot be empty, and mask
+ * is optionnal and either in the dotted or CIDR notation.
+ * Note: "addr" can also be a hostname. Returns 1 if OK, 0 if error.
+ */
+int str2net(char *str, struct in_addr *addr, struct in_addr *mask) {
+    char *c;
+    unsigned long len;
+
+    memset(mask, 0, sizeof(*mask));
+    memset(addr, 0, sizeof(*addr));
+    str=strdup(str);
+
+    if ((c = strrchr(str, '/')) != NULL) {
+	*c++ = 0;
+        /* c points to the mask */
+	if (strchr(c, '.') != NULL) {	    /* dotted notation */
+	    if (!inet_pton(AF_INET, c, mask))
+		return 0;
+	}
+	else { /* mask length */
+	    char *err;
+	    len = strtol(c, &err, 10);
+	    if (!*c || (err && *err) || (unsigned)len > 32)
+		return 0;
+	    if (len)
+		mask->s_addr = htonl(0xFFFFFFFFUL << (32 - len));
+	    else
+		mask->s_addr = 0;
+	}
+    }
+    else {
+	mask->s_addr = 0xFFFFFFFF;
+    }
+    if (!inet_pton(AF_INET, str, addr)) {
+	struct hostent *he;
+
+	if ((he = gethostbyname(str)) == NULL) {
+	    return 0;
+	}
+	else
+	    *addr = *(struct in_addr *) *(he->h_addr_list);
+    }
+    free(str);
+    return 1;
 }
 
 
@@ -2231,6 +2281,20 @@ int event_accept(int fd) {
 	    return 0;
 	}
 
+	/* if this session comes from a known monitoring system, we want to ignore
+	 * it as soon as possible, which means closing it immediately for TCP.
+	 */
+	s->flags = 0;
+	if (p->mon_mask.s_addr &&
+	    (addr.sin_addr.s_addr & p->mon_mask.s_addr) == p->mon_net.s_addr) {
+	    if (p->mode == PR_MODE_TCP) {
+		close(cfd);
+		pool_free(session, s);
+		continue;
+	    }
+	    s->flags |= SN_MONITOR;
+	}
+
 	if ((t = pool_alloc(task)) == NULL) { /* disable this proxy for a while */
 	    Alert("out of memory in event_accept().\n");
 	    FD_CLR(fd, StaticReadEvent);
@@ -2270,7 +2334,6 @@ int event_accept(int fd) {
 	s->cli_state = (p->mode == PR_MODE_HTTP) ?  CL_STHEADERS : CL_STDATA; /* no HTTP headers for non-HTTP proxies */
 	s->srv_state = SV_STIDLE;
 	s->req = s->rep = NULL; /* will be allocated later */
-	s->flags = 0;
 
 	s->res_cr = s->res_cw = s->res_sr = s->res_sw = RES_SILENT;
 	s->cli_fd = cfd;
@@ -2278,7 +2341,11 @@ int event_accept(int fd) {
 	s->srv = NULL;
 	s->conn_retries = p->conn_retries;
 
-	s->logs.logwait = p->to_log;
+	if (s->flags & SN_MONITOR)
+	    s->logs.logwait = 0;
+	else
+	    s->logs.logwait = p->to_log;
+
 	s->logs.tv_accept = now;
 	s->logs.t_request = -1;
 	s->logs.t_connect = -1;
@@ -2403,11 +2470,15 @@ int event_accept(int fd) {
 	fdtab[cfd].owner = t;
 	fdtab[cfd].state = FD_STREADY;
 
-	if (p->mode == PR_MODE_HEALTH) {  /* health check mode, no client reading */
-	    if (p->options & PR_O_HTTP_CHK) /* "option httpchk" will make it speak HTTP */
-		client_retnclose(s, 19, "HTTP/1.0 200 OK\r\n\r\n"); /* forge a 200 response */
-	    else
-		client_retnclose(s, 3, "OK\n"); /* forge an "OK" response */
+	if ((p->mode == PR_MODE_HTTP && (s->flags & SN_MONITOR)) ||
+	    (p->mode == PR_MODE_HEALTH && (p->options & PR_O_HTTP_CHK)))
+	    /* Either we got a request from a monitoring system on an HTTP instance,
+	     * or we're in health check mode with the 'httpchk' option enabled. In
+	     * both cases, we return a fake "HTTP/1.0 200 OK" response and we exit.
+	     */
+	    client_retnclose(s, 19, "HTTP/1.0 200 OK\r\n\r\n"); /* forge a 200 response */
+	else if (p->mode == PR_MODE_HEALTH) {  /* health check mode, no client reading */
+	    client_retnclose(s, 3, "OK\n"); /* forge an "OK" response */
 	}
 	else {
 	    FD_SET(cfd, StaticReadEvent);
@@ -5066,6 +5137,8 @@ int cfg_parse_listen(char *file, int linenum, char **args) {
 	curproxy->to_log = defproxy.to_log & ~LW_COOKIE & ~LW_REQHDR & ~ LW_RSPHDR;
 	curproxy->grace  = defproxy.grace;
 	curproxy->source_addr = defproxy.source_addr;
+	curproxy->mon_net = defproxy.mon_net;
+	curproxy->mon_mask = defproxy.mon_mask;
 	return 0;
     }
     else if (!strcmp(args[0], "defaults")) {  /* use this one to assign default values */
@@ -5102,6 +5175,16 @@ int cfg_parse_listen(char *file, int linenum, char **args) {
 	    return -1;
 	}
 	curproxy->listen = str2listener(args[1], curproxy->listen);
+	return 0;
+    }
+    else if (!strcmp(args[0], "monitor-net")) {  /* set the range of IPs to ignore */
+	if (!*args[1] || !str2net(args[1], &curproxy->mon_net, &curproxy->mon_mask)) {
+	    Alert("parsing [%s:%d] : '%s' expects address[/mask].\n",
+		  file, linenum, args[0]);
+	    return -1;
+	}
+	/* flush useless bits */
+	curproxy->mon_net.s_addr &= curproxy->mon_mask.s_addr;
 	return 0;
     }
     else if (!strcmp(args[0], "mode")) {  /* sets the proxy mode */

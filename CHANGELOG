@@ -1,6 +1,11 @@
 ChangeLog :
 ===========
 
+2005/07/05 : 1.1.32-pre1
+  - new configuration keyword "monitor-net" makes it possible to be monitored
+    by external devices which connect to the proxy without being logged nor
+    forwarded to any server. Particularly useful on generic TCP relays.
+
 2005/04/30 : 1.1.31
   - changed default FD_SETSIZE to 65536 on Solaris (default=1024)
 
