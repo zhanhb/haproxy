@@ -65,8 +65,8 @@
 #include <linux/netfilter_ipv4.h>
 #endif
 
-#define HAPROXY_VERSION "1.1.33rc"
-#define HAPROXY_DATE	"2005/10/09"
+#define HAPROXY_VERSION "1.1.33"
+#define HAPROXY_DATE	"2005/10/25"
 
 /* this is for libc5 for example */
 #ifndef TCP_NODELAY
