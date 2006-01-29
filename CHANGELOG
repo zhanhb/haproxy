@@ -1,6 +1,15 @@
 ChangeLog :
 ===========
 
+2006/01/29 : 1.1.34
+  - the "retries" option was ignored because connect() could not return an
+    error if the connection failed before the timeout.
+  - fixed a nasty bug affecting poll/epoll which could return unmodified data
+    from the server to the client, and sometimes lead to memory corruption
+    crashing the process. It did not affect select() code but had to be fixed
+    anyway.
+  - added the new pause/play mechanism with SIGTTOU/SIGTTIN for hot-reconf.
+
 2005/10/25 : 1.1.33
   - building with -DUSE_PCRE should include PCRE headers and not regex.h. At
     least on Solaris, this caused the libc's regex primitives to be used instead
