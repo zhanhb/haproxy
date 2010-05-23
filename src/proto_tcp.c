@@ -408,7 +408,7 @@ int tcp_inspect_request(struct session *s, struct buffer *req)
 				buffer_abort(req);
 				buffer_abort(s->rep);
 				req->analysers = 0;
-				s->fe->failed_req++;
+				s->fe->denied_req++;
 				if (!(s->flags & SN_ERR_MASK))
 					s->flags |= SN_ERR_PRXCOND;
 				if (!(s->flags & SN_FINST_MASK))
