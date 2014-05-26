@@ -3202,7 +3202,10 @@ int apply_filter_to_req_headers(struct session *t, struct buffer *req, struct hd
 				break;
 
 			case ACT_REPLACE:
-				len = exp_replace(trash, cur_ptr, exp->replace, pmatch);
+				len = exp_replace(trash, sizeof(trash), cur_ptr, exp->replace, pmatch);
+				if (len < 0)
+					return -1;
+
 				delta = buffer_replace2(req, cur_ptr, cur_end, trash, len);
 				/* FIXME: if the user adds a newline in the replacement, the
 				 * index will not be recalculated for now, and the new line
@@ -3326,7 +3329,10 @@ int apply_filter_to_req_line(struct session *t, struct buffer *req, struct hdr_e
 
 		case ACT_REPLACE:
 			*cur_end = term; /* restore the string terminator */
-			len = exp_replace(trash, cur_ptr, exp->replace, pmatch);
+			len = exp_replace(trash, sizeof(trash), cur_ptr, exp->replace, pmatch);
+			if (len < 0)
+				return -1;
+
 			delta = buffer_replace2(req, cur_ptr, cur_end, trash, len);
 			/* FIXME: if the user adds a newline in the replacement, the
 			 * index will not be recalculated for now, and the new line
@@ -3999,7 +4005,10 @@ int apply_filter_to_resp_headers(struct session *t, struct buffer *rtr, struct h
 				break;
 
 			case ACT_REPLACE:
-				len = exp_replace(trash, cur_ptr, exp->replace, pmatch);
+				len = exp_replace(trash, sizeof(trash), cur_ptr, exp->replace, pmatch);
+				if (len < 0)
+					return -1;
+
 				delta = buffer_replace2(rtr, cur_ptr, cur_end, trash, len);
 				/* FIXME: if the user adds a newline in the replacement, the
 				 * index will not be recalculated for now, and the new line
@@ -4089,7 +4098,10 @@ int apply_filter_to_sts_line(struct session *t, struct buffer *rtr, struct hdr_e
 
 		case ACT_REPLACE:
 			*cur_end = term; /* restore the string terminator */
-			len = exp_replace(trash, cur_ptr, exp->replace, pmatch);
+			len = exp_replace(trash, sizeof(trash), cur_ptr, exp->replace, pmatch);
+			if (len < 0)
+				return -1;
+
 			delta = buffer_replace2(rtr, cur_ptr, cur_end, trash, len);
 			/* FIXME: if the user adds a newline in the replacement, the
 			 * index will not be recalculated for now, and the new line
@@ -4156,7 +4168,8 @@ int apply_filters_to_response(struct session *t, struct buffer *rtr, struct hdr_
 			/* The filter did not match the response, it can be
 			 * iterated through all headers.
 			 */
-			apply_filter_to_resp_headers(t, rtr, exp);
+			if (unlikely(apply_filter_to_resp_headers(t, rtr, exp) < 0))
+				return -1;
 		}
 		exp = exp->next;
 	}
