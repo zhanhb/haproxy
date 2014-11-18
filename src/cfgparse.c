@@ -895,7 +895,6 @@ int cfg_parse_listen(const char *file, int linenum, char **args, int inv)
 		curproxy->options = defproxy.options;
 		curproxy->options2 = defproxy.options2;
 		curproxy->bind_proc = defproxy.bind_proc;
-		curproxy->lbprm.algo = defproxy.lbprm.algo;
 		curproxy->except_net = defproxy.except_net;
 		curproxy->except_mask = defproxy.except_mask;
 		curproxy->except_to = defproxy.except_to;
@@ -926,6 +925,7 @@ int cfg_parse_listen(const char *file, int linenum, char **args, int inv)
 		}
 
 		if (curproxy->cap & PR_CAP_BE) {
+			curproxy->lbprm.algo = defproxy.lbprm.algo;
 			curproxy->fullconn = defproxy.fullconn;
 			curproxy->conn_retries = defproxy.conn_retries;
 
