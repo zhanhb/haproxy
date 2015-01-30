@@ -4002,7 +4002,8 @@ int apply_filters_to_request(struct session *t, struct buffer *req, struct hdr_e
 			/* The filter did not match the request, it can be
 			 * iterated through all headers.
 			 */
-			apply_filter_to_req_headers(t, req, exp);
+			if (unlikely(apply_filter_to_req_headers(t, req, exp) < 0))
+				return -1;
 		}
 		exp = exp->next;
 	}
