@@ -1,6 +1,17 @@
 ChangeLog :
 ===========
 
+2015/02/01 : 1.3.15.14
+    - BUG/MEDIUM: regex: fix risk of buffer overrun in exp_replace()
+    - BUG/MEDIUM: zero-weight servers must not dequeue requests from the backend
+    - BUG/MEDIUM: http: "option checkcache" fails with the no-cache header
+    - BUG: proto_tcp: set AF_INET on tproxy for use with recent kernels
+    - BUG/MEDIUM: balance source did not properly hash IPv6 addresses
+    - BUG/MINOR: epoll: correctly disable FD polling in fd_rem()
+    - BUG/MINOR: config: fix improper check for failed memory alloc in ACL parser
+    - BUG/MEDIUM: tcp: don't use SO_ORIGINAL_DST on non-AF_INET sockets
+    - BUG/MINOR: http: abort request processing on filter failure
+
 2011/08/05 : 1.3.15.13
     - [MINOR] cfgparse: Check whether the path given for the stats socket actually fits into the sockaddr_un structure to avoid truncation.
     - [BUG] Configuration parser bug when escaping characters
