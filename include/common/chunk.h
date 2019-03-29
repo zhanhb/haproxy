@@ -36,7 +36,7 @@ struct chunk {
 	int len;	/* current size of the string from first to last char. <0 = uninit. */
 };
 
-struct pool_head *pool_head_trash;
+extern struct pool_head *pool_head_trash;
 
 /* function prototypes */
 
