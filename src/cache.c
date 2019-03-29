@@ -40,7 +40,7 @@ static const char *cache_store_flt_id = "cache store filter";
 
 static struct pool_head *pool_head_cache_st = NULL;
 
-struct applet http_cache_applet;
+extern struct applet http_cache_applet;
 
 struct flt_ops cache_ops;
 
