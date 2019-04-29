@@ -1130,6 +1130,7 @@ void pat_prune_reg(struct pattern_expr *expr)
 	list_for_each_entry_safe(pat, tmp, &expr->patterns, list) {
 		LIST_DEL(&pat->list);
 		regex_free(pat->pat.ptr.ptr);
+		free(pat->pat.ptr.ptr);
 		free(pat->pat.data);
 		free(pat);
 	}
@@ -1550,6 +1551,7 @@ void pat_del_list_reg(struct pattern_expr *expr, struct pat_ref_elt *ref)
 		/* Delete and free entry. */
 		LIST_DEL(&pat->list);
 		regex_free(pat->pat.ptr.ptr);
+		free(pat->pat.ptr.ptr);
 		free(pat->pat.data);
 		free(pat);
 	}
