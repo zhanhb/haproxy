@@ -1,6 +1,35 @@
 ChangeLog :
 ===========
 
+2019/06/26 : 2.0.1
+    - BUG/MEDIUM: h2/htx: Update data length of the HTX when the cookie list is built
+    - BUG/MINOR: lua/htx: Make txn.req_req_* and txn.res_rep_* HTX aware
+    - BUG/MINOR: mux-h1: Add the header connection in lower case in outgoing messages
+    - BUG/MEDIUM: compression: Set Vary: Accept-Encoding for compressed responses
+    - MINOR: htx: Add the function htx_change_blk_value_len()
+    - BUG/MEDIUM: htx: Fully update HTX message when the block value is changed
+    - BUG/MEDIUM: mux-h2: Reset padlen when several frames are demux
+    - BUG/MEDIUM: mux-h2: Remove the padding length when a DATA frame size is checked
+    - BUG/MEDIUM: lb_fwlc: Don't test the server's lb_tree from outside the lock
+    - BUG/MAJOR: sample: Wrong stick-table name parsing in "if/unless" ACL condition.
+    - BUG/MINOR: mworker-prog: Fix segmentation fault during cfgparse
+    - BUG/MEDIUM: mworker: don't call the thread and fdtab deinit
+    - BUG/MEDIUM: mworker/cli: command pipelining doesn't work anymore
+    - BUILD: mworker: silence two printf format warnings around getpid()
+    - BUILD: makefile: use :space: instead of digits to count commits
+    - BUILD: makefile: do not rely on shell substitutions to determine git version
+    - BUG/MINOR: spoe: Fix memory leak if failing to allocate memory
+    - BUG/MEDIUM: stream_interface: Don't add SI_FL_ERR the state is < SI_ST_CON.
+    - BUG/MEDIUM: connections: Always add the xprt handshake if needed.
+    - BUG/MEDIUM: ssl: Don't do anything in ssl_subscribe if we have no ctx.
+    - BUG/MINOR: htx: Save hdrs_bytes when the HTX start-line is replaced
+    - BUG/MAJOR: mux-h1: Don't crush trash chunk area when outgoing message is formatted
+    - BUG/MINOR: memory: Set objects size for pools in the per-thread cache
+    - BUG/MINOR: log: Detect missing sampling ranges in config
+    - BUG/MEDIUM: proto_htx: Don't add EOM on 1xx informational messages
+    - BUG/MEDIUM: mux-h1: Use buf_room_for_htx_data() to detect too large messages
+    - BUG/MINOR: mux-h1: Make format errors during output formatting fatal
+
 2019/06/16 : 2.0.0
     - MINOR: fd: Don't use atomic operations when it's not needed.
     - DOC: mworker-prog: documentation for the program section
