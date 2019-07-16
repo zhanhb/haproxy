@@ -1,6 +1,50 @@
 ChangeLog :
 ===========
 
+2019/07/16 : 2.0.2
+    - BUG/MINOR: mworker/cli: don't output a \n before the response
+    - BUG/MEDIUM: ssl: Don't attempt to set alpn if we're not using SSL.
+    - BUG/MEDIUM: mux-h1: Always release H1C if a shutdown for writes was reported
+    - BUG/MEDIUM: checks: unblock signals in external checks
+    - BUG/MINOR: mux-h1: Skip trailers for non-chunked outgoing messages
+    - BUG/MINOR: mux-h1: Don't return the empty chunk on HEAD responses
+    - BUG/MEDIUM: connections: Always call shutdown, with no linger.
+    - BUG/MEDIUM: checks: Make sure the tasklet won't run if the connection is closed.
+    - BUG/MINOR: contrib/prometheus-exporter: Don't use channel_htx_recv_max()
+    - BUG/MINOR: hlua: Don't use channel_htx_recv_max()
+    - BUG/MEDIUM: channel/htx: Use the total HTX size in channel_htx_recv_limit()
+    - BUG/MINOR: hlua/htx: Respect the reserve when HTX data are sent
+    - BUG/MINOR: contrib/prometheus-exporter: Respect the reserve when data are sent
+    - BUG/MEDIUM: connections: Make sure we're unsubscribe before upgrading the mux.
+    - BUG/MEDIUM: servers: Authorize tfo in default-server.
+    - BUG/MEDIUM: sessions: Don't keep an extra idle connection in sessions.
+    - MINOR: server: Add "no-tfo" option.
+    - BUG/MINOR: contrib/prometheus-exporter: Don't try to add empty data blocks
+    - MINOR: action: Add the return code ACT_RET_DONE for actions
+    - BUG/MEDIUM: http/applet: Finish request processing when a service is registered
+    - BUG/MEDIUM: lb_fas: Don't test the server's lb_tree from outside the lock
+    - BUG/MEDIUM: mux-h1: Handle TUNNEL state when outgoing messages are formatted
+    - BUG/MINOR: mux-h1: Don't process input or ouput if an error occurred
+    - MINOR: stream-int: Factorize processing done after sending data in si_cs_send()
+    - BUG/MEDIUM: stream-int: Don't rely on CF_WRITE_PARTIAL to unblock opposite si
+    - BUG/MEDIUM: servers: Don't forget to set srv_cs to NULL if we can't reuse it.
+    - BUG/MINOR: ssl: revert empty handshake detection in OpenSSL <= 1.0.2
+    - BUG/MEDIUM: fd/threads: fix excessive CPU usage on multi-thread accept
+    - BUG/MINOR: server: Be really able to keep "pool-max-conn" idle connections
+    - BUG/MEDIUM: checks: Don't attempt to read if we destroyed the connection.
+    - BUG/MEDIUM: da: cast the chunk to string.
+    - DOC: Fix typos and grammer in configuration.txt
+    - BUG/MEDIUM: servers: Fix a race condition with idle connections.
+    - MINOR: task: introduce work lists
+    - BUG/MAJOR: listener: fix thread safety in resume_listener()
+    - BUG/MEDIUM: mux-h1: Don't release h1 connection if there is still data to send
+    - BUG/MINOR: mux-h1: Correctly report Ti timer when HTX and keepalives are used
+    - BUG/MEDIUM: streams: Don't give up if we couldn't send the request.
+    - BUG/MEDIUM: streams: Don't redispatch with L7 retries if redispatch isn't set.
+    - BUG/MINOR: mux-pt: do not pretend there's more data after a read0
+    - BUG/MEDIUM: tcp-check: unbreak multiple connect rules again
+    - BUG/MEDIUM: threads: cpu-map designating a single thread/process are ignored
+
 2019/06/26 : 2.0.1
     - BUG/MEDIUM: h2/htx: Update data length of the HTX when the cookie list is built
     - BUG/MINOR: lua/htx: Make txn.req_req_* and txn.res_rep_* HTX aware
