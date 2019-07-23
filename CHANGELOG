@@ -1,6 +1,27 @@
 ChangeLog :
 ===========
 
+2019/07/23 : 2.0.3
+    - BUG/MINOR: dns: remove irrelevant dependency on a client connection
+    - BUG/MEDIUM: checks: Don't attempt to receive data if we already subscribed.
+    - BUG/MEDIUM: http/htx: unbreak option http_proxy
+    - BUG/MINOR: backend: do not try to install a mux when the connection failed
+    - BUG/MINOR: http_fetch: Fix http_auth/http_auth_group when called from TCP rules
+    - BUG/MINOR: http_htx: Initialize HTX error messages for TCP proxies
+    - BUG/MINOR: cache/htx: Make maxage calculation HTX aware
+    - BUG/MINOR: hlua: Make the function txn:done() HTX aware
+    - DOC: htx: Update comments in HTX files
+    - BUG/MINOR: debug: Remove flags CO_FL_SOCK_WR_ENA/CO_FL_SOCK_RD_ENA
+    - BUG/MINOR: session: Emit an HTTP error if accept fails only for H1 connection
+    - BUG/MINOR: session: Send a default HTTP error if accept fails for a H1 socket
+    - BUG/MINOR: checks: do not exit tcp-checks from the middle of the loop
+    - BUG/MEDIUM: mux-h1: Trim excess server data at the end of a transaction
+    - BUG/MINOR: mux-h1: Close server connection if input data remains in h1_detach()
+    - BUG/MEDIUM: tcp-checks: do not dereference inexisting conn_stream
+    - BUG/MINOR: http_ana: Be sure to have an allocated buffer to generate an error
+    - BUG/MINOR: http_htx: Support empty errorfiles
+    - BUG/CRITICAL: http_ana: Fix parsing of malformed cookies which start by a delimiter
+
 2019/07/16 : 2.0.2
     - BUG/MINOR: mworker/cli: don't output a \n before the response
     - BUG/MEDIUM: ssl: Don't attempt to set alpn if we're not using SSL.
