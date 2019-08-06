@@ -1,6 +1,38 @@
 ChangeLog :
 ===========
 
+2019/08/06 : 2.0.4
+    - BUG/MEDIUM: protocols: add a global lock for the init/deinit stuff
+    - BUG/MINOR: proxy: always lock stop_proxy()
+    - BUILD: threads: add the definition of PROTO_LOCK
+    - BUG/MEDIUM: lb-chash: Fix the realloc() when the number of nodes is increased
+    - BUG/MEDIUM: streams: Don't switch the SI to SI_ST_DIS if we have data to send.
+    - BUG/MINOR: log: make sure writev() is not interrupted on a file output
+    - DOC: improve the wording in CONTRIBUTING about how to document a bug fix
+    - BUG/MINOR: hlua/htx: Reset channels analyzers when txn:done() is called
+    - BUG/MEDIUM: hlua: Check the calling direction in lua functions of the HTTP class
+    - MINOR: hlua: Don't set request analyzers on response channel for lua actions
+    - MINOR: hlua: Add a flag on the lua txn to know in which context it can be used
+    - BUG/MINOR: hlua: Only execute functions of HTTP class if the txn is HTTP ready
+    - BUG/MINOR: htx: Fix free space addresses calculation during a block expansion
+    - BUG/MAJOR: queue/threads: avoid an AB/BA locking issue in process_srv_queue()
+    - BUG/MINOR: debug: fix a small race in the thread dumping code
+    - MINOR: wdt: also consider that waiting in the thread dumper is normal
+    - BUG/MEDIUM: lb-chash: Ensure the tree integrity when server weight is increased
+    - BUG/MAJOR: http/sample: use a static buffer for raw -> htx conversion
+    - BUG/MINOR: stream-int: also update analysers timeouts on activity
+    - BUG/MEDIUM: mux-h2: unbreak receipt of large DATA frames
+    - BUG/MEDIUM: mux-h2: split the stream's and connection's window sizes
+    - BUG/MEDIUM: proxy: Make sure to destroy the stream on upgrade from TCP to H2
+    - BUG/MEDIUM: fd: Always reset the polled_mask bits in fd_dodelete().
+    - BUG/MINOR: mux-h2: don't refrain from sending an RST_STREAM after another one
+    - BUG/MINOR: mux-h2: use CANCEL, not STREAM_CLOSED in h2c_frt_handle_data()
+    - BUG/MINOR: mux-h2: do not send REFUSED_STREAM on aborted uploads
+    - BUG/MEDIUM: mux-h2: do not recheck a frame type after a state transition
+    - BUG/MINOR: mux-h2: always send stream window update before connection's
+    - BUG/MINOR: mux-h2: always reset rcvd_s when switching to a new frame
+    - BUG/MEDIUM: checks: make sure to close nicely when we're the last to speak
+
 2019/07/23 : 2.0.3
     - BUG/MINOR: dns: remove irrelevant dependency on a client connection
     - BUG/MEDIUM: checks: Don't attempt to receive data if we already subscribed.
