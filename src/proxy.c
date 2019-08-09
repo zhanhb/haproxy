@@ -1498,6 +1498,7 @@ int stream_set_backend(struct stream *s, struct proxy *be)
 					s->flags |= SF_IGNORE;
 					return 0;
 				}
+				s->flags |= SF_HTX;
 			}
 		}
 
