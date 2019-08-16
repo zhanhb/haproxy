@@ -456,6 +456,7 @@ static inline void fdlist_process_cached_events(volatile struct fdlist *fdlist)
 			if (locked)
 				HA_SPIN_UNLOCK(FD_LOCK, &fdtab[fd].lock);
 		}
+		ti->flags &= ~TI_FL_STUCK; // this thread is still running
 	}
 }
 
