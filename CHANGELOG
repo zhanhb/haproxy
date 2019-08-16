@@ -1,6 +1,21 @@
 ChangeLog :
 ===========
 
+2019/08/16 : 2.0.5
+    - BUG/MEDIUM: stick-table: Wrong stick-table backends parsing.
+    - BUG/MINOR: ssl: fix 0-RTT for BoringSSL
+    - MINOR: ssl: ssl_fc_has_early should work for BoringSSL
+    - BUG/MINOR: buffers/threads: always clear a buffer's head before releasing it
+    - BUG/MEDIUM: proxy: Don't forget the SF_HTX flag when upgrading TCP=>H1+HTX.
+    - BUG/MEDIUM: proxy: Don't use cs_destroy() when freeing the conn_stream.
+    - BUG/MINOR: lua: fix setting netfilter mark
+    - BUG/MINOR: Fix prometheus '# TYPE' and '# HELP' headers
+    - BUG/MEDIUM: mux_h1: Don't bother subscribing in recv if we're not connected.
+    - BUG/MEDIUM: lua: Fix test on the direction to set the channel exp timeout
+    - BUG/MINOR: stats: Wait the body before processing POST requests
+    - MINOR: fd: make sure to mark the thread as not stuck in fd_update_events()
+    - BUG/MEDIUM: mux_pt: Don't call unsubscribe if we did not subscribe.
+
 2019/08/06 : 2.0.4
     - BUG/MEDIUM: protocols: add a global lock for the init/deinit stuff
     - BUG/MINOR: proxy: always lock stop_proxy()
