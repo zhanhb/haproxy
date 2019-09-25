@@ -989,7 +989,7 @@ static size_t h1_process_headers(struct h1s *h1s, struct h1m *h1m, struct htx *h
 	if (b_head(buf) + b_data(buf) > b_wrap(buf))
 		b_slow_realign(buf, trash.area, 0);
 
-	if (!(h1m->flags & H1_MF_RESP)) {
+	if (!(h1s->flags & H1S_F_NOT_FIRST) && !(h1m->flags & H1_MF_RESP)) {
 		/* Try to match H2 preface before parsing the request headers. */
 		ret = b_isteq(buf, 0, b_data(buf), ist(H2_CONN_PREFACE));
 		if (ret > 0)
