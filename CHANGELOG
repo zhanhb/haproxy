@@ -1,6 +1,28 @@
 ChangeLog :
 ===========
 
+2019/09/27 : 2.0.7
+    - BUG/MEDIUM: stick-table: Properly handle "show table" with a data type argument
+    - BUG/MINOR: mux-h2: Be sure to have a connection to unsubcribe
+    - BUG/MAJOR: mux-h2: Handle HEADERS frames received after a RST_STREAM frame
+    - BUG/MEDIUM: check/threads: make external checks run exclusively on thread 1
+    - BUG/MINOR: stream-int: Process connection/CS errors first in si_cs_send()
+    - BUG/MEDIUM: stream-int: Process connection/CS errors during synchronous sends
+    - BUG/MEDIUM: checks: make sure the connection is ready before trying to recv
+    - BUG/MINOR: mux-h2: do not wake up blocked streams before the mux is ready
+    - BUG/MEDIUM: namespace: close open namespaces during soft shutdown
+    - BUG/MEDIUM: mux-h2: don't reject valid frames on closed streams
+    - BUG/MINOR: mux-h2: Use the dummy error when decoding headers for a closed stream
+    - BUG/MAJOR: mux_h2: Don't consume more payload than received for skipped frames
+    - BUG/MINOR: mux-h1: Do h2 upgrade only on the first request
+    - BUG/MEDIUM: spoe: Use a different engine-id per process
+    - MINOR: spoe: Improve generation of the engine-id
+    - MINOR: spoe: Support the async mode with several threads
+    - MINOR: stats: Add the support of float fields in stats
+    - BUG/MINOR: contrib/prometheus-exporter: Return the time averages in seconds
+    - DOC: Fix documentation about the cli command to get resolver stats
+    - BUG/MEDIUM: namespace: fix fd leak in master-worker mode
+
 2019/09/13 : 2.0.6
     - MINOR: debug: indicate the applet name when the task is task_run_applet()
     - MINOR: tools: add append_prefixed_str()
