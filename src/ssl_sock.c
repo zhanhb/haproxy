@@ -2814,7 +2814,7 @@ static int ssl_sock_add_cert_sni(SSL_CTX *ctx, struct bind_conf *s, struct ssl_b
 		for (j = 0; j < len && j < trash.size; j++)
 			trash.area[j] = tolower(name[j]);
 		if (j >= trash.size)
-			return order;
+			return -1;
 		trash.area[j] = 0;
 
 		/* Check for duplicates. */
@@ -2830,7 +2830,7 @@ static int ssl_sock_add_cert_sni(SSL_CTX *ctx, struct bind_conf *s, struct ssl_b
 
 		sc = malloc(sizeof(struct sni_ctx) + len + 1);
 		if (!sc)
-			return order;
+			return -1;
 		memcpy(sc->name.key, trash.area, len + 1);
 		sc->ctx = ctx;
 		sc->conf = conf;
@@ -3270,7 +3270,12 @@ static int ssl_sock_load_multi_cert(const char *path, struct bind_conf *bind_con
 
 		/* Update SNI Tree */
 		key_combos[i-1].order = ssl_sock_add_cert_sni(cur_ctx, bind_conf, ssl_conf,
-							      kinfo, str, key_combos[i-1].order);
+		                                              kinfo, str, key_combos[i-1].order);
+		if (key_combos[i-1].order < 0) {
+			memprintf(err, "%sunable to create a sni context.\n", err && *err ? *err : "");
+			rv = 1;
+			goto end;
+		}
 		node = ebmb_next(node);
 	}
 
@@ -3370,8 +3375,11 @@ static int ssl_sock_load_cert_chain_file(SSL_CTX *ctx, const char *file, struct 
 	}
 
 	if (fcount) {
-		while (fcount--)
+		while (fcount--) {
 			order = ssl_sock_add_cert_sni(ctx, s, ssl_conf, kinfo, sni_filter[fcount], order);
+			if (order < 0)
+				goto end;
+		}
 	}
 	else {
 #ifdef SSL_CTRL_SET_TLSEXT_HOSTNAME
@@ -3383,6 +3391,8 @@ static int ssl_sock_load_cert_chain_file(SSL_CTX *ctx, const char *file, struct 
 					if (ASN1_STRING_to_UTF8((unsigned char **)&str, name->d.dNSName) >= 0) {
 						order = ssl_sock_add_cert_sni(ctx, s, ssl_conf, kinfo, str, order);
 						OPENSSL_free(str);
+						if (order < 0)
+							goto end;
 					}
 				}
 			}
@@ -3399,6 +3409,8 @@ static int ssl_sock_load_cert_chain_file(SSL_CTX *ctx, const char *file, struct 
 			if (ASN1_STRING_to_UTF8((unsigned char **)&str, value) >= 0) {
 				order = ssl_sock_add_cert_sni(ctx, s, ssl_conf, kinfo, str, order);
 				OPENSSL_free(str);
+				if (order < 0)
+					goto end;
 			}
 		}
 	}
