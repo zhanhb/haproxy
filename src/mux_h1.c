@@ -1591,7 +1591,7 @@ static size_t h1_process_output(struct h1c *h1c, struct buffer *buf, size_t coun
 		vlen = sz;
 		if (vlen > count) {
 			if (type != HTX_BLK_DATA)
-				goto copy;
+				goto full;
 			vlen = count;
 		}
 
@@ -1606,7 +1606,7 @@ static size_t h1_process_output(struct h1c *h1c, struct buffer *buf, size_t coun
 				h1s->meth = sl->info.req.meth;
 				h1_parse_req_vsn(h1m, sl);
 				if (!htx_reqline_to_h1(sl, &tmp))
-					goto copy;
+					goto full;
 				h1m->flags |= H1_MF_XFER_LEN;
 				if (sl->flags & HTX_SL_F_BODYLESS)
 					h1m->flags |= H1_MF_CLEN;
@@ -1620,7 +1620,7 @@ static size_t h1_process_output(struct h1c *h1c, struct buffer *buf, size_t coun
 				h1s->status = sl->info.res.status;
 				h1_parse_res_vsn(h1m, sl);
 				if (!htx_stline_to_h1(sl, &tmp))
-					goto copy;
+					goto full;
 				if (sl->flags & HTX_SL_F_XFER_LEN)
 					h1m->flags |= H1_MF_XFER_LEN;
 				if (sl->info.res.status < 200 &&
@@ -1654,7 +1654,7 @@ static size_t h1_process_output(struct h1c *h1c, struct buffer *buf, size_t coun
 				}
 
 				if (!htx_hdr_to_h1(n, v, &tmp))
-					goto copy;
+					goto full;
 			  skip_hdr:
 				h1m->state = H1_MSG_HDR_L2_LWS;
 				break;
@@ -1673,7 +1673,7 @@ static size_t h1_process_output(struct h1c *h1c, struct buffer *buf, size_t coun
 					h1_process_output_conn_mode(h1s, h1m, &v);
 					if (v.len) {
 						if (!htx_hdr_to_h1(n, v, &tmp))
-							goto copy;
+							goto full;
 					}
 					h1s->flags |= H1S_F_HAVE_O_CONN;
 				}
@@ -1687,12 +1687,12 @@ static size_t h1_process_output(struct h1c *h1c, struct buffer *buf, size_t coun
 				     (H1_MF_VER_11|H1_MF_RESP|H1_MF_XFER_LEN))) {
 					/* chunking needed but header not seen */
 					if (!chunk_memcat(&tmp, "transfer-encoding: chunked\r\n", 28))
-						goto copy;
+						goto full;
 					h1m->flags |= H1_MF_CHNK;
 				}
 
 				if (!chunk_memcat(&tmp, "\r\n", 2))
-					goto copy;
+					goto full;
 
 				if (!(h1m->flags & H1_MF_RESP) && h1s->meth == HTTP_METH_CONNECT) {
 					/* a CONNECT request is sent to the server. Switch it to tunnel mode. */
@@ -1721,7 +1721,7 @@ static size_t h1_process_output(struct h1c *h1c, struct buffer *buf, size_t coun
 					/* Chunked message without explicit trailers */
 					if (h1m->flags & H1_MF_CHNK) {
 						if (!chunk_memcat(&tmp, "0\r\n\r\n", 5))
-							goto copy;
+							goto full;
 					}
 					goto done;
 				}
@@ -1729,7 +1729,7 @@ static size_t h1_process_output(struct h1c *h1c, struct buffer *buf, size_t coun
 					/* If the message is not chunked, never
 					 * add the last chunk. */
 					if ((h1m->flags & H1_MF_CHNK) && !chunk_memcat(&tmp, "0\r\n", 3))
-						goto copy;
+						goto full;
 					goto trailers;
 				}
 				else if (type != HTX_BLK_DATA)
@@ -1737,7 +1737,7 @@ static size_t h1_process_output(struct h1c *h1c, struct buffer *buf, size_t coun
 				v = htx_get_blk_value(chn_htx, blk);
 				v.len = vlen;
 				if (!htx_data_to_h1(v, &tmp, !!(h1m->flags & H1_MF_CHNK)))
-					goto copy;
+					goto full;
 				break;
 
 			case H1_MSG_TRAILERS:
@@ -1754,13 +1754,13 @@ static size_t h1_process_output(struct h1c *h1c, struct buffer *buf, size_t coun
 
 				if (type == HTX_BLK_EOT) {
 					if (!chunk_memcat(&tmp, "\r\n", 2))
-						goto copy;
+						goto full;
 				}
 				else { // HTX_BLK_TLR
 					n = htx_get_blk_name(chn_htx, blk);
 					v = htx_get_blk_value(chn_htx, blk);
 					if (!htx_hdr_to_h1(n, v, &tmp))
-						goto copy;
+						goto full;
 				}
 				break;
 
@@ -1810,6 +1810,10 @@ static size_t h1_process_output(struct h1c *h1c, struct buffer *buf, size_t coun
 		h1c->flags |= H1C_F_OUT_FULL;
   end:
 	return total;
+
+  full:
+	h1c->flags |= H1C_F_OUT_FULL;
+	goto copy;
 }
 
 /*********************************************************/
