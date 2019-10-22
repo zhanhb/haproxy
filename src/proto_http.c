@@ -2482,6 +2482,7 @@ int http_apply_redirect_rule(struct redirect_rule *rule, struct stream *s, struc
 		res->next = res->sov = 0;
 		/* let the server side turn to SI_ST_CLO */
 		channel_shutw_now(req->chn);
+		channel_dont_connect(req->chn);
 	} else {
 		/* keep-alive not possible */
 		if (unlikely(txn->flags & TX_USE_PX_CONN)) {
