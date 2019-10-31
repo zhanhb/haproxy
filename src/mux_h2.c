@@ -3067,6 +3067,17 @@ static int h2_process(struct h2c *h2c)
 			h2_release(h2c);
 			return -1;
 		}
+
+		/* connections in error must be removed from the idle lists */
+		HA_SPIN_LOCK(OTHER_LOCK, &toremove_lock[tid]);
+		LIST_DEL_LOCKED(&conn->list);
+		HA_SPIN_UNLOCK(OTHER_LOCK, &toremove_lock[tid]);
+	}
+	else if (h2c->st0 == H2_CS_ERROR) {
+		/* connections in error must be removed from the idle lists */
+		HA_SPIN_LOCK(OTHER_LOCK, &toremove_lock[tid]);
+		LIST_DEL_LOCKED(&conn->list);
+		HA_SPIN_UNLOCK(OTHER_LOCK, &toremove_lock[tid]);
 	}
 
 	if (!b_data(&h2c->dbuf))
@@ -3163,6 +3174,11 @@ static struct task *h2_timeout_task(struct task *t, void *context, unsigned shor
 		if (released)
 			offer_buffers(NULL, tasks_run_queue);
 	}
+
+	/* in any case this connection must not be considered idle anymore */
+	HA_SPIN_LOCK(OTHER_LOCK, &toremove_lock[tid]);
+	LIST_DEL_LOCKED(&h2c->conn->list);
+	HA_SPIN_UNLOCK(OTHER_LOCK, &toremove_lock[tid]);
 
 	/* either we can release everything now or it will be done later once
 	 * the last stream closes.
