@@ -2358,32 +2358,16 @@ static int ssl_sock_switchctx_cbk(SSL *ssl, int *al, void *arg)
 	}
 	trash.area[i] = 0;
 
-	/* lookup in full qualified names */
-	node = ebst_lookup(&s->sni_ctx, trash.area);
 
-	/* lookup a not neg filter */
-	for (n = node; n; n = ebmb_next_dup(n)) {
-		if (!container_of(n, struct sni_ctx, name)->neg) {
-			switch(container_of(n, struct sni_ctx, name)->kinfo.sig) {
-			case TLSEXT_signature_ecdsa:
-				if (!node_ecdsa)
-					node_ecdsa = n;
-				break;
-			case TLSEXT_signature_rsa:
-				if (!node_rsa)
-					node_rsa = n;
-				break;
-			default: /* TLSEXT_signature_anonymous|dsa */
-				if (!node_anonymous)
-					node_anonymous = n;
-				break;
-			}
-		}
-	}
-	if (wildp) {
-		/* lookup in wildcards names */
-		node = ebst_lookup(&s->sni_w_ctx, wildp);
+	for (i = 0; i < 2; i++) {
+		if (i == 0) 	/* lookup in full qualified names */
+			node = ebst_lookup(&s->sni_ctx, trash.area);
+		else if (i == 1 && wildp) /* lookup in wildcards names */
+			node = ebst_lookup(&s->sni_w_ctx, wildp);
+		else
+			break;
 		for (n = node; n; n = ebmb_next_dup(n)) {
+			/* lookup a not neg filter */
 			if (!container_of(n, struct sni_ctx, name)->neg) {
 				switch(container_of(n, struct sni_ctx, name)->kinfo.sig) {
 				case TLSEXT_signature_ecdsa:
@@ -2401,18 +2385,17 @@ static int ssl_sock_switchctx_cbk(SSL *ssl, int *al, void *arg)
 				}
 			}
 		}
-	}
-	/* select by key_signature priority order */
-	node = (has_ecdsa_sig && node_ecdsa) ? node_ecdsa
-		: ((has_rsa_sig && node_rsa) ? node_rsa
-		   : (node_anonymous ? node_anonymous
-		      : (node_ecdsa ? node_ecdsa      /* no ecdsa signature case (< TLSv1.2) */
-			 : node_rsa                   /* no rsa signature case (far far away) */
-			 )));
-	if (node) {
-		/* switch ctx */
-		struct ssl_bind_conf *conf = container_of(node, struct sni_ctx, name)->conf;
-		ssl_sock_switchctx_set(ssl, container_of(node, struct sni_ctx, name)->ctx);
+		/* select by key_signature priority order */
+		node = (has_ecdsa_sig && node_ecdsa) ? node_ecdsa
+			: ((has_rsa_sig && node_rsa) ? node_rsa
+			   : (node_anonymous ? node_anonymous
+			      : (node_ecdsa ? node_ecdsa      /* no ecdsa signature case (< TLSv1.2) */
+				 : node_rsa                   /* no rsa signature case (far far away) */
+				 )));
+		if (node) {
+			/* switch ctx */
+			struct ssl_bind_conf *conf = container_of(node, struct sni_ctx, name)->conf;
+			ssl_sock_switchctx_set(ssl, container_of(node, struct sni_ctx, name)->ctx);
 			if (conf) {
 				methodVersions[conf->ssl_methods.min].ssl_set_version(ssl, SET_MIN);
 				methodVersions[conf->ssl_methods.max].ssl_set_version(ssl, SET_MAX);
@@ -2420,6 +2403,7 @@ static int ssl_sock_switchctx_cbk(SSL *ssl, int *al, void *arg)
 					allow_early = 1;
 			}
 			goto allow_early;
+		}
 	}
 #if (!defined SSL_NO_GENERATE_CERTIFICATES)
 	if (s->generate_certs && ssl_sock_generate_certificate(trash.area, s, ssl)) {
