@@ -2353,10 +2353,9 @@ redo:
 
 		/* prune the request variables and swap to the response variables. */
 		if (s->vars_reqres.scope != SCOPE_RES) {
-			if (!LIST_ISEMPTY(&s->vars_reqres.head)) {
+			if (!LIST_ISEMPTY(&s->vars_reqres.head))
 				vars_prune(&s->vars_reqres, s->sess, s);
-				vars_init(&s->vars_reqres, SCOPE_RES);
-			}
+			vars_init(&s->vars_reqres, SCOPE_RES);
 		}
 
 		do {
