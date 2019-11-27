@@ -2292,7 +2292,7 @@ static int promex_parse_uri(struct appctx *appctx, struct stream_interface *si)
 	return 1;
 
   error:
-	err = &http_err_chunks[HTTP_ERR_400];
+	err = &htx_err_chunks[HTTP_ERR_400];
 	channel_erase(res);
 	res->buf.data = b_data(err);
 	memcpy(res->buf.area, b_head(err), b_data(err));
