@@ -116,6 +116,8 @@ __decl_hathreads(extern HA_SPINLOCK_T wq_lock);  /* spin lock related to wait qu
 
 
 static inline void task_insert_into_tasklet_list(struct task *t);
+static inline struct task *task_unlink_wq(struct task *t);
+static inline void task_queue(struct task *task);
 
 /* return 0 if task is in run queue, otherwise non-zero */
 static inline int task_in_rq(struct task *t)
@@ -164,7 +166,11 @@ static inline void task_wakeup(struct task *t, unsigned int f)
 /* change the thread affinity of a task to <thread_mask> */
 static inline void task_set_affinity(struct task *t, unsigned long thread_mask)
 {
+	if (task_in_wq(t))
+		task_unlink_wq(t);
 	t->thread_mask = thread_mask;
+	if (t->expire != TICK_ETERNITY)
+		task_queue(t);
 }
 
 /*
