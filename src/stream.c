@@ -653,6 +653,13 @@ static int sess_update_st_con_tcp(struct stream *s)
 			 * so we need to pretend we're established to log correctly
 			 * and let later states handle the failure.
 			 */
+
+			/* a shutw is enough to close all during SI_ST_CON */
+			si_shutw(si);
+
+			/* set state to SI_ST_EST in order to have sess_establish()
+			 * set the response analysers.
+			 */
 			si->state    = SI_ST_EST;
 			si->err_type = SI_ET_DATA_ERR;
 			/* Don't add CF_WRITE_ERROR if we're here because
