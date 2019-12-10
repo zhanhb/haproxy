@@ -615,7 +615,7 @@ void listener_accept(int fd)
 					 * a while in case it comes back. In the mean time, we need to
 					 * clear this sticky flag.
 					 */
-					fdtab[fd].ev &= ~FD_POLL_HUP;
+					HA_ATOMIC_AND(&fdtab[fd].ev, ~FD_POLL_HUP);
 					goto transient_error;
 				}
 				fd_cant_recv(fd);
