@@ -496,6 +496,8 @@ static void mworker_register_signals()
 	sigaction(SIGHUP, &sa, NULL);
 	sigaction(SIGUSR1, &sa, NULL);
 	sigaction(SIGUSR2, &sa, NULL);
+	sigaction(SIGTTIN, &sa, NULL);
+	sigaction(SIGTTOU, &sa, NULL);
 	sigaction(SIGINT, &sa, NULL);
 	sigaction(SIGTERM, &sa, NULL);
 }
@@ -507,6 +509,8 @@ static void mworker_block_signals()
 	sigemptyset(&set);
 	sigaddset(&set, SIGUSR1);
 	sigaddset(&set, SIGUSR2);
+	sigaddset(&set, SIGTTIN);
+	sigaddset(&set, SIGTTOU);
 	sigaddset(&set, SIGHUP);
 	sigaddset(&set, SIGINT);
 	sigaddset(&set, SIGTERM);
@@ -520,6 +524,8 @@ static void mworker_unblock_signals()
 	sigemptyset(&set);
 	sigaddset(&set, SIGUSR1);
 	sigaddset(&set, SIGUSR2);
+	sigaddset(&set, SIGTTIN);
+	sigaddset(&set, SIGTTOU);
 	sigaddset(&set, SIGHUP);
 	sigaddset(&set, SIGINT);
 	sigaddset(&set, SIGTERM);
@@ -533,6 +539,8 @@ static void mworker_unregister_signals()
 	signal(SIGHUP,  SIG_IGN);
 	signal(SIGUSR1, SIG_IGN);
 	signal(SIGUSR2, SIG_IGN);
+	signal(SIGTTIN, SIG_IGN);
+	signal(SIGTTOU, SIG_IGN);
 }
 
 /*
@@ -750,6 +758,8 @@ restart_wait:
 				mworker_reload();
 				/* should reach there only if it fail */
 				goto restart_wait;
+			} else if (sig == SIGTTIN || sig == SIGTTOU) {
+				mworker_kill(sig);
 			} else {
 #if defined(USE_SYSTEMD)
 				if ((global.tune.options & GTUNE_USE_SYSTEMD) && (sig == SIGUSR1 || sig == SIGTERM)) {
