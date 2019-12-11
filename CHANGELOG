@@ -1,6 +1,51 @@
 ChangeLog :
 ===========
 
+2019/12/11 : 2.1.1
+    - BUG/MINOR: contrib/prometheus-exporter: decode parameter and value only
+    - BUG/MINOR: h1: Don't test the host header during response parsing
+    - BUILD/MINOR: trace: fix use of long type in a few printf format strings
+    - BUG/MINOR: http-htx: Don't make http_find_header() fail if the value is empty
+    - DOC: ssl/cli: set/commit/abort ssl cert
+    - BUG/MINOR: ssl: fix SSL_CTX_set1_chain compatibility for openssl < 1.0.2
+    - BUG/MINOR: fcgi-app: Make the directive pass-header case insensitive
+    - BUG/MINOR: stats: Fix HTML output for the frontends heading
+    - BUG/MINOR: ssl/cli: 'ssl cert' cmd only usable w/ admin rights
+    - DOC: Clarify behavior of server maxconn in HTTP mode
+    - DOC: clarify matching strings on binary fetches
+    - DOC: Fix ordered list in summary
+    - DOC: move the "group" keyword at the right place
+    - BUG/MEDIUM: stream-int: don't subscribed for recv when we're trying to flush data
+    - BUG/MINOR: stream-int: avoid calling rcv_buf() when splicing is still possible
+    - BUG/MINOR: ssl/cli: don't overwrite the filters variable
+    - BUG/MEDIUM: listener/thread: fix a race when pausing a listener
+    - BUG/MINOR: ssl: certificate choice can be unexpected with openssl >= 1.1.1
+    - BUG/MEDIUM: mux-h1: Never reuse H1 connection if a shutw is pending
+    - BUG/MINOR: mux-h1: Don't rely on CO_FL_SOCK_RD_SH to set H1C_F_CS_SHUTDOWN
+    - BUG/MINOR: mux-h1: Fix conditions to know whether or not we may receive data
+    - BUG/MEDIUM: tasks: Make sure we switch wait queues in task_set_affinity().
+    - BUG/MEDIUM: checks: Make sure we set the task affinity just before connecting.
+    - BUG/MINOR: mux-h1: Be sure to set CS_FL_WANT_ROOM when EOM can't be added
+    - BUG/MEDIUM: mux-fcgi: Handle cases where the HTX EOM block cannot be inserted
+    - BUG/MINOR: proxy: make soft_stop() also close FDs in LI_PAUSED state
+    - BUG/MINOR: listener/threads: always use atomic ops to clear the FD events
+    - BUG/MINOR: listener: also clear the error flag on a paused listener
+    - BUG/MEDIUM: listener/threads: fix a remaining race in the listener's accept()
+    - DOC: document the listener state transitions
+    - BUG/MEDIUM: kqueue: Make sure we report read events even when no data.
+    - BUG/MAJOR: dns: add minimalist error processing on the Rx path
+    - BUG/MEDIUM: proto_udp/threads: recv() and send() must not be exclusive.
+    - DOC: listeners: add a few missing transitions
+    - BUG/MINOR: tasks: only requeue a task if it was already in the queue
+    - DOC: proxies: HAProxy only supports 3 connection modes
+    - DOC: remove references to the outdated architecture.txt
+    - BUG/MINOR: log: fix minor resource leaks on logformat error path
+    - BUG/MINOR: mworker: properly pass SIGTTOU/SIGTTIN to workers
+    - BUG/MINOR: listener: do not immediately resume on transient error
+    - BUG/MINOR: server: make "agent-addr" work on default-server line
+    - BUG/MINOR: listener: fix off-by-one in state name check
+    - BUILD/MINOR: unix sockets: silence an absurd gcc warning about strncpy()
+
 2019/11/25 : 2.1.0
     - BUG/MINOR: init: fix set-dumpable when using uid/gid
     - MINOR: init: avoid code duplication while setting identify
