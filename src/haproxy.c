@@ -515,6 +515,8 @@ static void mworker_block_signals()
 	sigemptyset(&set);
 	sigaddset(&set, SIGUSR1);
 	sigaddset(&set, SIGUSR2);
+	sigaddset(&set, SIGTTIN);
+	sigaddset(&set, SIGTTOU);
 	sigaddset(&set, SIGHUP);
 	sigaddset(&set, SIGCHLD);
 	ha_sigmask(SIG_SETMASK, &set, NULL);
@@ -813,6 +815,12 @@ alloc_error:
 	return;
 }
 
+/* broadcast the configured signal to the workers */
+void mworker_broadcast_signal(struct sig_handler *sh)
+{
+	mworker_kill(sh->arg);
+}
+
 /*
  * When called, this function reexec haproxy with -sf followed by current
  * children PIDs and possibly old children PIDs if they didn't leave yet.
@@ -918,12 +926,16 @@ static void mworker_loop()
 
 	master = 1;
 
+	signal_unregister(SIGTTIN);
+	signal_unregister(SIGTTOU);
 	signal_unregister(SIGUSR1);
 	signal_unregister(SIGHUP);
 	signal_unregister(SIGQUIT);
 
 	signal_register_fct(SIGTERM, mworker_catch_sigterm, SIGTERM);
 	signal_register_fct(SIGUSR1, mworker_catch_sigterm, SIGUSR1);
+	signal_register_fct(SIGTTIN, mworker_broadcast_signal, SIGTTIN);
+	signal_register_fct(SIGTTOU, mworker_broadcast_signal, SIGTTOU);
 	signal_register_fct(SIGINT, mworker_catch_sigterm, SIGINT);
 	signal_register_fct(SIGHUP, mworker_catch_sighup, SIGHUP);
 	signal_register_fct(SIGUSR2, mworker_catch_sighup, SIGUSR2);
