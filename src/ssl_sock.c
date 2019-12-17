@@ -4005,10 +4005,8 @@ ssl_sock_initial_ctx(struct bind_conf *bind_conf)
 	SSL_CTX_set_select_certificate_cb(ctx, ssl_sock_switchctx_cbk);
 	SSL_CTX_set_tlsext_servername_callback(ctx, ssl_sock_switchctx_err_cbk);
 #elif (OPENSSL_VERSION_NUMBER >= 0x10101000L)
-	if (bind_conf->ssl_conf.early_data) {
+	if (bind_conf->ssl_conf.early_data)
 		SSL_CTX_set_options(ctx, SSL_OP_NO_ANTI_REPLAY);
-		SSL_CTX_set_max_early_data(ctx, global.tune.bufsize - global.tune.maxrewrite);
-	}
 	SSL_CTX_set_client_hello_cb(ctx, ssl_sock_switchctx_cbk, NULL);
 	SSL_CTX_set_tlsext_servername_callback(ctx, ssl_sock_switchctx_err_cbk);
 #else
@@ -5252,6 +5250,10 @@ static int ssl_sock_init(struct connection *conn)
 			conn->err_code = CO_ER_SSL_NO_MEM;
 			return -1;
 		}
+#if (OPENSSL_VERSION_NUMBER >= 0x10101000L)
+		if (__objt_listener(conn->target)->bind_conf->ssl_conf.early_data)
+			SSL_set_max_early_data(conn->xprt_ctx, global.tune.bufsize - global.tune.maxrewrite);
+#endif
 
 		/* set fd on SSL session context */
 		if (!SSL_set_fd(conn->xprt_ctx, conn->handle.fd)) {
