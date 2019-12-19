@@ -193,8 +193,10 @@ void fd_add_to_fd_list(volatile struct fdlist *list, int fd, int off)
 redo_next:
 	next = _GET_NEXT(fd, off);
 	/* Check that we're not already in the cache, and if not, lock us. */
-	if (next >= -2)
+	if (next > -2)
 		goto done;
+	if (next == -2)
+		goto redo_next;
 	if (!HA_ATOMIC_CAS(&_GET_NEXT(fd, off), &next, -2))
 		goto redo_next;
 	__ha_barrier_store();
