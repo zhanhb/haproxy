@@ -1507,6 +1507,14 @@ int stream_set_backend(struct stream *s, struct proxy *be)
 				s->flags |= SF_HTX;
 			}
 		}
+		else if (IS_HTX_STRM(s) && be->mode != PR_MODE_HTTP) {
+			/* If a TCP backend is assgiend to an HTX stream, return
+			 * an error. It may happens for a new stream on a
+			 * previously upgraded connnections. */
+			if (!(s->flags & SF_ERR_MASK))
+				s->flags |= SF_ERR_INTERNAL;
+			return 0;
+		}
 
 		/* If an LB algorithm needs to access some pre-parsed body contents,
 		 * we must not start to forward anything until the connection is
