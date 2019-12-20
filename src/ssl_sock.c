@@ -67,7 +67,7 @@
 #define OpenSSL_version_num     SSLeay
 #endif
 
-#if ((HA_OPENSSL_VERSION_NUMBER < 0x1010000fL) && (LIBRESSL_VERSION_NUMBER < 0x2070000fL)) ||\
+#if ((OPENSSL_VERSION_NUMBER < 0x1010000fL) && (LIBRESSL_VERSION_NUMBER < 0x2070000fL)) ||\
 	defined(OPENSSL_IS_BORINGSSL)
 #define X509_getm_notBefore     X509_get_notBefore
 #define X509_getm_notAfter      X509_get_notAfter
