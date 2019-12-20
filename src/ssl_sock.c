@@ -73,6 +73,10 @@
 #define X509_getm_notAfter      X509_get_notAfter
 #endif
 
+#ifndef SSL_CTX_set_ecdh_auto
+#define SSL_CTX_set_ecdh_auto(dummy, onoff)      ((onoff) != 0)
+#endif
+
 #include <import/lru.h>
 #include <import/xxhash.h>
 
@@ -4491,9 +4495,7 @@ int ssl_sock_prepare_ctx(struct bind_conf *bind_conf, struct ssl_bind_conf *ssl_
 				 curproxy->id, conf_curves, bind_conf->arg, bind_conf->file, bind_conf->line);
 			cfgerr++;
 		}
-#if defined(SSL_CTX_set_ecdh_auto)
 		(void)SSL_CTX_set_ecdh_auto(ctx, 1);
-#endif
 	}
 #endif
 #if defined(SSL_CTX_set_tmp_ecdh) && !defined(OPENSSL_NO_ECDH)
