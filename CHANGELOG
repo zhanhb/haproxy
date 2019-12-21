@@ -1,6 +1,26 @@
 ChangeLog :
 ===========
 
+2019/12/21 : 2.1.2
+    - DOC: clarify the fact that replace-uri works on a full URI
+    - BUG/MINOR: sample: fix the closing bracket and LF in the debug converter
+    - BUG/MINOR: sample: always check converters' arguments
+    - MINOR: sample: Validate the number of bits for the sha2 converter
+    - BUG/MEDIUM: ssl: Don't set the max early data we can receive too early.
+    - MINOR: debug: support logging to various sinks
+    - MINOR: http: add a new "replace-path" action
+    - MINOR: task: only check TASK_WOKEN_ANY to decide to requeue a task
+    - BUG/MAJOR: task: add a new TASK_SHARED_WQ flag to fix foreing requeuing
+    - BUG/MEDIUM: ssl: Revamp the way early data are handled.
+    - MINOR: fd/threads: make _GET_NEXT()/_GET_PREV() use the volatile attribute
+    - BUG/MEDIUM: fd/threads: fix a concurrency issue between add and rm on the same fd
+    - BUG/MINOR: ssl: openssl-compat: Fix getm_ defines
+    - BUG/MEDIUM: state-file: do not allocate a full buffer for each server entry
+    - BUG/MINOR: state-file: do not store duplicates in the global tree
+    - BUG/MINOR: state-file: do not leak memory on parse errors
+    - BUG/MEDIUM: stream: Be sure to never assign a TCP backend to an HTX stream
+    - BUILD: ssl: improve SSL_CTX_set_ecdh_auto compatibility
+
 2019/12/11 : 2.1.1
     - BUG/MINOR: contrib/prometheus-exporter: decode parameter and value only
     - BUG/MINOR: h1: Don't test the host header during response parsing
