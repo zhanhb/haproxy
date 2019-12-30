@@ -1362,6 +1362,7 @@ int connect_server(struct stream *s)
 				// see it possibly larger.
 				ALREADY_CHECKED(i);
 
+				HA_SPIN_LOCK(OTHER_LOCK, &toremove_lock[tid]);
 				tokill_conn = LIST_POP_LOCKED(&srv->idle_orphan_conns[i],
 				    struct connection *, list);
 				if (tokill_conn) {
@@ -1372,6 +1373,7 @@ int connect_server(struct stream *s)
 					task_wakeup(idle_conn_cleanup[i], TASK_WOKEN_OTHER);
 					break;
 				}
+				HA_SPIN_UNLOCK(OTHER_LOCK, &toremove_lock[tid]);
 			}
 		}
 
