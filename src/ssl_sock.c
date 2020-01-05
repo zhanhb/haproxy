@@ -5862,7 +5862,6 @@ static size_t ssl_sock_to_buf(struct connection *conn, void *xprt_ctx, struct bu
 	 * EINTR too.
 	 */
 	while (count > 0) {
-		int need_out = 0;
 
 		try = b_contig_space(buf);
 		if (!try)
@@ -5920,8 +5919,6 @@ static size_t ssl_sock_to_buf(struct connection *conn, void *xprt_ctx, struct bu
 			/* otherwise it's a real error */
 			goto out_error;
 		}
-		if (need_out)
-			break;
 	}
  leave:
 	return done;
