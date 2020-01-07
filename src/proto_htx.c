@@ -2544,6 +2544,8 @@ int htx_apply_redirect_rule(struct redirect_rule *rule, struct stream *s, struct
 		close = 1;
 
 	htx = htx_from_buf(&res->buf);
+	/* Trim any possible response */
+	channel_htx_truncate(&s->res, htx);
 	flags = (HTX_SL_F_IS_RESP|HTX_SL_F_VER_11|HTX_SL_F_XFER_LEN|HTX_SL_F_BODYLESS);
 	sl = htx_add_stline(htx, HTX_BLK_RES_SL, flags, ist("HTTP/1.1"), status, reason);
 	if (!sl)
@@ -2570,6 +2572,8 @@ int htx_apply_redirect_rule(struct redirect_rule *rule, struct stream *s, struct
 
 	if (!htx_add_endof(htx, HTX_BLK_EOH) || !htx_add_endof(htx, HTX_BLK_EOM))
 		goto fail;
+
+	htx_to_buf(htx, &res->buf);
 
 	/* let's log the request time */
 	s->logs.tv_request = now;
