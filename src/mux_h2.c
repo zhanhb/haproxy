@@ -2654,6 +2654,10 @@ static void h2_resume_each_sending_h2s(struct h2c *h2c, struct list *head)
 			break;
 
 		h2s->flags &= ~H2_SF_BLK_ANY;
+
+		if (!LIST_ISEMPTY(&h2s->sending_list))
+			continue;
+
 		/* For some reason, the upper layer failed to subscribe again,
 		 * so remove it from the send_list
 		 */
