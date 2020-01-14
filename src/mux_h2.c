@@ -4996,6 +4996,7 @@ static size_t h2s_htx_frt_make_resp_data(struct h2s *h2s, struct buffer *buf, si
 	struct htx_blk *blk;
 	enum htx_blk_type type;
 	int idx;
+	int trunc_out; /* non-zero if truncated on out buf */
 
 	if (h2c_mux_busy(h2c, h2s)) {
 		h2s->flags |= H2_SF_BLK_MBUSY;
@@ -5018,6 +5019,7 @@ static size_t h2s_htx_frt_make_resp_data(struct h2s *h2s, struct buffer *buf, si
 	type  = htx_get_blk_type(blk); // DATA or EOM
 	bsize = htx_get_blksz(blk);
 	fsize = bsize;
+	trunc_out = 0;
 
 	if (type == HTX_BLK_EOM) {
 		if (h2s->flags & H2_SF_ES_SENT) {
@@ -5172,6 +5174,7 @@ static size_t h2s_htx_frt_make_resp_data(struct h2s *h2s, struct buffer *buf, si
 		    b_data(mbuf) <= MAX_DATA_REALIGN)
 			goto realign_again;
 		fsize = outbuf.size - 9;
+		trunc_out = 1;
 
 		if (fsize <= 0) {
 			/* no need to send an empty frame here */
@@ -5225,6 +5228,8 @@ static size_t h2s_htx_frt_make_resp_data(struct h2s *h2s, struct buffer *buf, si
 	} else {
 		/* we've truncated this block */
 		htx_cut_data_blk(htx, blk, fsize);
+		if (trunc_out)
+			goto new_frame;
 	}
 
 	if (es_now) {
