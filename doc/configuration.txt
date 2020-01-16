@@ -4181,8 +4181,11 @@ http-request { allow | auth [realm <realm>] | redirect <rule> | reject |
       the captured string in a previously declared capture slot. This is useful
       to run captures in backends. The slot id can be declared by a previous
       directive "http-request capture" or with the "declare capture" keyword.
-      If the slot <id> doesn't exist, then HAProxy fails parsing the
-      configuration to prevent unexpected behavior at run time.
+
+      When using this action in a backend, double check that the relevant
+      frontend(s) have the required capture slots otherwise, this rule will be
+      ignored at run time. This can't be detected at configuration parsing time
+      due to HAProxy's ability to dynamically resolve backend name at runtime.
 
     - cache-use <name> :
       See section 10.2 about cache setup.
@@ -4625,8 +4628,11 @@ http-response { allow | deny | add-header <name> <fmt> | set-nice <nice> |
       This is useful to run captures in backends. The slot id can be declared by
       a previous directive "http-response capture" or with the "declare capture"
       keyword.
-      If the slot <id> doesn't exist, then HAProxy fails parsing the
-      configuration to prevent unexpected behavior at run time.
+
+      When using this action in a backend, double check that the relevant
+      frontend(s) have the required capture slots otherwise, this rule will be
+      ignored at run time. This can't be detected at configuration parsing time
+      due to HAProxy's ability to dynamically resolve backend name at runtime.
 
     - cache-store <name> :
       See section 10.2 about cache setup.
