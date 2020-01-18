@@ -46,7 +46,7 @@
 struct list dns_resolvers  = LIST_HEAD_INIT(dns_resolvers);
 struct list dns_srvrq_list = LIST_HEAD_INIT(dns_srvrq_list);
 
-static THREAD_LOCAL int64_t dns_query_id_seed = 0; /* random seed */
+static THREAD_LOCAL uint64_t dns_query_id_seed = 0; /* random seed */
 static struct pool_head *dns_answer_item_pool = NULL;
 static struct pool_head *dns_resolution_pool  = NULL;
 static unsigned int resolution_uuid = 1;
