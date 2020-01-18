@@ -54,7 +54,7 @@ struct chunk dns_trash = { };
 struct dns_query_item dns_query_records[DNS_MAX_QUERY_RECORDS];
 struct dns_answer_item dns_answer_records[DNS_MAX_ANSWER_RECORDS];
 
-static int64_t dns_query_id_seed;	/* random seed */
+static uint64_t dns_query_id_seed;	/* random seed */
 
 /* proto_udp callback functions for a DNS resolution */
 struct dgram_data_cb resolve_dgram_cb = {
