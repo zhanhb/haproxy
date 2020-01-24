@@ -5250,6 +5250,8 @@ static int ssl_sock_init(struct connection *conn, void **xprt_ctx)
 		}
 		ctx->bio = BIO_new(ha_meth);
 		if (!ctx->bio) {
+			SSL_free(ctx->ssl);
+			ctx->ssl = NULL;
 			if (may_retry--) {
 				pool_gc(NULL);
 				goto retry_connect;
@@ -5326,6 +5328,8 @@ static int ssl_sock_init(struct connection *conn, void **xprt_ctx)
 
 		ctx->bio = BIO_new(ha_meth);
 		if (!ctx->bio) {
+			SSL_free(ctx->ssl);
+			ctx->ssl = NULL;
 			if (may_retry--) {
 				pool_gc(NULL);
 				goto retry_accept;
