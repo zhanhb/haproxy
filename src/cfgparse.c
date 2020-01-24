@@ -3411,8 +3411,8 @@ out_uri_auth_compat:
 			}
 
 			if (newsrv->max_idle_conns != 0) {
-				newsrv->idle_orphan_conns = calloc((unsigned int)global.nbthread, sizeof(*newsrv->idle_orphan_conns));
-				newsrv->idle_task         = calloc(global.nbthread, sizeof(*newsrv->idle_task));
+				newsrv->idle_orphan_conns = calloc((unsigned short)global.nbthread, sizeof(*newsrv->idle_orphan_conns));
+				newsrv->idle_task         = calloc((unsigned short)global.nbthread, sizeof(*newsrv->idle_task));
 				if (!newsrv->idle_orphan_conns || !newsrv->idle_task)
 					goto err;
 				for (i = 0; i < global.nbthread; i++) {
