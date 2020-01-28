@@ -2447,8 +2447,6 @@ int http_apply_redirect_rule(struct redirect_rule *rule, struct stream *s, struc
 
 	/* add end of headers and the keep-alive/close status. */
 	txn->status = rule->code;
-	/* let's log the request time */
-	s->logs.tv_request = now;
 
 	if (((!(req->flags & HTTP_MSGF_TE_CHNK) && !req->body_len) || (req->msg_state == HTTP_MSG_DONE)) &&
 	    ((txn->flags & TX_CON_WANT_MSK) == TX_CON_WANT_SCL ||
@@ -2483,6 +2481,11 @@ int http_apply_redirect_rule(struct redirect_rule *rule, struct stream *s, struc
 		/* let the server side turn to SI_ST_CLO */
 		channel_shutw_now(req->chn);
 		channel_dont_connect(req->chn);
+
+		if (rule->flags & REDIRECT_FLAG_FROM_REQ) {
+			/* let's log the request time */
+			s->logs.tv_request = now;
+		}
 	} else {
 		/* keep-alive not possible */
 		if (unlikely(txn->flags & TX_USE_PX_CONN)) {
@@ -2495,13 +2498,21 @@ int http_apply_redirect_rule(struct redirect_rule *rule, struct stream *s, struc
 			chunk->data += 23;
 		}
 		http_reply_and_close(s, txn->status, chunk);
-		req->chn->analysers &= AN_REQ_FLT_END;
+
+		if (rule->flags & REDIRECT_FLAG_FROM_REQ) {
+			/* let's log the request time */
+			s->logs.tv_request = now;
+			req->chn->analysers &= AN_REQ_FLT_END;
+			if (s->sess->fe == s->be) /* report it if the request was intercepted by the frontend */
+				HA_ATOMIC_ADD(&s->sess->fe->fe_counters.intercepted_req, 1);
+
+		}
 	}
 
 	if (!(s->flags & SF_ERR_MASK))
 		s->flags |= SF_ERR_LOCAL;
 	if (!(s->flags & SF_FINST_MASK))
-		s->flags |= SF_FINST_R;
+		s->flags |= ((rule->flags & REDIRECT_FLAG_FROM_REQ) ? SF_FINST_R : SF_FINST_H);
 
 	ret = 1;
  leave:
