@@ -133,6 +133,8 @@ struct pool_head *create_pool(char *name, unsigned int size, unsigned int flags)
 		}
 #ifndef CONFIG_HAP_LOCKLESS_POOLS
 		HA_SPIN_INIT(&pool->lock);
+#else
+		HA_RWLOCK_INIT(&pool->flush_lock);
 #endif
 	}
 	pool->users++;
@@ -211,12 +213,14 @@ void pool_flush(struct pool_head *pool)
 
 	if (!pool)
 		return;
+	HA_RWLOCK_WRLOCK(POOL_LOCK, &pool->flush_lock);
 	do {
 		cmp.free_list = pool->free_list;
 		cmp.seq = pool->seq;
 		new.free_list = NULL;
 		new.seq = cmp.seq + 1;
 	} while (!HA_ATOMIC_DWCAS(&pool->free_list, &cmp, &new));
+	HA_RWLOCK_WRUNLOCK(POOL_LOCK, &pool->flush_lock);
 	next = cmp.free_list;
 	while (next) {
 		temp = next;
@@ -246,6 +250,7 @@ void pool_gc(struct pool_head *pool_ctx)
 		return;
 
 	list_for_each_entry(entry, &pools, list) {
+		HA_RWLOCK_WRLOCK(POOL_LOCK, &entry->flush_lock);
 		while ((int)((volatile int)entry->allocated - (volatile int)entry->used) > (int)entry->minavail) {
 			struct pool_free_list cmp, new;
 
@@ -262,6 +267,7 @@ void pool_gc(struct pool_head *pool_ctx)
 			free(cmp.free_list);
 			HA_ATOMIC_SUB(&entry->allocated, 1);
 		}
+		HA_RWLOCK_WRUNLOCK(POOL_LOCK, &entry->flush_lock);
 	}
 
 	HA_ATOMIC_STORE(&recurse, 0);
