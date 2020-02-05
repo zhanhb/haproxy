@@ -2922,6 +2922,7 @@ static int ssl_sock_load_dh_params(SSL_CTX *ctx, const struct cert_key_and_chain
 	}
 
 end:
+	ERR_clear_error();
 	return ret;
 }
 #endif
