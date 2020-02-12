@@ -220,6 +220,7 @@ int resume_listener(struct listener *l)
 	thr_mask = l->bind_conf->bind_thread[relative_pid-1] ?
 	           l->bind_conf->bind_thread[relative_pid-1] : MAX_THREADS_MASK;
 
+	thr_mask &= all_threads_mask;
 	if (!(thr_mask & tid_bit)) {
 		/* we're not allowed to touch this listener's FD, let's requeue
 		 * the listener into one of its owning thread's queue instead.
