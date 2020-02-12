@@ -934,14 +934,14 @@ flt_analyze_http_headers(struct stream *s, struct channel *chn, unsigned int an_
 	} RESUME_FILTER_END;
 
 	if (IS_HTX_STRM(s)) {
-		struct htx *htx = htxbuf(&chn->buf);
-		int32_t pos;
+		if (HAS_DATA_FILTERS(s, chn)) {
+			size_t data = http_get_hdrs_size(htxbuf(&chn->buf));
+			struct filter *f;
 
-		for (pos = htx_get_head(htx); pos != -1; pos = htx_get_next(htx, pos)) {
-			struct htx_blk *blk = htx_get_blk(htx, pos);
-			c_adv(chn, htx_get_blksz(blk));
-			if (htx_get_blk_type(blk) == HTX_BLK_EOH)
-				break;
+			list_for_each_entry(f, &strm_flt(s)->filters, list) {
+				if (IS_DATA_FILTER(f, chn))
+					FLT_OFF(f, chn) = data;
+			}
 		}
 	}
 	else {
