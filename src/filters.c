@@ -933,8 +933,17 @@ flt_analyze_http_headers(struct stream *s, struct channel *chn, unsigned int an_
 		}
 	} RESUME_FILTER_END;
 
-	if (IS_HTX_STRM(s))
-		channel_htx_fwd_headers(chn, htxbuf(&chn->buf));
+	if (IS_HTX_STRM(s)) {
+		if (HAS_DATA_FILTERS(s, chn)) {
+			size_t data = http_get_hdrs_size(htxbuf(&chn->buf));
+			struct filter *f;
+
+			list_for_each_entry(f, &strm_flt(s)->filters, list) {
+				if (IS_DATA_FILTER(f, chn))
+					FLT_OFF(f, chn) = data;
+			}
+		}
+	}
 	else {
 		/* We increase next offset of all "data" filters after all processing on
 		 * headers because any filter can alter them. So the definitive size of
