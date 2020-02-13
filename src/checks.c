@@ -2964,10 +2964,10 @@ static int tcpcheck_main(struct check *check)
 				goto out_end_tcpcheck;
 			}
 
+		tcpcheck_expect:
 			if (!done && (check->current_step->string != NULL) && (check->bi->i < check->current_step->string_len) )
 				continue; /* try to read more */
 
-		tcpcheck_expect:
 			if (check->current_step->string != NULL)
 				ret = my_memmem(contentptr, check->bi->i, check->current_step->string, check->current_step->string_len) != NULL;
 			else if (check->current_step->expect_regex != NULL)
