@@ -337,7 +337,7 @@ int htx_wait_for_request(struct stream *s, struct channel *req, int an_bit)
 	 * the monitor-uri is defined by the frontend.
 	 */
 	if (unlikely((sess->fe->monitor_uri_len != 0) &&
-		     isteqi(htx_sl_req_uri(sl), ist2(sess->fe->monitor_uri, sess->fe->monitor_uri_len)))) {
+		     isteq(htx_sl_req_uri(sl), ist2(sess->fe->monitor_uri, sess->fe->monitor_uri_len)))) {
 		/*
 		 * We have found the monitor URI
 		 */
