@@ -157,7 +157,7 @@ static enum act_return http_action_replace_uri(struct act_rule *rule, struct pro
 		uri = ist2(ci_head(&s->req) + s->txn->req.sl.rq.u, s->txn->req.sl.rq.u_l);
 
 	if (rule->arg.act.p[0] == (void *)1)
-		uri = http_get_path(uri); // replace path
+		uri = iststop(http_get_path(uri), '?');
 
 	if (!regex_exec_match2(rule->arg.act.p[1], uri.ptr, uri.len, MAX_MATCH, pmatch, 0))
 		goto leave;
