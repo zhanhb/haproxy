@@ -1940,7 +1940,7 @@ static int sample_conv_json(const struct arg *arg_p, struct sample *smp, void *p
 			len = 2;
 			str = "\\t";
 		}
-		else if (c > 0xff || !isprint(c)) {
+		else if (c > 0xff || !isprint((unsigned char)c)) {
 			/* isprint generate a segfault if c is too big. The man says that
 			 * c must have the value of an unsigned char or EOF.
 			 */
