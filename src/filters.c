@@ -783,8 +783,9 @@ flt_http_payload(struct stream *s, struct http_msg *msg, unsigned int len)
 	struct filter *filter;
 	unsigned long long *strm_off = &FLT_STRM_OFF(s, msg->chn);
 	unsigned int out = co_data(msg->chn);
-	int ret = 0, data = len - out;
+	int ret, data;
 
+	ret = data = len - out;
 	list_for_each_entry(filter, &strm_flt(s)->filters, list) {
 		/* Call "data" filters only */
 		if (!IS_DATA_FILTER(filter, msg->chn))
