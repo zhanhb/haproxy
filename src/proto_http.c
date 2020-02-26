@@ -10439,10 +10439,10 @@ smp_fetch_uniqueid(const struct arg *args, struct sample *smp, const char *kw, v
 		if ((smp->strm->unique_id = pool_alloc2(pool2_uniqueid)) == NULL)
 			return 0;
 		smp->strm->unique_id[0] = '\0';
+		build_logline(smp->strm, smp->strm->unique_id,
+		              UNIQUEID_LEN, &smp->sess->fe->format_unique_id);
 	}
-	smp->data.u.str.len = build_logline(smp->strm, smp->strm->unique_id,
-	                                    UNIQUEID_LEN, &smp->sess->fe->format_unique_id);
-
+	smp->data.u.str.len = strlen(smp->strm->unique_id);
 	smp->data.type = SMP_T_STR;
 	smp->data.u.str.str = smp->strm->unique_id;
 	smp->flags = SMP_F_CONST;
