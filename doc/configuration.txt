@@ -860,7 +860,7 @@ h1-case-adjust <from> <to>
   <from>, to change it to <to> before sending it to HTTP/1 clients or
   servers. <from> must be in lower case, and <from> and <to> must not differ
   except for their case. It may be repeated if several header names need to be
-  ajusted. Duplicate entries are not allowed. If a lot of header names have to
+  adjusted. Duplicate entries are not allowed. If a lot of header names have to
   be adjusted, it might be more convenient to use "h1-case-adjust-file".
   Please note that no transformation will be applied unless "option
   h1-case-adjust-bogus-client" or "option h1-case-adjust-bogus-server" is
@@ -4429,7 +4429,7 @@ http-request reject [ { if | unless } <condition> ]
 http-request replace-header <name> <match-regex> <replace-fmt>
                             [ { if | unless } <condition> ]
 
-  This matches the value of all occurences of header field <name> against
+  This matches the value of all occurrences of header field <name> against
   <match-regex>. Matching is performed case-sensitively. Matching values are
   completely replaced by <replace-fmt>. Format characters are allowed in
   <replace-fmt> and work like <fmt> arguments in "http-request add-header".
@@ -18123,7 +18123,7 @@ path-info <regex>
   filled.
 
   For security reason, when this regular expression is defined, the newline and
-  the null characters are forbiden from the path, once URL-decoded. The reason
+  the null characters are forbidden from the path, once URL-decoded. The reason
   to such limitation is because otherwise the matching always fails (due to a
   limitation one the way regular expression are executed in HAProxy). So if one
   of these two characters is found in the URL-decoded path, an error is
@@ -18253,7 +18253,7 @@ use-fcgi-app <name>
 
 A Responder FastCGI application has the same purpose as a CGI/1.1 program. In
 the CGI/1.1 specification (RFC3875), several variables must be passed to the
-scipt. So HAProxy set them and some others commonly used by FastCGI
+script. So HAProxy set them and some others commonly used by FastCGI
 applications. All these variables may be overwritten, with caution though.
 
   +-------------------+-----------------------------------------------------+
