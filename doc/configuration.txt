@@ -849,7 +849,7 @@ h1-case-adjust <from> <to>
   <from>, to change it to <to> before sending it to HTTP/1 clients or
   servers. <from> must be in lower case, and <from> and <to> must not differ
   except for their case. It may be repeated if several header names need to be
-  ajusted. Duplicate entries are not allowed. If a lot of header names have to
+  adjusted. Duplicate entries are not allowed. If a lot of header names have to
   be adjusted, it might be more convenient to use "h1-case-adjust-file".
   Please note that no transformation will be applied unless "option
   h1-case-adjust-bogus-client" or "option h1-case-adjust-bogus-server" is
@@ -4509,7 +4509,7 @@ http-request reject [ { if | unless } <condition> ]
 http-request replace-header <name> <match-regex> <replace-fmt>
                             [ { if | unless } <condition> ]
 
-  This matches the value of all occurences of header field <name> against
+  This matches the value of all occurrences of header field <name> against
   <match-regex>. Matching is performed case-sensitively. Matching values are
   completely replaced by <replace-fmt>. Format characters are allowed in
   <replace-fmt> and work like <fmt> arguments in "http-request add-header".
