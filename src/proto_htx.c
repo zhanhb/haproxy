@@ -1824,6 +1824,8 @@ int htx_wait_for_response(struct stream *s, struct channel *rep, int an_bit)
 	s->si[1].flags |= SI_FL_NOLINGER;
 	htx_reply_and_close(s, txn->status, htx_error_message(s));
 	rep->analysers &= AN_RES_FLT_END;
+	s->req.analysers &= AN_REQ_FLT_END;
+	rep->analyse_exp = TICK_ETERNITY;
 
 	if (!(s->flags & SF_ERR_MASK))
 		s->flags |= SF_ERR_PRXCOND;
@@ -2143,6 +2145,9 @@ int htx_process_res_common(struct stream *s, struct channel *rep, int an_bit, st
 		s->flags |= SF_ERR_PRXCOND;
 	if (!(s->flags & SF_FINST_MASK))
 		s->flags |= SF_FINST_H;
+
+	s->req.analysers &= AN_REQ_FLT_END;
+	rep->analyse_exp = TICK_ETERNITY;
 	return 0;
 }
 
