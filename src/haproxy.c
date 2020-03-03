@@ -2733,7 +2733,7 @@ void deinit(void)
 
 
 /* Runs the polling loop */
-static void run_poll_loop()
+void run_poll_loop()
 {
 	int next, wake;
 
