@@ -50,6 +50,7 @@
 #   USE_NS               : enable network namespace support. Supported on Linux >= 2.6.24.
 #   USE_DL               : enable it if your system requires -ldl. Automatic on Linux.
 #   USE_RT               : enable it if your system requires -lrt. Automatic on Linux.
+#   USE_BACKTRACE        : enable backtrace(). Automatic on Linux.
 #   USE_DEVICEATLAS      : enable DeviceAtlas api.
 #   USE_51DEGREES        : enable third party device detection library from 51Degrees
 #   USE_WURFL            : enable WURFL detection library from Scientiamobile
@@ -290,7 +291,7 @@ use_opts = USE_EPOLL USE_KQUEUE USE_MY_EPOLL USE_MY_SPLICE USE_NETFILTER      \
            USE_PCRE USE_PCRE_JIT USE_PCRE2 USE_PCRE2_JIT USE_POLL             \
            USE_PRIVATE_CACHE USE_THREAD USE_PTHREAD_PSHARED USE_REGPARM       \
            USE_STATIC_PCRE USE_STATIC_PCRE2 USE_TPROXY USE_LINUX_TPROXY       \
-           USE_LINUX_SPLICE USE_LIBCRYPT USE_CRYPT_H USE_VSYSCALL             \
+           USE_LINUX_SPLICE USE_LIBCRYPT USE_CRYPT_H USE_VSYSCALL USE_BACKTRACE \
            USE_GETADDRINFO USE_OPENSSL USE_LUA USE_FUTEX USE_ACCEPT4          \
            USE_MY_ACCEPT4 USE_ZLIB USE_SLZ USE_CPU_AFFINITY USE_TFO USE_NS    \
            USE_DL USE_RT USE_DEVICEATLAS USE_51DEGREES USE_WURFL USE_SYSTEMD  \
@@ -328,7 +329,7 @@ ifeq ($(TARGET),linux-glibc)
     USE_POLL USE_TPROXY USE_LIBCRYPT USE_DL USE_RT USE_CRYPT_H USE_NETFILTER  \
     USE_CPU_AFFINITY USE_THREAD USE_EPOLL USE_FUTEX USE_LINUX_TPROXY          \
     USE_ACCEPT4 USE_LINUX_SPLICE USE_PRCTL USE_THREAD_DUMP USE_NS USE_TFO     \
-    USE_GETADDRINFO)
+    USE_GETADDRINFO USE_BACKTRACE)
 ifneq ($(shell echo __arm__/__aarch64__ | $(CC) -E -xc - | grep '^[^\#]'),__arm__/__aarch64__)
   TARGET_LDFLAGS=-latomic
 endif
@@ -522,6 +523,10 @@ endif
 
 ifneq ($(USE_RT),)
 OPTIONS_LDFLAGS += -lrt
+endif
+
+ifneq ($(USE_BACKTRACE),)
+OPTIONS_LDFLAGS += -Wl,$(if $(EXPORT_SYMBOL),$(EXPORT_SYMBOL),--export-dynamic)
 endif
 
 ifneq ($(USE_OPENSSL),)
