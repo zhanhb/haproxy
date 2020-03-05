@@ -2816,6 +2816,7 @@ static int ckch_inst_add_cert_sni(SSL_CTX *ctx, struct ckch_inst *ckch_inst,
 		sc->neg = neg;
 		sc->wild = wild;
 		sc->name.node.leaf_p = NULL;
+		sc->ckch_inst = ckch_inst;
 		LIST_ADDQ(&ckch_inst->sni_ctx, &sc->by_ckch_inst);
 	}
 	return order;
@@ -3924,6 +3925,7 @@ static int ckch_inst_new_load_multi_store(const char *path, struct ckch_store *c
 
 	ckch_inst->bind_conf = bind_conf;
 	ckch_inst->ssl_conf = ssl_conf;
+	ckch_inst->ckch_store = ckchs;
 end:
 
 	if (names)
@@ -4116,6 +4118,7 @@ static int ckch_inst_new_load_store(const char *path, struct ckch_store *ckchs, 
 	/* everything succeed, the ckch instance can be used */
 	ckch_inst->bind_conf = bind_conf;
 	ckch_inst->ssl_conf = ssl_conf;
+	ckch_inst->ckch_store = ckchs;
 
 	*ckchi = ckch_inst;
 	return errcode;
