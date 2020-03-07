@@ -61,6 +61,26 @@
  * power of 2, and 0 otherwise */
 #define POWEROF2(x) (((x) & ((x)-1)) == 0)
 
+/* rotate left a 64-bit integer by <bits:[0-5]> bits */
+static inline uint64_t rotl64(uint64_t v, uint8_t bits)
+{
+#if !defined(__ARM_ARCH_8A) && !defined(__x86_64__)
+	bits &= 63;
+#endif
+	v = (v << bits) | (v >> (-bits & 63));
+	return v;
+}
+
+/* rotate right a 64-bit integer by <bits:[0-5]> bits */
+static inline uint64_t rotr64(uint64_t v, uint8_t bits)
+{
+#if !defined(__ARM_ARCH_8A) && !defined(__x86_64__)
+	bits &= 63;
+#endif
+	v = (v >> bits) | (v << (-bits & 63));
+	return v;
+}
+
 /* operators to compare values. They're ordered that way so that the lowest bit
  * serves as a negation for the test and contains all tests that are not equal.
  */
