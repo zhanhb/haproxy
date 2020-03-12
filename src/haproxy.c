@@ -146,6 +146,7 @@ unsigned long pid_bit = 1;      /* bit corresponding to the process id */
 unsigned long all_proc_mask = 1; /* mask of all processes */
 
 volatile unsigned long sleeping_thread_mask = 0; /* Threads that are about to sleep in poll() */
+volatile unsigned long stopping_thread_mask = 0; /* Threads acknowledged stopping */
 
 /* global options */
 struct global global = {
@@ -2752,8 +2753,12 @@ static void run_poll_loop()
 		/* Check if we can expire some tasks */
 		next = wake_expired_tasks();
 
+		if (stopping && tasks_run_queue == 0)
+			_HA_ATOMIC_OR(&stopping_thread_mask, tid_bit);
+
 		/* stop when there's nothing left to do */
-		if ((jobs - unstoppable_jobs) == 0)
+		if ((jobs - unstoppable_jobs) == 0 && tasks_run_queue == 0 &&
+		    (stopping_thread_mask & all_threads_mask) == all_threads_mask)
 			break;
 
 		/* also stop  if we failed to cleanly stop all tasks */
