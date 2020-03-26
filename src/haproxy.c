@@ -95,6 +95,7 @@
 #include <proto/auth.h>
 #include <proto/backend.h>
 #include <proto/channel.h>
+#include <proto/checks.h>
 #include <proto/connection.h>
 #include <proto/fd.h>
 #include <proto/filters.h>
@@ -2278,15 +2279,6 @@ void deinit(void)
 		while (s) {
 			s_next = s->next;
 
-			if (s->check.task) {
-				task_delete(s->check.task);
-				task_free(s->check.task);
-			}
-			if (s->agent.task) {
-				task_delete(s->agent.task);
-				task_free(s->agent.task);
-			}
-
 			if (s->warmup) {
 				task_delete(s->warmup);
 				task_free(s->warmup);
@@ -2294,16 +2286,14 @@ void deinit(void)
 
 			free(s->id);
 			free(s->cookie);
-			free(s->check.bi);
-			free(s->check.bo);
-			free(s->agent.bi);
-			free(s->agent.bo);
-			free(s->agent.send_string);
 			free(s->hostname_dn);
 			free((char*)s->conf.file);
 			free(s->idle_conns);
 			free(s->priv_conns);
 			free(s->safe_conns);
+
+			deinit_srv_check(s);
+			deinit_srv_agent_check(s);
 
 			if (s->use_ssl == 1 || s->check.use_ssl == 1 || (s->proxy->options & PR_O_TCPCHK_SSL)) {
 				if (xprt_get(XPRT_SSL) && xprt_get(XPRT_SSL)->destroy_srv)
