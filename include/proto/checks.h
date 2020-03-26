@@ -3,7 +3,7 @@
   Functions prototypes for the checks.
 
   Copyright (C) 2000-2009 Willy Tarreau - w@1wt.eu
-  
+
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
   License as published by the Free Software Foundation, version 2.1
@@ -50,6 +50,8 @@ static inline void health_adjust(struct server *s, short status)
 
 const char *init_check(struct check *check, int type);
 void free_check(struct check *check);
+void deinit_srv_check(struct server *srv);
+void deinit_srv_agent_check(struct server *srv);
 
 int init_email_alert(struct mailers *mailers, struct proxy *p, char **err);
 void send_email_alert(struct server *s, int priority, const char *format, ...)

@@ -2952,9 +2952,6 @@ out_uri_auth_compat:
 					cfgerr += xprt_get(XPRT_SSL)->prepare_srv(newsrv);
 			}
 
-			/* set the check type on the server */
-			newsrv->check.type = curproxy->options2 & PR_O2_CHK_ANY;
-
 			if (newsrv->trackit) {
 				struct proxy *px;
 				struct server *srv, *loop;
@@ -2991,9 +2988,7 @@ out_uri_auth_compat:
 					goto next_srv;
 				}
 
-				if (!(srv->check.state & CHK_ST_CONFIGURED) &&
-				    !(srv->agent.state & CHK_ST_CONFIGURED) &&
-				    !srv->track && !srv->trackit) {
+				if (!srv->do_check && !srv->do_agent && !srv->track && !srv->trackit) {
 					ha_alert("config : %s '%s', server '%s': unable to use %s/%s for "
 						 "tracking as it does not have any check nor agent enabled.\n",
 						 proxy_type_str(curproxy), curproxy->id,
