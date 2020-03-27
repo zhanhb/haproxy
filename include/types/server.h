@@ -270,7 +270,7 @@ struct server {
 	struct sockaddr_storage init_addr;	/* plain IP address specified on the init-addr line */
 	unsigned int init_addr_methods;		/* initial address setting, 3-bit per method, ends at 0, enough to store 10 entries */
 
-	int use_ssl;				/* ssl enabled  */
+	char use_ssl;			        /* ssl enabled (1: on, 0: disabled, -1 forced off)  */
 #ifdef USE_OPENSSL
 	char *sni_expr;             /* Temporary variable to store a sample expression for SNI */
 	struct {
