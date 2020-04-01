@@ -4321,6 +4321,8 @@ int http_wait_for_response(struct stream *s, struct channel *rep, int an_bit)
 		abort_response:
 			channel_auto_close(rep);
 			rep->analysers &= AN_RES_FLT_END;
+			s->req.analysers &= AN_REQ_FLT_END;
+			rep->analyse_exp = TICK_ETERNITY;
 			txn->status = 502;
 			s->si[1].flags |= SI_FL_NOLINGER;
 			channel_truncate(rep);
@@ -4356,6 +4358,8 @@ int http_wait_for_response(struct stream *s, struct channel *rep, int an_bit)
 
 			channel_auto_close(rep);
 			rep->analysers &= AN_RES_FLT_END;
+			s->req.analysers &= AN_REQ_FLT_END;
+			rep->analyse_exp = TICK_ETERNITY;
 			txn->status = 502;
 
 			/* Check to see if the server refused the early data.
@@ -4392,6 +4396,8 @@ int http_wait_for_response(struct stream *s, struct channel *rep, int an_bit)
 
 			channel_auto_close(rep);
 			rep->analysers &= AN_RES_FLT_END;
+			s->req.analysers &= AN_REQ_FLT_END;
+			rep->analyse_exp = TICK_ETERNITY;
 			txn->status = 504;
 			s->si[1].flags |= SI_FL_NOLINGER;
 			channel_truncate(rep);
@@ -4412,6 +4418,8 @@ int http_wait_for_response(struct stream *s, struct channel *rep, int an_bit)
 				HA_ATOMIC_ADD(&objt_server(s->target)->counters.cli_aborts, 1);
 
 			rep->analysers &= AN_RES_FLT_END;
+			s->req.analysers &= AN_REQ_FLT_END;
+			rep->analyse_exp = TICK_ETERNITY;
 			channel_auto_close(rep);
 
 			txn->status = 400;
@@ -4442,6 +4450,8 @@ int http_wait_for_response(struct stream *s, struct channel *rep, int an_bit)
 
 			channel_auto_close(rep);
 			rep->analysers &= AN_RES_FLT_END;
+			s->req.analysers &= AN_REQ_FLT_END;
+			rep->analyse_exp = TICK_ETERNITY;
 			txn->status = 502;
 			s->si[1].flags |= SI_FL_NOLINGER;
 			channel_truncate(rep);
@@ -4463,6 +4473,8 @@ int http_wait_for_response(struct stream *s, struct channel *rep, int an_bit)
 
 			HA_ATOMIC_ADD(&s->be->be_counters.failed_resp, 1);
 			rep->analysers &= AN_RES_FLT_END;
+			s->req.analysers &= AN_REQ_FLT_END;
+			rep->analyse_exp = TICK_ETERNITY;
 			channel_auto_close(rep);
 
 			if (!(s->flags & SF_ERR_MASK))
@@ -4845,6 +4857,7 @@ int http_wait_for_response(struct stream *s, struct channel *rep, int an_bit)
 	txn->status = 0;
 	rep->analysers   &= AN_RES_FLT_END;
 	s->req.analysers &= AN_REQ_FLT_END;
+	rep->analyse_exp = TICK_ETERNITY;
 	channel_auto_close(rep);
 	s->logs.logwait = 0;
 	s->logs.level = 0;
@@ -4948,6 +4961,8 @@ int http_process_res_common(struct stream *s, struct channel *rep, int an_bit, s
 				HA_ATOMIC_ADD(&s->be->be_counters.failed_resp, 1);
 			return_srv_prx_502:
 				rep->analysers &= AN_RES_FLT_END;
+				s->req.analysers &= AN_REQ_FLT_END;
+				rep->analyse_exp = TICK_ETERNITY;
 				txn->status = 502;
 				s->logs.t_data = -1; /* was not a valid response */
 				s->si[1].flags |= SI_FL_NOLINGER;

@@ -1477,6 +1477,8 @@ int htx_wait_for_response(struct stream *s, struct channel *rep, int an_bit)
 			}
 
 			rep->analysers &= AN_RES_FLT_END;
+			s->req.analysers &= AN_REQ_FLT_END;
+			rep->analyse_exp = TICK_ETERNITY;
 			txn->status = 502;
 
 			/* Check to see if the server refused the early data.
@@ -1508,6 +1510,8 @@ int htx_wait_for_response(struct stream *s, struct channel *rep, int an_bit)
 			}
 
 			rep->analysers &= AN_RES_FLT_END;
+			s->req.analysers &= AN_REQ_FLT_END;
+			rep->analyse_exp = TICK_ETERNITY;
 			txn->status = 504;
 			s->si[1].flags |= SI_FL_NOLINGER;
 			htx_reply_and_close(s, txn->status, htx_error_message(s));
@@ -1527,6 +1531,8 @@ int htx_wait_for_response(struct stream *s, struct channel *rep, int an_bit)
 				HA_ATOMIC_ADD(&__objt_server(s->target)->counters.cli_aborts, 1);
 
 			rep->analysers &= AN_RES_FLT_END;
+			s->req.analysers &= AN_REQ_FLT_END;
+			rep->analyse_exp = TICK_ETERNITY;
 			txn->status = 400;
 			htx_reply_and_close(s, txn->status, htx_error_message(s));
 
@@ -1551,6 +1557,8 @@ int htx_wait_for_response(struct stream *s, struct channel *rep, int an_bit)
 			}
 
 			rep->analysers &= AN_RES_FLT_END;
+			s->req.analysers &= AN_REQ_FLT_END;
+			rep->analyse_exp = TICK_ETERNITY;
 			txn->status = 502;
 			s->si[1].flags |= SI_FL_NOLINGER;
 			htx_reply_and_close(s, txn->status, htx_error_message(s));
@@ -1569,6 +1577,8 @@ int htx_wait_for_response(struct stream *s, struct channel *rep, int an_bit)
 
 			HA_ATOMIC_ADD(&s->be->be_counters.failed_resp, 1);
 			rep->analysers &= AN_RES_FLT_END;
+			s->req.analysers &= AN_REQ_FLT_END;
+			rep->analyse_exp = TICK_ETERNITY;
 
 			if (!(s->flags & SF_ERR_MASK))
 				s->flags |= SF_ERR_CLICL;
