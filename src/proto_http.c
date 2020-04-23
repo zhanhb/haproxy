@@ -11809,6 +11809,8 @@ expect_comma:
 /* This fetch url-decode any input string. */
 static int sample_conv_url_dec(const struct arg *args, struct sample *smp, void *private)
 {
+	int in_form = 0;
+
 	/* If the constant flag is set or if not size is avalaible at
 	 * the end of the buffer, copy the string in other buffer
 	  * before decoding.
@@ -11823,7 +11825,11 @@ static int sample_conv_url_dec(const struct arg *args, struct sample *smp, void 
 
 	/* Add final \0 required by url_decode(), and convert the input string. */
 	smp->data.u.str.str[smp->data.u.str.len] = '\0';
-	smp->data.u.str.len = url_decode(smp->data.u.str.str);
+
+	if (args && (args[0].type == ARGT_SINT))
+		in_form = !!args[0].data.sint;
+
+	smp->data.u.str.len = url_decode(smp->data.u.str.str, in_form);
 	return (smp->data.u.str.len >= 0);
 }
 
@@ -13044,7 +13050,7 @@ static struct sample_conv_kw_list sample_conv_kws = {ILH, {
 	{ "language",  sample_conv_q_prefered, ARG2(1,STR,STR),  NULL, SMP_T_STR,  SMP_T_STR},
 	{ "capture-req", smp_conv_req_capture, ARG1(1,SINT),     NULL, SMP_T_STR,  SMP_T_STR},
 	{ "capture-res", smp_conv_res_capture, ARG1(1,SINT),     NULL, SMP_T_STR,  SMP_T_STR},
-	{ "url_dec",   sample_conv_url_dec,    0,                NULL, SMP_T_STR,  SMP_T_STR},
+	{ "url_dec",   sample_conv_url_dec,    ARG1(0,SINT),     NULL, SMP_T_STR,  SMP_T_STR},
 	{ NULL, NULL, 0, 0, 0 },
 }};
 

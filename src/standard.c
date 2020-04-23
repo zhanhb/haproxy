@@ -1691,8 +1691,12 @@ const char *csv_enc_append(const char *str, int quote, struct chunk *output)
  * be shorter. If some forbidden characters are found, the conversion is
  * aborted, the string is truncated before the issue and a negative value is
  * returned, otherwise the operation returns the length of the decoded string.
+ * If the 'in_form' argument is non-nul the string is assumed to be part of
+ * an "application/x-www-form-urlencoded" encoded string, and the '+' will be
+ * turned to a space. If it's zero, this will only be done after a question
+ * mark ('?').
  */
-int url_decode(char *string)
+int url_decode(char *string, int in_form)
 {
 	char *in, *out;
 	int ret = -1;
@@ -1702,7 +1706,7 @@ int url_decode(char *string)
 	while (*in) {
 		switch (*in) {
 		case '+' :
-			*out++ = ' ';
+			*out++ = in_form ? ' ' : *in;
 			break;
 		case '%' :
 			if (!ishex(in[1]) || !ishex(in[2]))
@@ -1710,6 +1714,9 @@ int url_decode(char *string)
 			*out++ = (hex2i(in[1]) << 4) + hex2i(in[2]);
 			in += 2;
 			break;
+		case '?':
+			in_form = 1;
+			/* fall through */
 		default:
 			*out++ = *in;
 			break;
