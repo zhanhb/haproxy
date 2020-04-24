@@ -251,22 +251,18 @@ void pool_flush(struct pool_head *pool)
 
 /*
  * This function frees whatever can be freed in all pools, but respecting
- * the minimum thresholds imposed by owners. It takes care of avoiding
- * recursion because it may be called from a signal handler.
- *
- * <pool_ctx> is unused
+ * the minimum thresholds imposed by owners. It makes sure to be alone to
+ * run by using thread_isolate(). <pool_ctx> is unused.
  */
 void pool_gc(struct pool_head *pool_ctx)
 {
-	static int recurse;
-	int cur_recurse = 0;
 	struct pool_head *entry;
+	int isolated = thread_isolated();
 
-	if (recurse || !_HA_ATOMIC_CAS(&recurse, &cur_recurse, 1))
-		return;
+	if (!isolated)
+		thread_isolate();
 
 	list_for_each_entry(entry, &pools, list) {
-		HA_SPIN_LOCK(POOL_LOCK, &entry->flush_lock);
 		while ((int)((volatile int)entry->allocated - (volatile int)entry->used) > (int)entry->minavail) {
 			struct pool_free_list cmp, new;
 
@@ -283,10 +279,10 @@ void pool_gc(struct pool_head *pool_ctx)
 			free(cmp.free_list);
 			_HA_ATOMIC_SUB(&entry->allocated, 1);
 		}
-		HA_SPIN_UNLOCK(POOL_LOCK, &entry->flush_lock);
 	}
 
-	_HA_ATOMIC_STORE(&recurse, 0);
+	if (!isolated)
+		thread_release();
 }
 
 /* frees an object to the local cache, possibly pushing oldest objects to the
@@ -414,27 +410,20 @@ void pool_flush(struct pool_head *pool)
 
 /*
  * This function frees whatever can be freed in all pools, but respecting
- * the minimum thresholds imposed by owners. It takes care of avoiding
- * recursion because it may be called from a signal handler.
- *
- * <pool_ctx> is used when pool_gc is called to release resources to allocate
- * an element in __pool_refill_alloc. It is important because <pool_ctx> is
- * already locked, so we need to skip the lock here.
+ * the minimum thresholds imposed by owners. It makes sure to be alone to
+ * run by using thread_isolate(). <pool_ctx> is unused.
  */
 void pool_gc(struct pool_head *pool_ctx)
 {
-	static int recurse;
-	int cur_recurse = 0;
 	struct pool_head *entry;
+	int isolated = thread_isolated();
 
-	if (recurse || !_HA_ATOMIC_CAS(&recurse, &cur_recurse, 1))
-		return;
+	if (!isolated)
+		thread_isolate();
 
 	list_for_each_entry(entry, &pools, list) {
 		void *temp;
 		//qfprintf(stderr, "Flushing pool %s\n", entry->name);
-		if (entry != pool_ctx)
-			HA_SPIN_LOCK(POOL_LOCK, &entry->lock);
 		while (entry->free_list &&
 		       (int)(entry->allocated - entry->used) > (int)entry->minavail) {
 			temp = entry->free_list;
@@ -442,11 +431,10 @@ void pool_gc(struct pool_head *pool_ctx)
 			entry->allocated--;
 			pool_free_area(temp, entry->size + POOL_EXTRA);
 		}
-		if (entry != pool_ctx)
-			HA_SPIN_UNLOCK(POOL_LOCK, &entry->lock);
 	}
 
-	_HA_ATOMIC_STORE(&recurse, 0);
+	if (!isolated)
+		thread_release();
 }
 #endif
 
