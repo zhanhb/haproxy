@@ -247,7 +247,7 @@ static int sample_conv_url_dec(const struct arg *args, struct sample *smp, void 
 
 static int smp_conv_req_capture(const struct arg *args, struct sample *smp, void *private)
 {
-	struct proxy *fe = strm_fe(smp->strm);
+	struct proxy *fe;
 	int idx, i;
 	struct cap_hdr *hdr;
 	int len;
@@ -255,6 +255,10 @@ static int smp_conv_req_capture(const struct arg *args, struct sample *smp, void
 	if (!args || args->type != ARGT_SINT)
 		return 0;
 
+	if (!smp->strm)
+		return 0;
+
+	fe = strm_fe(smp->strm);
 	idx = args->data.sint;
 
 	/* Check the availibity of the capture id. */
@@ -288,7 +292,7 @@ static int smp_conv_req_capture(const struct arg *args, struct sample *smp, void
 
 static int smp_conv_res_capture(const struct arg *args, struct sample *smp, void *private)
 {
-	struct proxy *fe = strm_fe(smp->strm);
+	struct proxy *fe;
 	int idx, i;
 	struct cap_hdr *hdr;
 	int len;
@@ -296,6 +300,10 @@ static int smp_conv_res_capture(const struct arg *args, struct sample *smp, void
 	if (!args || args->type != ARGT_SINT)
 		return 0;
 
+	if (!smp->strm)
+		return 0;
+
+	fe = strm_fe(smp->strm);
 	idx = args->data.sint;
 
 	/* Check the availibity of the capture id. */
