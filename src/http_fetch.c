@@ -612,6 +612,9 @@ static int smp_fetch_uniqueid(const struct arg *args, struct sample *smp, const 
 	if (LIST_ISEMPTY(&smp->sess->fe->format_unique_id))
 		return 0;
 
+	if (!smp->strm)
+		return 0;
+
 	if (!smp->strm->unique_id) {
 		if ((smp->strm->unique_id = pool_alloc(pool_head_uniqueid)) == NULL)
 			return 0;
