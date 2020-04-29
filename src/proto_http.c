@@ -10707,12 +10707,16 @@ extract_cookie_value(char *hdr, const char *hdr_end,
 static int
 smp_fetch_capture_header_req(const struct arg *args, struct sample *smp, const char *kw, void *private)
 {
-	struct proxy *fe = strm_fe(smp->strm);
+	struct proxy *fe;
 	int idx;
 
 	if (!args || args->type != ARGT_SINT)
 		return 0;
 
+	if (!smp->strm)
+		return 0;
+
+	fe = strm_fe(smp->strm);
 	idx = args->data.sint;
 
 	if (idx > (fe->nb_req_cap - 1) || smp->strm->req_cap == NULL || smp->strm->req_cap[idx] == NULL)
@@ -10732,12 +10736,16 @@ smp_fetch_capture_header_req(const struct arg *args, struct sample *smp, const c
 static int
 smp_fetch_capture_header_res(const struct arg *args, struct sample *smp, const char *kw, void *private)
 {
-	struct proxy *fe = strm_fe(smp->strm);
+	struct proxy *fe;
 	int idx;
 
 	if (!args || args->type != ARGT_SINT)
 		return 0;
 
+	if (!smp->strm)
+		return 0;
+
+	fe = strm_fe(smp->strm);
 	idx = args->data.sint;
 
 	if (idx > (fe->nb_rsp_cap - 1) || smp->strm->res_cap == NULL || smp->strm->res_cap[idx] == NULL)
@@ -10756,9 +10764,13 @@ static int
 smp_fetch_capture_req_method(const struct arg *args, struct sample *smp, const char *kw, void *private)
 {
 	struct chunk *temp;
-	struct http_txn *txn = smp->strm->txn;
+	struct http_txn *txn;
 	char *ptr;
 
+	if (!smp->strm)
+		return 0;
+
+	txn = smp->strm->txn;
 	if (!txn || !txn->uri)
 		return 0;
 
@@ -10783,9 +10795,13 @@ static int
 smp_fetch_capture_req_uri(const struct arg *args, struct sample *smp, const char *kw, void *private)
 {
 	struct chunk *temp;
-	struct http_txn *txn = smp->strm->txn;
+	struct http_txn *txn;
 	char *ptr;
 
+	if (!smp->strm)
+		return 0;
+
+	txn = smp->strm->txn;
 	if (!txn || !txn->uri)
 		return 0;
 
@@ -10820,8 +10836,12 @@ smp_fetch_capture_req_uri(const struct arg *args, struct sample *smp, const char
 static int
 smp_fetch_capture_req_ver(const struct arg *args, struct sample *smp, const char *kw, void *private)
 {
-	struct http_txn *txn = smp->strm->txn;
+	struct http_txn *txn;
 
+	if (!smp->strm)
+		return 0;
+
+	txn = smp->strm->txn;
 	if (!txn || txn->req.msg_state < HTTP_MSG_HDR_FIRST)
 		return 0;
 
@@ -10843,8 +10863,12 @@ smp_fetch_capture_req_ver(const struct arg *args, struct sample *smp, const char
 static int
 smp_fetch_capture_res_ver(const struct arg *args, struct sample *smp, const char *kw, void *private)
 {
-	struct http_txn *txn = smp->strm->txn;
+	struct http_txn *txn;
 
+	if (!smp->strm)
+		return 0;
+
+	txn = smp->strm->txn;
 	if (!txn || txn->rsp.msg_state < HTTP_MSG_HDR_FIRST)
 		return 0;
 
