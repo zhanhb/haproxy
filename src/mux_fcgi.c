@@ -3494,7 +3494,7 @@ static void fcgi_detach(struct conn_stream *cs)
 	fcgi_strm_destroy(fstrm);
 
 	if (!(fconn->conn->flags & (CO_FL_ERROR|CO_FL_SOCK_RD_SH|CO_FL_SOCK_WR_SH)) &&
-	    !(fconn->flags & FCGI_CF_KEEP_CONN)) {
+	    (fconn->flags & FCGI_CF_KEEP_CONN)) {
 		if (!fconn->conn->owner) {
 			fconn->conn->owner = sess;
 			if (!session_add_conn(sess, fconn->conn, fconn->conn->target)) {
