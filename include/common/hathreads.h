@@ -44,7 +44,12 @@ enum { tid = 0 };
 
 #define __decl_hathreads(decl)
 
-#define HA_ATOMIC_CAS(val, old, new) ({((*val) == (*old)) ? (*(val) = (new) , 1) : (*(old) = *(val), 0);})
+#define HA_ATOMIC_CAS(val, old, new)                                    \
+	({                                                              \
+		typeof(val) _v = (val);                                 \
+		typeof(old) _o = (old);                                 \
+		(*_v == *_o) ? ((*_v = (new)), 1) : ((*_o = *_v), 0);   \
+	})
 #define HA_ATOMIC_ADD(val, i)        ({*(val) += (i);})
 #define HA_ATOMIC_SUB(val, i)        ({*(val) -= (i);})
 #define HA_ATOMIC_XADD(val, i)						\
