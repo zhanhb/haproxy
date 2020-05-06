@@ -243,7 +243,7 @@ void dump_pools_to_trash()
 	chunk_printf(&trash, "Dumping pools usage. Use SIGQUIT to flush them.\n");
 	list_for_each_entry(entry, &pools, list) {
 		HA_SPIN_LOCK(POOL_LOCK, &entry->lock);
-		chunk_appendf(&trash, "  - Pool %s (%d bytes) : %d allocated (%u bytes), %d used, %d failures, %d users%s\n",
+		chunk_appendf(&trash, "  - Pool %s (%u bytes) : %u allocated (%u bytes), %u used, %u failures, %u users%s\n",
 			 entry->name, entry->size, entry->allocated,
 		         entry->size * entry->allocated, entry->used, entry->failed,
 			 entry->users, (entry->flags & MEM_F_SHARED) ? " [SHARED]" : "");
