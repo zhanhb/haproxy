@@ -1558,6 +1558,12 @@ int connect_server(struct stream *s)
 			srv_conn->flags |= CO_FL_SOCKS4;
 		}
 	}
+	else if (!srv_conn->mux) {
+		/* No mux? We possibly asked for ALPN during a first failed
+		 * attempt and are trying to start again from this connection,
+		 * thus we have nothing to do.
+		 */
+	}
 	else if (!conn_xprt_ready(srv_conn)) {
 		if (srv_conn->mux->reset)
 			srv_conn->mux->reset(srv_conn);
