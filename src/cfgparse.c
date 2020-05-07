@@ -7290,6 +7290,7 @@ next_line:
 					else {
 						ha_alert("parsing [%s:%d] : invalid or incomplete '\\x' sequence in '%s'.\n", file, linenum, args[0]);
 						err_code |= ERR_ALERT | ERR_FATAL;
+						goto next_line;
 					}
 				} else if (line[1] == '"') {
 					*line = '"';
