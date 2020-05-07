@@ -2383,7 +2383,10 @@ int check_config_validity()
 					free(pxname);
 					continue;
 				}
-				/* simple string: free the expression and fall back to static rule */
+				/* Only one element in the list, a simple string: free the expression and
+				 * fall back to static rule
+				 */
+				LIST_DEL(&node->list);
 				free(node->arg);
 				free(node);
 			}
