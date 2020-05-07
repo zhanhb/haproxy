@@ -4784,7 +4784,13 @@ int http_wait_for_response(struct stream *s, struct channel *rep, int an_bit)
 	    /* check for Negotiate/NTLM WWW-Authenticate headers */
 	    ctx.idx = 0;
 	    while (http_find_header2("WWW-Authenticate", 16, ci_head(rep), &txn->hdr_idx, &ctx)) {
-	            if ((ctx.vlen >= 9 && word_match(ctx.line + ctx.val, ctx.vlen, "Negotiate", 9)) ||
+		    /* If www-authenticate contains "Negotiate", "Nego2", or "NTLM",
+		     * possibly followed by blanks and a base64 string, the connection
+		     * is private. Since it's a mess to deal with, we only check for
+		     * values starting with "NTLM" or "Nego". Note that often multiple
+		     * headers are sent by the server there.
+		     */
+	            if ((ctx.vlen >= 4 && word_match(ctx.line + ctx.val, ctx.vlen, "Nego", 4)) ||
 	                  (ctx.vlen >= 4 && word_match(ctx.line + ctx.val, ctx.vlen, "NTLM", 4)))
 				srv_conn->flags |= CO_FL_PRIVATE;
 	    }
@@ -4792,7 +4798,7 @@ int http_wait_for_response(struct stream *s, struct channel *rep, int an_bit)
 	    /* check for Negotiate/NTLM Proxy-Authenticate headers */
 	    ctx.idx = 0;
 	    while (http_find_header2("Proxy-Authenticate", 18, ci_head(rep), &txn->hdr_idx, &ctx)) {
-	            if ((ctx.vlen >= 9 && word_match(ctx.line + ctx.val, ctx.vlen, "Negotiate", 9)) ||
+	            if ((ctx.vlen >= 4 && word_match(ctx.line + ctx.val, ctx.vlen, "Nego", 4)) ||
 	                  (ctx.vlen >= 4 && word_match(ctx.line + ctx.val, ctx.vlen, "NTLM", 4)))
 				srv_conn->flags |= CO_FL_PRIVATE;
 	    }
