@@ -3810,13 +3810,12 @@ static int init_servers_checks()
 				goto end;
 		}
 	}
+	ret = start_checks();
   end:
 	return ret;
 }
 
-/* Must be declared in that order because checks must be initialized first */
 REGISTER_POST_CHECK(init_servers_checks);
-REGISTER_POST_CHECK(start_checks);
 
 /*
  * Local variables:
