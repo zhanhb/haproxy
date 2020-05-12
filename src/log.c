@@ -1121,6 +1121,10 @@ void __send_log(struct proxy *p, int level, char *message, size_t size, char *sd
 
 	dataptr = message;
 
+	/* historically some messages used to already contain the trailing LF */
+	if (size && (dataptr[size-1] == '\n'))
+		size--;
+
 	if (p == NULL) {
 		if (!LIST_ISEMPTY(&global.logsrvs)) {
 			logsrvs = &global.logsrvs;
@@ -1280,7 +1284,7 @@ void __send_log(struct proxy *p, int level, char *message, size_t size, char *sd
 			goto send;
 		}
 
-		max = MIN(size, maxlen - sd_max) - 1;
+		max = MIN(size, maxlen - sd_max - 1);
 send:
 		iovec[0].iov_base = hdr_ptr;
 		iovec[0].iov_len  = hdr_max;
