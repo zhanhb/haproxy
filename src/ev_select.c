@@ -237,7 +237,6 @@ static void deinit_select_per_thread()
  */
 REGPRM1 static int _do_init(struct poller *p)
 {
-	__label__ fail_swevt, fail_srevt, fail_revt;
 	int fd_set_bytes;
 
 	p->private = NULL;
