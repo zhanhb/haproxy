@@ -3732,6 +3732,8 @@ static int init_srv_check(struct server *srv)
 
 		srv->check.send_proxy |= (srv->pp_opts);
 	}
+	else if (srv->check.use_ssl == 1)
+		srv->check.xprt = xprt_get(XPRT_SSL);
 
 	/* validate <srv> server health-check settings */
 
