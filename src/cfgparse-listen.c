@@ -2560,7 +2560,7 @@ stats_error_parsing:
 				curproxy->check_len = snprintf(curproxy->check_req, reqlen,
 							       "OPTIONS %s HTTP/1.0\r\n", args[2]); /* URI to use */
 			} else if (!*args[4]) { /* two arguments : METHOD URI */
-				int reqlen = strlen(args[2]) + strlen(args[3]) + strlen(" HTTP/1.0\r\n") + 1;
+				int reqlen = strlen(args[2]) + strlen(args[3]) + strlen("HTTP/1.0\r\n") + 3;
 
 				curproxy->check_req = malloc(reqlen);
 				curproxy->check_len = snprintf(curproxy->check_req, reqlen,
