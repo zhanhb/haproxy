@@ -2308,13 +2308,6 @@ stats_error_parsing:
 				char *hdrs = strstr(vsn, "\r\n");
 				char *body = strstr(vsn, "\r\n\r\n");
 
-				if (hdrs || body) {
-					ha_warning("parsing [%s:%d]: '%s %s' : hiding headers or body at the end of the version string is deprecated."
-						   " Please, consider to use 'http-check send' directive instead.\n",
-						   file, linenum, args[0], args[1]);
-					err_code |= ERR_WARN;
-				}
-
 				if (hdrs == body)
 					hdrs = NULL;
 				if (hdrs) {
