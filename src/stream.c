@@ -673,8 +673,6 @@ static void sess_update_st_con_tcp(struct stream *s)
 	struct stream_interface *si = &s->si[1];
 	struct channel *req = &s->req;
 	struct channel *rep = &s->res;
-	struct conn_stream *srv_cs = objt_cs(si->end);
-	struct connection *conn = srv_cs ? srv_cs->conn : objt_conn(si->end);
 
 	/* the client might want to abort */
 	if ((rep->flags & CF_SHUTW) ||
@@ -691,10 +689,7 @@ static void sess_update_st_con_tcp(struct stream *s)
 
 	/* retryable error ? */
 	if (si->flags & (SI_FL_EXP|SI_FL_ERR)) {
-		if (!(s->flags & SF_SRV_REUSED) && conn) {
-			conn_stop_tracking(conn);
-			conn_full_close(conn);
-		}
+		si_release_endpoint(si);
 
 		if (!si->err_type) {
 			if (si->flags & SI_FL_ERR)
@@ -824,8 +819,6 @@ static void sess_update_st_rdy_tcp(struct stream *s)
 	struct stream_interface *si = &s->si[1];
 	struct channel *req = &s->req;
 	struct channel *rep = &s->res;
-	struct conn_stream *srv_cs = objt_cs(si->end);
-	struct connection *conn = srv_cs ? srv_cs->conn : objt_conn(si->end);
 
 	/* We know the connection at least succeeded, though it could have
 	 * since met an error for any other reason. At least it didn't time out
@@ -861,10 +854,7 @@ static void sess_update_st_rdy_tcp(struct stream *s)
 
 		/* retryable error ? */
 		if (si->flags & SI_FL_ERR) {
-			if (!(s->flags & SF_SRV_REUSED) && conn) {
-				conn_stop_tracking(conn);
-				conn_full_close(conn);
-			}
+			si_release_endpoint(si);
 
 			if (!si->err_type)
 				si->err_type = SI_ET_CONN_ERR;
