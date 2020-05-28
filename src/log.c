@@ -1360,8 +1360,10 @@ void __send_log(struct proxy *p, int level, char *message, size_t size, char *sd
 
 	dataptr = message;
 
-	/* historically some messages used to already contain the trailing LF */
-	if (size && (dataptr[size-1] == '\n'))
+	/* historically some messages used to already contain the trailing LF
+	 * or Zero. Let's remove all trailing LF or Zero
+	 */
+	while (size && ((dataptr[size-1] == '\n' || (dataptr[size-1] == 0))))
 		size--;
 
 	if (p == NULL) {
