@@ -116,6 +116,47 @@ enum {
 	PEER_MSG_ERR_SIZELIMIT,
 };
 
+/* network key types;
+ * network types were directly and mistakenly
+ * mapped on sample types, to keep backward
+ * compatiblitiy we keep those values but
+ * we now use a internal/network mapping
+ * to avoid further mistakes adding or
+ * modifying internals types
+ */
+enum {
+        PEER_KT_ANY = 0,  /* any type */
+        PEER_KT_RESV1,    /* UNUSED */
+        PEER_KT_SINT,     /* signed 64bits integer type */
+        PEER_KT_RESV3,    /* UNUSED */
+        PEER_KT_IPV4,     /* ipv4 type */
+        PEER_KT_IPV6,     /* ipv6 type */
+        PEER_KT_STR,      /* char string type */
+        PEER_KT_BIN,      /* buffer type */
+        PEER_KT_TYPES     /* number of types, must always be last */
+};
+
+/* Map used to retrieve network type from internal type
+ * Note: Undeclared mapping maps entry to PEER_KT_ANY == 0
+ */
+static int peer_net_key_type[SMP_TYPES] = {
+	[SMP_T_SINT] = PEER_KT_SINT,
+	[SMP_T_IPV4] = PEER_KT_IPV4,
+	[SMP_T_IPV6] = PEER_KT_IPV6,
+	[SMP_T_STR]  = PEER_KT_STR,
+	[SMP_T_BIN]  = PEER_KT_BIN,
+};
+
+/* Map used to retrieve internal type from external type
+ * Note: Undeclared mapping maps entry to SMP_T_ANY == 0
+ */
+static int peer_int_key_type[PEER_KT_TYPES] = {
+	[PEER_KT_SINT] = SMP_T_SINT,
+	[PEER_KT_IPV4] = SMP_T_IPV4,
+	[PEER_KT_IPV6] = SMP_T_IPV6,
+	[PEER_KT_STR]  = SMP_T_STR,
+	[PEER_KT_BIN]  = SMP_T_BIN,
+};
 
 /*******************************/
 /* stick table sync mesg types */
@@ -426,7 +467,7 @@ static int peer_prepare_switchmsg(struct shared_table *st, char *msg, size_t siz
 
 	/* encode table type */
 
-	intencode(st->table->type, &cursor);
+	intencode(peer_net_key_type[st->table->type], &cursor);
 
 	/* encode table key size */
 	intencode(st->table->key_size, &cursor);
@@ -1189,7 +1230,7 @@ switchstate:
 							goto switchstate;
 						}
 
-						if (curpeer->remote_table->table->type != table_type
+						if (curpeer->remote_table->table->type != peer_int_key_type[table_type]
 						    || curpeer->remote_table->table->key_size != table_keylen) {
 							curpeer->remote_table = NULL;
 							goto ignore_msg;
