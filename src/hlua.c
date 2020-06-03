@@ -1269,7 +1269,9 @@ __LJMP static int hlua_del_acl(lua_State *L)
 	if (!ref)
 		WILL_LJMP(luaL_error(L, "'del_acl': unknown acl file '%s'", name));
 
+	HA_SPIN_LOCK(PATREF_LOCK, &ref->lock);
 	pat_ref_delete(ref, key);
+	HA_SPIN_UNLOCK(PATREF_LOCK, &ref->lock);
 	return 0;
 }
 
@@ -1291,7 +1293,9 @@ static int hlua_del_map(lua_State *L)
 	if (!ref)
 		WILL_LJMP(luaL_error(L, "'del_map': unknown acl file '%s'", name));
 
+	HA_SPIN_LOCK(PATREF_LOCK, &ref->lock);
 	pat_ref_delete(ref, key);
+	HA_SPIN_UNLOCK(PATREF_LOCK, &ref->lock);
 	return 0;
 }
 
@@ -1313,8 +1317,10 @@ static int hlua_add_acl(lua_State *L)
 	if (!ref)
 		WILL_LJMP(luaL_error(L, "'add_acl': unknown acl file '%s'", name));
 
+	HA_SPIN_LOCK(PATREF_LOCK, &ref->lock);
 	if (pat_ref_find_elt(ref, key) == NULL)
 		pat_ref_add(ref, key, NULL, NULL);
+	HA_SPIN_UNLOCK(PATREF_LOCK, &ref->lock);
 	return 0;
 }
 
@@ -1339,10 +1345,12 @@ static int hlua_set_map(lua_State *L)
 	if (!ref)
 		WILL_LJMP(luaL_error(L, "'set_map': unknown map file '%s'", name));
 
+	HA_SPIN_LOCK(PATREF_LOCK, &ref->lock);
 	if (pat_ref_find_elt(ref, key) != NULL)
 		pat_ref_set(ref, key, value, NULL);
 	else
 		pat_ref_add(ref, key, value, NULL);
+	HA_SPIN_UNLOCK(PATREF_LOCK, &ref->lock);
 	return 0;
 }
 
