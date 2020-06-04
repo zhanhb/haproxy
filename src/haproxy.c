@@ -1503,7 +1503,7 @@ static void init(int argc, char **argv)
 			else if (*flag == 'q')
 				arg_mode |= MODE_QUIET;
 			else if (*flag == 'x') {
-				if (argc <= 1 || argv[1][0] == '-') {
+				if (argc <= 1) {
 					ha_alert("Unix socket path expected with the -x flag\n\n");
 					usage(progname);
 				}
