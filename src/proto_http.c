@@ -4781,16 +4781,16 @@ int http_wait_for_response(struct stream *s, struct channel *rep, int an_bit)
 		     * values starting with "NTLM" or "Nego". Note that often multiple
 		     * headers are sent by the server there.
 		     */
-	            if ((ctx.vlen >= 4 && word_match(ctx.line + ctx.val, ctx.vlen, "Nego", 4)) ||
-	                  (ctx.vlen >= 4 && word_match(ctx.line + ctx.val, ctx.vlen, "NTLM", 4)))
+	            if ((ctx.vlen >= 4 && strncasecmp(ctx.line + ctx.val, "Nego", 4)) ||
+	                  (ctx.vlen >= 4 && strncasecmp(ctx.line + ctx.val, "NTLM", 4)))
 				srv_conn->flags |= CO_FL_PRIVATE;
 	    }
 	} else if (srv_conn && txn->status == 407) {
 	    /* check for Negotiate/NTLM Proxy-Authenticate headers */
 	    ctx.idx = 0;
 	    while (http_find_header2("Proxy-Authenticate", 18, ci_head(rep), &txn->hdr_idx, &ctx)) {
-	            if ((ctx.vlen >= 4 && word_match(ctx.line + ctx.val, ctx.vlen, "Nego", 4)) ||
-	                  (ctx.vlen >= 4 && word_match(ctx.line + ctx.val, ctx.vlen, "NTLM", 4)))
+	            if ((ctx.vlen >= 4 && strncasecmp(ctx.line + ctx.val, "Nego", 4)) ||
+	                  (ctx.vlen >= 4 && strncasecmp(ctx.line + ctx.val, "NTLM", 4)))
 				srv_conn->flags |= CO_FL_PRIVATE;
 	    }
 	}
