@@ -267,15 +267,15 @@ int cfg_parse_listen(const char *file, int linenum, char **args, int kwm)
 			const struct buffer *src = &defproxy.errmsg[rc];
 
 			if (b_orig(src)) {
-				dst->head = src->head;
-				dst->data = src->data;
-				dst->size = src->size;
+				dst->head = 0;
+				dst->data = 0;
+				dst->size = 0;
 				dst->area = malloc(src->size);
-				if (!dst->area) {
-					dst->head = 0;
-					dst->data = 0;
-					dst->size = 0;
-					continue;
+				if (dst->area) {
+					dst->head = src->head;
+					dst->data = src->data;
+					dst->size = src->size;
+					memcpy(dst->area, src->area, dst->data);
 				}
 			}
 		}
