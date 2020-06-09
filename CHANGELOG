@@ -1,6 +1,9 @@
 ChangeLog :
 ===========
 
+2020/06/09 : 2.1.7
+    - BUG/MAJOR: http-htx: Don't forget to copy error messages from defaults sections
+
 2020/06/08 : 2.1.6
     - Revert "BUG/MEDIUM: connections: force connections cleanup on server changes"
     - SCRIPTS: publish-release: pass -n to gzip to remove timestamp
