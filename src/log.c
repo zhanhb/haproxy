@@ -1682,13 +1682,30 @@ send:
 	iovec[7].iov_len  = 1;
 
 	if (logsrv->addr.ss_family == AF_UNSPEC) {
+		int attempts = 0;
+		/* make sure we never interleave writes and we never block. This means
+		 * we prefer to fail on collision than to block. But we don't want to
+		 * lose too many logs so we just perform a few lock attempts then give
+		 * up.
+		 */
+
+		while (HA_SPIN_TRYLOCK(LOGSRV_LOCK, &logsrv->lock) != 0) {
+			if (++attempts >= 200) {
+				/* so that the caller knows the message couldn't be delivered */
+				sent = -1;
+				errno = EAGAIN;
+				goto leave;
+			}
+			ha_thread_relax();
+		}
+
 		/* the target is a direct file descriptor. While writev() guarantees
 		 * to write everything, it doesn't guarantee that it will not be
 		 * interrupted while doing so. This occasionally results in interleaved
 		 * messages when the output is a tty, hence the lock. There's no real
 		 * performance concern here for such type of output.
 		 */
-		HA_SPIN_LOCK(LOGSRV_LOCK, &logsrv->lock);
+
 		sent = writev(*plogfd, iovec, 8);
 		HA_SPIN_UNLOCK(LOGSRV_LOCK, &logsrv->lock);
 	}
@@ -1699,6 +1716,7 @@ send:
 		sent = sendmsg(*plogfd, &msghdr, MSG_DONTWAIT | MSG_NOSIGNAL);
 	}
 
+leave:
 	if (sent < 0) {
 		static char once;
 
