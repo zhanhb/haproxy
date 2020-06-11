@@ -382,7 +382,8 @@ void hap_register_per_thread_deinit(void (*fct)())
 
 static void display_version()
 {
-	printf("HA-Proxy version " HAPROXY_VERSION " " HAPROXY_DATE" - https://haproxy.org/\n");
+	printf("HA-Proxy version " HAPROXY_VERSION " " HAPROXY_DATE" - https://haproxy.org/\n"
+	       "No more fixes for branch 1.9 past this version, please upgrade to branch 2.0!\n");
 }
 
 static void display_build_opts()
