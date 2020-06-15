@@ -4364,7 +4364,7 @@ int ssl_sock_load_cert_list_file(char *file, struct bind_conf *bind_conf, struct
 			}
 			line++;
 		}
-		if (cfgerr)
+		if (cfgerr & ERR_CODE)
 			break;
 		args[arg++] = line;
 
@@ -4409,7 +4409,7 @@ int ssl_sock_load_cert_list_file(char *file, struct bind_conf *bind_conf, struct
 			}
 		}
 
-		if (cfgerr) {
+		if (cfgerr & ERR_CODE) {
 			ssl_sock_free_ssl_conf(ssl_conf);
 			free(ssl_conf);
 			ssl_conf = NULL;
@@ -4428,7 +4428,7 @@ int ssl_sock_load_cert_list_file(char *file, struct bind_conf *bind_conf, struct
 		else
 			cfgerr |= ssl_sock_load_ckchs(crt_path, ckchs, bind_conf, ssl_conf, &args[cur_arg], arg - cur_arg - 1, err);
 
-		if (cfgerr) {
+		if (cfgerr & ERR_CODE) {
 			memprintf(err, "error processing line %d in file '%s' : %s", linenum, file, *err);
 			break;
 		}
