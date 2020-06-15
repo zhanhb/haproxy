@@ -297,8 +297,8 @@ int tcp_inspect_response(struct stream *s, struct channel *rep, int an_bit)
 	 * - if one rule returns OK, then return OK
 	 * - if one rule returns KO, then return KO
 	 */
-
-	if (rep->flags & CF_SHUTR || tick_is_expired(rep->analyse_exp, now_ms))
+	if ((rep->flags & CF_SHUTR) || buffer_full(rep->buf, global.tune.maxrewrite) ||
+	    !s->be->tcp_rep.inspect_delay || tick_is_expired(rep->analyse_exp, now_ms))
 		partial = SMP_OPT_FINAL;
 	else
 		partial = 0;
