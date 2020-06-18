@@ -2037,7 +2037,7 @@ int pcli_parse_request(struct stream *s, struct channel *req, char **errmsg, int
 		while (p+reql < end) {
 			/* handle escaping */
 			if (p[reql] == '\\') {
-				reql++;
+				reql+=2;
 				continue;
 			}
 			if (p[reql] == ';' || p[reql] == '\n') {
