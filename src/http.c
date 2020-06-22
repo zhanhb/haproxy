@@ -220,6 +220,7 @@ const int http_err_codes[HTTP_ERR_SIZE] = {
 	[HTTP_ERR_405] = 405,
 	[HTTP_ERR_408] = 408,
 	[HTTP_ERR_410] = 410,
+	[HTTP_ERR_413] = 413,
 	[HTTP_ERR_421] = 421,
 	[HTTP_ERR_425] = 425,
 	[HTTP_ERR_429] = 429,
@@ -292,6 +293,15 @@ const char *http_err_msgs[HTTP_ERR_SIZE] = {
 	"Content-Type: text/html\r\n"
 	"\r\n"
 	"<html><body><h1>410 Gone</h1>\nThe resource is no longer available and will not be available again.\n</body></html>\n",
+
+	[HTTP_ERR_413] =
+	"HTTP/1.1 413 Payload Too Large\r\n"
+	"Content-length: 106\r\n"
+	"Cache-Control: no-cache\r\n"
+	"Connection: close\r\n"
+	"Content-Type: text/html\r\n"
+	"\r\n"
+	"<html><body><h1>413 Payload Too Large</h1>\nThe request entity exceeds the maximum allowed.\n</body></html>\n",
 
 	[HTTP_ERR_421] =
 	"HTTP/1.1 421 Misdirected Request\r\n"
@@ -401,6 +411,7 @@ int http_get_status_idx(unsigned int status)
 	case 405: return HTTP_ERR_405;
 	case 408: return HTTP_ERR_408;
 	case 410: return HTTP_ERR_410;
+	case 413: return HTTP_ERR_413;
 	case 421: return HTTP_ERR_421;
 	case 425: return HTTP_ERR_425;
 	case 429: return HTTP_ERR_429;
