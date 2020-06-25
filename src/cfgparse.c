@@ -1911,12 +1911,14 @@ next_line:
 				ha_alert("parsing [%s:%d]: line too long, cannot allocate memory.\n",
 					 file, linenum);
 				err_code |= ERR_ALERT | ERR_FATAL;
+				linenum--;
 				continue;
 			}
 
 			readbytes = linesize - 1;
 			linesize = newlinesize;
 			thisline = newline;
+			linenum--;
 			continue;
 		}
 
