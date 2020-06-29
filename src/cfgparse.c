@@ -3661,6 +3661,7 @@ out_uri_auth_compat:
 							goto err;
 						idle_conn_cleanup[i]->process = srv_cleanup_toremove_connections;
 						idle_conn_cleanup[i]->context = NULL;
+						HA_SPIN_INIT(&toremove_lock[i]);
 						MT_LIST_INIT(&toremove_connections[i]);
 					}
 				}
