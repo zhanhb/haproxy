@@ -50,7 +50,9 @@
 #define POOL_LINK(pool, item) ((void **)(item))
 #endif
 
-#define MAX_BASE_POOLS 32
+#ifndef MAX_BASE_POOLS
+#define MAX_BASE_POOLS 64
+#endif
 
 struct pool_cache_head {
 	struct list list;    /* head of objects in this pool */
