@@ -1383,7 +1383,8 @@ static size_t h1_process_data(struct h1s *h1s, struct h1m *h1m, struct htx *htx,
 		return 0;
 	}
 
-	if (h1m->state == H1_MSG_DATA && h1m->curr_len && h1s->cs)
+	if (h1s->cs && !(h1m->flags & H1_MF_CHNK) &&
+	    ((h1m->state == H1_MSG_DATA && h1m->curr_len) || (h1m->state == H1_MSG_TUNNEL)))
 		h1s->cs->flags |= CS_FL_MAY_SPLICE;
 	else if (h1s->cs)
 		h1s->cs->flags &= ~CS_FL_MAY_SPLICE;
@@ -2477,7 +2478,7 @@ static size_t h1_rcv_buf(struct conn_stream *cs, struct buffer *buf, size_t coun
 	if (flags & CO_RFL_BUF_FLUSH) {
 		struct h1m *h1m = (!conn_is_back(cs->conn) ? &h1s->req : &h1s->res);
 
-		if (h1m->state != H1_MSG_TUNNEL || (h1m->state == H1_MSG_DATA && h1m->curr_len))
+		if (h1m->state == H1_MSG_TUNNEL || (h1m->state == H1_MSG_DATA && h1m->curr_len))
 			h1s->flags |= H1S_F_BUF_FLUSH;
 	}
 	else if (ret > 0 || (h1s->flags & H1S_F_SPLICED_DATA)) {
@@ -2556,7 +2557,8 @@ static int h1_rcv_pipe(struct conn_stream *cs, struct pipe *pipe, unsigned int c
 		h1s->flags &= ~(H1S_F_BUF_FLUSH|H1S_F_SPLICED_DATA);
 	}
 
-	if (h1m->state != H1_MSG_DATA || !h1m->curr_len)
+	if ((h1m->state != H1_MSG_TUNNEL && h1m->state != H1_MSG_DATA) ||
+	    (h1m->state == H1_MSG_DATA && !h1m->curr_len))
 		cs->flags &= ~CS_FL_MAY_SPLICE;
 
 	return ret;
