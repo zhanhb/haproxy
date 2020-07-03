@@ -2482,7 +2482,8 @@ static size_t h1_rcv_buf(struct conn_stream *cs, struct buffer *buf, size_t coun
 			h1s->flags |= H1S_F_BUF_FLUSH;
 	}
 	else if (ret > 0 || (h1s->flags & H1S_F_SPLICED_DATA)) {
-		h1s->flags &= ~H1S_F_SPLICED_DATA;
+		if (ret)
+			h1s->flags &= ~H1S_F_SPLICED_DATA;
 		if (!(h1c->wait_event.events & SUB_RETRY_RECV))
 			tasklet_wakeup(h1c->wait_event.tasklet);
 	}
