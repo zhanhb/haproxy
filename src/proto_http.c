@@ -12979,6 +12979,7 @@ enum act_return http_action_res_capture_by_id(struct act_rule *rule, struct prox
 	return ACT_RET_CONT;
 }
 
+
 /* parse an "http-response capture" action. It takes a single argument which is
  * a sample fetch expression. It stores the expression into arg->act.p[0] and
  * the allocated hdr_cap struct od the preallocated id into arg->act.p[1].
