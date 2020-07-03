@@ -2644,7 +2644,7 @@ static size_t h1_rcv_buf(struct conn_stream *cs, struct buffer *buf, size_t coun
 			TRACE_STATE("disable splicing", H1_EV_STRM_RECV, h1c->conn, h1s);
 		}
 		if (h1m->state != H1_MSG_DONE && !(h1c->wait_event.events & SUB_RETRY_RECV))
-			tasklet_wakeup(h1c->wait_event.tasklet);
+			h1c->conn->xprt->subscribe(h1c->conn, h1c->conn->xprt_ctx, SUB_RETRY_RECV, &h1c->wait_event);
 	}
 	TRACE_LEAVE(H1_EV_STRM_RECV, h1c->conn, h1s,, (size_t[]){ret});
 	return ret;
