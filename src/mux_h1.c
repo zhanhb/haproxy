@@ -2542,6 +2542,10 @@ static int h1_rcv_pipe(struct conn_stream *cs, struct pipe *pipe, unsigned int c
 
 	h1s->flags &= ~H1S_F_BUF_FLUSH;
 	h1s->flags |= H1S_F_SPLICED_DATA;
+
+	if (!h1_recv_allowed(h1s->h1c))
+		goto end;
+
 	if (h1m->state == H1_MSG_DATA && count > h1m->curr_len)
 		count = h1m->curr_len;
 	ret = cs->conn->xprt->rcv_pipe(cs->conn, cs->conn->xprt_ctx, pipe, count);
