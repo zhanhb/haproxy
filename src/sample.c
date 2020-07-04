@@ -2722,6 +2722,8 @@ static int smp_check_const_meth(struct arg *args, char **err)
 
 	meth = find_http_meth(args[0].data.str.str, args[0].data.str.len);
 	if (meth != HTTP_METH_OTHER) {
+		free(args[0].data.str.str);
+
 		args[0].type = ARGT_SINT;
 		args[0].data.sint = meth;
 	} else {
