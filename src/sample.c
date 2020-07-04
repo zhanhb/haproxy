@@ -2649,12 +2649,14 @@ static int smp_check_const_bool(struct arg *args, char **err)
 {
 	if (strcasecmp(args[0].data.str.str, "true") == 0 ||
 	    strcasecmp(args[0].data.str.str, "1") == 0) {
+		free(args[0].data.str.str);
 		args[0].type = ARGT_SINT;
 		args[0].data.sint = 1;
 		return 1;
 	}
 	if (strcasecmp(args[0].data.str.str, "false") == 0 ||
 	    strcasecmp(args[0].data.str.str, "0") == 0) {
+		free(args[0].data.str.str);
 		args[0].type = ARGT_SINT;
 		args[0].data.sint = 0;
 		return 1;
