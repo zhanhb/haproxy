@@ -69,9 +69,6 @@ int raw_sock_to_pipe(struct connection *conn, void *xprt_ctx, struct pipe *pipe,
 	if (!conn_ctrl_ready(conn))
 		return 0;
 
-	if (!fd_recv_ready(conn->handle.fd))
-		return 0;
-
 	conn->flags &= ~CO_FL_WAIT_ROOM;
 	conn_refresh_polling_flags(conn);
 	errno = 0;
