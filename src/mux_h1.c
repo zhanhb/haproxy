@@ -2562,7 +2562,8 @@ static int h1_rcv_pipe(struct conn_stream *cs, struct pipe *pipe, unsigned int c
 		h1s->flags &= ~(H1S_F_BUF_FLUSH|H1S_F_SPLICED_DATA);
 	}
 
-	if ((h1m->state != H1_MSG_TUNNEL && h1m->state != H1_MSG_DATA) ||
+	if ((h1s->flags & H1S_F_REOS) ||
+	    (h1m->state != H1_MSG_TUNNEL && h1m->state != H1_MSG_DATA) ||
 	    (h1m->state == H1_MSG_DATA && !h1m->curr_len))
 		cs->flags &= ~CS_FL_MAY_SPLICE;
 
