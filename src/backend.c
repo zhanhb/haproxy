@@ -1457,6 +1457,7 @@ int connect_server(struct stream *s)
 
 	/* no reuse or failed to reuse the connection above, pick a new one */
 	if (!srv_conn) {
+		s->flags &= ~SF_ADDR_SET;
 		srv_conn = conn_new();
 		if (srv_conn)
 			srv_conn->target = s->target;
