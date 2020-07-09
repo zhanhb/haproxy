@@ -751,6 +751,19 @@ static void sess_update_st_cer(struct stream *s)
 			si->conn_retries = 0;
 		}
 	}
+	else if (s->be->options & PR_O_HTTP_PROXY) {
+		/*
+		 * Disable connection retries on plain HTTP proxy mode, because
+		 * on connection failure, the connection is detached from the SI
+		 * and released. So the address is definitely lost. It is a 2.0
+		 * limitation only. Disabling connection retries is the easiest
+		 * way to work around this limitation in this very particular
+		 * case (and no so common). Try the 2.2 if it is a problem (or
+		 * report a bug).
+		 */
+		if (!si->end) /* endpoint already detached */
+			si->conn_retries = 0;
+	}
 
 	/* ensure that we have enough retries left */
 	si->conn_retries--;
