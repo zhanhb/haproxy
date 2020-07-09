@@ -245,6 +245,7 @@ struct cond_wordlist {
 			if ((el)->next != (el) || (el)->prev != (el)) {    \
 				(n)->prev = p;                             \
 				(lh)->next = n;                            \
+				__ha_barrier_store();                      \
 				break;                                     \
 			}                                                  \
 			(el)->next = n;                                    \
@@ -286,6 +287,7 @@ struct cond_wordlist {
 			if ((el)->next != (el) || (el)->prev != (el)) {    \
 				p->next = n;                               \
 				(lh)->prev = p;                            \
+				__ha_barrier_store();                      \
 				break;                                     \
 			}                                                  \
 			(el)->next = n;                                    \
