@@ -1515,9 +1515,12 @@ static size_t h1_process_input(struct h1c *h1c, struct buffer *buf, size_t count
 		else if (h1m->state == H1_MSG_DONE) {
 			if (!(h1m->flags & H1_MF_RESP) && h1s->status == 101)
 				h1_set_req_tunnel_mode(h1s);
-			else if (h1s->req.state < H1_MSG_DONE || h1s->res.state < H1_MSG_DONE)
+			else if (h1s->req.state < H1_MSG_DONE || h1s->res.state < H1_MSG_DONE) {
 				h1c->flags |= H1C_F_IN_BUSY;
-			break;
+				break;
+			}
+			else
+				break;
 		}
 		else if (h1m->state == H1_MSG_TUNNEL) {
 			ret = h1_process_data(h1s, h1m, htx, &h1c->ibuf, &total, count, buf);
