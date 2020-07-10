@@ -1771,7 +1771,7 @@ void __send_log(struct proxy *p, int level, char *message, size_t size, char *sd
 	/* Send log messages to syslog server. */
 	nblogger = 0;
 	list_for_each_entry(logsrv, logsrvs, list) {
-		static THREAD_LOCAL int in_range = 1;
+		int in_range = 1;
 
 		/* we can filter the level of the messages that are sent to each logger */
 		if (level > logsrv->level)
