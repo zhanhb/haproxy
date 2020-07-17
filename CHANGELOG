@@ -1,6 +1,53 @@
 ChangeLog :
 ===========
 
+2020/07/17 : 2.0.16
+    - MINOR: http: Add 410 to http-request deny
+    - MINOR: http: Add 404 to http-request deny
+    - BUG/MINOR: tcp-rules: tcp-response must check the buffer's fullness
+    - BUG/MEDIUM: ebtree: use a byte-per-byte memcmp() to compare memory blocks
+    - BUG/MINOR: spoe: add missing key length check before checking key names
+    - BUG/MINOR: cli: allow space escaping on the CLI
+    - BUG/MINOR: mworker/cli: fix the escaping in the master CLI
+    - BUG/MINOR: mworker/cli: fix semicolon escaping in master CLI
+    - REGTEST: http-rules: test spaces in ACLs
+    - REGTEST: http-rules: test spaces in ACLs with master CLI
+    - MEDIUM: map: make the "clear map" operation yield
+    - BUG/MINOR: systemd: Wait for network to be online
+    - REGTEST: Add a simple script to tests errorfile directives in proxy sections
+    - BUG/MINOR: spoe: correction of setting bits for analyzer
+    - BUG/MINOR: http_ana: clarify connection pointer check on L7 retry
+    - MINOR: spoe: Don't systematically create new applets if processing rate is low
+    - REGTEST: ssl: tests the ssl_f_* sample fetches
+    - REGTEST: ssl: add some ssl_c_* sample fetches test
+    - BUG/MEDIUM: fetch: Fix hdr_ip misparsing IPv4 addresses due to missing NUL
+    - MINOR: cli: make "show sess" stop at the last known session
+    - DOC: ssl: add "allow-0rtt" and "ciphersuites" in crt-list
+    - BUG/MEDIUM: pattern: Add a trailing \0 to match strings only if possible
+    - BUG/MINOR: proxy: fix dump_server_state()'s misuse of the trash
+    - BUG/MINOR: proxy: always initialize the trash in show servers state
+    - DOC: configuration: add missing index entries for tune.pool-{low,high}-fd-ratio
+    - DOC: configuration: fix alphabetical ordering for tune.pool-{high,low}-fd-ratio
+    - BUG/MINOR: http_act: don't check capture id in backend (2)
+    - BUG/MINOR: mux-h1: Fix the splicing in TUNNEL mode
+    - BUG/MINOR: mux-h1: Don't read data from a pipe if the mux is unable to receive
+    - BUG/MINOR: mux-h1: Disable splicing only if input data was processed
+    - BUG/MEDIUM: mux-h1: Disable splicing for the conn-stream if read0 is received
+    - BUG/MEDIUM: mux-h1: Subscribe rather than waking up in h1_rcv_buf()
+    - MINOR: connection: move the CO_FL_WAIT_ROOM cleanup to the reader only
+    - BUG/MEDIUM: connection: Continue to recv data to a pipe when the FD is not ready
+    - BUG/MINOR: backend: Remove CO_FL_SESS_IDLE if a client remains on the last server
+    - MINOR: http: Add support for http 413 status
+    - BUG/MAJOR: stream: Mark the server address as unset on new outgoing connection
+    - BUG/MEDIUM: stream-int: Disable connection retries on plain HTTP proxy mode
+    - DOC: configuration: remove obsolete mentions of H2 being converted to HTTP/1.x
+    - BUG/MINOR: sample: Free str.area in smp_check_const_bool
+    - BUG/MINOR: sample: Free str.area in smp_check_const_meth
+    - CONTRIB: da: fix memory leak in dummy function da_atlas_open()
+    - BUG/MEDIUM: mux-h1: Continue to process request when switching in tunnel mode
+    - BUG/MEDIUM: log: issue mixing sampled to not sampled log servers.
+    - BUG/MEDIUM: channel: Be aware of SHUTW_NOW flag when output data are peeked
+
 2020/06/12 : 2.0.15
     - BUG/MINOR: protocol_buffer: Wrong maximum shifting.
     - BUG/MINOR: peers: Incomplete peers sections should be validated.
