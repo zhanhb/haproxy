@@ -3579,7 +3579,7 @@ out_uri_auth_compat:
 				for (i = 0; i < global.nbthread; i++)
 					MT_LIST_INIT(&newsrv->idle_conns[i]);
 
-				newsrv->safe_conns = calloc(global.nbthread, sizeof(*newsrv->safe_conns));
+				newsrv->safe_conns = calloc((unsigned short)global.nbthread, sizeof(*newsrv->safe_conns));
 				if (!newsrv->safe_conns) {
 					ha_alert("parsing [%s:%d] : failed to allocate idle connections for server '%s'.\n",
 					    newsrv->conf.file, newsrv->conf.line, newsrv->id);
@@ -3590,7 +3590,7 @@ out_uri_auth_compat:
 				for (i = 0; i < global.nbthread; i++)
 					MT_LIST_INIT(&newsrv->safe_conns[i]);
 
-				newsrv->curr_idle_thr = calloc(global.nbthread, sizeof(*newsrv->curr_idle_thr));
+				newsrv->curr_idle_thr = calloc((unsigned short)global.nbthread, sizeof(*newsrv->curr_idle_thr));
 				if (!newsrv->curr_idle_thr)
 					goto err;
 				continue;
