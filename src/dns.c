@@ -695,18 +695,21 @@ static int dns_validate_dns_response(unsigned char *resp, unsigned char *bufend,
 	struct dns_answer_item *dns_answer_record, *tmp_record;
 	struct dns_response_packet *dns_p;
 	int i, found = 0;
+	int cause = DNS_RESP_ERROR;
 
 	reader         = resp;
 	len            = 0;
 	previous_dname = NULL;
 	dns_query      = NULL;
+	dns_answer_record = NULL;
 
 	/* Initialization of response buffer and structure */
 	dns_p = &resolution->response;
 
 	/* query id */
 	if (reader + 2 >= bufend)
-		return DNS_RESP_INVALID;
+		goto invalid_resp;
+
 	dns_p->header.id = reader[0] * 256 + reader[1];
 	reader += 2;
 
@@ -719,16 +722,23 @@ static int dns_validate_dns_response(unsigned char *resp, unsigned char *bufend,
 	 *  - recursion desired (1 bit)
 	 */
 	if (reader + 2 >= bufend)
-		return DNS_RESP_INVALID;
+		goto invalid_resp;
 
 	flags = reader[0] * 256 + reader[1];
 
 	if ((flags & DNS_FLAG_REPLYCODE) != DNS_RCODE_NO_ERROR) {
-		if ((flags & DNS_FLAG_REPLYCODE) == DNS_RCODE_NX_DOMAIN)
-			return DNS_RESP_NX_DOMAIN;
-		else if ((flags & DNS_FLAG_REPLYCODE) == DNS_RCODE_REFUSED)
-			return DNS_RESP_REFUSED;
-		return DNS_RESP_ERROR;
+		if ((flags & DNS_FLAG_REPLYCODE) == DNS_RCODE_NX_DOMAIN) {
+			cause = DNS_RESP_NX_DOMAIN;
+			goto return_error;
+		}
+		else if ((flags & DNS_FLAG_REPLYCODE) == DNS_RCODE_REFUSED) {
+			cause = DNS_RESP_REFUSED;
+			goto return_error;
+		}
+		else {
+			cause = DNS_RESP_ERROR;
+			goto return_error;
+		}
 	}
 
 	/* Move forward 2 bytes for flags */
@@ -736,36 +746,42 @@ static int dns_validate_dns_response(unsigned char *resp, unsigned char *bufend,
 
 	/* 2 bytes for question count */
 	if (reader + 2 >= bufend)
-		return DNS_RESP_INVALID;
+		goto invalid_resp;
 	dns_p->header.qdcount = reader[0] * 256 + reader[1];
 	/* (for now) we send one query only, so we expect only one in the
 	 * response too */
-	if (dns_p->header.qdcount != 1)
-		return DNS_RESP_QUERY_COUNT_ERROR;
+	if (dns_p->header.qdcount != 1) {
+		cause = DNS_RESP_QUERY_COUNT_ERROR;
+		goto return_error;
+	}
+
 	if (dns_p->header.qdcount > DNS_MAX_QUERY_RECORDS)
-		return DNS_RESP_INVALID;
+		goto invalid_resp;
 	reader += 2;
 
 	/* 2 bytes for answer count */
 	if (reader + 2 >= bufend)
-		return DNS_RESP_INVALID;
+		goto invalid_resp;
 	dns_p->header.ancount = reader[0] * 256 + reader[1];
-	if (dns_p->header.ancount == 0)
-		return DNS_RESP_ANCOUNT_ZERO;
+	if (dns_p->header.ancount == 0) {
+		cause = DNS_RESP_ANCOUNT_ZERO;
+		goto return_error;
+	}
+
 	/* Check if too many records are announced */
 	if (dns_p->header.ancount > max_answer_records)
-		return DNS_RESP_INVALID;
+		goto invalid_resp;
 	reader += 2;
 
 	/* 2 bytes authority count */
 	if (reader + 2 >= bufend)
-		return DNS_RESP_INVALID;
+		goto invalid_resp;
 	dns_p->header.nscount = reader[0] * 256 + reader[1];
 	reader += 2;
 
 	/* 2 bytes additional count */
 	if (reader + 2 >= bufend)
-		return DNS_RESP_INVALID;
+		goto invalid_resp;
 	dns_p->header.arcount = reader[0] * 256 + reader[1];
 	reader += 2;
 
@@ -776,7 +792,7 @@ static int dns_validate_dns_response(unsigned char *resp, unsigned char *bufend,
 		 * still one available.
 		 * It's then added to our packet query list. */
 		if (dns_query_record_id > DNS_MAX_QUERY_RECORDS)
-			return DNS_RESP_INVALID;
+			goto invalid_resp;
 		dns_query = &resolution->response_query_records[dns_query_record_id];
 		LIST_ADDQ(&dns_p->query_list, &dns_query->list);
 
@@ -787,61 +803,62 @@ static int dns_validate_dns_response(unsigned char *resp, unsigned char *bufend,
 		len = dns_read_name(resp, bufend, reader, dns_query->name, DNS_MAX_NAME_SIZE, &offset, 0);
 
 		if (len == 0)
-			return DNS_RESP_INVALID;
+			goto invalid_resp;
 
 		reader += offset;
 		previous_dname = dns_query->name;
 
 		/* move forward 2 bytes for question type */
 		if (reader + 2 >= bufend)
-			return DNS_RESP_INVALID;
+			goto invalid_resp;
 		dns_query->type = reader[0] * 256 + reader[1];
 		reader += 2;
 
 		/* move forward 2 bytes for question class */
 		if (reader + 2 >= bufend)
-			return DNS_RESP_INVALID;
+			goto invalid_resp;
 		dns_query->class = reader[0] * 256 + reader[1];
 		reader += 2;
 	}
 
 	/* TRUNCATED flag must be checked after we could read the query type
 	 * because a TRUNCATED SRV query type response can still be exploited */
-	if (dns_query->type != DNS_RTYPE_SRV && flags & DNS_FLAG_TRUNCATED)
-		return DNS_RESP_TRUNCATED;
+	if (dns_query->type != DNS_RTYPE_SRV && flags & DNS_FLAG_TRUNCATED) {
+		cause = DNS_RESP_TRUNCATED;
+		goto return_error;
+	}
 
 	/* now parsing response records */
 	nb_saved_records = 0;
 	for (i = 0; i < dns_p->header.ancount; i++) {
 		if (reader >= bufend)
-			return DNS_RESP_INVALID;
+			goto invalid_resp;
 
 		dns_answer_record = pool_alloc(dns_answer_item_pool);
 		if (dns_answer_record == NULL)
-			return (DNS_RESP_INVALID);
+			goto invalid_resp;
 
 		offset = 0;
 		len = dns_read_name(resp, bufend, reader, tmpname, DNS_MAX_NAME_SIZE, &offset, 0);
 
-		if (len == 0) {
-			pool_free(dns_answer_item_pool, dns_answer_record);
-			return DNS_RESP_INVALID;
-		}
+		if (len == 0)
+			goto invalid_resp;
 
 		/* Check if the current record dname is valid.  previous_dname
 		 * points either to queried dname or last CNAME target */
 		if (dns_query->type != DNS_RTYPE_SRV && dns_hostname_cmp(previous_dname, tmpname, len) != 0) {
-			pool_free(dns_answer_item_pool, dns_answer_record);
 			if (i == 0) {
 				/* First record, means a mismatch issue between
 				 * queried dname and dname found in the first
 				 * record */
-				return DNS_RESP_INVALID;
+				goto invalid_resp;
 			}
 			else {
 				/* If not the first record, this means we have a
-				 * CNAME resolution error */
-				return DNS_RESP_CNAME_ERROR;
+				 * CNAME resolution error.
+				 */
+				cause = DNS_RESP_CNAME_ERROR;
+				goto return_error;
 			}
 
 		}
@@ -850,59 +867,50 @@ static int dns_validate_dns_response(unsigned char *resp, unsigned char *bufend,
 		dns_answer_record->name[len] = 0;
 
 		reader += offset;
-		if (reader >= bufend) {
-			pool_free(dns_answer_item_pool, dns_answer_record);
-			return DNS_RESP_INVALID;
-		}
+		if (reader >= bufend)
+			goto invalid_resp;
 
 		/* 2 bytes for record type (A, AAAA, CNAME, etc...) */
-		if (reader + 2 > bufend) {
-			pool_free(dns_answer_item_pool, dns_answer_record);
-			return DNS_RESP_INVALID;
-		}
+		if (reader + 2 > bufend)
+			goto invalid_resp;
+
 		dns_answer_record->type = reader[0] * 256 + reader[1];
 		reader += 2;
 
 		/* 2 bytes for class (2) */
-		if (reader + 2 > bufend) {
-			pool_free(dns_answer_item_pool, dns_answer_record);
-			return DNS_RESP_INVALID;
-		}
+		if (reader + 2 > bufend)
+			goto invalid_resp;
+
 		dns_answer_record->class = reader[0] * 256 + reader[1];
 		reader += 2;
 
 		/* 4 bytes for ttl (4) */
-		if (reader + 4 > bufend) {
-			pool_free(dns_answer_item_pool, dns_answer_record);
-			return DNS_RESP_INVALID;
-		}
+		if (reader + 4 > bufend)
+			goto invalid_resp;
+
 		dns_answer_record->ttl =   reader[0] * 16777216 + reader[1] * 65536
 			                 + reader[2] * 256 + reader[3];
 		reader += 4;
 
 		/* Now reading data len */
-		if (reader + 2 > bufend) {
-			pool_free(dns_answer_item_pool, dns_answer_record);
-			return DNS_RESP_INVALID;
-		}
+		if (reader + 2 > bufend)
+			goto invalid_resp;
+
 		dns_answer_record->data_len = reader[0] * 256 + reader[1];
 
 		/* Move forward 2 bytes for data len */
 		reader += 2;
 
-		if (reader + dns_answer_record->data_len > bufend) {
-			pool_free(dns_answer_item_pool, dns_answer_record);
-			return DNS_RESP_INVALID;
-		}
+		if (reader + dns_answer_record->data_len > bufend)
+			goto invalid_resp;
 
 		/* Analyzing record content */
 		switch (dns_answer_record->type) {
 			case DNS_RTYPE_A:
 				/* ipv4 is stored on 4 bytes */
-				if (dns_answer_record->data_len != 4) {
-					pool_free(dns_answer_item_pool, dns_answer_record);
-					return DNS_RESP_INVALID;
-				}
+				if (dns_answer_record->data_len != 4)
+					goto invalid_resp;
+
 				dns_answer_record->address.sa_family = AF_INET;
 				memcpy(&(((struct sockaddr_in *)&dns_answer_record->address)->sin_addr),
 						reader, dns_answer_record->data_len);
@@ -918,16 +926,14 @@ static int dns_validate_dns_response(unsigned char *resp, unsigned char *bufend,
 				 * starts at 1.
 				 */
 				if (i + 1 == dns_p->header.ancount) {
-					pool_free(dns_answer_item_pool, dns_answer_record);
-					return DNS_RESP_CNAME_ERROR;
+					cause = DNS_RESP_CNAME_ERROR;
+					goto return_error;
 				}
 
 				offset = 0;
 				len = dns_read_name(resp, bufend, reader, tmpname, DNS_MAX_NAME_SIZE, &offset, 0);
-				if (len == 0) {
-					pool_free(dns_answer_item_pool, dns_answer_record);
-					return DNS_RESP_INVALID;
-				}
+				if (len == 0)
+					goto invalid_resp;
 
 				memcpy(dns_answer_record->target, tmpname, len);
 				dns_answer_record->target[len] = 0;
@@ -942,10 +948,9 @@ static int dns_validate_dns_response(unsigned char *resp, unsigned char *bufend,
 				 * - 2 bytes for the port
 				 * - the target hostname
 				 */
-				if (dns_answer_record->data_len <= 6) {
-					pool_free(dns_answer_item_pool, dns_answer_record);
-					return DNS_RESP_INVALID;
-				}
+				if (dns_answer_record->data_len <= 6)
+					goto invalid_resp;
+
 				dns_answer_record->priority = read_n16(reader);
 				reader += sizeof(uint16_t);
 				dns_answer_record->weight = read_n16(reader);
@@ -954,10 +959,9 @@ static int dns_validate_dns_response(unsigned char *resp, unsigned char *bufend,
 				reader += sizeof(uint16_t);
 				offset = 0;
 				len = dns_read_name(resp, bufend, reader, tmpname, DNS_MAX_NAME_SIZE, &offset, 0);
-				if (len == 0) {
-					pool_free(dns_answer_item_pool, dns_answer_record);
-					return DNS_RESP_INVALID;
-				}
+				if (len == 0)
+					goto invalid_resp;
+
 				dns_answer_record->data_len = len;
 				memcpy(dns_answer_record->target, tmpname, len);
 				dns_answer_record->target[len] = 0;
@@ -965,10 +969,9 @@ static int dns_validate_dns_response(unsigned char *resp, unsigned char *bufend,
 
 			case DNS_RTYPE_AAAA:
 				/* ipv6 is stored on 16 bytes */
-				if (dns_answer_record->data_len != 16) {
-					pool_free(dns_answer_item_pool, dns_answer_record);
-					return DNS_RESP_INVALID;
-				}
+				if (dns_answer_record->data_len != 16)
+					goto invalid_resp;
+
 				dns_answer_record->address.sa_family = AF_INET6;
 				memcpy(&(((struct sockaddr_in6 *)&dns_answer_record->address)->sin6_addr),
 						reader, dns_answer_record->data_len);
@@ -1027,11 +1030,13 @@ static int dns_validate_dns_response(unsigned char *resp, unsigned char *bufend,
 		if (found == 1) {
 			tmp_record->last_seen = now.tv_sec;
 			pool_free(dns_answer_item_pool, dns_answer_record);
+			dns_answer_record = NULL;
 		}
 		else {
 			dns_answer_record->last_seen = now.tv_sec;
 			dns_answer_record->ar_item = NULL;
 			LIST_ADDQ(&dns_p->answer_list, &dns_answer_record->list);
+			dns_answer_record = NULL;
 		}
 	} /* for i 0 to ancount */
 
@@ -1051,7 +1056,7 @@ static int dns_validate_dns_response(unsigned char *resp, unsigned char *bufend,
 			continue;
 
 		if (reader + offset + 10 >= bufend)
-			return DNS_RESP_INVALID;
+			goto invalid_resp;
 
 		reader += offset;
 		/* skip 2 bytes for class */
@@ -1065,7 +1070,7 @@ static int dns_validate_dns_response(unsigned char *resp, unsigned char *bufend,
 		reader += 2;
 
 		if (reader + len >= bufend)
-			return DNS_RESP_INVALID;
+			goto invalid_resp;
 
 		reader += len;
 	}
@@ -1073,17 +1078,18 @@ static int dns_validate_dns_response(unsigned char *resp, unsigned char *bufend,
 	nb_saved_records = 0;
 	for (i = 0; i < dns_p->header.arcount; i++) {
 		if (reader >= bufend)
-			return DNS_RESP_INVALID;
+			goto invalid_resp;
 
 		dns_answer_record = pool_alloc(dns_answer_item_pool);
 		if (dns_answer_record == NULL)
-			return (DNS_RESP_INVALID);
+			goto invalid_resp;
 
 		offset = 0;
 		len = dns_read_name(resp, bufend, reader, tmpname, DNS_MAX_NAME_SIZE, &offset, 0);
 
 		if (len == 0) {
 			pool_free(dns_answer_item_pool, dns_answer_record);
+			dns_answer_record = NULL;
 			continue;
 		}
 
@@ -1091,59 +1097,50 @@ static int dns_validate_dns_response(unsigned char *resp, unsigned char *bufend,
 		dns_answer_record->name[len] = 0;
 
 		reader += offset;
-		if (reader >= bufend) {
-			pool_free(dns_answer_item_pool, dns_answer_record);
-			return DNS_RESP_INVALID;
-		}
+		if (reader >= bufend)
+			goto invalid_resp;
 
 		/* 2 bytes for record type (A, AAAA, CNAME, etc...) */
-		if (reader + 2 > bufend) {
-			pool_free(dns_answer_item_pool, dns_answer_record);
-			return DNS_RESP_INVALID;
-		}
+		if (reader + 2 > bufend)
+			goto invalid_resp;
+
 		dns_answer_record->type = reader[0] * 256 + reader[1];
 		reader += 2;
 
 		/* 2 bytes for class (2) */
-		if (reader + 2 > bufend) {
-			pool_free(dns_answer_item_pool, dns_answer_record);
-			return DNS_RESP_INVALID;
-		}
+		if (reader + 2 > bufend)
+			goto invalid_resp;
+
 		dns_answer_record->class = reader[0] * 256 + reader[1];
 		reader += 2;
 
 		/* 4 bytes for ttl (4) */
-		if (reader + 4 > bufend) {
-			pool_free(dns_answer_item_pool, dns_answer_record);
-			return DNS_RESP_INVALID;
-		}
+		if (reader + 4 > bufend)
+			goto invalid_resp;
+
 		dns_answer_record->ttl =   reader[0] * 16777216 + reader[1] * 65536
 			                 + reader[2] * 256 + reader[3];
 		reader += 4;
 
 		/* Now reading data len */
-		if (reader + 2 > bufend) {
-			pool_free(dns_answer_item_pool, dns_answer_record);
-			return DNS_RESP_INVALID;
-		}
+		if (reader + 2 > bufend)
+			goto invalid_resp;
+
 		dns_answer_record->data_len = reader[0] * 256 + reader[1];
 
 		/* Move forward 2 bytes for data len */
 		reader += 2;
 
-		if (reader + dns_answer_record->data_len > bufend) {
-			pool_free(dns_answer_item_pool, dns_answer_record);
-			return DNS_RESP_INVALID;
-		}
+		if (reader + dns_answer_record->data_len > bufend)
+			goto invalid_resp;
 
 		/* Analyzing record content */
 		switch (dns_answer_record->type) {
 			case DNS_RTYPE_A:
 				/* ipv4 is stored on 4 bytes */
-				if (dns_answer_record->data_len != 4) {
-					pool_free(dns_answer_item_pool, dns_answer_record);
-					return DNS_RESP_INVALID;
-				}
+				if (dns_answer_record->data_len != 4)
+					goto invalid_resp;
+
 				dns_answer_record->address.sa_family = AF_INET;
 				memcpy(&(((struct sockaddr_in *)&dns_answer_record->address)->sin_addr),
 						reader, dns_answer_record->data_len);
@@ -1151,10 +1148,9 @@ static int dns_validate_dns_response(unsigned char *resp, unsigned char *bufend,
 
 			case DNS_RTYPE_AAAA:
 				/* ipv6 is stored on 16 bytes */
-				if (dns_answer_record->data_len != 16) {
-					pool_free(dns_answer_item_pool, dns_answer_record);
-					return DNS_RESP_INVALID;
-				}
+				if (dns_answer_record->data_len != 16)
+					goto invalid_resp;
+
 				dns_answer_record->address.sa_family = AF_INET6;
 				memcpy(&(((struct sockaddr_in6 *)&dns_answer_record->address)->sin6_addr),
 						reader, dns_answer_record->data_len);
@@ -1162,6 +1158,7 @@ static int dns_validate_dns_response(unsigned char *resp, unsigned char *bufend,
 
 			default:
 				pool_free(dns_answer_item_pool, dns_answer_record);
+				dns_answer_record = NULL;
 				continue;
 
 		} /* switch (record type) */
@@ -1208,6 +1205,7 @@ static int dns_validate_dns_response(unsigned char *resp, unsigned char *bufend,
 		if (found == 1) {
 			tmp_record->last_seen = now.tv_sec;
 			pool_free(dns_answer_item_pool, dns_answer_record);
+			dns_answer_record = NULL;
 		}
 		else {
 			dns_answer_record->last_seen = now.tv_sec;
@@ -1226,6 +1224,7 @@ static int dns_validate_dns_response(unsigned char *resp, unsigned char *bufend,
 			}
 
 			LIST_ADDQ(&dns_p->ar_list, &dns_answer_record->list);
+			dns_answer_record = NULL;
 		}
 	} /* for i 0 to arcount */
 
@@ -1236,6 +1235,13 @@ static int dns_validate_dns_response(unsigned char *resp, unsigned char *bufend,
 
 	dns_check_dns_response(resolution);
 	return DNS_RESP_VALID;
+
+ invalid_resp:
+	cause = DNS_RESP_INVALID;
+
+ return_error:
+	pool_free(dns_answer_item_pool, dns_answer_record);
+	return cause;
 }
 
 /* Searches dn_name resolution in resp.
