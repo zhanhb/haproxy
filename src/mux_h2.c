@@ -3302,10 +3302,7 @@ static int h2s_frt_make_resp_data(struct h2s *h2s, struct buffer *buf)
 	default:          /* te:chunked : parse chunks */
 		if (h1m->state == HTTP_MSG_CHUNK_CRLF) {
 			ret = h1_skip_chunk_crlf(buf, -buf->o, 0);
-			if (!ret)
-				goto end;
-
-			if (ret < 0) {
+			if (ret <= 0) {
 				/* FIXME: bad contents. how to proceed here when we're in H2 ? */
 				h1m->err_pos = ret;
 				h2s_error(h2s, H2_ERR_INTERNAL_ERROR);
@@ -3320,10 +3317,7 @@ static int h2s_frt_make_resp_data(struct h2s *h2s, struct buffer *buf)
 			unsigned int chunk;
 
 			ret = h1_parse_chunk_size(buf, -buf->o, 0, &chunk);
-			if (!ret)
-				goto end;
-
-			if (ret < 0) {
+			if (ret <= 0) {
 				/* FIXME: bad contents. how to proceed here when we're in H2 ? */
 				h1m->err_pos = ret;
 				h2s_error(h2s, H2_ERR_INTERNAL_ERROR);
@@ -3516,8 +3510,7 @@ static int h2_snd_buf(struct conn_stream *cs, struct buffer *buf, int flags)
 			int count = h1_measure_trailers(buf);
 
 			if (unlikely(count <= 0)) {
-				if (count < 0)
-					h2s_error(h2s, H2_ERR_INTERNAL_ERROR);
+				h2s_error(h2s, H2_ERR_INTERNAL_ERROR);
 				break;
 			}
 			total += count;
