@@ -4323,11 +4323,8 @@ static size_t h2s_frt_make_resp_data(struct h2s *h2s, const struct buffer *buf, 
 	default:          /* te:chunked : parse chunks */
 		if (h1m->state == H1_MSG_CHUNK_CRLF) {
 			ret = h1_skip_chunk_crlf(buf, ofs, ofs + max);
-			if (!ret)
-				goto end;
-
-			if (ret < 0) {
-				/* FIXME: bad contents. how to proceed here when we're in H2 ? */
+			if (ret <= 0) {
+				/* FIXME: bad contents or truncated response. how to proceed here when we're in H2 ? */
 				h1m->err_pos = ofs + max + ret;
 				h2s_error(h2s, H2_ERR_INTERNAL_ERROR);
 				goto end;
@@ -4341,11 +4338,8 @@ static size_t h2s_frt_make_resp_data(struct h2s *h2s, const struct buffer *buf, 
 		if (h1m->state == H1_MSG_CHUNK_SIZE) {
 			unsigned int chunk;
 			ret = h1_parse_chunk_size(buf, ofs, ofs + max, &chunk);
-			if (!ret)
-				goto end;
-
-			if (ret < 0) {
-				/* FIXME: bad contents. how to proceed here when we're in H2 ? */
+			if (ret <= 0) {
+				/* FIXME: bad contents or truncated response. how to proceed here when we're in H2 ? */
 				h1m->err_pos = ofs + max + ret;
 				h2s_error(h2s, H2_ERR_INTERNAL_ERROR);
 				goto end;
@@ -5732,10 +5726,10 @@ static size_t h2_snd_buf(struct conn_stream *cs, struct buffer *buf, size_t coun
 			ret = h1_measure_trailers(buf, total, count);
 
 			if (unlikely((int)ret <= 0)) {
-				if ((int)ret < 0)
-					h2s_error(h2s, H2_ERR_INTERNAL_ERROR);
+				h2s_error(h2s, H2_ERR_INTERNAL_ERROR);
 				break;
 			}
+
 			// trim any possibly pending data (eg: extra CR-LF, ...)
 			total += count;
 			count  = 0;
