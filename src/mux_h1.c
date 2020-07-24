@@ -2735,7 +2735,11 @@ static int h1_rcv_pipe(struct conn_stream *cs, struct pipe *pipe, unsigned int c
 	if (h1m->state == H1_MSG_DATA && count > h1m->curr_len)
 		count = h1m->curr_len;
 	ret = cs->conn->xprt->rcv_pipe(cs->conn, cs->conn->xprt_ctx, pipe, count);
-	if (h1m->state == H1_MSG_DATA && ret >= 0) {
+	if (ret <= 0) {
+		h1s->flags &= ~(H1S_F_BUF_FLUSH|H1S_F_SPLICED_DATA);
+		TRACE_STATE("disable splicing on !ret", H1_EV_STRM_RECV, cs->conn, h1s);
+	}
+	else if (h1m->state == H1_MSG_DATA) {
 		h1m->curr_len -= ret;
 		if (!h1m->curr_len) {
 			h1s->flags &= ~(H1S_F_BUF_FLUSH|H1S_F_SPLICED_DATA);
