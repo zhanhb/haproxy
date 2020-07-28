@@ -1080,6 +1080,9 @@ void hlua_hook(lua_State *L, lua_Debug *ar)
  */
 static enum hlua_exec hlua_ctx_resume(struct hlua *lua, int yield_allowed)
 {
+#if defined(LUA_VERSION_NUM) && LUA_VERSION_NUM >= 504
+	int nres;
+#endif
 	int ret;
 	const char *msg;
 	const char *trace;
@@ -1110,7 +1113,11 @@ resume_execution:
 	lua->start_time = now_ms;
 
 	/* Call the function. */
+#if defined(LUA_VERSION_NUM) && LUA_VERSION_NUM >= 504
+	ret = lua_resume(lua->T, gL.T, lua->nargs, &nres);
+#else
 	ret = lua_resume(lua->T, gL.T, lua->nargs);
+#endif
 	switch (ret) {
 
 	case LUA_OK:
@@ -8278,10 +8285,12 @@ static int hlua_load(char **args, int section_type, struct proxy *curpx,
 		memprintf(err, "Lua message handler error: %s\n", lua_tostring(gL.T, -1));
 		lua_pop(gL.T, 1);
 		return -1;
+#if defined(LUA_VERSION_NUM) && LUA_VERSION_NUM <= 503
 	case LUA_ERRGCMM:
 		memprintf(err, "Lua garbage collector error: %s\n", lua_tostring(gL.T, -1));
 		lua_pop(gL.T, 1);
 		return -1;
+#endif
 	default:
 		memprintf(err, "Lua unknonwn error: %s\n", lua_tostring(gL.T, -1));
 		lua_pop(gL.T, 1);
