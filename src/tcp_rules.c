@@ -378,6 +378,8 @@ resume_execution:
 				case ACT_RET_YIELD:
 					channel_dont_close(rep);
 					s->current_rule = rule;
+					if (!tick_isset(rep->analyse_exp) && s->be->tcp_rep.inspect_delay)
+						rep->analyse_exp = tick_add(now_ms, s->be->tcp_rep.inspect_delay);
 					DBG_TRACE_DEVEL("waiting for more data", STRM_EV_STRM_ANA|STRM_EV_TCP_ANA, s);
 					return 0;
 				}
