@@ -1519,6 +1519,16 @@ int connect_server(struct stream *s)
 	if (err != SF_ERR_NONE)
 		return err;
 
+	/* The CO_FL_SEND_PROXY flag may have been set by the connect method,
+	 * if so, add our handshake pseudo-XPRT now.
+	 */
+	if ((srv_conn->flags & CO_FL_HANDSHAKE)) {
+		if (xprt_add_hs(srv_conn) < 0) {
+			conn_full_close(srv_conn);
+			return SF_ERR_INTERNAL;
+		}
+	}
+
 	/* We have to defer the mux initialization until after si_connect()
 	 * has been called, as we need the xprt to have been properly
 	 * initialized, or any attempt to recv during the mux init may
@@ -1537,16 +1547,6 @@ int connect_server(struct stream *s)
 		    !(srv_conn->flags & CO_FL_PRIVATE) && srv_conn->mux->avail_streams(srv_conn) > 0)
 			LIST_ADDQ(&srv->available_conns[tid], mt_list_to_list(&srv_conn->list));
 	}
-	/* The CO_FL_SEND_PROXY flag may have been set by the connect method,
-	 * if so, add our handshake pseudo-XPRT now.
-	 */
-	if ((srv_conn->flags & CO_FL_HANDSHAKE)) {
-		if (xprt_add_hs(srv_conn) < 0) {
-			conn_full_close(srv_conn);
-			return SF_ERR_INTERNAL;
-		}
-	}
-
 
 #if USE_OPENSSL && (defined(OPENSSL_IS_BORINGSSL) || (HA_OPENSSL_VERSION_NUMBER >= 0x10101000L))
 
