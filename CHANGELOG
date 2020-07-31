@@ -1,6 +1,27 @@
 ChangeLog :
 ===========
 
+2020/07/31 : 2.0.17
+    - BUILD: ebtree: fix build on libmusl after recent introduction of eb_memcmp()
+    - REGEST: Add reg tests about error files
+    - BUG/MINOR: threads: Don't forget to init each thread toremove_lock.
+    - MINOR: pools: increase MAX_BASE_POOLS to 64
+    - BUILD: thread: add parenthesis around values of locking macros
+    - BUG/MINOR: cfgparse: don't increment linenum on incomplete lines
+    - BUG/MEDIUM: resolve: fix init resolving for ring and peers section.
+    - BUG/MEDIUM: mux-h2: Emit an error if the response chunk formatting is incomplete
+    - BUG/MAJOR: dns: Make the do-resolve action thread-safe
+    - BUG/MEDIUM: dns: Release answer items when a DNS resolution is freed
+    - BUG/MEDIUM: mux-h1: Wakeup the H1C in h1_rcv_buf() if more data are expected
+    - BUG/MEDIUM: mux-h1: Disable the splicing when nothing is received
+    - BUG/MINOR: debug: Don't dump the lua stack if it is not initialized
+    - MEDIUM: lua: Add support for the Lua 5.4
+    - BUG/MEDIUM: dns: Don't yield in do-resolve action on a final evaluation
+    - BUG/MINOR: tcp-rules: Set the inspect-delay when a tcp-response action yields
+    - MINOR: connection: Preinstall the mux for non-ssl connect
+    - MINOR: stream-int: Be sure to have a mux to do sends and receives
+    - SCRIPTS: announce-release: add the link to the wiki in the announce messages
+
 2020/07/17 : 2.0.16
     - MINOR: http: Add 410 to http-request deny
     - MINOR: http: Add 404 to http-request deny
