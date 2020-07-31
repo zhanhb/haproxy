@@ -1,6 +1,90 @@
 ChangeLog :
 ===========
 
+2020/07/31 : 2.1.8
+    - BUG/MEDIUM: log: don't hold the log lock during writev() on a file descriptor
+    - BUG/MEDIUM: pattern: fix thread safety of pattern matching
+    - BUILD: make dladdr1 depend on glibc version and not __USE_GNU
+    - REGTESTS: Add missing OPENSSL to REQUIRE_OPTIONS for lua/txn_get_priv
+    - REGTESTS: Add missing OPENSSL to REQUIRE_OPTIONS for compression/lua_validation
+    - BUG/MINOR: ssl: fix ssl-{min,max}-ver with openssl < 1.1.0
+    - BUG/MEDIUM: ssl: crt-list must continue parsing on ERR_WARN
+    - MINOR: http: Add 410 to http-request deny
+    - MINOR: http: Add 404 to http-request deny
+    - BUG/MINOR: http: make smp_fetch_body() report that the contents may change
+    - BUG/MINOR: tcp-rules: tcp-response must check the buffer's fullness
+    - BUG/MEDIUM: ebtree: use a byte-per-byte memcmp() to compare memory blocks
+    - BUG/MINOR: spoe: add missing key length check before checking key names
+    - BUG/MINOR: cli: allow space escaping on the CLI
+    - BUG/MINOR: mworker/cli: fix the escaping in the master CLI
+    - BUG/MINOR: mworker/cli: fix semicolon escaping in master CLI
+    - REGTEST: http-rules: test spaces in ACLs
+    - REGTEST: http-rules: test spaces in ACLs with master CLI
+    - MEDIUM: map: make the "clear map" operation yield
+    - BUG/MINOR: systemd: Wait for network to be online
+    - REGTEST: Add a simple script to tests errorfile directives in proxy sections
+    - BUG/MINOR: spoe: correction of setting bits for analyzer
+    - BUG/MINOR: http_ana: clarify connection pointer check on L7 retry
+    - MINOR: spoe: Don't systematically create new applets if processing rate is low
+    - REGTEST: ssl: tests the ssl_f_* sample fetches
+    - REGTEST: ssl: add some ssl_c_* sample fetches test
+    - BUG/MEDIUM: fetch: Fix hdr_ip misparsing IPv4 addresses due to missing NUL
+    - MINOR: cli: make "show sess" stop at the last known session
+    - DOC: ssl: add "allow-0rtt" and "ciphersuites" in crt-list
+    - BUG/MEDIUM: pattern: Add a trailing \0 to match strings only if possible
+    - BUG/MINOR: proxy: fix dump_server_state()'s misuse of the trash
+    - BUG/MINOR: proxy: always initialize the trash in show servers state
+    - DOC: configuration: add missing index entries for tune.pool-{low,high}-fd-ratio
+    - DOC: configuration: fix alphabetical ordering for tune.pool-{high,low}-fd-ratio
+    - BUILD: haproxy: fix build error when RLIMIT_AS is not set
+    - BUG/MINOR: http_act: don't check capture id in backend (2)
+    - BUG/MINOR: mux-h1: Fix the splicing in TUNNEL mode
+    - BUG/MINOR: mux-h1: Don't read data from a pipe if the mux is unable to receive
+    - BUG/MINOR: mux-h1: Disable splicing only if input data was processed
+    - BUG/MEDIUM: mux-h1: Disable splicing for the conn-stream if read0 is received
+    - MINOR: mux-h1: Improve traces about the splicing
+    - BUG/MEDIUM: mux-h1: Subscribe rather than waking up in h1_rcv_buf()
+    - MINOR: connection: move the CO_FL_WAIT_ROOM cleanup to the reader only
+    - BUG/MEDIUM: connection: Continue to recv data to a pipe when the FD is not ready
+    - BUG/MINOR: backend: Remove CO_FL_SESS_IDLE if a client remains on the last server
+    - MINOR: http: Add support for http 413 status
+    - DOC: configuration: remove obsolete mentions of H2 being converted to HTTP/1.x
+    - BUG/MINOR: sample: Free str.area in smp_check_const_bool
+    - BUG/MINOR: sample: Free str.area in smp_check_const_meth
+    - BUG/MEDIUM: lists: add missing store barrier on MT_LIST_BEHEAD()
+    - BUG/MEDIUM: lists: add missing store barrier in MT_LIST_ADD/MT_LIST_ADDQ
+    - CONTRIB: da: fix memory leak in dummy function da_atlas_open()
+    - BUG/MEDIUM: mux-h1: Continue to process request when switching in tunnel mode
+    - BUG/MINOR: mux-fcgi: Handle empty STDERR record
+    - BUG/MINOR: mux-fcgi: Set conn state to RECORD_P when skipping the record padding
+    - BUG/MINOR: mux-fcgi: Set flags on the right stream field for empty FCGI_STDOUT
+    - BUG/MEDIUM: log: issue mixing sampled to not sampled log servers.
+    - BUG/MEDIUM: fcgi-app: fix memory leak in fcgi_flt_http_headers
+    - BUG/MEDIUM: server: resolve state file handle leak on reload
+    - BUG/MEDIUM: server: fix possibly uninitialized state file on close
+    - BUG/MEDIUM: channel: Be aware of SHUTW_NOW flag when output data are peeked
+    - BUILD: ebtree: fix build on libmusl after recent introduction of eb_memcmp()
+    - REGEST: Add reg tests about error files
+    - BUG/MINOR: threads: Don't forget to init each thread toremove_lock.
+    - MINOR: pools: increase MAX_BASE_POOLS to 64
+    - BUILD: thread: add parenthesis around values of locking macros
+    - BUG/MINOR: cfgparse: don't increment linenum on incomplete lines
+    - BUG/MEDIUM: resolve: fix init resolving for ring and peers section.
+    - BUG/MAJOR: dns: Make the do-resolve action thread-safe
+    - BUG/MEDIUM: dns: Release answer items when a DNS resolution is freed
+    - BUG/MINOR: mux-fcgi: Don't url-decode the QUERY_STRING parameter anymore
+    - BUG/MEDIUM: mux-h1: Wakeup the H1C in h1_rcv_buf() if more data are expected
+    - BUG/MEDIUM: mux-h1: Disable the splicing when nothing is received
+    - BUILD: tools: fix build with static only toolchains
+    - BUG/MINOR: debug: Don't dump the lua stack if it is not initialized
+    - MEDIUM: lua: Add support for the Lua 5.4
+    - BUG/MEDIUM: dns: Don't yield in do-resolve action on a final evaluation
+    - BUG/MINOR: tcp-rules: Set the inspect-delay when a tcp-response action yields
+    - MINOR: connection: Preinstall the mux for non-ssl connect
+    - MINOR: stream-int: Be sure to have a mux to do sends and receives
+    - SCRIPTS: announce-release: add the link to the wiki in the announce messages
+    - BUG/MEDIUM: backend: always attach the transport before installing the mux
+
 2020/06/09 : 2.1.7
     - BUG/MAJOR: http-htx: Don't forget to copy error messages from defaults sections
 
