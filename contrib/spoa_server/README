@@ -11,7 +11,7 @@ is done.
   Compilation
 ---------------
 
-Actually, the server support Lua and Python. Type "make" with the options:
+The server currently supports Lua and Python. Type "make" with the options:
 USE_LUA=1 and/or USE_PYTHON=1.
 
 
