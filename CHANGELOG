@@ -1,6 +1,79 @@
 ChangeLog :
 ===========
 
+2020/08/03 : 1.8.26
+    - BUILD: chunk: properly declare pool_head_trash as extern
+    - BUILD: cache: avoid a build warning with some compilers/linkers
+    - BUG/MINOR: ssl: default settings for ssl server options are not used
+    - BUG/MINOR: tools: fix the i386 version of the div64_32 function
+    - DOC: option logasap does not depend on mode
+    - BUG/MINOR: check: Update server address and port to execute an external check
+    - BUG/MINOR: checks: Respect the no-check-ssl option
+    - BUG/MINOR: checks/server: use_ssl member must be signed
+    - BUG/MINOR: checks: chained expect will not properly wait for enough data
+    - BUG/MEDIUM: capture: capture-req/capture-res converters crash without a stream
+    - BUG/MEDIUM: capture: capture.{req,res}.* crash without a stream
+    - BUG/MEDIUM: http: the "http_first_req" sample fetch could crash without a steeam
+    - BUG/MEDIUM: http: the "unique-id" sample fetch could crash without a steeam
+    - BUG/MEDIUM: shctx: really check the lock's value while waiting
+    - BUG/MEDIUM: shctx: bound the number of loops that can happen around the lock
+    - REGTEST: ssl: test the client certificate authentication
+    - BUG/MINOR: sample: Set the correct type when a binary is converted to a string
+    - BUG/MINOR: config: Make use_backend and use-server post-parsing less obscur
+    - BUG/MEDIUM: http_ana: make the detection of NTLM variants safer
+    - BUG/MINOR: cfgparse: Abort parsing the current line if an invalid \x sequence is encountered
+    - BUG/MINOR: pollers: remove uneeded free in global init
+    - BUILD: select: only declare existing local labels to appease clang
+    - SCRIPTS: publish-release: pass -n to gzip to remove timestamp
+    - BUG/MINOR: peers: fix internal/network key type mapping.
+    - BUG/MEDIUM: lua: Reset analyse expiration timeout before executing a lua action
+    - BUG/MEDIUM: hlua: Lock pattern references to perform set/add/del operations
+    - BUG/MINOR: logs: prevent double line returns in some events.
+    - BUG/MEDIUM: logs: fix trailing zeros on log message.
+    - BUG/MINOR: proto-http: Fix detection of NTLM for the legacy HTTP version
+    - BUG/MEDIUM: mworker: fix the copy of options in copy_argv()
+    - BUG/MINOR: init: -x can have a parameter starting with a dash
+    - BUG/MEDIUM: mworker: fix the reload with an -- option
+    - BUG/MINOR: mworker: fix a memleak when execvp() failed
+    - BUG/MEDIUM: pattern: fix thread safety of pattern matching
+    - BUG/MINOR: ssl: fix ssl-{min,max}-ver with openssl < 1.1.0
+    - BUG/MINOR: tcp-rules: tcp-response must check the buffer's fullness
+    - BUG/MEDIUM: ebtree: use a byte-per-byte memcmp() to compare memory blocks
+    - BUG/MINOR: spoe: add missing key length check before checking key names
+    - BUG/MINOR: systemd: Wait for network to be online
+    - BUG/MINOR: spoe: correction of setting bits for analyzer
+    - BUG/MEDIUM: fetch: Fix hdr_ip misparsing IPv4 addresses due to missing NUL
+    - MINOR: cli: make "show sess" stop at the last known session
+    - DOC: ssl: add "allow-0rtt" and "ciphersuites" in crt-list
+    - BUG/MEDIUM: pattern: Add a trailing \0 to match strings only if possible
+    - BUG/MINOR: proxy: fix dump_server_state()'s misuse of the trash
+    - BUG/MINOR: proxy: always initialize the trash in show servers state
+    - BUG/MINOR: http_act: don't check capture id in backend (2)
+    - BUG/MINOR: sample: Free str.area in smp_check_const_bool
+    - BUG/MINOR: sample: Free str.area in smp_check_const_meth
+    - BUG/MEDIUM: channel: Be aware of SHUTW_NOW flag when output data are peeked
+    - BUILD: ebtree: fix build on libmusl after recent introduction of eb_memcmp()
+    - BUG/MINOR: cfgparse: don't increment linenum on incomplete lines
+    - BUG/MEDIUM: mux-h2: Emit an error if the response chunk formatting is incomplete
+    - BUG/MEDIUM: dns: Release answer items when a DNS resolution is freed
+    - BUG/MINOR: tcp-rules: Set the inspect-delay when a tcp-response action yields
+    - SCRIPTS: announce-release: add the link to the wiki in the announce messages
+    - SCRIPTS: git-show-backports: make -m most only show the left branch
+    - SCRIPTS: git-show-backports: emit the shell command to backport a commit
+    - DOC: Improve documentation on http-request set-src
+    - BUG/MINOR: http: make url_decode() optionally convert '+' to SP
+    - MINOR: checks: Add a way to send custom headers and payload during http chekcs
+    - BUG/MINOR: checks: Compute the right HTTP request length for HTTP health checks
+    - BUG/MINOR: checks: Remove a warning about http health checks
+    - BUG/MINOR: threads: fix multiple use of argument inside HA_ATOMIC_CAS()
+    - BUG/MINOR: threads: fix multiple use of argument inside HA_ATOMIC_UPDATE_{MIN,MAX}()
+    - BUG/MINOR: pools: use %u not %d to report pool stats in "show pools"
+    - MEDIUM: map: make the "clear map" operation yield
+    - BUG/MEDIUM: server/checks: Init server check during config validity check
+    - BUG/MEDIUM: checks: Always initialize checks before starting them
+    - BUG/MINOR: checks: Respect check-ssl param when a port or an addr is specified
+    - BUG/MINOR: server: Fix server_finalize_init() to avoid unused variable
+
 2020/04/02 : 1.8.25
     - BUG/MINOR: namespace: avoid closing fd when socket failed in my_socketat
     - SCRIPTS: announce-release: use mutt -H instead of -i to include the draft
