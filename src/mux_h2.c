@@ -4324,9 +4324,15 @@ static size_t h2s_frt_make_resp_data(struct h2s *h2s, const struct buffer *buf, 
 		if (h1m->state == H1_MSG_CHUNK_CRLF) {
 			ret = h1_skip_chunk_crlf(buf, ofs, ofs + max);
 			if (ret <= 0) {
-				/* FIXME: bad contents or truncated response. how to proceed here when we're in H2 ? */
-				h1m->err_pos = ofs + max + ret;
-				h2s_error(h2s, H2_ERR_INTERNAL_ERROR);
+				/* FIXME: bad contents or truncated response. how to proceed here when we're in H2 ?
+				 *        It should not happen except if opposite connection was closed.
+				 * Note: check there is at least something to parse to be sure the chunk crlf
+				 *       is truncated.
+				 */
+				if (max) {
+					h1m->err_pos = ofs + max + ret;
+					h2s_error(h2s, H2_ERR_INTERNAL_ERROR);
+				}
 				goto end;
 			}
 			max -= ret;
@@ -4339,9 +4345,15 @@ static size_t h2s_frt_make_resp_data(struct h2s *h2s, const struct buffer *buf, 
 			unsigned int chunk;
 			ret = h1_parse_chunk_size(buf, ofs, ofs + max, &chunk);
 			if (ret <= 0) {
-				/* FIXME: bad contents or truncated response. how to proceed here when we're in H2 ? */
-				h1m->err_pos = ofs + max + ret;
-				h2s_error(h2s, H2_ERR_INTERNAL_ERROR);
+				/* FIXME: bad contents or truncated response. how to proceed here when we're in H2 ?
+				 *        It should not happen except if opposite connection was closed.
+				 * Note: check there is at least something to parse to be sure the chunke size
+				 *       is truncated.
+				 */
+				if (max) {
+					h1m->err_pos = ofs + max + ret;
+					h2s_error(h2s, H2_ERR_INTERNAL_ERROR);
+				}
 				goto end;
 			}
 
