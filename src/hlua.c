@@ -421,7 +421,7 @@ static int hlua_lua2arg(lua_State *L, int ud, struct arg *arg)
 		arg->type = ARGT_STR;
 		arg->data.str.area = (char *)lua_tolstring(L, ud, &arg->data.str.data);
 		/* We don't know the actual size of the underlying allocation, so be conservative. */
-		arg->data.str.size = arg->data.str.data;
+		arg->data.str.size = arg->data.str.data+1; /* count the terminating null byte */
 		arg->data.str.head = 0;
 		break;
 
@@ -564,7 +564,7 @@ static int hlua_lua2smp(lua_State *L, int ud, struct sample *smp)
 		smp->flags |= SMP_F_CONST;
 		smp->data.u.str.area = (char *)lua_tolstring(L, ud, &smp->data.u.str.data);
 		/* We don't know the actual size of the underlying allocation, so be conservative. */
-		smp->data.u.str.size = smp->data.u.str.data;
+		smp->data.u.str.size = smp->data.u.str.data+1; /* count the terminating null byte */
 		smp->data.u.str.head = 0;
 		break;
 
@@ -686,10 +686,7 @@ __LJMP int hlua_lua2arg_check(lua_State *L, int first, struct arg *argp,
 		case ARGT_FE:
 			if (argp[idx].type != ARGT_STR)
 				WILL_LJMP(luaL_argerror(L, first + idx, "string expected"));
-			memcpy(trash.area, argp[idx].data.str.area,
-			       argp[idx].data.str.data);
-			trash.area[argp[idx].data.str.data] = 0;
-			argp[idx].data.prx = proxy_fe_by_name(trash.area);
+			argp[idx].data.prx = proxy_fe_by_name(argp[idx].data.str.area);
 			if (!argp[idx].data.prx)
 				WILL_LJMP(luaL_argerror(L, first + idx, "frontend doesn't exist"));
 			argp[idx].type = ARGT_FE;
@@ -698,10 +695,7 @@ __LJMP int hlua_lua2arg_check(lua_State *L, int first, struct arg *argp,
 		case ARGT_BE:
 			if (argp[idx].type != ARGT_STR)
 				WILL_LJMP(luaL_argerror(L, first + idx, "string expected"));
-			memcpy(trash.area, argp[idx].data.str.area,
-			       argp[idx].data.str.data);
-			trash.area[argp[idx].data.str.data] = 0;
-			argp[idx].data.prx = proxy_be_by_name(trash.area);
+			argp[idx].data.prx = proxy_be_by_name(argp[idx].data.str.area);
 			if (!argp[idx].data.prx)
 				WILL_LJMP(luaL_argerror(L, first + idx, "backend doesn't exist"));
 			argp[idx].type = ARGT_BE;
@@ -710,10 +704,7 @@ __LJMP int hlua_lua2arg_check(lua_State *L, int first, struct arg *argp,
 		case ARGT_TAB:
 			if (argp[idx].type != ARGT_STR)
 				WILL_LJMP(luaL_argerror(L, first + idx, "string expected"));
-			memcpy(trash.area, argp[idx].data.str.area,
-			       argp[idx].data.str.data);
-			trash.area[argp[idx].data.str.data] = 0;
-			argp[idx].data.t = stktable_find_by_name(trash.area);
+			argp[idx].data.t = stktable_find_by_name(argp[idx].data.str.area);
 			if (!argp[idx].data.t)
 				WILL_LJMP(luaL_argerror(L, first + idx, "table doesn't exist"));
 			argp[idx].type = ARGT_TAB;
@@ -722,19 +713,16 @@ __LJMP int hlua_lua2arg_check(lua_State *L, int first, struct arg *argp,
 		case ARGT_SRV:
 			if (argp[idx].type != ARGT_STR)
 				WILL_LJMP(luaL_argerror(L, first + idx, "string expected"));
-			memcpy(trash.area, argp[idx].data.str.area,
-			       argp[idx].data.str.data);
-			trash.area[argp[idx].data.str.data] = 0;
-			sname = strrchr(trash.area, '/');
+			sname = strrchr(argp[idx].data.str.area, '/');
 			if (sname) {
 				*sname++ = '\0';
-				pname = trash.area;
+				pname = argp[idx].data.str.area;
 				px = proxy_be_by_name(pname);
 				if (!px)
 					WILL_LJMP(luaL_argerror(L, first + idx, "backend doesn't exist"));
 			}
 			else {
-				sname = trash.area;
+				sname = argp[idx].data.str.area;
 				px = p;
 			}
 			argp[idx].data.srv = findserver(px, sname);
@@ -746,10 +734,7 @@ __LJMP int hlua_lua2arg_check(lua_State *L, int first, struct arg *argp,
 		case ARGT_IPV4:
 			if (argp[idx].type != ARGT_STR)
 				WILL_LJMP(luaL_argerror(L, first + idx, "string expected"));
-			memcpy(trash.area, argp[idx].data.str.area,
-			       argp[idx].data.str.data);
-			trash.area[argp[idx].data.str.data] = 0;
-			if (inet_pton(AF_INET, trash.area, &argp[idx].data.ipv4))
+			if (inet_pton(AF_INET, argp[idx].data.str.area, &argp[idx].data.ipv4))
 				WILL_LJMP(luaL_argerror(L, first + idx, "invalid IPv4 address"));
 			argp[idx].type = ARGT_IPV4;
 			break;
@@ -758,10 +743,7 @@ __LJMP int hlua_lua2arg_check(lua_State *L, int first, struct arg *argp,
 			if (argp[idx].type == ARGT_SINT)
 				len2mask4(argp[idx].data.sint, &argp[idx].data.ipv4);
 			else if (argp[idx].type == ARGT_STR) {
-				memcpy(trash.area, argp[idx].data.str.area,
-				       argp[idx].data.str.data);
-				trash.area[argp[idx].data.str.data] = 0;
-				if (!str2mask(trash.area, &argp[idx].data.ipv4))
+				if (!str2mask(argp[idx].data.str.area, &argp[idx].data.ipv4))
 					WILL_LJMP(luaL_argerror(L, first + idx, "invalid IPv4 mask"));
 			}
 			else
@@ -772,10 +754,7 @@ __LJMP int hlua_lua2arg_check(lua_State *L, int first, struct arg *argp,
 		case ARGT_IPV6:
 			if (argp[idx].type != ARGT_STR)
 				WILL_LJMP(luaL_argerror(L, first + idx, "string expected"));
-			memcpy(trash.area, argp[idx].data.str.area,
-			       argp[idx].data.str.data);
-			trash.area[argp[idx].data.str.data] = 0;
-			if (inet_pton(AF_INET6, trash.area, &argp[idx].data.ipv6))
+			if (inet_pton(AF_INET6, argp[idx].data.str.area, &argp[idx].data.ipv6))
 				WILL_LJMP(luaL_argerror(L, first + idx, "invalid IPv6 address"));
 			argp[idx].type = ARGT_IPV6;
 			break;
@@ -784,10 +763,7 @@ __LJMP int hlua_lua2arg_check(lua_State *L, int first, struct arg *argp,
 			if (argp[idx].type == ARGT_SINT)
 				len2mask6(argp[idx].data.sint, &argp[idx].data.ipv6);
 			else if (argp[idx].type == ARGT_STR) {
-				memcpy(trash.area, argp[idx].data.str.area,
-				       argp[idx].data.str.data);
-				trash.area[argp[idx].data.str.data] = 0;
-				if (!str2mask6(trash.area, &argp[idx].data.ipv6))
+				if (!str2mask6(argp[idx].data.str.area, &argp[idx].data.ipv6))
 					WILL_LJMP(luaL_argerror(L, first + idx, "invalid IPv6 mask"));
 			}
 			else
