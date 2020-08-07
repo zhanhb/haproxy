@@ -744,6 +744,8 @@ __LJMP int hlua_lua2arg_check(lua_State *L, int first, struct arg *argp,
 			break;
 
 		case ARGT_IPV4:
+			if (argp[idx].type != ARGT_STR)
+				WILL_LJMP(luaL_argerror(L, first + idx, "string expected"));
 			memcpy(trash.area, argp[idx].data.str.area,
 			       argp[idx].data.str.data);
 			trash.area[argp[idx].data.str.data] = 0;
@@ -762,6 +764,8 @@ __LJMP int hlua_lua2arg_check(lua_State *L, int first, struct arg *argp,
 			break;
 
 		case ARGT_IPV6:
+			if (argp[idx].type != ARGT_STR)
+				WILL_LJMP(luaL_argerror(L, first + idx, "string expected"));
 			memcpy(trash.area, argp[idx].data.str.area,
 			       argp[idx].data.str.data);
 			trash.area[argp[idx].data.str.data] = 0;
