@@ -2255,6 +2255,8 @@ static int ssl_sock_switchctx_cbk(SSL *ssl, int *al, void *arg)
 	trash.str[i] = 0;
 
 
+	/* Look for an ECDSA, RSA and DSA certificate, first in the single
+	 * name and if not found in the wildcard  */
 	for (i = 0; i < 2; i++) {
 		if (i == 0) 	/* lookup in full qualified names */
 			node = ebst_lookup(&s->sni_ctx, trash.str);
@@ -2281,25 +2283,27 @@ static int ssl_sock_switchctx_cbk(SSL *ssl, int *al, void *arg)
 				}
 			}
 		}
-		/* select by key_signature priority order */
-		node = (has_ecdsa_sig && node_ecdsa) ? node_ecdsa
-			: ((has_rsa_sig && node_rsa) ? node_rsa
-			   : (node_anonymous ? node_anonymous
-			      : (node_ecdsa ? node_ecdsa      /* no ecdsa signature case (< TLSv1.2) */
-				 : node_rsa                   /* no rsa signature case (far far away) */
-				 )));
-		if (node) {
-			/* switch ctx */
-			struct ssl_bind_conf *conf = container_of(node, struct sni_ctx, name)->conf;
-			ssl_sock_switchctx_set(ssl, container_of(node, struct sni_ctx, name)->ctx);
-			if (conf) {
-				methodVersions[conf->ssl_methods.min].ssl_set_version(ssl, SET_MIN);
-				methodVersions[conf->ssl_methods.max].ssl_set_version(ssl, SET_MAX);
-				if (conf->early_data)
-					allow_early = 1;
-			}
-			goto allow_early;
+	}
+	/* Once the certificates are found, select them depending on what is
+	 * supported in the client and by key_signature priority order: EDSA >
+	 * RSA > DSA */
+	node = (has_ecdsa_sig && node_ecdsa) ? node_ecdsa
+		: ((has_rsa_sig && node_rsa) ? node_rsa
+		   : (node_anonymous ? node_anonymous
+		      : (node_ecdsa ? node_ecdsa      /* no ecdsa signature case (< TLSv1.2) */
+			 : node_rsa                   /* no rsa signature case (far far away) */
+			 )));
+	if (node) {
+		/* switch ctx */
+		struct ssl_bind_conf *conf = container_of(node, struct sni_ctx, name)->conf;
+		ssl_sock_switchctx_set(ssl, container_of(node, struct sni_ctx, name)->ctx);
+		if (conf) {
+			methodVersions[conf->ssl_methods.min].ssl_set_version(ssl, SET_MIN);
+			methodVersions[conf->ssl_methods.max].ssl_set_version(ssl, SET_MAX);
+			if (conf->early_data)
+				allow_early = 1;
 		}
+		goto allow_early;
 	}
 #if (!defined SSL_NO_GENERATE_CERTIFICATES)
 	if (s->generate_certs && ssl_sock_generate_certificate(trash.str, s, ssl)) {
