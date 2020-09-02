@@ -229,6 +229,19 @@ __attribute__((constructor))
 static void __hathreads_init(void)
 {
 	HA_SPIN_INIT(&sync_lock);
+
+#if defined(__GNUC__) && (__GNUC__ >= 3) && !defined(__clang__)
+	/* make sure libgcc_s is already loaded, because pthread_exit() may
+	 * may need it on exit after the chroot! _Unwind_Find_FDE() is defined
+	 * there since gcc 3.0, has no side effect, doesn't take any argument
+	 * and seems to be present on all supported platforms.
+	 */
+	{
+		extern void _Unwind_Find_FDE(void);
+		_Unwind_Find_FDE();
+	}
+#endif
+
 #if defined(DEBUG_THREAD) || defined(DEBUG_FULL)
 	memset(lock_stats, 0, sizeof(lock_stats));
 #endif
