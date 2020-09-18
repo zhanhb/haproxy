@@ -3012,6 +3012,7 @@ int cfg_parse_listen(const char *file, int linenum, char **args, int kwm)
 			goto out;
 		}
 
+		free(defproxy.conf.file);
 		free(defproxy.check_req);
 		free(defproxy.check_command);
 		free(defproxy.check_path);
