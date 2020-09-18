@@ -189,6 +189,8 @@ int h2_make_h1_request(struct http_hdr *list, char *out, int osize, unsigned int
 /* returns a bit corresponding to the frame type */
 static inline unsigned int h2_ft_bit(enum h2_ft ft)
 {
+	if (ft >= H2_FT_ENTRIES)
+		return 0;
 	return 1U << ft;
 }
 
