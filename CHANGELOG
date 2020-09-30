@@ -1,6 +1,67 @@
 ChangeLog :
 ===========
 
+2020/09/30 : 2.1.9
+    - BUG/MEDIUM: mux-h1: Refresh H1 connection timeout after a synchronous send
+    - SCRIPTS: git-show-backports: make -m most only show the left branch
+    - SCRIPTS: git-show-backports: emit the shell command to backport a commit
+    - BUG/MINOR: ssl: fix memory leak at OCSP loading
+    - BUG/MEDIUM: ssl: memory leak of ocsp data at SSL_CTX_free()
+    - BUG/MEDIUM: map/lua: Return an error if a map is loaded during runtime
+    - MINOR: arg: Add an argument type to keep a reference on opaque data
+    - BUG/MINOR: converters: Store the sink in an arg pointer for debug() converter
+    - BUG/MINOR: lua: Duplicate map name to load it when a new Map object is created
+    - BUG/MINOR: arg: Fix leaks during arguments validation for fetches/converters
+    - BUG/MINOR: lua: Check argument type to convert it to IPv4/IPv6 arg validation
+    - BUG/MINOR: lua: Check argument type to convert it to IP mask in arg validation
+    - MINOR: hlua: Don't needlessly copy lua strings in trash during args validation
+    - BUG/MINOR: lua: Duplicate lua strings in sample fetches/converters arg array
+    - MEDIUM: lua: Don't filter exported fetches and converters
+    - BUG/MINOR: snapshots: leak of snapshots on deinit()
+    - BUG/MINOR: stats: use strncmp() instead of memcmp() on health states
+    - BUG/MEDIUM: htx: smp_prefetch_htx() must always validate the direction
+    - BUG/MINOR: reload: do not fail when no socket is sent
+    - MINOR: http-htx: Add an option to eval query-string when the path is replaced
+    - BUG/MINOR: http-rules: Replace path and query-string in "replace-path" action
+    - DOC: cache: Use '<name>' instead of '<id>' in error message
+    - BUG/MAJOR: contrib/spoa-server: Fix unhandled python call leading to memory leak
+    - BUG/MINOR: contrib/spoa-server: Ensure ip address references are freed
+    - BUG/MINOR: contrib/spoa-server: Do not free reference to NULL
+    - BUG/MINOR: contrib/spoa-server: Updating references to free in case of failure
+    - BUG/MEDIUM: contrib/spoa-server: Fix ipv4_address used instead of ipv6_address
+    - BUG/MINOR: startup: haproxy -s cause 100% cpu
+    - BUG/MEDIUM: doc: Fix replace-path action description
+    - Revert "BUG/MINOR: http-rules: Replace path and query-string in "replace-path" action"
+    - BUG/MEDIUM: ssl: check OCSP calloc in ssl_sock_load_ocsp()
+    - BUG/MINOR: threads: work around a libgcc_s issue with chrooting
+    - BUILD: thread: limit the libgcc_s workaround to glibc only
+    - MINOR: Commit .gitattributes
+    - CLEANUP: Update .gitignore
+    - BUG/MINOR: auth: report valid crypto(3) support depending on build options
+    - BUG/MEDIUM: mux-h1: always apply the timeout on half-closed connections
+    - BUILD: threads: better workaround for late loading of libgcc_s
+    - BUG/MEDIUM: pattern: Renew the pattern expression revision when it is pruned
+    - MINOR: arg: Use chunk_destroy() to release string arguments
+    - BUG/MEDIUM: http-ana: Don't wait to send 1xx responses received from servers
+    - BUG/MEDIUM: ssl: does not look for all SNIs before chosing a certificate
+    - BUG/MINOR: ssl: verifyhost is case sensitive
+    - BUG/MINOR: server: report correct error message for invalid port on "socks4"
+    - BUG/MINOR: h2/trace: do not display "stream error" after a frame ACK
+    - BUG/MINOR: http-fetch: Don't set the sample type during the htx prefetch
+    - BUG/MEDIUM: h2: report frame bits only for handled types
+    - MINOR: h2/trace: also display the remaining frame length in traces
+    - BUG/MINOR: Fix memory leaks cfg_parse_peers
+    - MINOR: backend: make the "whole" option of balance uri take only one bit
+    - MINOR: backend: add a new "path-only" option to "balance uri"
+    - REGTESTS: add a few load balancing tests
+    - DOC: spoa-server: fix false friends `actually`
+    - BUG/MINOR: config: Fix memory leak on config parse listen
+    - BUG/MEDIUM: listeners: do not pause foreign listeners
+    - DOC: agent-check: fix typo in "fail" word expected reply
+    - REGTEST: fix host part in balance-uri-path-only.vtc
+    - REGTEST: make abns_socket.vtc require 1.8
+    - REGTEST: make map_regm_with_backref require 1.7
+
 2020/07/31 : 2.1.8
     - BUG/MEDIUM: log: don't hold the log lock during writev() on a file descriptor
     - BUG/MEDIUM: pattern: fix thread safety of pattern matching
