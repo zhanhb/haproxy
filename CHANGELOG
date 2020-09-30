@@ -1,6 +1,51 @@
 ChangeLog :
 ===========
 
+2020/09/30 : 2.0.18
+    - SCRIPTS: git-show-backports: make -m most only show the left branch
+    - SCRIPTS: git-show-backports: emit the shell command to backport a commit
+    - BUG/MEDIUM: mux-h2: Don't fail if nothing is parsed for a legacy chunk response
+    - BUG/MEDIUM: mux-h1: Refresh H1 connection timeout after a synchronous send
+    - BUG/MEDIUM: map/lua: Return an error if a map is loaded during runtime
+    - BUG/MINOR: lua: Check argument type to convert it to IPv4/IPv6 arg validation
+    - BUG/MINOR: lua: Check argument type to convert it to IP mask in arg validation
+    - BUG/MINOR: snapshots: leak of snapshots on deinit()
+    - BUG/MINOR: stats: use strncmp() instead of memcmp() on health states
+    - BUG/MEDIUM: htx: smp_prefetch_htx() must always validate the direction
+    - BUG/MINOR: reload: do not fail when no socket is sent
+    - DOC: cache: Use '<name>' instead of '<id>' in error message
+    - BUG/MAJOR: contrib/spoa-server: Fix unhandled python call leading to memory leak
+    - BUG/MINOR: contrib/spoa-server: Ensure ip address references are freed
+    - BUG/MINOR: contrib/spoa-server: Do not free reference to NULL
+    - BUG/MINOR: contrib/spoa-server: Updating references to free in case of failure
+    - BUG/MEDIUM: contrib/spoa-server: Fix ipv4_address used instead of ipv6_address
+    - BUG/MINOR: startup: haproxy -s cause 100% cpu
+    - BUG/MEDIUM: doc: Fix replace-path action description
+    - BUG/MEDIUM: ssl: check OCSP calloc in ssl_sock_load_ocsp()
+    - BUG/MINOR: threads: work around a libgcc_s issue with chrooting
+    - BUILD: thread: limit the libgcc_s workaround to glibc only
+    - MINOR: Commit .gitattributes
+    - CLEANUP: Update .gitignore
+    - BUG/MINOR: auth: report valid crypto(3) support depending on build options
+    - BUG/MEDIUM: mux-h1: always apply the timeout on half-closed connections
+    - BUILD: threads: better workaround for late loading of libgcc_s
+    - BUG/MEDIUM: pattern: Renew the pattern expression revision when it is pruned
+    - BUG/MEDIUM: http-ana: Don't wait to send 1xx responses received from servers
+    - BUG/MEDIUM: ssl: does not look for all SNIs before chosing a certificate
+    - BUG/MINOR: ssl: verifyhost is case sensitive
+    - BUG/MINOR: server: report correct error message for invalid port on "socks4"
+    - BUG/MINOR: http-fetch: Don't set the sample type during the htx prefetch
+    - BUG/MEDIUM: h2: report frame bits only for handled types
+    - BUG/MINOR: Fix memory leaks cfg_parse_peers
+    - BUG/MINOR: config: Fix memory leak on config parse listen
+    - BUG/MEDIUM: listeners: do not pause foreign listeners
+    - DOC: spoa-server: fix false friends `actually`
+    - DOC: agent-check: fix typo in "fail" word expected reply
+    - REGTESTS: add a few load balancing tests
+    - REGTEST: fix host part in balance-uri-path-only.vtc
+    - REGTEST: make abns_socket.vtc require 1.8
+    - REGTEST: make map_regm_with_backref require 1.7
+
 2020/07/31 : 2.0.17
     - BUILD: ebtree: fix build on libmusl after recent introduction of eb_memcmp()
     - REGEST: Add reg tests about error files
