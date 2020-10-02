@@ -12,6 +12,7 @@
 #include <unistd.h>
 
 #include <common/cfgparse.h>
+#include <common/buf.h>
 #include <common/uri_auth.h>
 
 #include <types/capture.h>
@@ -3821,7 +3822,13 @@ stats_error_parsing:
 			goto out;
 		}
 		chunk_destroy(&curproxy->log_tag);
-		chunk_initstr(&curproxy->log_tag, strdup(args[1]));
+		chunk_initlen(&curproxy->log_tag, strdup(args[1]), strlen(args[1]), strlen(args[1]));
+		if (b_orig(&curproxy->log_tag) == NULL) {
+			chunk_destroy(&curproxy->log_tag);
+			ha_alert("parsing [%s:%d]: cannot allocate memory for '%s'.\n", file, linenum, args[0]);
+			err_code |= ERR_ALERT | ERR_FATAL;
+			goto out;
+		}
 	}
 	else if (!strcmp(args[0], "log")) { /* "no log" or "log ..." */
 		if (!parse_logsrv(args, &curproxy->logsrvs, (kwm == KWM_NO), &errmsg)) {

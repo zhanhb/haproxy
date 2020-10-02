@@ -12,6 +12,7 @@
 #include <unistd.h>
 
 #include <common/cfgparse.h>
+#include <common/buf.h>
 #include <proto/compression.h>
 
 /*
@@ -920,7 +921,13 @@ int cfg_parse_global(const char *file, int linenum, char **args, int kwm)
 			goto out;
 		}
 		chunk_destroy(&global.log_tag);
-		chunk_initstr(&global.log_tag, strdup(args[1]));
+		chunk_initlen(&global.log_tag, strdup(args[1]), strlen(args[1]), strlen(args[1]));
+		if (b_orig(&global.log_tag) == NULL) {
+			chunk_destroy(&global.log_tag);
+			ha_alert("parsing [%s:%d]: cannot allocate memory for '%s'.\n", file, linenum, args[0]);
+			err_code |= ERR_ALERT | ERR_FATAL;
+			goto out;
+		}
 	}
 	else if (!strcmp(args[0], "spread-checks")) {  /* random time between checks (0-50) */
 		if (alertif_too_many_args(1, file, linenum, args, &err_code))
