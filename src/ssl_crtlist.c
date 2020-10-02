@@ -412,8 +412,10 @@ int crtlist_parse_file(char *file, struct bind_conf *bind_conf, struct proxy *cu
 			else
 				ckchs = ckchs_load_cert_file(crt_path, 1,  err);
 		}
-		if (ckchs == NULL)
+		if (ckchs == NULL) {
 			cfgerr |= ERR_ALERT | ERR_FATAL;
+			goto error;
+		}
 
 		if (cfgerr & ERR_CODE)
 			goto error;
