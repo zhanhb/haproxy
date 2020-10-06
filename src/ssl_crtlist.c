@@ -363,7 +363,7 @@ int crtlist_parse_file(char *file, struct bind_conf *bind_conf, struct proxy *cu
 		if (missing_lf != -1) {
 			memprintf(err, "parsing [%s:%d]: Stray NUL character at position %d.\n",
 			          file, linenum, (missing_lf + 1));
-			cfgerr |= ERR_ALERT | ERR_FATAL;
+			cfgerr |= ERR_WARN;
 			missing_lf = -1;
 			break;
 		}
@@ -449,7 +449,7 @@ int crtlist_parse_file(char *file, struct bind_conf *bind_conf, struct proxy *cu
 	if (missing_lf != -1) {
 		memprintf(err, "parsing [%s:%d]: Missing LF on last line, file might have been truncated at position %d.\n",
 		          file, linenum, (missing_lf + 1));
-		cfgerr |= ERR_ALERT | ERR_FATAL;
+		cfgerr |= ERR_WARN;
 	}
 
 	if (cfgerr & ERR_CODE)
