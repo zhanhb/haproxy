@@ -159,12 +159,13 @@ void __task_queue(struct task *task, struct eb_root *wq)
  */
 int wake_expired_tasks()
 {
+	int max_processed = global.tune.runqueue_depth;
 	struct task *task;
 	struct eb32_node *eb;
 	int ret = TICK_ETERNITY;
 	__decl_hathreads(int key);
 
-	while (1) {
+	while (max_processed-- > 0) {
   lookup_next_local:
 		eb = eb32_lookup_ge(&task_per_thread[tid].timers, now_ms - TIMER_LOOK_BACK);
 		if (!eb) {
@@ -235,6 +236,8 @@ int wake_expired_tasks()
 	while (1) {
 		HA_RWLOCK_WRLOCK(TASK_WQ_LOCK, &wq_lock);
   lookup_next:
+		if (max_processed-- <= 0)
+			break;
 		eb = eb32_lookup_ge(&timers, now_ms - TIMER_LOOK_BACK);
 		if (!eb) {
 			/* we might have reached the end of the tree, typically because
