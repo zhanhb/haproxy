@@ -1589,8 +1589,11 @@ int connect_server(struct stream *s)
 		s->flags |= SF_CURR_SESS;
 		count = _HA_ATOMIC_ADD(&srv->cur_sess, 1);
 		HA_ATOMIC_UPDATE_MAX(&srv->counters.cur_sess_max, count);
-		if (s->be->lbprm.server_take_conn)
+		if (s->be->lbprm.server_take_conn) {
+			HA_SPIN_LOCK(SERVER_LOCK, &srv->lock);
 			s->be->lbprm.server_take_conn(srv);
+			HA_SPIN_UNLOCK(SERVER_LOCK, &srv->lock);
+		}
 
 #ifdef USE_OPENSSL
 		if (srv->ssl_ctx.sni) {
