@@ -799,6 +799,19 @@ static inline int htx_is_not_empty(const struct htx *htx)
 	return htx->used;
 }
 
+static inline void htx_skip_msg_payload(struct htx *htx)
+{
+	struct htx_blk *blk = htx_get_first_blk(htx);
+
+	while (blk) {
+		enum htx_blk_type type = htx_get_blk_type(blk);
+
+		blk = ((type > HTX_BLK_EOH && type < HTX_BLK_EOM)
+		       ? htx_remove_blk(htx, blk)
+		       : htx_get_next_blk(htx, blk));
+	}
+}
+
 /* For debugging purpose */
 static inline const char *htx_blk_type_str(enum htx_blk_type type)
 {

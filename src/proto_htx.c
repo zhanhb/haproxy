@@ -5424,6 +5424,8 @@ void htx_server_error(struct stream *s, struct stream_interface *si, int err,
 		chn->buf.data = msg->data;
 		memcpy(chn->buf.area, msg->area, msg->data);
 		htx = htx_from_buf(&chn->buf);
+		if (s->txn->meth == HTTP_METH_HEAD)
+			htx_skip_msg_payload(htx);
 		c_adv(chn, htx->data);
 		chn->total += htx->data;
 	}
@@ -5454,6 +5456,8 @@ void htx_reply_and_close(struct stream *s, short status, struct buffer *msg)
 		chn->buf.data = msg->data;
 		memcpy(chn->buf.area, msg->area, msg->data);
 		htx = htx_from_buf(&chn->buf);
+		if (s->txn->meth == HTTP_METH_HEAD)
+			htx_skip_msg_payload(htx);
 		c_adv(chn, htx->data);
 		chn->total += htx->data;
 	}
@@ -5586,6 +5590,9 @@ static int htx_reply_40x_unauthorized(struct stream *s, const char *auth_realm)
 		goto fail;
 	if (!htx_add_endof(htx, HTX_BLK_EOH))
 		goto fail;
+
+	if (s->txn->meth == HTTP_METH_HEAD)
+		body.len = 0;
 
 	while (body.len) {
 		size_t sent = htx_add_data(htx, body);
