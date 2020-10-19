@@ -4983,6 +4983,8 @@ void http_server_error(struct stream *s, struct stream_interface *si, int err,
 		FLT_STRM_CB(s, flt_http_reply(s, s->txn->status, msg));
 		htx = htx_from_buf(&chn->buf);
 		if (channel_htx_copy_msg(chn, htx, msg)) {
+			if (s->txn->meth == HTTP_METH_HEAD)
+				htx_skip_msg_payload(htx);
 			htx->flags |= HTX_FL_PROXY_RESP;
 			data = htx->data - co_data(chn);
 			c_adv(chn, data);
@@ -5015,6 +5017,8 @@ void http_reply_and_close(struct stream *s, short status, struct buffer *msg)
 		FLT_STRM_CB(s, flt_http_reply(s, s->txn->status, msg));
 		htx = htx_from_buf(&chn->buf);
 		if (channel_htx_copy_msg(chn, htx, msg)) {
+			if (s->txn->meth == HTTP_METH_HEAD)
+				htx_skip_msg_payload(htx);
 			htx->flags |= HTX_FL_PROXY_RESP;
 			data = htx->data - co_data(chn);
 			c_adv(chn, data);
@@ -5200,6 +5204,9 @@ static int http_reply_40x_unauthorized(struct stream *s, const char *auth_realm)
 		goto fail;
 	if (!htx_add_endof(htx, HTX_BLK_EOH))
 		goto fail;
+
+	if (s->txn->meth == HTTP_METH_HEAD)
+		body.len = 0;
 
 	while (body.len) {
 		size_t sent = htx_add_data(htx, body);
