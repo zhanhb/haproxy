@@ -1315,7 +1315,6 @@ static void ssl_sock_free_ocsp(struct certificate_ocsp *ocsp)
  * Returns 1 if no ".ocsp" file found, 0 if OCSP status extension is
  * successfully enabled, or -1 in other error case.
  */
-#ifndef OPENSSL_IS_BORINGSSL
 static int ssl_sock_load_ocsp(SSL_CTX *ctx, const struct cert_key_and_chain *ckch, STACK_OF(X509) *chain)
 {
 	X509 *x, *issuer;
@@ -1445,13 +1444,13 @@ out:
 
 	return ret;
 }
-#else /* OPENSSL_IS_BORINGSSL */
+#endif
+
+#ifdef OPENSSL_IS_BORINGSSL
 static int ssl_sock_load_ocsp(SSL_CTX *ctx, const struct cert_key_and_chain *ckch, STACK_OF(X509) *chain)
 {
 	return SSL_CTX_set_ocsp_response(ctx, (const uint8_t *)ckch->ocsp_response->area, ckch->ocsp_response->data);
 }
-#endif
-
 #endif
 
 
@@ -3076,7 +3075,7 @@ static int ssl_sock_put_ckch_into_ctx(const char *path, const struct cert_key_an
 	}
 #endif
 
-#if ((defined SSL_CTRL_SET_TLSEXT_STATUS_REQ_CB && !defined OPENSSL_NO_OCSP) && !defined OPENSSL_IS_BORINGSSL)
+#if ((defined SSL_CTRL_SET_TLSEXT_STATUS_REQ_CB && !defined OPENSSL_NO_OCSP) || defined OPENSSL_IS_BORINGSSL)
 	/* Load OCSP Info into context */
 	if (ckch->ocsp_response) {
 		if (ssl_sock_load_ocsp(ctx, ckch, find_chain) < 0) {
