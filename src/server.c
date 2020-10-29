@@ -72,7 +72,7 @@ struct dict server_name_dict = {
 
 int srv_downtime(const struct server *s)
 {
-	if ((s->cur_state != SRV_ST_STOPPED) && s->last_change < now.tv_sec)		// ignore negative time
+	if ((s->cur_state != SRV_ST_STOPPED) || s->last_change >= now.tv_sec)		// ignore negative time
 		return s->down_time;
 
 	return now.tv_sec - s->last_change + s->down_time;
