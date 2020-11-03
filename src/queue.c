@@ -267,6 +267,7 @@ int pendconn_redistribute(struct server *s)
 
 		remote |= !(p->strm->task->thread_mask & tid_bit);
 		task_wakeup(p->strm->task, TASK_WOKEN_RES);
+		xferred++;
 		HA_SPIN_UNLOCK(PENDCONN_LOCK, &p->lock);
 	}
 	HA_SPIN_UNLOCK(SERVER_LOCK, &s->lock);
