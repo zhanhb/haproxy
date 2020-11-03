@@ -357,7 +357,7 @@ flt_deinit(struct proxy *proxy)
 	struct flt_conf *fconf, *back;
 
 	list_for_each_entry_safe(fconf, back, &proxy->filter_configs, list) {
-		if (proxy->state != PR_STSTOPPED && fconf->ops->deinit)
+		if (fconf->ops->deinit)
 			fconf->ops->deinit(proxy, fconf);
 		LIST_DEL(&fconf->list);
 		free(fconf);
@@ -386,10 +386,8 @@ flt_deinit_all_per_thread()
 {
 	struct proxy *px;
 
-	for (px = proxies_list; px; px = px->next) {
-		if (px->state != PR_STSTOPPED)
-			flt_deinit_per_thread(px);
-	}
+	for (px = proxies_list; px; px = px->next)
+		flt_deinit_per_thread(px);
 }
 
 /* Attaches a filter to a stream. Returns -1 if an error occurs, 0 otherwise. */
