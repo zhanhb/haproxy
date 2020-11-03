@@ -297,7 +297,7 @@ flt_deinit(struct proxy *proxy)
 	struct flt_conf *fconf, *back;
 
 	list_for_each_entry_safe(fconf, back, &proxy->filter_configs, list) {
-		if (proxy->state != PR_STSTOPPED && fconf->ops->deinit)
+		if (fconf->ops->deinit)
 			fconf->ops->deinit(proxy, fconf);
 		LIST_DEL(&fconf->list);
 		free(fconf);
