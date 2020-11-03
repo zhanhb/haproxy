@@ -256,6 +256,11 @@ flt_init(struct proxy *proxy)
 {
 	struct flt_conf *fconf;
 
+	if (proxy->state == PR_STSTOPPED) {
+		flt_deinit(proxy);
+		return 0;
+	}
+
 	list_for_each_entry(fconf, &proxy->filter_configs, list) {
 		if (fconf->ops->init && fconf->ops->init(proxy, fconf) < 0)
 			return ERR_ALERT|ERR_FATAL;
@@ -292,7 +297,7 @@ flt_deinit(struct proxy *proxy)
 	struct flt_conf *fconf, *back;
 
 	list_for_each_entry_safe(fconf, back, &proxy->filter_configs, list) {
-		if (fconf->ops->deinit)
+		if (proxy->state != PR_STSTOPPED && fconf->ops->deinit)
 			fconf->ops->deinit(proxy, fconf);
 		LIST_DEL(&fconf->list);
 		free(fconf);
