@@ -240,6 +240,15 @@ typedef struct { } empty_t;
 #endif
 #endif
 
+/* malloc_trim() can be very convenient to reclaim unused memory especially
+ * from huge pattern files. It's available (and really usable) in glibc 2.8 and
+ * above.
+ */
+#if (defined(__GNU_LIBRARY__) && (__GLIBC__ > 2 || __GLIBC__ == 2 && __GLIBC_MINOR__ >= 8))
+#include <malloc.h>
+#define HA_HAVE_MALLOC_TRIM
+#endif
+
 /* glibc 2.26 includes a thread-local cache which makes it fast enough in threads */
 #if (defined(__GNU_LIBRARY__) && (__GLIBC__ > 2 || __GLIBC__ == 2 && __GLIBC_MINOR__ >= 26))
 #include <malloc.h>
