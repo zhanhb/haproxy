@@ -349,7 +349,7 @@ int http_calc_maxage(struct stream *s, struct cache *cache)
 
 			chunk_strncat(chk, value, ctx.vlen - 8 + 1);
 			chunk_strncat(chk, "", 1);
-			maxage = atoi(chk->str);
+			smaxage = atoi(chk->str);
 		}
 
 		value = directive_value(ctx.line + ctx.val, ctx.vlen, "max-age", 7);
@@ -358,7 +358,7 @@ int http_calc_maxage(struct stream *s, struct cache *cache)
 
 			chunk_strncat(chk, value, ctx.vlen - 7 + 1);
 			chunk_strncat(chk, "", 1);
-			smaxage = atoi(chk->str);
+			maxage = atoi(chk->str);
 		}
 	}
 
