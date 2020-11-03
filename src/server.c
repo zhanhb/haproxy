@@ -4448,6 +4448,9 @@ static void __server_init(void)
  * This function applies server's status changes, it is
  * is designed to be called asynchronously.
  *
+ * Must be called with the server lock held. This may also be called at init
+ * time as the result of parsing the state file, in which case no lock will be
+ * held, and the server's warmup task can be null.
  */
 void srv_update_status(struct server *s)
 {
@@ -4545,7 +4548,7 @@ void srv_update_status(struct server *s)
 				s->down_time += now.tv_sec - s->last_change;
 
 			s->last_change = now.tv_sec;
-			if (s->next_state == SRV_ST_STARTING)
+			if (s->next_state == SRV_ST_STARTING && s->warmup)
 				task_schedule(s->warmup, tick_add(now_ms, MS_TO_TICKS(MAX(1000, s->slowstart / 20))));
 
 			server_recalc_eweight(s);
@@ -4717,8 +4720,10 @@ void srv_update_status(struct server *s)
 			}
 			else {
 				s->next_state = SRV_ST_STARTING;
-				if (s->slowstart > 0)
-					task_schedule(s->warmup, tick_add(now_ms, MS_TO_TICKS(MAX(1000, s->slowstart / 20))));
+				if (s->slowstart > 0) {
+					if (s->warmup)
+						task_schedule(s->warmup, tick_add(now_ms, MS_TO_TICKS(MAX(1000, s->slowstart / 20))));
+				}
 				else
 					s->next_state = SRV_ST_RUNNING;
 			}
