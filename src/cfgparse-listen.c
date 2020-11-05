@@ -3997,12 +3997,18 @@ stats_error_parsing:
 			if (http_err_codes[rc] == errnum) {
 				struct buffer chk;
 
-				if (!http_str_to_htx(&chk, ist2(err, errlen))) {
-					ha_alert("parsing [%s:%d] : unable to convert message in HTX for HTTP return code %d.\n",
-						 file, linenum, http_err_codes[rc]);
+				if (!http_str_to_htx(&chk, ist2(err, errlen), &errmsg)) {
+					ha_alert("parsing [%s:%d] : invalid error message: %s.\n",
+						 file, linenum, errmsg);
 					err_code |= ERR_ALERT | ERR_FATAL;
 					free(err);
 					goto out;
+				}
+				if (errmsg) {
+					ha_warning("parsing [%s:%d] : %s\n", file, linenum, errmsg);
+					err_code |= ERR_WARN;
+					free(errmsg);
+					errmsg = NULL;
 				}
 				chunk_destroy(&curproxy->errmsg[rc]);
 				curproxy->errmsg[rc] = chk;
@@ -4066,12 +4072,18 @@ stats_error_parsing:
 			if (http_err_codes[rc] == errnum) {
 				struct buffer chk;
 
-				if (!http_str_to_htx(&chk, ist2(err, errlen))) {
-					ha_alert("parsing [%s:%d] : unable to convert message in HTX for HTTP return code %d.\n",
-						 file, linenum, http_err_codes[rc]);
+				if (!http_str_to_htx(&chk, ist2(err, errlen), &errmsg)) {
+					ha_alert("parsing [%s:%d] : %s: %s.\n",
+						 file, linenum, args[2], errmsg);
 					err_code |= ERR_ALERT | ERR_FATAL;
 					free(err);
 					goto out;
+				}
+				if (errmsg) {
+					ha_warning("parsing [%s:%d] : %s\n", file, linenum, errmsg);
+					err_code |= ERR_WARN;
+					free(errmsg);
+					errmsg = NULL;
 				}
 				chunk_destroy(&curproxy->errmsg[rc]);
 				curproxy->errmsg[rc] = chk;
