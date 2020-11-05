@@ -1,6 +1,53 @@
 ChangeLog :
 ===========
 
+2020/11/05 : 2.1.10
+    - BUG/MEDIUM: ssl: crt-list negative filters don't work
+    - MINOR: ssl: reach a ckch_store from a sni_ctx
+    - BUILD: makefile: Fix building with closefrom() support enabled
+    - BUG/MINOR: Fix several leaks of 'log_tag' in init().
+    - DOC: tcp-rules: Refresh details about L7 matching for tcp-request content rules
+    - BUG/MEDIUM: queue: make pendconn_cond_unlink() really thread-safe
+    - MINOR: counters: fix a typo in comment
+    - BUG/MINOR: stats: fix validity of the json schema
+    - MINOR: hlua: Display debug messages on stderr only in debug mode
+    - BUG/MINOR: peers: Inconsistency when dumping peer status codes.
+    - BUG/MINOR: mux-h1: Always set the session on frontend h1 stream
+    - BUG/MEDIUM: mux-fcgi: Don't handle pending read0 too early on streams
+    - BUG/MEDIUM: mux-h2: Don't handle pending read0 too early on streams
+    - BUG/MINOR: http-htx: Expect no body for 204/304 internal HTTP responses
+    - BUG/MINOR: init: only keep rlim_fd_cur if max is unlimited
+    - BUG/MINOR: mux-h2: do not stop outgoing connections on stopping
+    - MINOR: fd: report an error message when failing initial allocations
+    - BUG/MEDIUM: task: bound the number of tasks picked from the wait queue at once
+    - BUG/MEDIUM: spoe: Unset variable instead of set it if no data provided
+    - BUG/MEDIUM: mux-h1: Get the session from the H1S when capturing bad messages
+    - BUG/MEDIUM: lb: Always lock the server when calling server_{take,drop}_conn
+    - BUG/MINOR: peers: Possible unexpected peer seesion reset after collisions.
+    - BUILD: ssl: make BoringSSL use its own version numbers
+    - BUG/MINOR: disable dynamic OCSP load with BoringSSL
+    - BUG/MEDIUM: ssl: OCSP must work with BoringSSL
+    - BUG/MINOR: queue: properly report redistributed connections
+    - BUG/MEDIUM: server: support changing the slowstart value from state-file
+    - BUG/MINOR: http-ana: Don't send payload for internal responses to HEAD requests
+    - BUG/MAJOR: mux-h2: Don't try to send data if we know it is no longer possible
+    - BUG/MINOR: extcheck: add missing checks on extchk_setenv()
+    - BUG/MINOR: log: fix memory leak on logsrv parse error
+    - BUG/MINOR: server: fix srv downtime calcul on starting
+    - BUG/MINOR: server: fix down_time report for stats
+    - BUG/MINOR: lua: initialize sample before using it
+    - MINOR: ist: Add a case insensitive istmatch function
+    - BUG/MINOR: cache: Manage multiple values in cache-control header value
+    - BUG/MINOR: cache: Inverted variables in http_calc_maxage function
+    - BUG/MEDIUM: filters: Don't try to init filters for disabled proxies
+    - BUG/MINOR: proxy/server: Skip per-proxy/server post-check for disabled proxies
+    - BUG/MINOR: server: Set server without addr but with dns in RMAINT on startup
+    - MINOR: server: Copy configuration file and line for server templates
+    - BUG/MEDIUM: mux-pt: Release the tasklet during an HTTP upgrade
+    - BUG/MINOR: filters: Skip disabled proxies during startup only
+    - BUG/MEDIUM: stick-table: limit the time spent purging old entries
+    - CLEANUP: mux-h2: Remove the h1 parser state from the h2 stream
+
 2020/09/30 : 2.1.9
     - BUG/MEDIUM: mux-h1: Refresh H1 connection timeout after a synchronous send
     - SCRIPTS: git-show-backports: make -m most only show the left branch
