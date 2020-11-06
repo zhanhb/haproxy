@@ -699,7 +699,7 @@ int http_str_to_htx(struct buffer *buf, struct ist raw, char **errmsg)
 
 		memprintf(errmsg, "payload size does not match the announced content-length (%lu != %lu)."
 			  " C-L header is updated accordingly but it should be fixed to avoid any errors on future versions.",
-			  (raw.len - ret), h1m.body_len);
+			  (unsigned long)(raw.len - ret), (unsigned long)h1m.body_len);
 
 		for (i = 0; hdrs[i].n.len; i++) {
 			if (isteqi(hdrs[i].n, ist("content-length")))
