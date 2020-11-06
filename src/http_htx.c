@@ -833,9 +833,17 @@ int http_str_to_htx(struct buffer *buf, struct ist raw, char **errmsg)
 		goto error;
 	}
 	if ((flags & HTX_SL_F_CLEN) && h1m.body_len != (raw.len - ret)) {
-		memprintf(errmsg, "payload size does not match the announced content-length (%lu != %lu)",
+		struct ist clen = ist(ultoa(raw.len - ret));
+		int i;
+
+		memprintf(errmsg, "payload size does not match the announced content-length (%lu != %lu)."
+			  " C-L header is updated accordingly but it should be fixed to avoid any errors on future versions.",
 			  (raw.len - ret), h1m.body_len);
-		goto error;
+
+		for (i = 0; hdrs[i].n.len; i++) {
+			if (isteqi(hdrs[i].n, ist("content-length")))
+				hdrs[i].v = clen;
+		}
 	}
 
 	htx = htx_from_buf(buf);
