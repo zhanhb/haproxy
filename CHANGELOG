@@ -1,6 +1,52 @@
 ChangeLog :
 ===========
 
+2020/11/06 : 1.8.27
+    - BUG/MINOR: dns: ignore trailing dot
+    - BUG/MEDIUM: mux-h2: Don't fail if nothing is parsed for a legacy chunk response
+    - BUG/MEDIUM: map/lua: Return an error if a map is loaded during runtime
+    - BUG/MINOR: lua: Check argument type to convert it to IPv4/IPv6 arg validation
+    - BUG/MINOR: lua: Check argument type to convert it to IP mask in arg validation
+    - BUG/MINOR: stats: use strncmp() instead of memcmp() on health states
+    - BUG/MINOR: reload: do not fail when no socket is sent
+    - BUG/MINOR: startup: haproxy -s cause 100% cpu
+    - BUG/MEDIUM: ssl: check OCSP calloc in ssl_sock_load_ocsp()
+    - BUG/MINOR: threads: work around a libgcc_s issue with chrooting
+    - BUILD: thread: limit the libgcc_s workaround to glibc only
+    - MINOR: Commit .gitattributes
+    - CLEANUP: Update .gitignore
+    - BUILD: threads: better workaround for late loading of libgcc_s
+    - BUG/MEDIUM: pattern: Renew the pattern expression revision when it is pruned
+    - BUG/MEDIUM: pattern: fix memory leak in regex pattern functions
+    - BUG/MEDIUM: ssl: does not look for all SNIs before chosing a certificate
+    - BUG/MINOR: ssl: verifyhost is case sensitive
+    - BUG/MEDIUM: h2: report frame bits only for handled types
+    - BUG/MINOR: config: Fix memory leak on config parse listen
+    - BUG/MEDIUM: listeners: do not pause foreign listeners
+    - DOC: agent-check: fix typo in "fail" word expected reply
+    - REGTESTS: add a few load balancing tests
+    - REGTEST: fix host part in balance-uri-path-only.vtc
+    - REGTEST: make abns_socket.vtc require 1.8
+    - REGTEST: make map_regm_with_backref require 1.7
+    - DOC: ssl: crt-list negative filters are only a hint
+    - MINOR: counters: fix a typo in comment
+    - BUG/MINOR: stats: fix validity of the json schema
+    - MINOR: hlua: Display debug messages on stderr only in debug mode
+    - BUG/MEDIUM: spoe: Unset variable instead of set it if no data provided
+    - BUG/MEDIUM: lb: Always lock the server when calling server_{take,drop}_conn
+    - BUG/MINOR: queue: properly report redistributed connections
+    - BUG/MEDIUM: server: support changing the slowstart value from state-file
+    - BUG/MAJOR: mux-h2: Don't try to send data if we know it is no longer possible
+    - BUG/MINOR: extcheck: add missing checks on extchk_setenv()
+    - BUG/MINOR: server: fix srv downtime calcul on starting
+    - BUG/MINOR: server: fix down_time report for stats
+    - BUG/MINOR: lua: initialize sample before using it
+    - BUG/MINOR: cache: Inverted variables in http_calc_maxage function
+    - BUG/MEDIUM: filters: Don't try to init filters for disabled proxies
+    - BUG/MINOR: server: Set server without addr but with dns in RMAINT on startup
+    - MINOR: server: Copy configuration file and line for server templates
+    - BUG/MINOR: filters: Skip disabled proxies during startup only
+
 2020/08/03 : 1.8.26
     - BUILD: chunk: properly declare pool_head_trash as extern
     - BUILD: cache: avoid a build warning with some compilers/linkers
