@@ -1506,8 +1506,9 @@ static int peer_treat_updatemsg(struct appctx *appctx, struct peer *p, int updt,
 			dc = p->dcache;
 			if (*msg_cur == end) {
 				/* Dictionary entry key without value. */
-				if (id > dc->max_entries)
-					break;
+				if (id > dc->max_entries) {
+					goto malformed_unlock;
+				}
 				/* IDs sent over the network are numbered from 1. */
 				de = dc->rx[id - 1].de;
 			}
