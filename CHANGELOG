@@ -1,6 +1,34 @@
 ChangeLog :
 ===========
 
+2020/11/13 : 2.3.1
+    - BUG/MINOR: ssl: don't report 1024 bits DH param load error when it's higher
+    - MINOR: http-htx: Add understandable errors for the errorfiles parsing
+    - DOC: config: Fix a typo on ssl_c_chain_der
+    - BUG/MEDIUM: ssl/crt-list: correctly insert crt-list line if crt already loaded
+    - BUG/MINOR: pattern: a sample marked as const could be written
+    - BUG/MINOR: lua: set buffer size during map lookups
+    - BUG/MINOR: stats: free dynamically stats fields/lines on shutdown
+    - BUG/MINOR: peers: Do not ignore a protocol error for dictionary entries.
+    - BUG/MINOR: peers: Missing TX cache entries reset.
+    - BUG/MEDIUM: peers: fix decoding of multi-byte length in stick-table messages
+    - BUG/MINOR: http-fetch: Extract cookie value even when no cookie name
+    - BUG/MINOR: http-fetch: Fix calls w/o parentheses of the cookie sample fetches
+    - BUG/MEDIUM: check: reuse srv proto only if using same mode
+    - MINOR: check: report error on incompatible proto
+    - MINOR: check: report error on incompatible connect proto
+    - BUG/MINOR: http-htx: Handle warnings when parsing http-error and http-errors
+    - BUG/MAJOR: spoe: Be sure to remove all references on a released spoe applet
+    - MINOR: spoe: Don't close connection in sync mode on processing timeout
+    - BUG/MINOR: tcpcheck: Don't warn on unused rules if check option is after
+    - MINOR: init: Fix the prototype for per-thread free callbacks
+    - MINOR: config/mux-h2: Return ERR_ flags from init_h2() instead of a status
+    - MINOR: cfgparse: tighten the scope of newnameserver variable, free it on error.
+    - REGTEST: ssl: test wildcard and multi-type + exclusions
+    - REGTEST: ssl: mark reg-tests/ssl/ssl_crt-list_filters.vtc as broken
+    - MINOR: peers: Add traces to peer_treat_updatemsg().
+    - REGTEST: make ssl_client_samples and ssl_server_samples require to 2.2
+
 2020/11/05 : 2.3.0
     - CLEANUP: pattern: remove unused entry "tree" in pattern.val
     - BUILD: ssl: use SSL_CTRL_GET_RAW_CIPHERLIST instead of OpenSSL versions
