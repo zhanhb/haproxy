@@ -960,7 +960,6 @@ out:
 int cfg_parse_resolvers(const char *file, int linenum, char **args, int kwm)
 {
 	static struct dns_resolvers *curr_resolvers = NULL;
-	struct dns_nameserver *newnameserver = NULL;
 	const char *err;
 	int err_code = 0;
 	char *errmsg = NULL;
@@ -1021,6 +1020,7 @@ int cfg_parse_resolvers(const char *file, int linenum, char **args, int kwm)
 		HA_SPIN_INIT(&curr_resolvers->lock);
 	}
 	else if (strcmp(args[0], "nameserver") == 0) { /* nameserver definition */
+		struct dns_nameserver *newnameserver = NULL;
 		struct sockaddr_storage *sk;
 		int port1, port2;
 		struct protocol *proto;
@@ -1094,6 +1094,7 @@ int cfg_parse_resolvers(const char *file, int linenum, char **args, int kwm)
 		newnameserver->addr = *sk;
 	}
 	else if (strcmp(args[0], "parse-resolv-conf") == 0) {
+		struct dns_nameserver *newnameserver = NULL;
 		const char *whitespace = "\r\n\t ";
 		char *resolv_line = NULL;
 		int resolv_linenum = 0;
@@ -1182,6 +1183,7 @@ int cfg_parse_resolvers(const char *file, int linenum, char **args, int kwm)
 			if (newnameserver->conf.file == NULL) {
 				ha_alert("parsing [/etc/resolv.conf:%d] : out of memory.\n", resolv_linenum);
 				err_code |= ERR_ALERT | ERR_FATAL;
+				free(newnameserver);
 				goto resolv_out;
 			}
 
@@ -1189,6 +1191,8 @@ int cfg_parse_resolvers(const char *file, int linenum, char **args, int kwm)
 			if (newnameserver->id == NULL) {
 				ha_alert("parsing [/etc/resolv.conf:%d] : out of memory.\n", resolv_linenum);
 				err_code |= ERR_ALERT | ERR_FATAL;
+				free((char *)newnameserver->conf.file);
+				free(newnameserver);
 				goto resolv_out;
 			}
 
@@ -1338,7 +1342,7 @@ resolv_out:
 			err_code |= ERR_ALERT | ERR_FATAL;
 			goto out;
 		}
-	} /* neither "nameserver" nor "resolvers" */
+	}
 	else if (*args[0] != 0) {
 		ha_alert("parsing [%s:%d] : unknown keyword '%s' in '%s' section\n", file, linenum, args[0], cursection);
 		err_code |= ERR_ALERT | ERR_FATAL;
