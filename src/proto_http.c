@@ -11461,6 +11461,8 @@ smp_fetch_capture_res_ver(const struct arg *args, struct sample *smp, const char
 int smp_fetch_cookie(const struct arg *args, struct sample *smp, const char *kw, void *private)
 {
 	struct http_txn *txn;
+	char *cook = NULL;
+	size_t cook_l = 0;
 	struct hdr_idx *idx;
 	struct hdr_ctx *ctx = smp->ctx.a[2];
 	const struct http_msg *msg;
@@ -11469,8 +11471,10 @@ int smp_fetch_cookie(const struct arg *args, struct sample *smp, const char *kw,
 	char *sol;
 	int found = 0;
 
-	if (!args || args->type != ARGT_STR)
-		return 0;
+	if (args && args->type == ARGT_STR) {
+		cook = args->data.str.str;
+		cook_l = args->data.str.len;
+	}
 
 	if (!ctx) {
 		/* first call */
@@ -11516,7 +11520,7 @@ int smp_fetch_cookie(const struct arg *args, struct sample *smp, const char *kw,
 			if (!http_find_header2(hdr_name, hdr_name_len, sol, idx, ctx))
 				goto out;
 
-			if (ctx->vlen < args->data.str.len + 1)
+			if (ctx->vlen < cook_l + 1)
 				continue;
 
 			smp->ctx.a[0] = ctx->line + ctx->val;
@@ -11526,7 +11530,7 @@ int smp_fetch_cookie(const struct arg *args, struct sample *smp, const char *kw,
 		smp->data.type = SMP_T_STR;
 		smp->flags |= SMP_F_CONST;
 		smp->ctx.a[0] = extract_cookie_value(smp->ctx.a[0], smp->ctx.a[1],
-						 args->data.str.str, args->data.str.len,
+						 cook, cook_l,
 						 (smp->opt & SMP_OPT_DIR) == SMP_OPT_DIR_REQ,
 						 &smp->data.u.str.str,
 						 &smp->data.u.str.len);
@@ -11568,10 +11572,14 @@ smp_fetch_cookie_cnt(const struct arg *args, struct sample *smp, const char *kw,
 	int hdr_name_len;
 	int cnt;
 	char *val_beg, *val_end;
+	char *cook = NULL;
+	size_t cook_l = 0;
 	char *sol;
 
-	if (!args || args->type != ARGT_STR)
-		return 0;
+	if (args && args->type == ARGT_STR){
+		cook = args->data.str.str;
+		cook_l = args->data.str.len;
+	}
 
 	CHECK_HTTP_MESSAGE_FIRST();
 
@@ -11599,7 +11607,7 @@ smp_fetch_cookie_cnt(const struct arg *args, struct sample *smp, const char *kw,
 			if (!http_find_header2(hdr_name, hdr_name_len, sol, idx, &ctx))
 				break;
 
-			if (ctx.vlen < args->data.str.len + 1)
+			if (ctx.vlen < cook_l + 1)
 				continue;
 
 			val_beg = ctx.line + ctx.val;
@@ -11609,7 +11617,7 @@ smp_fetch_cookie_cnt(const struct arg *args, struct sample *smp, const char *kw,
 		smp->data.type = SMP_T_STR;
 		smp->flags |= SMP_F_CONST;
 		while ((val_beg = extract_cookie_value(val_beg, val_end,
-						       args->data.str.str, args->data.str.len,
+						       cook, cook_l,
 						       (smp->opt & SMP_OPT_DIR) == SMP_OPT_DIR_REQ,
 						       &smp->data.u.str.str,
 						       &smp->data.u.str.len))) {
