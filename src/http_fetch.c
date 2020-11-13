@@ -2209,10 +2209,14 @@ static int smp_fetch_cookie(const struct arg *args, struct sample *smp, const ch
 {
 	/* possible keywords: req.cookie / cookie / cook, res.cookie / scook / set-cookie */
 	struct channel *chn = ((kw[0] == 'c' || kw[2] == 'q') ? SMP_REQ_CHN(smp) : SMP_RES_CHN(smp));
+	char *cook = NULL;
+	size_t cook_l = 0;
 	int found = 0;
 
-	if (!args || args->type != ARGT_STR)
-		return 0;
+	if (args && args->type == ARGT_STR) {
+		cook = args->data.str.area;
+		cook_l = args->data.str.data;
+	}
 
 	if (smp->px->options2 & PR_O2_USE_HTX) {
 		/* HTX version */
@@ -2252,7 +2256,7 @@ static int smp_fetch_cookie(const struct arg *args, struct sample *smp, const ch
 				if (!http_find_header(htx, hdr, ctx, 0))
 					goto out;
 
-				if (ctx->value.len < args->data.str.data + 1)
+				if (ctx->value.len < cook_l + 1)
 					continue;
 
 				smp->ctx.a[0] = ctx->value.ptr;
@@ -2262,7 +2266,7 @@ static int smp_fetch_cookie(const struct arg *args, struct sample *smp, const ch
 			smp->data.type = SMP_T_STR;
 			smp->flags |= SMP_F_CONST;
 			smp->ctx.a[0] = http_extract_cookie_value(smp->ctx.a[0], smp->ctx.a[1],
-								  args->data.str.area, args->data.str.data,
+								  cook, cook_l,
 								  (smp->opt & SMP_OPT_DIR) == SMP_OPT_DIR_REQ,
 								  &smp->data.u.str.area,
 								  &smp->data.u.str.data);
@@ -2329,7 +2333,7 @@ static int smp_fetch_cookie(const struct arg *args, struct sample *smp, const ch
 				if (!http_find_header2(hdr_name, hdr_name_len, sol, idx, ctx))
 					goto out;
 
-				if (ctx->vlen < args->data.str.data + 1)
+				if (ctx->vlen < cook_l + 1)
 					continue;
 
 				smp->ctx.a[0] = ctx->line + ctx->val;
@@ -2339,7 +2343,7 @@ static int smp_fetch_cookie(const struct arg *args, struct sample *smp, const ch
 			smp->data.type = SMP_T_STR;
 			smp->flags |= SMP_F_CONST;
 			smp->ctx.a[0] = http_extract_cookie_value(smp->ctx.a[0], smp->ctx.a[1],
-								  args->data.str.area, args->data.str.data,
+								  cook, cook_l,
 								  (smp->opt & SMP_OPT_DIR) == SMP_OPT_DIR_REQ,
 								  &smp->data.u.str.area, &smp->data.u.str.data);
 			if (smp->ctx.a[0]) {
@@ -2385,10 +2389,14 @@ static int smp_fetch_cookie_cnt(const struct arg *args, struct sample *smp, cons
 	/* possible keywords: req.cook_cnt / cook_cnt, res.cook_cnt / scook_cnt */
 	struct channel *chn = ((kw[0] == 'c' || kw[2] == 'q') ? SMP_REQ_CHN(smp) : SMP_RES_CHN(smp));
 	char *val_beg, *val_end;
+	char *cook = NULL;
+	size_t cook_l = 0;
 	int cnt;
 
-	if (!args || args->type != ARGT_STR)
-		return 0;
+	if (args && args->type == ARGT_STR){
+		cook = args->data.str.area;
+		cook_l = args->data.str.data;
+	}
 
 	if (smp->px->options2 & PR_O2_USE_HTX) {
 		/* HTX version */
@@ -2410,7 +2418,7 @@ static int smp_fetch_cookie_cnt(const struct arg *args, struct sample *smp, cons
 				if (!http_find_header(htx, hdr, &ctx, 0))
 					break;
 
-				if (ctx.value.len < args->data.str.data + 1)
+				if (ctx.value.len < cook_l + 1)
 					continue;
 
 				val_beg = ctx.value.ptr;
@@ -2420,7 +2428,7 @@ static int smp_fetch_cookie_cnt(const struct arg *args, struct sample *smp, cons
 			smp->data.type = SMP_T_STR;
 			smp->flags |= SMP_F_CONST;
 			while ((val_beg = http_extract_cookie_value(val_beg, val_end,
-								    args->data.str.area, args->data.str.data,
+								    cook, cook_l,
 								    (smp->opt & SMP_OPT_DIR) == SMP_OPT_DIR_REQ,
 								    &smp->data.u.str.area,
 								    &smp->data.u.str.data))) {
@@ -2458,7 +2466,7 @@ static int smp_fetch_cookie_cnt(const struct arg *args, struct sample *smp, cons
 				if (!http_find_header2(hdr_name, hdr_name_len, sol, idx, &ctx))
 					break;
 
-				if (ctx.vlen < args->data.str.data + 1)
+				if (ctx.vlen < cook_l + 1)
 					continue;
 
 				val_beg = ctx.line + ctx.val;
@@ -2468,7 +2476,7 @@ static int smp_fetch_cookie_cnt(const struct arg *args, struct sample *smp, cons
 			smp->data.type = SMP_T_STR;
 			smp->flags |= SMP_F_CONST;
 			while ((val_beg = http_extract_cookie_value(val_beg, val_end,
-								    args->data.str.area, args->data.str.data,
+								    cook, cook_l,
 								    (smp->opt & SMP_OPT_DIR) == SMP_OPT_DIR_REQ,
 								    &smp->data.u.str.area, &smp->data.u.str.data))) {
 				cnt++;
