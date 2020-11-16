@@ -656,15 +656,24 @@ flt_http_chunk_trailers(struct stream *s, struct http_msg *msg)
 int
 flt_http_end(struct stream *s, struct http_msg *msg)
 {
+	unsigned long long *strm_off = &FLT_STRM_OFF(s, msg->chn);
+	unsigned int offset = 0;
 	int ret = 1;
 
 	RESUME_FILTER_LOOP(s, msg->chn) {
+		unsigned long long flt_off = FLT_OFF(filter, msg->chn);
+		offset = flt_off - *strm_off;
+
 		if (FLT_OPS(filter)->http_end) {
 			ret = FLT_OPS(filter)->http_end(s, filter, msg);
 			if (ret <= 0)
 				BREAK_EXECUTION(s, msg->chn, end);
 		}
 	} RESUME_FILTER_END;
+
+	c_adv(msg->chn, offset);
+	*strm_off += offset;
+
 end:
 	return ret;
 }
