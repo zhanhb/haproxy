@@ -50,7 +50,7 @@ struct action_kw_list http_res_keywords = {
 /*
  * Return the struct http_req_action_kw associated to a keyword.
  */
-static struct action_kw *action_http_req_custom(const char *kw)
+struct action_kw *action_http_req_custom(const char *kw)
 {
 	return action_lookup(&http_req_keywords.list, kw);
 }
@@ -58,7 +58,7 @@ static struct action_kw *action_http_req_custom(const char *kw)
 /*
  * Return the struct http_res_action_kw associated to a keyword.
  */
-static struct action_kw *action_http_res_custom(const char *kw)
+struct action_kw *action_http_res_custom(const char *kw)
 {
 	return action_lookup(&http_res_keywords.list, kw);
 }
