@@ -1,6 +1,42 @@
 ChangeLog :
 ===========
 
+2020/11/28 : 2.3.2
+    - BUILD: http-htx: fix build warning regarding long type in printf
+    - CLEANUP: cfgparse: remove duplicate registration for transparent build options
+    - BUG/MEDIUM: filters: Forward all filtered data at the end of http filtering
+    - BUG/MINOR: http-ana: Don't wait for the body of CONNECT requests
+    - DOC: add missing 3.10 in the summary
+    - BUG/MINOR: ssl: segv on startup when AKID but no keyid
+    - BUG/MEDIUM: http-ana: Don't eval http-after-response ruleset on empty messages
+    - BUG/MEDIUM: ssl/crt-list: bundle support broken in crt-list
+    - BUG/MEDIUM: ssl: error when no certificate are found
+    - BUG/MINOR: ssl/crt-list: load bundle in crt-list only if activated
+    - BUG/MEDIUM: ssl/crt-list: fix error when no file found
+    - BUILD: makefile: enable crypt(3) for OpenBSD
+    - DOC: clarify how to create a fallback crt
+    - CLEANUP: connection: do not use conn->owner when the session is known
+    - BUG/MAJOR: connection: reset conn->owner when detaching from session list
+    - BUG/MINOR: http_htx: Fix searching headers by substring
+    - DOC: better describes how to configure a fallback crt
+    - BUG/MAJOR: filters: Always keep all offsets up to date during data filtering
+    - MEDIUM: cache: Change caching conditions
+    - DOC: cache: Add new caching limitation information
+    - REGTESTS: Add sample_fetches/cook.vtc
+    - REGTESTS: converter: add url_dec test
+    - MINOR: http_act: Add -m flag for del-header name matching method
+    - BUILD: Make DEBUG part of .build_opts
+    - BUILD: Show the value of DEBUG= in haproxy -vv
+    - BUG/MEDIUM: http_act: Restore init of log-format list
+    - BUG/MAJOR: peers: fix partial message decoding
+    - DOC: better document the config file format and escaping/quoting rules
+    - DOC: Clarify %HP description in log-format
+    - BUG/MINOR: tcpcheck: Don't forget to reset tcp-check flags on new kind of check
+    - MINOR: tcpcheck: Don't handle anymore in-progress send rules in tcpcheck_main
+    - BUG/MAJOR: tcpcheck: Allocate input and output buffers from the buffer pool
+    - DOC: config: Move req.hdrs and req.hdrs_bin in L7 samples fetches section
+    - BUG/MINOR: http-fetch: Fix smp_fetch_body() when called from a health-check
+
 2020/11/13 : 2.3.1
     - BUG/MINOR: ssl: don't report 1024 bits DH param load error when it's higher
     - MINOR: http-htx: Add understandable errors for the errorfiles parsing
