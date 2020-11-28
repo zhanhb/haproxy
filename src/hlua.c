@@ -7629,9 +7629,6 @@ void hlua_init(void)
 	 * process of HAProxy, this abort() is tolerated.
 	 */
 
-	/* Initialise lua. */
-	luaL_openlibs(gL.T);
-
 	/* Set safe environment for the initialisation. */
 	if (!SET_SAFE_LJMP(gL.T)) {
 		if (lua_type(gL.T, -1) == LUA_TSTRING)
@@ -7641,6 +7638,9 @@ void hlua_init(void)
 		fprintf(stderr, "Lua init: %s.\n", error_msg);
 		exit(1);
 	}
+
+	/* Initialise lua. */
+	luaL_openlibs(gL.T);
 
 	/*
 	 *
