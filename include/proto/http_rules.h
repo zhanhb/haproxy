@@ -45,6 +45,10 @@ static inline void http_res_keywords_register(struct action_kw_list *kw_list)
 	LIST_ADDQ(&http_res_keywords.list, &kw_list->list);
 }
 
+struct action_kw *action_http_req_custom(const char *kw);
+struct action_kw *action_http_res_custom(const char *kw);
+struct action_kw *action_http_after_res_custom(const char *kw);
+
 #endif /* _PROTO_HTTP_RULES_H */
 
 /*
