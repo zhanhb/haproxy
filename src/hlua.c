@@ -6078,6 +6078,8 @@ __LJMP static int hlua_register_converters(lua_State *L)
 	int ref;
 	int len;
 	struct hlua_function *fcn;
+	struct sample_conv *sc;
+	struct chunk *trash;
 
 	MAY_LJMP(check_args(L, 2, "register_converters"));
 
@@ -6086,6 +6088,15 @@ __LJMP static int hlua_register_converters(lua_State *L)
 
 	/* Second argument : lua function. */
 	ref = MAY_LJMP(hlua_checkfunction(L, 2));
+
+	/* Check if the converter is already registered */
+	trash = get_trash_chunk();
+	chunk_printf(trash, "lua.%s", name);
+	sc = find_sample_conv(trash->str, trash->len);
+	if (sc != NULL) {
+		ha_warning("Trying to register converter 'lua.%s' more than once. "
+		           "This will become a hard error in version 2.5.\n", name);
+	}
 
 	/* Allocate and fill the sample fetch keyword struct. */
 	sck = calloc(1, sizeof(*sck) + sizeof(struct sample_conv) * 2);
@@ -6135,6 +6146,8 @@ __LJMP static int hlua_register_fetches(lua_State *L)
 	int len;
 	struct sample_fetch_kw_list *sfk;
 	struct hlua_function *fcn;
+	struct sample_fetch *sf;
+	struct chunk *trash;
 
 	MAY_LJMP(check_args(L, 2, "register_fetches"));
 
@@ -6143,6 +6156,15 @@ __LJMP static int hlua_register_fetches(lua_State *L)
 
 	/* Second argument : lua function. */
 	ref = MAY_LJMP(hlua_checkfunction(L, 2));
+
+	/* Check if the sample-fetch is already registered */
+	trash = get_trash_chunk();
+	chunk_printf(trash, "lua.%s", name);
+	sf = find_sample_fetch(trash->str, trash->len);
+	if (sf != NULL) {
+		ha_warning("Trying to register sample-fetch 'lua.%s' more than once. "
+		           "This will become a hard error in version 2.5.\n", name);
+	}
 
 	/* Allocate and fill the sample fetch keyword struct. */
 	sfk = calloc(1, sizeof(*sfk) + sizeof(struct sample_fetch) * 2);
@@ -6926,6 +6948,8 @@ __LJMP static int hlua_register_action(lua_State *L)
 	int len;
 	struct hlua_function *fcn;
 	int nargs;
+	struct chunk *trash;
+	struct action_kw *akw;
 
 	/* Initialise the number of expected arguments at 0. */
 	nargs = 0;
@@ -6952,6 +6976,25 @@ __LJMP static int hlua_register_action(lua_State *L)
 	while (lua_next(L, 2) != 0) {
 		if (lua_type(L, -1) != LUA_TSTRING)
 			WILL_LJMP(luaL_error(L, "register_action: second argument must be a table of strings"));
+
+		/* Check if action exists */
+		trash = get_trash_chunk();
+		chunk_printf(trash, "lua.%s", name);
+		if (strcmp(lua_tostring(L, -1), "tcp-req") == 0) {
+			akw = tcp_req_cont_action(trash->str);
+		} else if (strcmp(lua_tostring(L, -1), "tcp-res") == 0) {
+			akw = tcp_res_cont_action(trash->str);
+		} else if (strcmp(lua_tostring(L, -1), "http-req") == 0) {
+			akw = action_http_req_custom(trash->str);
+		} else if (strcmp(lua_tostring(L, -1), "http-res") == 0) {
+			akw = action_http_res_custom(trash->str);
+		} else {
+			akw = NULL;
+		}
+		if (akw != NULL) {
+			ha_warning("Trying to register action 'lua.%s' more than once. "
+			           "This will become a hard error in version 2.5.\n", name);
+		}
 
 		/* Check required environment. Only accepted "http" or "tcp". */
 		/* Allocate and fill the sample fetch keyword struct. */
@@ -7047,6 +7090,8 @@ __LJMP static int hlua_register_service(lua_State *L)
 	int ref;
 	int len;
 	struct hlua_function *fcn;
+	struct chunk *trash;
+	struct action_kw *akw;
 
 	MAY_LJMP(check_args(L, 3, "register_service"));
 
@@ -7058,6 +7103,15 @@ __LJMP static int hlua_register_service(lua_State *L)
 
 	/* Third argument : lua function. */
 	ref = MAY_LJMP(hlua_checkfunction(L, 3));
+
+	/* Check for service already registered */
+	trash = get_trash_chunk();
+	chunk_printf(trash, "lua.%s", name);
+	akw = service_find(trash->str);
+	if (akw != NULL) {
+		ha_warning("Trying to register service 'lua.%s' more than once. "
+		           "This will become a hard error in version 2.5.\n", name);
+	}
 
 	/* Allocate and fill the sample fetch keyword struct. */
 	akl = calloc(1, sizeof(*akl) + sizeof(struct action_kw) * 2);
@@ -7276,6 +7330,9 @@ __LJMP static int hlua_register_cli(lua_State *L)
 	struct hlua_function *fcn;
 	int index;
 	int i;
+	struct chunk *trash;
+	const char *kw[5];
+	struct cli_kw *cli_kw;
 
 	MAY_LJMP(check_args(L, 3, "register_cli"));
 
@@ -7288,6 +7345,30 @@ __LJMP static int hlua_register_cli(lua_State *L)
 
 	/* Third and fourth argument : lua function. */
 	ref_io = MAY_LJMP(hlua_checkfunction(L, 3));
+
+	/* Check for CLI service already registered */
+	trash = get_trash_chunk();
+	index = 0;
+	lua_pushnil(L);
+	memset(kw, 0, sizeof(kw));
+	while (lua_next(L, 1) != 0) {
+		if (index >= CLI_PREFIX_KW_NB)
+			WILL_LJMP(luaL_argerror(L, 1, "1st argument must be a table with a maximum of 5 entries"));
+		if (lua_type(L, -1) != LUA_TSTRING)
+			WILL_LJMP(luaL_argerror(L, 1, "1st argument must be a table filled with strings"));
+		kw[index] = lua_tostring(L, -1);
+		if (index == 0)
+			chunk_printf(trash, "%s", kw[index]);
+		else
+			chunk_appendf(trash, " %s", kw[index]);
+		index++;
+		lua_pop(L, 1);
+	}
+	cli_kw = cli_find_kw_exact((char **)kw);
+	if (cli_kw != NULL) {
+		ha_warning("Trying to register CLI keyword 'lua.%s' more than once. "
+		           "This will become a hard error in version 2.5.\n", trash->str);
+	}
 
 	/* Allocate and fill the sample fetch keyword struct. */
 	cli_kws = calloc(1, sizeof(*cli_kws) + sizeof(struct cli_kw) * 2);
