@@ -413,6 +413,7 @@ static inline void stream_choose_redispatch(struct stream *s)
 }
 
 void service_keywords_register(struct action_kw_list *kw_list);
+struct action_kw *service_find(const char *kw);
 void list_services(FILE *out);
 
 #endif /* _PROTO_STREAM_H */
