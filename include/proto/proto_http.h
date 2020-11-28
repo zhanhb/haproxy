@@ -127,6 +127,7 @@ enum http_meth_t find_http_meth(const char *str, const int len);
 
 struct action_kw *action_http_req_custom(const char *kw);
 struct action_kw *action_http_res_custom(const char *kw);
+struct action_kw *action_http_after_res_custom(const char *kw);
 int val_hdr(struct arg *arg, char **err_msg);
 
 int smp_prefetch_http(struct proxy *px, struct stream *s, unsigned int opt,
