@@ -8172,6 +8172,16 @@ void hlua_init(void)
 	 * process of HAProxy, this abort() is tolerated.
 	 */
 
+	/* Set safe environment for the initialisation. */
+	if (!SET_SAFE_LJMP(gL.T)) {
+		if (lua_type(gL.T, -1) == LUA_TSTRING)
+			error_msg = lua_tostring(gL.T, -1);
+		else
+			error_msg = "critical error";
+		fprintf(stderr, "Lua init: %s.\n", error_msg);
+		exit(1);
+	}
+
 	/* Initialise lua. */
 	luaL_openlibs(gL.T);
 #define HLUA_PREPEND_PATH_TOSTRING1(x) #x
@@ -8184,16 +8194,6 @@ void hlua_init(void)
 #endif
 #undef HLUA_PREPEND_PATH_TOSTRING
 #undef HLUA_PREPEND_PATH_TOSTRING1
-
-	/* Set safe environment for the initialisation. */
-	if (!SET_SAFE_LJMP(gL.T)) {
-		if (lua_type(gL.T, -1) == LUA_TSTRING)
-			error_msg = lua_tostring(gL.T, -1);
-		else
-			error_msg = "critical error";
-		fprintf(stderr, "Lua init: %s.\n", error_msg);
-		exit(1);
-	}
 
 	/*
 	 *
