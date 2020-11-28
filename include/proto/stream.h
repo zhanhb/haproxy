@@ -361,6 +361,7 @@ static int inline stream_res_wakeup(struct stream *s)
 }
 
 void service_keywords_register(struct action_kw_list *kw_list);
+struct action_kw *service_find(const char *kw);
 
 #endif /* _PROTO_STREAM_H */
 
