@@ -26,6 +26,7 @@
 
 struct cli_kw* cli_find_kw(char **args);
 void cli_register_kw(struct cli_kw_list *kw_list);
+struct cli_kw* cli_find_kw_exact(char **args);
 
 int cli_has_level(struct appctx *appctx, int level);
 

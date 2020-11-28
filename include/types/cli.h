@@ -23,8 +23,10 @@
 #include <common/mini-clist.h>
 #include <types/applet.h>
 
+#define CLI_PREFIX_KW_NB 5
+
 struct cli_kw {
-	const char *str_kw[5];   /* keywords ended by NULL, limited to 5
+	const char *str_kw[CLI_PREFIX_KW_NB]; /* keywords ended by NULL, limited to CLI_PREFIX_KW_NB
 				 separated keywords combination */
 	const char *usage;   /* usage message */
 	int (*parse)(char **args, struct appctx *appctx, void *private);
