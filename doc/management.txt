@@ -1125,7 +1125,7 @@ S (Servers).
  98. need_conn_est [...S]: estimated needed number of connections
 
 
-9.2) Typed output format
+9.2. Typed output format
 ------------------------
 
 Both "show info" and "show stat" support a mode where each output value comes
