@@ -1111,7 +1111,7 @@ S (Servers).
  93. ttime_max [..BS]: the maximum observed total session time in ms
 
 
-9.2) Typed output format
+9.2. Typed output format
 ------------------------
 
 Both "show info" and "show stat" support a mode where each output value comes
