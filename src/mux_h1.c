@@ -1044,7 +1044,11 @@ static size_t h1_process_eom(struct h1s *h1s, struct h1m *h1m, struct htx *htx, 
 
 	h1s->flags &= ~H1S_F_APPEND_EOM;
 	h1m->state = H1_MSG_DONE;
-	h1s->cs->flags |= CS_FL_EOI;
+	/* Don't set EOI on the conn-stream for protocol upgrade requests, wait
+	 * the response to do so or not depending on the status code.
+	 */
+	if (!(h1m->flags & H1_MF_CONN_UPG))
+		h1s->cs->flags |= CS_FL_EOI;
 	return (sizeof(struct htx_blk) + 1);
 }
 
@@ -1927,6 +1931,13 @@ static size_t h1_process_output(struct h1c *h1c, struct buffer *buf, size_t coun
 
 	htx_to_buf(chn_htx, buf);
  out:
+	/* Both the request and the response reached the DONE state. So set EOI
+	 * flag on the conn-stream. Most of time, the flag will already be set,
+	 * except for protocol upgrades.
+	 */
+	if (h1s->cs && h1s->req.state == H1_MSG_DONE && h1s->res.state == H1_MSG_DONE)
+			h1s->cs->flags |= CS_FL_EOI;
+
 	if (!buf_room_for_htx_data(&h1c->obuf))
 		h1c->flags |= H1C_F_OUT_FULL;
   end:
