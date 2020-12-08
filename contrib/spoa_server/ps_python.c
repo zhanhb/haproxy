@@ -66,7 +66,7 @@ static PyObject *ps_python_set_var_null(PyObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, "s#i", &name, &name_len, &scope))
 		return NULL;
 	if (!set_var_null(worker, name, name_len, scope)) {
-		PyErr_SetString(spoa_error, "No space left available");
+		PyErr_SetString(spoa_error, "No more memory space available");
 		return NULL;
 	}
 	Py_RETURN_NONE;
@@ -82,7 +82,7 @@ static PyObject *ps_python_set_var_boolean(PyObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, "s#ii", &name, &name_len, &scope, &value))
 		return NULL;
 	if (!set_var_bool(worker, name, name_len, scope, value)) {
-		PyErr_SetString(spoa_error, "No space left available");
+		PyErr_SetString(spoa_error, "No more memory space available");
 		return NULL;
 	}
 	Py_RETURN_NONE;
@@ -98,7 +98,7 @@ static PyObject *ps_python_set_var_int32(PyObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, "s#ii", &name, &name_len, &scope, &value))
 		return NULL;
 	if (!set_var_int32(worker, name, name_len, scope, value)) {
-		PyErr_SetString(spoa_error, "No space left available");
+		PyErr_SetString(spoa_error, "No more memory space available");
 		return NULL;
 	}
 	Py_RETURN_NONE;
@@ -114,7 +114,7 @@ static PyObject *ps_python_set_var_uint32(PyObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, "s#iI", &name, &name_len, &scope, &value))
 		return NULL;
 	if (!set_var_uint32(worker, name, name_len, scope, value)) {
-		PyErr_SetString(spoa_error, "No space left available");
+		PyErr_SetString(spoa_error, "No more memory space available");
 		return NULL;
 	}
 	Py_RETURN_NONE;
@@ -130,7 +130,7 @@ static PyObject *ps_python_set_var_int64(PyObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, "s#il", &name, &name_len, &scope, &value))
 		return NULL;
 	if (!set_var_int64(worker, name, name_len, scope, value)) {
-		PyErr_SetString(spoa_error, "No space left available");
+		PyErr_SetString(spoa_error, "No more memory space available");
 		return NULL;
 	}
 	Py_RETURN_NONE;
@@ -146,7 +146,7 @@ static PyObject *ps_python_set_var_uint64(PyObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, "s#ik", &name, &name_len, &scope, &value))
 		return NULL;
 	if (!set_var_uint64(worker, name, name_len, scope, value)) {
-		PyErr_SetString(spoa_error, "No space left available");
+		PyErr_SetString(spoa_error, "No more memory space available");
 		return NULL;
 	}
 	Py_RETURN_NONE;
@@ -177,7 +177,7 @@ static PyObject *ps_python_set_var_ipv4(PyObject *self, PyObject *args)
 	}
 	memcpy(&ip, PyString_AS_STRING(value), PyString_GET_SIZE(value));
 	if (!set_var_ipv4(worker, name, name_len, scope, &ip)) {
-		PyErr_SetString(spoa_error, "No space left available");
+		PyErr_SetString(spoa_error, "No more memory space available");
 		return NULL;
 	}
 	/* Once we set the IP value in the worker, we don't need it anymore... */
@@ -210,7 +210,7 @@ static PyObject *ps_python_set_var_ipv6(PyObject *self, PyObject *args)
 	}
 	memcpy(&ip, PyString_AS_STRING(value), PyString_GET_SIZE(value));
 	if (!set_var_ipv6(worker, name, name_len, scope, &ip)) {
-		PyErr_SetString(spoa_error, "No space left available");
+		PyErr_SetString(spoa_error, "No more memory space available");
 		return NULL;
 	}
 	/* Once we set the IP value in the worker, we don't need it anymore... */
@@ -229,7 +229,7 @@ static PyObject *ps_python_set_var_str(PyObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, "s#is#", &name, &name_len, &scope, &value, &value_len))
 		return NULL;
 	if (!set_var_string(worker, name, name_len, scope, value, value_len)) {
-		PyErr_SetString(spoa_error, "No space left available");
+		PyErr_SetString(spoa_error, "No more memory space available");
 		return NULL;
 	}
 	Py_RETURN_NONE;
@@ -246,7 +246,7 @@ static PyObject *ps_python_set_var_bin(PyObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, "s#is#", &name, &name_len, &scope, &value, &value_len))
 		return NULL;
 	if (!set_var_bin(worker, name, name_len, scope, value, value_len)) {
-		PyErr_SetString(spoa_error, "No space left available");
+		PyErr_SetString(spoa_error, "No more memory space available");
 		return NULL;
 	}
 	Py_RETURN_NONE;
