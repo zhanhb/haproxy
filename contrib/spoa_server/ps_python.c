@@ -54,7 +54,7 @@ static PyObject *ps_python_register_message(PyObject *self, PyObject *args)
 
 	ps_register_message(&ps_python_bindings, name, (void *)ref);
 
-	return Py_None;
+	Py_RETURN_NONE;
 }
 
 static PyObject *ps_python_set_var_null(PyObject *self, PyObject *args)
@@ -69,7 +69,7 @@ static PyObject *ps_python_set_var_null(PyObject *self, PyObject *args)
 		PyErr_SetString(spoa_error, "No space left available");
 		return NULL;
 	}
-	return Py_None;
+	Py_RETURN_NONE;
 }
 
 static PyObject *ps_python_set_var_boolean(PyObject *self, PyObject *args)
@@ -85,7 +85,7 @@ static PyObject *ps_python_set_var_boolean(PyObject *self, PyObject *args)
 		PyErr_SetString(spoa_error, "No space left available");
 		return NULL;
 	}
-	return Py_None;
+	Py_RETURN_NONE;
 }
 
 static PyObject *ps_python_set_var_int32(PyObject *self, PyObject *args)
@@ -101,7 +101,7 @@ static PyObject *ps_python_set_var_int32(PyObject *self, PyObject *args)
 		PyErr_SetString(spoa_error, "No space left available");
 		return NULL;
 	}
-	return Py_None;
+	Py_RETURN_NONE;
 }
 
 static PyObject *ps_python_set_var_uint32(PyObject *self, PyObject *args)
@@ -117,7 +117,7 @@ static PyObject *ps_python_set_var_uint32(PyObject *self, PyObject *args)
 		PyErr_SetString(spoa_error, "No space left available");
 		return NULL;
 	}
-	return Py_None;
+	Py_RETURN_NONE;
 }
 
 static PyObject *ps_python_set_var_int64(PyObject *self, PyObject *args)
@@ -133,7 +133,7 @@ static PyObject *ps_python_set_var_int64(PyObject *self, PyObject *args)
 		PyErr_SetString(spoa_error, "No space left available");
 		return NULL;
 	}
-	return Py_None;
+	Py_RETURN_NONE;
 }
 
 static PyObject *ps_python_set_var_uint64(PyObject *self, PyObject *args)
@@ -149,7 +149,7 @@ static PyObject *ps_python_set_var_uint64(PyObject *self, PyObject *args)
 		PyErr_SetString(spoa_error, "No space left available");
 		return NULL;
 	}
-	return Py_None;
+	Py_RETURN_NONE;
 }
 
 static PyObject *ps_python_set_var_ipv4(PyObject *self, PyObject *args)
@@ -182,7 +182,7 @@ static PyObject *ps_python_set_var_ipv4(PyObject *self, PyObject *args)
 	}
 	/* Once we set the IP value in the worker, we don't need it anymore... */
 	Py_XDECREF(value);
-	return Py_None;
+	Py_RETURN_NONE;
 }
 
 static PyObject *ps_python_set_var_ipv6(PyObject *self, PyObject *args)
@@ -215,7 +215,7 @@ static PyObject *ps_python_set_var_ipv6(PyObject *self, PyObject *args)
 	}
 	/* Once we set the IP value in the worker, we don't need it anymore... */
 	Py_XDECREF(value);
-	return Py_None;
+	Py_RETURN_NONE;
 }
 
 static PyObject *ps_python_set_var_str(PyObject *self, PyObject *args)
@@ -232,7 +232,7 @@ static PyObject *ps_python_set_var_str(PyObject *self, PyObject *args)
 		PyErr_SetString(spoa_error, "No space left available");
 		return NULL;
 	}
-	return Py_None;
+	Py_RETURN_NONE;
 }
 
 static PyObject *ps_python_set_var_bin(PyObject *self, PyObject *args)
@@ -249,7 +249,7 @@ static PyObject *ps_python_set_var_bin(PyObject *self, PyObject *args)
 		PyErr_SetString(spoa_error, "No space left available");
 		return NULL;
 	}
-	return Py_None;
+	Py_RETURN_NONE;
 }
 
 
