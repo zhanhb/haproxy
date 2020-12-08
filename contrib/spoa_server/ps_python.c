@@ -172,7 +172,7 @@ static PyObject *ps_python_set_var_ipv4(PyObject *self, PyObject *args)
 	if (value == NULL)
 		return NULL;
 	if (PyString_GET_SIZE(value) != sizeof(ip)) {
-		PyErr_Format(spoa_error, "UPv6 manipulation internal error");
+		PyErr_Format(spoa_error, "IPv4 manipulation internal error");
 		return NULL;
 	}
 	memcpy(&ip, PyString_AS_STRING(value), PyString_GET_SIZE(value));
@@ -205,7 +205,7 @@ static PyObject *ps_python_set_var_ipv6(PyObject *self, PyObject *args)
 	if (value == NULL)
 		return NULL;
 	if (PyString_GET_SIZE(value) != sizeof(ip)) {
-		PyErr_Format(spoa_error, "UPv6 manipulation internal error");
+		PyErr_Format(spoa_error, "IPv6 manipulation internal error");
 		return NULL;
 	}
 	memcpy(&ip, PyString_AS_STRING(value), PyString_GET_SIZE(value));
