@@ -32,6 +32,7 @@
 #include <common/tools.h>
 #include <types/global.h>
 #include <proto/dns.h>
+#include <proto/log.h>
 #include <eb32tree.h>
 #include <eb32sctree.h>
 
@@ -2049,6 +2050,10 @@ const char *parse_time_err(const char *text, unsigned *ret, unsigned unit_flags)
 	unsigned long long imult, idiv;
 	unsigned long long omult, odiv;
 	unsigned long long value, result;
+	const char *str = text;
+
+	if (!isdigit((unsigned char)*text))
+		return text;
 
 	omult = odiv = 1;
 
@@ -2079,7 +2084,7 @@ const char *parse_time_err(const char *text, unsigned *ret, unsigned unit_flags)
 	switch (*text) {
 	case '\0': /* no unit = default unit */
 		imult = omult = idiv = odiv = 1;
-		break;
+		goto end;
 	case 's': /* second = unscaled unit */
 		break;
 	case 'u': /* microsecond : "us" */
@@ -2087,7 +2092,7 @@ const char *parse_time_err(const char *text, unsigned *ret, unsigned unit_flags)
 			idiv = 1000000;
 			text++;
 		}
-		break;
+		return text;
 	case 'm': /* millisecond : "ms" or minute: "m" */
 		if (text[1] == 's') {
 			idiv = 1000;
@@ -2105,7 +2110,13 @@ const char *parse_time_err(const char *text, unsigned *ret, unsigned unit_flags)
 		return text;
 		break;
 	}
+	if (*(++text) != '\0') {
+		ha_warning("unexpected character '%c' after the timer value '%s', only "
+			   "(us=microseconds,ms=milliseconds,s=seconds,m=minutes,h=hours,d=days) are supported."
+			   " This will be reported as an error in next versions.\n", *text, str);
+	}
 
+  end:
 	if (omult % idiv == 0) { omult /= idiv; idiv = 1; }
 	if (idiv % omult == 0) { idiv /= omult; omult = 1; }
 	if (imult % odiv == 0) { imult /= odiv; odiv = 1; }
