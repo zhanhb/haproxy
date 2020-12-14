@@ -2866,6 +2866,9 @@ int cfg_parse_listen(const char *file, int linenum, char **args, int kwm)
 				 curproxy->rdp_cookie_name = strdup(defproxy.rdp_cookie_name);
 			curproxy->rdp_cookie_len = defproxy.rdp_cookie_len;
 
+			if (defproxy.cookie_attrs)
+				curproxy->cookie_attrs = strdup(defproxy.cookie_attrs);
+
 			if (defproxy.url_param_name)
 				curproxy->url_param_name = strdup(defproxy.url_param_name);
 			curproxy->url_param_len   = defproxy.url_param_len;
@@ -3020,6 +3023,7 @@ int cfg_parse_listen(const char *file, int linenum, char **args, int kwm)
 		free(defproxy.rdp_cookie_name);
 		free(defproxy.dyncookie_key);
 		free(defproxy.cookie_domain);
+		free(defproxy.cookie_attrs);
 		free(defproxy.url_param_name);
 		free(defproxy.hh_name);
 		free(defproxy.capture_name);
