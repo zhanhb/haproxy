@@ -975,6 +975,7 @@ clean:
 	for dir in . src include/* doc ebtree; do rm -f $$dir/*~ $$dir/*.rej $$dir/core; done
 	rm -f haproxy-$(VERSION).tar.gz haproxy-$(VERSION)$(SUBVERS).tar.gz
 	rm -f haproxy-$(VERSION) haproxy-$(VERSION)$(SUBVERS) nohup.out gmon.out
+	rm -f contrib/*/*.[oas] contrib/*/*/*.[oas] contrib/*/*/*/*.[oas]
 
 tags:
 	find src include \( -name '*.c' -o -name '*.h' \) -print0 | \
