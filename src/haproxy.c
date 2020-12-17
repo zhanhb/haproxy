@@ -1328,6 +1328,21 @@ static char **copy_argv(int argc, char **argv)
 						}
 						break;
 
+					case 'C':
+					case 'n':
+					case 'm':
+					case 'N':
+					case 'L':
+					case 'f':
+					case 'p':
+						/* these options have only 1 parameter which must be copied and can start with a '-' */
+						*newargv++ = *argv++;
+						argc--;
+						if (argc == 0)
+							goto error;
+						*newargv++ = *argv++;
+						argc--;
+						break;
 					default:
 						/* for other options just copy them without parameters, this is also done
 						 * for options like "--foo", but this  will fail in the argument parser.
