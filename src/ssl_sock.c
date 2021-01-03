@@ -6580,10 +6580,8 @@ static int ssl_sock_show_fd(struct buffer *buf, const struct connection *conn, c
  */
 #if (defined SSL_CTRL_SET_TLSEXT_TICKET_KEY_CB && TLS_TICKETS_NO > 0)
 static inline
-struct tls_keys_ref *tlskeys_list_get_next(struct tls_keys_ref *getnext, struct list *end)
+struct tls_keys_ref *tlskeys_list_get_next(struct tls_keys_ref *ref, struct list *end)
 {
-	struct tls_keys_ref *ref = getnext;
-
 	/* Get next list entry. */
 	ref = LIST_NEXT(&ref->list, struct tls_keys_ref *, list);
 
