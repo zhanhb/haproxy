@@ -2143,6 +2143,8 @@ int tcpcheck_main(struct check *check)
 #endif
 			set_server_check_status(check, status, msg);
 		}
+		else
+			set_server_check_status(check, HCHK_STATUS_L7OKD, "(tcp-check)");
 	}
 	else
 		set_server_check_status(check, HCHK_STATUS_L7OKD, "(tcp-check)");
