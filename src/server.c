@@ -4267,7 +4267,7 @@ int srv_init_addr(void)
 		struct server *srv;
 
 		/* servers are in backend only */
-		if (!(curproxy->cap & PR_CAP_BE))
+		if (!(curproxy->cap & PR_CAP_BE) || curproxy->state == PR_STSTOPPED)
 			goto srv_init_addr_next;
 
 		for (srv = curproxy->srv; srv; srv = srv->next)
