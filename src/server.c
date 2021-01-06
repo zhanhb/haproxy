@@ -5277,6 +5277,10 @@ static void srv_cleanup_connections(struct server *srv)
 	int did_remove;
 	int i;
 
+	/* nothing to do if pool-max-conn is null */
+	if (!srv->max_idle_conns)
+		return;
+
 	/* check all threads starting with ours */
 	HA_SPIN_LOCK(OTHER_LOCK, &idle_conn_srv_lock);
 	for (i = tid;;) {
