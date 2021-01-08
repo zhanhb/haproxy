@@ -1,6 +1,73 @@
 ChangeLog :
 ===========
 
+2021/01/08 : 2.1.11
+    - MINOR: http-htx: Add understandable errors for the errorfiles parsing
+    - BUG/MINOR: http-htx: Just warn if payload of an errorfile doesn't match the C-L
+    - BUG/MINOR: pattern: a sample marked as const could be written
+    - BUG/MINOR: lua: set buffer size during map lookups
+    - BUG/MINOR: peers: Do not ignore a protocol error for dictionary entries.
+    - BUG/MINOR: peers: Missing TX cache entries reset.
+    - BUG/MEDIUM: peers: fix decoding of multi-byte length in stick-table messages
+    - BUG/MINOR: http-fetch: Extract cookie value even when no cookie name
+    - BUG/MINOR: http-fetch: Fix calls w/o parentheses of the cookie sample fetches
+    - BUG/MAJOR: spoe: Be sure to remove all references on a released spoe applet
+    - MINOR: spoe: Don't close connection in sync mode on processing timeout
+    - MINOR: cfgparse: tighten the scope of newnameserver variable, free it on error.
+    - BUILD: http-htx: fix build warning regarding long type in printf
+    - BUG/MEDIUM: filters: Forward all filtered data at the end of http filtering
+    - BUG/MINOR: http-ana: Don't wait for the body of CONNECT requests
+    - BUG/MAJOR: filters: Always keep all offsets up to date during data filtering
+    - BUG/MAJOR: peers: fix partial message decoding
+    - DOC: Clarify %HP description in log-format
+    - DOC: config: Move req.hdrs and req.hdrs_bin in L7 samples fetches section
+    - MINOR: plock: use an ARMv8 instruction barrier for the pause instruction
+    - BUG/MINOR: lua: missing "\n" in error message
+    - BUG/MINOR: lua: lua-load doesn't check its parameters
+    - BUG/MINOR: lua: Post init register function are not executed beyond the first one
+    - BUG/MINOR: lua: Some lua init operation are processed unsafe
+    - MINOR: actions: Export actions lookup functions
+    - MINOR: actions: add a function returning a service pointer from its name
+    - MINOR: cli: add a function to look up a CLI service description
+    - BUG/MINOR: lua: warn when registering action, conv, sf, cli or applet multiple times
+    - DOC/MINOR: Fix formatting in Management Guide
+    - BUG/MAJOR: spoa/python: Fixing return None
+    - DOC: spoa/python: Fixing typo in IP related error messages
+    - DOC: spoa/python: Rephrasing memory related error messages
+    - DOC: spoa/python: Fixing typos in comments
+    - BUG/MINOR: spoa/python: Cleanup references for failed Module Addobject operations
+    - BUG/MINOR: spoa/python: Cleanup ipaddress objects if initialization fails
+    - BUG/MEDIUM: spoa/python: Fixing PyObject_Call positional arguments
+    - BUG/MEDIUM: spoa/python: Fixing references to None
+    - DOC: email change of the DeviceAtlas maintainer
+    - BUG/MINOR: tools: make parse_time_err() more strict on the timer validity
+    - BUG/MINOR: tools: Reject size format not starting by a digit
+    - BUG/MEDIUM: lb-leastconn: Reposition a server using the right eweight
+    - CLEANUP: lua: Remove declaration of an inexistant function
+    - CLEANUP: contrib/prometheus-exporter: typo fixes for ssl reuse metric
+    - REGTESTS: make use of HAPROXY_ARGS and pass -dM by default
+    - BUILD: Makefile: have "make clean" destroy .o/.a/.s in contrib subdirs as well
+    - BUG/MINOR: mux-h1: Don't set CS_FL_EOI too early for protocol upgrade requests
+    - BUG/MEDIUM: http-ana: Never for sending data in TUNNEL mode
+    - CONTRIB: halog: fix build issue caused by %L printf format
+    - CONTRIB: halog: mark the has_zero* functions unused
+    - CONTRIB: halog: fix signed/unsigned build warnings on counts and timestamps
+    - CONTRIB: debug: address "poll" utility build on non-linux platforms
+    - BUILD: plock: remove dead code that causes a warning in gcc 11
+    - BUG/MEDIUM: mux_h2: Add missing braces in h2_snd_buf()around trace+wakeup
+    - BUILD: hpack: hpack-tbl-t.h uses VAR_ARRAY but does not include compiler.h
+    - MINOR: atomic: don't use ; to separate instruction on aarch64.
+    - BUG/MINOR: cfgparse: Fail if the strdup() for `rule->be.name` for `use_backend` fails
+    - SCRIPTS: improve announce-release to support different tag and versions
+    - SCRIPTS: make announce release support preparing announces before tag exists
+    - BUG/MINOR: srv: do not init address if backend is disabled
+    - BUILD: Makefile: exclude broken tests by default
+    - MINOR: contrib/prometheus-exporter: export build_info
+    - DOC: fix some spelling issues over multiple files
+    - SCRIPTS: announce-release: fix typo in help message
+    - DOC: Add maintainers for the Prometheus exporter
+    - BUG/MINOR: sample: fix concat() converter's corruption with non-string variables
+
 2020/11/05 : 2.1.10
     - BUG/MEDIUM: ssl: crt-list negative filters don't work
     - MINOR: ssl: reach a ckch_store from a sni_ctx
