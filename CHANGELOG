@@ -1,6 +1,68 @@
 ChangeLog :
 ===========
 
+2021/01/08 : 2.2.7
+    - BUG/MINOR: lua: missing "\n" in error message
+    - BUG/MINOR: lua: lua-load doesn't check its parameters
+    - BUG/MINOR: lua: Post init register function are not executed beyond the first one
+    - BUG/MINOR: lua: Some lua init operation are processed unsafe
+    - MINOR: actions: Export actions lookup functions
+    - MINOR: actions: add a function returning a service pointer from its name
+    - MINOR: cli: add a function to look up a CLI service description
+    - BUG/MINOR: lua: warn when registering action, conv, sf, cli or applet multiple times
+    - BUG/MAJOR: ring: tcp forward on ring can break the reader counter.
+    - BUILD/MINOR: haproxy DragonFlyBSD affinity build update.
+    - DOC/MINOR: Fix formatting in Management Guide
+    - BUG/MINOR: mux-h1: Handle keep-alive timeout for idle frontend connections
+    - BUG/MAJOR: spoa/python: Fixing return None
+    - DOC: spoa/python: Fixing typo in IP related error messages
+    - DOC: spoa/python: Rephrasing memory related error messages
+    - DOC: spoa/python: Fixing typos in comments
+    - BUG/MINOR: spoa/python: Cleanup references for failed Module Addobject operations
+    - BUG/MINOR: spoa/python: Cleanup ipaddress objects if initialization fails
+    - BUG/MEDIUM: spoa/python: Fixing PyObject_Call positional arguments
+    - BUG/MEDIUM: spoa/python: Fixing references to None
+    - DOC: email change of the DeviceAtlas maintainer
+    - BUG/MINOR: http-check: Use right condition to consider HTX message as full
+    - BUG/MINOR: tcpcheck: Don't rearm the check timeout on each read
+    - MINOR: tcpcheck: Only wait for more payload data on HTTP expect rules
+    - BUG/MINOR: tools: make parse_time_err() more strict on the timer validity
+    - BUG/MINOR: tools: Reject size format not starting by a digit
+    - BUG/MEDIUM: lb-leastconn: Reposition a server using the right eweight
+    - CLEANUP: contrib/prometheus-exporter: typo fixes for ssl reuse metric
+    - BUG/MEDIUM: ssl/crt-list: bad behavior with "commit ssl cert"
+    - REGTESTS: make use of HAPROXY_ARGS and pass -dM by default
+    - BUILD: SSL: fine guard for SSL_CTX_add_server_custom_ext call
+    - BUILD: Makefile: have "make clean" destroy .o/.a/.s in contrib subdirs as well
+    - BUG/MINOR: mux-h1: Don't set CS_FL_EOI too early for protocol upgrade requests
+    - BUG/MEDIUM: http-ana: Never for sending data in TUNNEL mode
+    - BUG/MEDIUM: mux-h1: Handle h1_process() failures on a pipelined request
+    - CONTRIB: halog: fix build issue caused by %L printf format
+    - CONTRIB: halog: mark the has_zero* functions unused
+    - CONTRIB: halog: fix signed/unsigned build warnings on counts and timestamps
+    - CONTRIB: debug: address "poll" utility build on non-linux platforms
+    - BUILD: plock: remove dead code that causes a warning in gcc 11
+    - BUILD: ssl: fine guard for SSL_CTX_get0_privatekey call
+    - BUG/MINOR: dns: SRV records ignores duplicated AR records
+    - BUG/MEDIUM: mux_h2: Add missing braces in h2_snd_buf()around trace+wakeup
+    - BUILD: hpack: hpack-tbl-t.h uses VAR_ARRAY but does not include compiler.h
+    - MINOR: atomic: don't use ; to separate instruction on aarch64.
+    - BUG/MINOR: sink: Return an allocation failure in __sink_new if strdup() fails
+    - BUG/MINOR: cfgparse: Fail if the strdup() for `rule->be.name` for `use_backend` fails
+    - BUG/MINOR: tcpcheck: Report a L7OK if the last evaluated rule is a send rule
+    - SCRIPTS: improve announce-release to support different tag and versions
+    - SCRIPTS: make announce release support preparing announces before tag exists
+    - BUG/MINOR: srv: do not init address if backend is disabled
+    - BUG/MINOR: srv: do not cleanup idle conns if pool max is null
+    - MINOR: converter: adding support for url_enc
+    - BUILD: Makefile: exclude broken tests by default
+    - CLEANUP: cfgparse: replace "realloc" with "my_realloc2" to fix to memory leak on error
+    - MINOR: contrib/prometheus-exporter: export build_info
+    - DOC: fix some spelling issues over multiple files
+    - SCRIPTS: announce-release: fix typo in help message
+    - DOC: Add maintainers for the Prometheus exporter
+    - BUG/MINOR: sample: fix concat() converter's corruption with non-string variables
+
 2020/11/30 : 2.2.6
     - BUG/MINOR: ssl: don't report 1024 bits DH param load error when it's higher
     - MINOR: http-htx: Add understandable errors for the errorfiles parsing
