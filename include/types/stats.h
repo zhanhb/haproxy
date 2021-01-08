@@ -317,6 +317,7 @@ enum info_field {
 	INF_FAILED_RESOLUTIONS,
 	INF_TOTAL_BYTES_OUT,
 	INF_BYTES_OUT_RATE,
+	INF_BUILD_INFO,
 
 	/* must always be the last one */
 	INF_TOTAL_FIELDS

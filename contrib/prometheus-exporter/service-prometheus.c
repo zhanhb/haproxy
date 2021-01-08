@@ -20,6 +20,7 @@
 #include <common/initcall.h>
 #include <common/memory.h>
 #include <common/mini-clist.h>
+#include <common/version.h>
 
 #include <types/global.h>
 
@@ -83,12 +84,17 @@ enum {
  */
 #define PROMEX_MAX_METRIC_LENGTH 512
 
+/* Some labels for build_info */
+#define PROMEX_VERSION_LABEL "version=\"" HAPROXY_VERSION "\""
+#define PROMEX_BUILDINFO_LABEL PROMEX_VERSION_LABEL
+
 /* Matrix used to dump global metrics. Each metric points to the next one to be
  * processed or 0 to stop the dump. */
 const int promex_global_metrics[INF_TOTAL_FIELDS] = {
-	[INF_NAME]                           = INF_NBTHREAD,
+	[INF_NAME]                           = INF_BUILD_INFO,
 	[INF_VERSION]                        = 0,
 	[INF_RELEASE_DATE]                   = 0,
+	[INF_BUILD_INFO]                     = INF_NBTHREAD,
 	[INF_NBTHREAD]                       = INF_NBPROC,
 	[INF_NBPROC]                         = INF_PROCESS_NUM,
 	[INF_PROCESS_NUM]                    = INF_UPTIME_SEC,
@@ -450,6 +456,7 @@ const struct ist promex_inf_metric_names[INF_TOTAL_FIELDS] = {
 	[INF_NAME]                           = IST("name"),
 	[INF_VERSION]                        = IST("version"),
 	[INF_RELEASE_DATE]                   = IST("release_date"),
+	[INF_BUILD_INFO]                     = IST("build_info"),
 	[INF_NBTHREAD]                       = IST("nbthread"),
 	[INF_NBPROC]                         = IST("nbproc"),
 	[INF_PROCESS_NUM]                    = IST("relative_process_id"),
@@ -611,7 +618,8 @@ const struct ist promex_st_metric_names[ST_F_TOTAL_FIELDS] = {
 const struct ist promex_inf_metric_desc[INF_TOTAL_FIELDS] = {
 	[INF_NAME]                           = IST("Product name."),
 	[INF_VERSION]                        = IST("HAProxy version."),
-	[INF_RELEASE_DATE]                   = IST("HAProxy realease date."),
+	[INF_RELEASE_DATE]                   = IST("HAProxy release date."),
+	[INF_BUILD_INFO]                     = IST("HAProxy build info."),
 	[INF_NBTHREAD]                       = IST("Configured number of threads."),
 	[INF_NBPROC]                         = IST("Configured number of processes."),
 	[INF_PROCESS_NUM]                    = IST("Relative process id, starting at 1."),
@@ -774,6 +782,7 @@ const struct ist promex_inf_metric_labels[INF_TOTAL_FIELDS] = {
 	[INF_NAME]                           = IST(""),
 	[INF_VERSION]                        = IST(""),
 	[INF_RELEASE_DATE]                   = IST(""),
+	[INF_BUILD_INFO]                     = IST(PROMEX_BUILDINFO_LABEL),
 	[INF_NBTHREAD]                       = IST(""),
 	[INF_NBPROC]                         = IST(""),
 	[INF_PROCESS_NUM]                    = IST(""),
@@ -930,6 +939,7 @@ const struct ist promex_inf_metric_types[INF_TOTAL_FIELDS] = {
 	[INF_NAME]                           = IST("untyped"),
 	[INF_VERSION]                        = IST("untyped"),
 	[INF_RELEASE_DATE]                   = IST("untyped"),
+	[INF_BUILD_INFO]                     = IST("gauge"),
 	[INF_NBTHREAD]                       = IST("gauge"),
 	[INF_NBPROC]                         = IST("gauge"),
 	[INF_PROCESS_NUM]                    = IST("gauge"),
@@ -1269,6 +1279,9 @@ static int promex_dump_global_metrics(struct appctx *appctx, struct htx *htx)
 #endif
 	while (appctx->st2 && appctx->st2 < INF_TOTAL_FIELDS) {
 		switch (appctx->st2) {
+			case INF_BUILD_INFO:
+				metric = mkf_u32(FN_GAUGE, 1);
+				break;
 			case INF_NBTHREAD:
 				metric = mkf_u32(FO_CONFIG|FS_SERVICE, global.nbthread);
 				break;
