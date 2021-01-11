@@ -37,7 +37,7 @@ extern const struct name_desc stat_fields[];
 extern const struct name_desc info_fields[];
 extern const char *stat_status_codes[];
 extern struct applet http_stats_applet;
-
+extern THREAD_LOCAL struct field info[];
 
 int stats_fill_info(struct field *info, int len);
 int stats_fill_fe_stats(struct proxy *px, struct field *stats, int len);

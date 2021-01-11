@@ -251,7 +251,7 @@ const struct name_desc stat_fields[ST_F_TOTAL_FIELDS] = {
 };
 
 /* one line of info */
-static THREAD_LOCAL struct field info[INF_TOTAL_FIELDS];
+THREAD_LOCAL struct field info[INF_TOTAL_FIELDS];
 /* one line of stats */
 static THREAD_LOCAL struct field stats[ST_F_TOTAL_FIELDS];
 
