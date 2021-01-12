@@ -1278,7 +1278,7 @@ static int init_srv_check(struct server *srv)
 	int ret = 0;
 	int check_type;
 
-	if (!srv->do_check)
+	if (!srv->do_check || !(srv->proxy->cap & PR_CAP_BE))
 		goto out;
 
 	check_type = srv->check.tcpcheck_rules->flags & TCPCHK_RULES_PROTO_CHK;
@@ -1403,7 +1403,7 @@ static int init_srv_agent_check(struct server *srv)
 	const char *err;
 	int ret = 0;
 
-	if (!srv->do_agent)
+	if (!srv->do_agent || !(srv->proxy->cap & PR_CAP_BE))
 		goto out;
 
 	/* If there is no connect rule preceding all send / expect rules, an
@@ -2763,6 +2763,12 @@ static int srv_parse_agent_check(char **args, int *cur_arg, struct proxy *curpx,
 	if (srv->do_agent)
 		goto out;
 
+	if (!(curpx->cap & PR_CAP_BE)) {
+		memprintf(errmsg, "'%s' ignored because %s '%s' has no backend capability",
+			  args[*cur_arg], proxy_type_str(curpx), curpx->id);
+		return ERR_WARN;
+	}
+
 	if (!rules) {
 		rules = calloc(1, sizeof(*rules));
 		if (!rules) {
@@ -2962,6 +2968,12 @@ static int srv_parse_no_agent_check(char **args, int *cur_arg, struct proxy *cur
 static int srv_parse_check(char **args, int *cur_arg, struct proxy *curpx, struct server *srv,
 			   char **errmsg)
 {
+	if (!(curpx->cap & PR_CAP_BE)) {
+		memprintf(errmsg, "'%s' ignored because %s '%s' has no backend capability",
+			  args[*cur_arg], proxy_type_str(curpx), curpx->id);
+		return ERR_WARN;
+	}
+
 	srv->do_check = 1;
 	return 0;
 }
