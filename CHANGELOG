@@ -1,6 +1,41 @@
 ChangeLog :
 ===========
 
+2021/01/13 : 1.8.28
+    - BUG/MINOR: config: copy extra cookie attributes from dfl proxy
+    - BUG/MINOR: http-fetch: Extract cookie value even when no cookie name
+    - BUG/MINOR: http-fetch: Fix calls w/o parentheses of the cookie sample fetches
+    - MINOR: spoe: Don't close connection in sync mode on processing timeout
+    - DOC: config: Move req.hdrs and req.hdrs_bin in L7 samples fetches section
+    - BUG/MINOR: lua: lua-load doesn't check its parameters
+    - BUG/MINOR: lua: Post init register function are not executed beyond the first one
+    - BUG/MINOR: lua: Some lua init operation are processed unsafe
+    - MINOR: actions: Export actions lookup functions
+    - MINOR: actions: add a function returning a service pointer from its name
+    - MINOR: cli: add a function to look up a CLI service description
+    - BUG/MINOR: lua: warn when registering action, conv, sf, cli or applet multiple times
+    - DOC/MINOR: Fix formatting in Management Guide
+    - DOC: email change of the DeviceAtlas maintainer
+    - BUG/MINOR: tools: make parse_time_err() more strict on the timer validity
+    - BUG/MINOR: tools: Reject size format not starting by a digit
+    - BUG/MEDIUM: lb-leastconn: Reposition a server using the right eweight
+    - CLEANUP: lua: Remove declaration of an inexistant function
+    - CLEANUP: stream: remove an obsolete debugging test
+    - BUG/MEDIUM: mworker: fix again copy_argv()
+    - BUILD: Makefile: have "make clean" destroy .o/.a/.s in contrib subdirs as well
+    - CONTRIB: halog: fix build issue caused by %L printf format
+    - CONTRIB: halog: mark the has_zero* functions unused
+    - CONTRIB: halog: fix signed/unsigned build warnings on counts and timestamps
+    - BUILD: plock: remove dead code that causes a warning in gcc 11
+    - BUILD: hpack: hpack-tbl-t.h uses VAR_ARRAY but does not include compiler.h
+    - MINOR: atomic: don't use ; to separate instruction on aarch64.
+    - BUG/MINOR: cfgparse: Fail if the strdup() for `rule->be.name` for `use_backend` fails
+    - SCRIPTS: improve announce-release to support different tag and versions
+    - SCRIPTS: make announce release support preparing announces before tag exists
+    - BUG/MINOR: srv: do not init address if backend is disabled
+    - DOC: fix some spelling issues over multiple files
+    - SCRIPTS: announce-release: fix typo in help message
+
 2020/11/06 : 1.8.27
     - BUG/MINOR: dns: ignore trailing dot
     - BUG/MEDIUM: mux-h2: Don't fail if nothing is parsed for a legacy chunk response
