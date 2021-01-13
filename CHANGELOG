@@ -1,6 +1,18 @@
 ChangeLog :
 ===========
 
+2021/01/13 : 2.2.8
+    - MINOR: reg-tests: add a way to add service dependency
+    - BUG/MINOR: sample: check alloc_trash_chunk return value in concat()
+    - BUG/MINOR: reg-tests: fix service dependency script
+    - MINOR: reg-tests: add base prometheus test
+    - Revert "BUG/MINOR: dns: SRV records ignores duplicated AR records"
+    - BUG/MINOR: sample: Memory leak of sample_expr structure in case of error
+    - BUG/MINOR: check: Don't perform any check on servers defined in a frontend
+    - BUG/MINOR: init: enforce strict-limits when using master-worker
+    - MINOR: contrib/prometheus-exporter: avoid connection close header
+    - MINOR: contrib/prometheus-exporter: use fill_info for process dump
+
 2021/01/08 : 2.2.7
     - BUG/MINOR: lua: missing "\n" in error message
     - BUG/MINOR: lua: lua-load doesn't check its parameters
