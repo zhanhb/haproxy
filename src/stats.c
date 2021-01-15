@@ -154,6 +154,7 @@ const char *info_field_names[INF_TOTAL_FIELDS] = {
 	[INF_FAILED_RESOLUTIONS]             = "FailedResolutions",
 	[INF_TOTAL_BYTES_OUT]                = "TotalBytesOut",
 	[INF_BYTES_OUT_RATE]                 = "BytesOutRate",
+	[INF_BUILD_INFO]                     = "Build info",
 };
 
 const char *stat_field_names[ST_F_TOTAL_FIELDS] = {
@@ -3654,6 +3655,7 @@ int stats_fill_info(struct field *info, int len)
 
 	info[INF_NAME]                           = mkf_str(FO_PRODUCT|FN_OUTPUT|FS_SERVICE, PRODUCT_NAME);
 	info[INF_VERSION]                        = mkf_str(FO_PRODUCT|FN_OUTPUT|FS_SERVICE, haproxy_version);
+	info[INF_BUILD_INFO]                     = mkf_str(FO_PRODUCT|FN_OUTPUT|FS_SERVICE, haproxy_version);
 	info[INF_RELEASE_DATE]                   = mkf_str(FO_PRODUCT|FN_OUTPUT|FS_SERVICE, haproxy_date);
 
 	info[INF_NBTHREAD]                       = mkf_u32(FO_CONFIG|FS_SERVICE, global.nbthread);
