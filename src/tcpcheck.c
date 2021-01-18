@@ -984,20 +984,20 @@ enum tcpcheck_eval_ret tcpcheck_eval_connect(struct check *check, struct tcpchec
 	struct tcpcheck_rule *next;
 	int status, port;
 
-	/* For a connect action we'll create a new connection. We may also have
-	 * to kill a previous one. But we don't want to leave *without* a
+	/* For a connect action we'll create a new connection. The previous one,
+	 * if any  should have been killed. We don't want to leave *without* a
 	 * connection if we came here from the connection layer, hence with a
 	 * connection.  Thus we'll proceed in the following order :
 	 *   1: close but not release previous connection (handled by the caller)
-	 *   2: try to get a new connection
-	 *   3: release and replace the old one on success
+	 *   2: Wait the connection is released (handled by process_chk_conn())
+	 *   3: try to get a new connection
 	 */
 
 	/* Always release input and output buffer when a new connect is evaluated */
 	check_release_buf(check, &check->bi);
 	check_release_buf(check, &check->bo);
 
-	/* 2- prepare new connection */
+	/* prepare new connection */
 	cs = cs_new(NULL, (s ? &s->obj_type : &proxy->obj_type));
 	if (!cs) {
 		chunk_printf(&trash, "TCPCHK error allocating connection at step %d",
@@ -1007,19 +1007,6 @@ enum tcpcheck_eval_ret tcpcheck_eval_connect(struct check *check, struct tcpchec
 		set_server_check_status(check, HCHK_STATUS_SOCKERR, trash.area);
 		ret = TCPCHK_EVAL_STOP;
 		goto out;
-	}
-
-	/* 3- release and replace the old one on success */
-	if (check->cs) {
-		if (check->wait_list.events)
-			check->cs->conn->mux->unsubscribe(check->cs, check->wait_list.events,
-							  &check->wait_list);
-
-		/* We may have been scheduled to run, and the I/O handler
-		 * expects to have a cs, so remove the tasklet
-		 */
-		tasklet_remove_from_tasklet_list(check->wait_list.tasklet);
-		cs_destroy(check->cs);
 	}
 
 	tasklet_set_tid(check->wait_list.tasklet, tid);
@@ -1980,30 +1967,38 @@ int tcpcheck_main(struct check *check)
 	/* 2- check if we are waiting for the connection establishment. It only
 	 *    happens during TCPCHK_ACT_CONNECT. */
 	if (check->current_step && check->current_step->action == TCPCHK_ACT_CONNECT) {
-		if (conn->flags & CO_FL_WAIT_XPRT) {
-			struct tcpcheck_rule *next;
-
-			next = get_next_tcpcheck_rule(check->tcpcheck_rules, check->current_step);
-			if (next && next->action == TCPCHK_ACT_SEND) {
-				if (!(check->wait_list.events & SUB_RETRY_SEND))
-					conn->mux->subscribe(cs, SUB_RETRY_SEND, &check->wait_list);
-				goto out;
-			}
-			else {
-				eval_ret = tcpcheck_eval_recv(check, check->current_step);
-				if (eval_ret == TCPCHK_EVAL_STOP)
-					goto out_end_tcpcheck;
-				else if (eval_ret == TCPCHK_EVAL_WAIT)
-					goto out;
-				last_read = ((conn->flags & CO_FL_ERROR) || (cs->flags & (CS_FL_ERROR|CS_FL_EOS)));
-				must_read = 0;
-			}
+		if (!cs)
+			rule = check->current_step;
+		else if (cs && (check->state & CHK_ST_CLOSE_CONN)) {
+			/* We are still waiting the connection gets closed */
+			goto out;
 		}
+		else {
+			if (conn->flags & CO_FL_WAIT_XPRT) {
+				struct tcpcheck_rule *next;
 
-                if (check->proxy->timeout.check)
-                    check->task->expire = tick_add_ifset(now_ms, check->proxy->timeout.check);
+				next = get_next_tcpcheck_rule(check->tcpcheck_rules, check->current_step);
+				if (next && next->action == TCPCHK_ACT_SEND) {
+					if (!(check->wait_list.events & SUB_RETRY_SEND))
+						conn->mux->subscribe(cs, SUB_RETRY_SEND, &check->wait_list);
+					goto out;
+				}
+				else {
+					eval_ret = tcpcheck_eval_recv(check, check->current_step);
+					if (eval_ret == TCPCHK_EVAL_STOP)
+						goto out_end_tcpcheck;
+					else if (eval_ret == TCPCHK_EVAL_WAIT)
+						goto out;
+					last_read = ((conn->flags & CO_FL_ERROR) || (cs->flags & (CS_FL_ERROR|CS_FL_EOS)));
+					must_read = 0;
+				}
+			}
 
-		rule = LIST_NEXT(&check->current_step->list, typeof(rule), list);
+			if (check->proxy->timeout.check)
+				check->task->expire = tick_add_ifset(now_ms, check->proxy->timeout.check);
+
+			rule = LIST_NEXT(&check->current_step->list, typeof(rule), list);
+		}
 	}
 
 	/* 3- check if a rule must be resume. It happens if check->current_step
@@ -2043,13 +2038,20 @@ int tcpcheck_main(struct check *check)
 		check->code = 0;
 		switch (rule->action) {
 		case TCPCHK_ACT_CONNECT:
+			/* Not the first connection, release it first */
+			if (check->cs && check->current_step != rule) {
+				check->state |= CHK_ST_CLOSE_CONN;
+				retcode = -1;
+			}
+
 			check->current_step = rule;
 
-			/* close but not release yet previous connection  */
-			if (check->cs) {
-				cs_close(check->cs);
-				retcode = -1; /* do not reuse the fd in the caller! */
+			/* We are still waiting the connection gets closed */
+			if (check->cs && (check->state & CHK_ST_CLOSE_CONN)) {
+				eval_ret = TCPCHK_EVAL_WAIT;
+				break;
 			}
+
 			eval_ret = tcpcheck_eval_connect(check, rule);
 
 			/* Refresh conn-stream and connection */
