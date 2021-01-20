@@ -140,6 +140,10 @@ static BIO_METHOD *ha_meth;
 DECLARE_STATIC_POOL(ssl_sock_ctx_pool, "ssl_sock_ctx_pool", sizeof(struct ssl_sock_ctx));
 
 static struct task *ssl_sock_io_cb(struct task *, void *, unsigned short);
+
+/* ssl_sock_io_cb is exported to see it resolved in "show fd" */
+struct task *ssl_sock_io_cb(struct task *, void *, unsigned short);
+
 static int ssl_sock_handshake(struct connection *conn, unsigned int flag);
 
 /* Methods to implement OpenSSL BIO */
@@ -5470,7 +5474,7 @@ static int ssl_remove_xprt(struct connection *conn, void *xprt_ctx, void *toremo
 	return (ctx->xprt->remove_xprt(conn, ctx->xprt_ctx, toremove_ctx, newops, newctx));
 }
 
-static struct task *ssl_sock_io_cb(struct task *t, void *context, unsigned short state)
+struct task *ssl_sock_io_cb(struct task *t, void *context, unsigned short state)
 {
 	struct tasklet *tl = (struct tasklet *)t;
 	struct ssl_sock_ctx *ctx = context;
