@@ -2260,7 +2260,7 @@ static int h1_process(struct h1c * h1c)
 	return -1;
 }
 
-static struct task *h1_io_cb(struct task *t, void *ctx, unsigned short status)
+struct task *h1_io_cb(struct task *t, void *ctx, unsigned short status)
 {
 	struct connection *conn;
 	struct tasklet *tl = (struct tasklet *)t;
