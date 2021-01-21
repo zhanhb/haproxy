@@ -1059,9 +1059,16 @@ static int cli_io_handler_show_fd(struct appctx *appctx)
 			sv         = objt_server(conn->target);
 			px         = objt_proxy(conn->target);
 			is_back    = conn_is_back(conn);
+			if (atleast2(fdt.thread_mask))
+				suspicious = 1;
+			if (conn->handle.fd != fd)
+				suspicious = 1;
 		}
 		else if (fdt.iocb == listener_accept)
 			li = fdt.owner;
+
+		if (!fdt.thread_mask)
+			suspicious = 1;
 
 		chunk_printf(&trash,
 			     "  %5d : st=0x%02x(R:%c%c W:%c%c) ev=0x%02x(%c%c%c%c%c) [%c%c] tmask=0x%lx umask=0x%lx owner=%p iocb=%p(",
@@ -1089,6 +1096,12 @@ static int cli_io_handler_show_fd(struct appctx *appctx)
 		}
 		else if (fdt.iocb == conn_fd_handler) {
 			chunk_appendf(&trash, ") back=%d cflg=0x%08x", is_back, conn_flags);
+
+			if (conn->handle.fd != fd) {
+				chunk_appendf(&trash, " fd=%d(BOGUS)", conn->handle.fd);
+				suspicious = 1;
+			}
+
 			if (px)
 				chunk_appendf(&trash, " px=%s", px->id);
 			else if (sv)
@@ -1098,6 +1111,8 @@ static int cli_io_handler_show_fd(struct appctx *appctx)
 
 			if (mux) {
 				chunk_appendf(&trash, " mux=%s ctx=%p", mux->name, ctx);
+				if (!ctx)
+					suspicious = 1;
 				if (mux->show_fd)
 					suspicious |= mux->show_fd(&trash, fdt.owner);
 			}
@@ -1122,6 +1137,8 @@ static int cli_io_handler_show_fd(struct appctx *appctx)
 
 #ifdef DEBUG_FD
 		chunk_appendf(&trash, " evcnt=%u", fdtab[fd].event_count);
+		if (fdtab[fd].event_count >= 1000000)
+			suspicious = 1;
 #endif
 		chunk_appendf(&trash, "%s\n", suspicious ? " !" : "");
 
