@@ -1035,6 +1035,7 @@ static int cli_io_handler_show_fd(struct appctx *appctx)
 		const void *xprt_ctx = NULL;
 		uint32_t conn_flags = 0;
 		int is_back = 0;
+		int suspicious = 0;
 
 		fdt = fdtab[fd];
 
@@ -1098,7 +1099,7 @@ static int cli_io_handler_show_fd(struct appctx *appctx)
 			if (mux) {
 				chunk_appendf(&trash, " mux=%s ctx=%p", mux->name, ctx);
 				if (mux->show_fd)
-					mux->show_fd(&trash, fdt.owner);
+					suspicious |= mux->show_fd(&trash, fdt.owner);
 			}
 			else
 				chunk_appendf(&trash, " nomux");
@@ -1108,7 +1109,7 @@ static int cli_io_handler_show_fd(struct appctx *appctx)
 				if (xprt_ctx || xprt->show_fd)
 					chunk_appendf(&trash, " xprt_ctx=%p", xprt_ctx);
 				if (xprt->show_fd)
-					xprt->show_fd(&trash, conn, xprt_ctx);
+					suspicious |= xprt->show_fd(&trash, conn, xprt_ctx);
 			}
 		}
 		else if (fdt.iocb == listener_accept) {
@@ -1122,7 +1123,7 @@ static int cli_io_handler_show_fd(struct appctx *appctx)
 #ifdef DEBUG_FD
 		chunk_appendf(&trash, " evcnt=%u", fdtab[fd].event_count);
 #endif
-		chunk_appendf(&trash, "\n");
+		chunk_appendf(&trash, "%s\n", suspicious ? " !" : "");
 
 		if (ci_putchk(si_ic(si), &trash) == -1) {
 			si_rx_room_blk(si);
