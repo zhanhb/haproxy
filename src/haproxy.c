@@ -2143,6 +2143,9 @@ void deinit(void)
 		free(p->capture_name);
 		free(p->monitor_uri);
 		free(p->rdp_cookie_name);
+#if defined(CONFIG_HAP_TRANSPARENT)
+		free(p->conn_src.bind_hdr_name);
+#endif
 		if (p->conf.logformat_string != default_http_log_format &&
 		    p->conf.logformat_string != default_tcp_log_format &&
 		    p->conf.logformat_string != clf_http_log_format)
