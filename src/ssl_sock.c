@@ -10652,7 +10652,6 @@ static int cli_parse_abort_cert(char **args, char *payload, struct appctx *appct
 	/* Only free the ckchs there, because the SNI and instances were not generated yet */
 	ckchs_free(ckchs_transaction.new_ckchs);
 	ckchs_transaction.new_ckchs = NULL;
-	ckchs_free(ckchs_transaction.old_ckchs);
 	ckchs_transaction.old_ckchs = NULL;
 	free(ckchs_transaction.path);
 	ckchs_transaction.path = NULL;
