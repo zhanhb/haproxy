@@ -5401,11 +5401,29 @@ static int ssl_sock_handshake(struct connection *conn, unsigned int flag)
 {
 	struct ssl_sock_ctx *ctx = conn->xprt_ctx;
 	int ret;
+	socklen_t lskerr;
+	int skerr;
+
 
 	if (!conn_ctrl_ready(conn))
 		return 0;
 
 	if (!conn->xprt_ctx)
+		goto out_error;
+
+	/* don't start calculating a handshake on a dead connection */
+	if (conn->flags & (CO_FL_ERROR | CO_FL_SOCK_RD_SH | CO_FL_SOCK_WR_SH))
+		goto out_error;
+
+	/* FIXME/WT: for now we don't have a clear way to inspect the connection
+	 * status from the lower layers, so let's check the FD directly. Ideally
+	 * the xprt layers should provide some status indicating their knowledge
+	 * of shutdowns or error.
+	 */
+	skerr = 0;
+	lskerr = sizeof(skerr);
+	if ((getsockopt(conn->handle.fd, SOL_SOCKET, SO_ERROR, &skerr, &lskerr) < 0) ||
+	    skerr != 0)
 		goto out_error;
 
 #if HA_OPENSSL_VERSION_NUMBER >= 0x10101000L
