@@ -956,7 +956,6 @@ opts:
 	@echo 'OBJS="$(strip $(OBJS))"'
 
 ifeq (reg-tests, $(firstword $(MAKECMDGOALS)))
-  REGTESTS_TYPES := default,bug,devel,slow
   REGTEST_ARGS := $(wordlist 2, $(words $(MAKECMDGOALS)), $(MAKECMDGOALS))
   $(eval $(REGTEST_ARGS):;@true)
 endif
@@ -986,7 +985,7 @@ reg-tests-help:
 	@echo "To run tests with specific types:"
 	@echo "    $$ REGTESTS_TYPES=slow,default make reg-tests"
 	@echo
-	@echo "with 'any' as default value for REGTESTS_TYPES variable."
+	@echo "with 'default,bug,devel,slow' as default value for REGTESTS_TYPES variable."
 	@echo
 	@echo "About the reg test types:"
 	@echo "    any         : all the tests without distinction (this is the default"
