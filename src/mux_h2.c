@@ -2373,6 +2373,9 @@ static void h2_process_demux(struct h2c *h2c)
 	while (b_data(&h2c->dbuf)) {
 		int ret = 0;
 
+		if (!b_data(&h2c->dbuf))
+			goto dbuf_empty;
+
 		if (h2c->st0 >= H2_CS_ERROR)
 			break;
 
@@ -2698,6 +2701,7 @@ static void h2_process_demux(struct h2c *h2c)
 		if (h2c->st0 == H2_CS_FRAME_E)
 			ret = h2c_send_rst_stream(h2c, h2s);
 
+	dbuf_empty:
 		/* error or missing data condition met above ? */
 		if (ret <= 0) {
 			if (h2c->flags & H2_CF_RCVD_SHUT)
