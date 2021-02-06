@@ -1,6 +1,62 @@
 ChangeLog :
 ===========
 
+2021/02/06 : 2.3.5
+    - BUG/MINOR: init: Use a dynamic buffer to set HAPROXY_CFGFILES env variable
+    - MINOR: config: Add failifnotcap() to emit an alert on proxy capabilities
+    - MINOR: server: Forbid server definitions in frontend sections
+    - BUG/MINOR: threads: Fixes the number of possible cpus report for Mac.
+    - MINOR: peers: Add traces for peer control messages.
+    - BUG/MINOR: dns: SRV records ignores duplicated AR records (v2)
+    - BUILD: peers: fix build warning about unused variable
+    - BUG/MEDIUM: stats: add missing INF_BUILD_INFO definition
+    - BUG/MINOR: peers: Possible appctx pointer dereference.
+    - MINOR: build: discard echoing in help target
+    - BUG/MINOR: peers: Wrong "new_conn" value for "show peers" CLI command.
+    - BUG/MINOR: mux_h2: missing space between "st" and ".flg" in the "show fd" helper
+    - BUG/MINOR: mworker: define _GNU_SOURCE for strsignal()
+    - BUG/MEDIUM: tcpcheck: Don't destroy connection in the wake callback context
+    - BUG/MEDIUM: mux-h2: fix read0 handling on partial frames
+    - BUILD/MINOR: lua: define _GNU_SOURCE for LLONG_MAX
+    - DOC: Improve documentation of the various hdr() fetches
+    - BUG/MEDIUM: filters/htx: Fix data forwarding when payload length is unknown
+    - BUG/MINOR: config: fix leak on proxy.conn_src.bind_hdr_name
+    - BUG/MINOR: ssl: init tmp chunk correctly in ssl_sock_load_sctl_from_file()
+    - BUG/MEDIUM: session: only retrieve ready idle conn from session
+    - REORG: backend: simplify conn_backend_get
+    - BUG/MEDIUM: backend: never reuse a connection for tcp mode
+    - BUG/MINOR: backend: check available list allocation for reuse
+    - MINOR: contrib: Make the wireshark peers dissector compile for more distribs.
+    - CLEANUP: tools: make resolve_sym_name() take a const pointer
+    - CLEANUP: cli: make "show fd" use a const connection to access other fields
+    - MINOR: cli: make "show fd" also report the xprt and xprt_ctx
+    - MINOR: xprt: add a new show_fd() helper to complete some "show fd" dumps.
+    - MINOR: ssl: provide a "show fd" helper to report important SSL information
+    - MINOR: xprt/mux: export all *_io_cb functions so that "show fd" resolves them
+    - MINOR: mux-h2: make the "show fd" helper also decode the h2s subscriber when known
+    - MINOR: mux-h1: make the "show fd" helper also decode the h1s subscriber when known
+    - MINOR: mux-fcgi: make the "show fd" helper also decode the fstrm subscriber when known
+    - MINOR: cli: give the show_fd helpers the ability to report a suspicious entry
+    - MINOR: cli/show_fd: report some easily detectable suspicious states
+    - MINOR: ssl/show_fd: report some FDs as suspicious when possible
+    - MINOR: mux-h2/show_fd: report as suspicious an entry with too many calls
+    - MINOR: mux-h1/show_fd: report as suspicious an entry with too many calls
+    - MINOR: h1: Raise the chunk size limit up to (2^52 - 1)
+    - DOC: management: fix "show resolvers" alphabetical ordering
+    - BUG/MINOR: stick-table: Always call smp_fetch_src() with a valid arg list
+    - BUG/MEDIUM: ssl/cli: abort ssl cert is freeing the old store
+    - BUG/MEDIUM: ssl: check a connection's status before computing a handshake
+    - BUG/MINOR: mux_h2: fix incorrect stat titles
+    - BUG/MINOR: xxhash: make sure armv6 uses memcpy()
+    - BUG/MINOR: ssl: do not try to use early data if not configured
+    - BUILD: ssl: fix build breakage with last commit
+    - MINOR: cli/show_fd: report local and report ports when known
+    - BUILD: Makefile: move REGTESTST_TYPE default setting
+    - BUG/MEDIUM: mux-h2: handle remaining read0 cases
+    - BUG/MEDIUM: mux-h2: do not quit the demux loop before setting END_REACHED
+    - BUG/MINOR: sock: Unclosed fd in case of connection allocation failure
+    - MINOR: config: Deprecate and ignore tune.chksize global option
+
 2021/01/13 : 2.3.4
     - MINOR: reg-tests: add a way to add service dependency
     - BUG/MINOR: sample: check alloc_trash_chunk return value in concat()
