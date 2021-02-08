@@ -1389,12 +1389,17 @@ static size_t h1_process_eom(struct h1s *h1s, struct h1m *h1m, struct htx *htx, 
 		return 0;
 	}
 
+
 	h1s->flags &= ~H1S_F_APPEND_EOM;
 	h1m->state = H1_MSG_DONE;
-	/* Don't set EOI on the conn-stream for protocol upgrade requests, wait
-	 * the response to do so or not depending on the status code.
-	 */
-	if (!(h1m->flags & H1_MF_CONN_UPG))
+	/* Set EOI on conn-stream in DONE state iff:
+	 *  - it is a response
+	 *  - it is a request but no a protocol upgrade nor a CONNECT
+	 *
+	 * If not set, Wait the response to do so or not depending on the status
+         * code.
+         */
+	if ((h1m->flags & H1_MF_RESP) || ((h1s->meth != HTTP_METH_CONNECT) && !(h1m->flags & H1_MF_CONN_UPG)))
 		h1s->cs->flags |= CS_FL_EOI;
 	TRACE_STATE("end of message", H1_EV_RX_DATA|H1_EV_RX_EOI, h1s->h1c->conn, h1s);
 	TRACE_LEAVE(H1_EV_RX_DATA, h1s->h1c->conn, h1s);
