@@ -2370,7 +2370,7 @@ static void h2_process_demux(struct h2c *h2c)
 	}
 
 	/* process as many incoming frames as possible below */
-	while (b_data(&h2c->dbuf)) {
+	while (1) {
 		int ret = 0;
 
 		if (!b_data(&h2c->dbuf))
