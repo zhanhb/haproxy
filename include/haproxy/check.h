@@ -76,15 +76,11 @@ int set_srv_agent_send(struct server *srv, const char *send);
  */
 static inline void health_adjust(struct server *s, short status)
 {
-	HA_SPIN_LOCK(SERVER_LOCK, &s->lock);
 	/* return now if observing nor health check is not enabled */
-	if (!s->observe || !s->check.task) {
-		HA_SPIN_UNLOCK(SERVER_LOCK, &s->lock);
+	if (!s->observe || !s->check.task)
 		return;
-	}
 
 	__health_adjust(s, status);
-	HA_SPIN_UNLOCK(SERVER_LOCK, &s->lock);
 }
 
 #endif /* _HAPROXY_CHECKS_H */
