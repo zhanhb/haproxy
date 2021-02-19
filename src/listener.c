@@ -124,7 +124,7 @@ static struct task *accept_queue_process(struct task *t, void *context, unsigned
 	/* if global.tune.maxaccept is -1, then max_accept is UINT_MAX. It
 	 * is not really illimited, but it is probably enough.
 	 */
-	max_accept = global.tune.maxaccept ? global.tune.maxaccept : 64;
+	max_accept = global.tune.maxaccept ? global.tune.maxaccept : MAX_ACCEPT;
 	for (; max_accept; max_accept--) {
 		conn = accept_queue_pop_sc(ring);
 		if (!conn)
