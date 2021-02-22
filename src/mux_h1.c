@@ -1502,6 +1502,10 @@ static size_t h1_process_input(struct h1c *h1c, struct buffer *buf, size_t count
 
 			if (!(h1m->flags & H1_MF_RESP) && h1s->status == 101)
 				h1_set_req_tunnel_mode(h1s);
+			else if ((h1m->flags & H1_MF_RESP) && h1s->req.state == H1_MSG_TUNNEL) {
+				TRACE_STATE("switch back H1 request from tunnel mode", H1_EV_RX_DATA|H1_EV_H1C_BLK, h1c->conn, h1s);
+				h1s->req.state = H1_MSG_DONE;
+			}
 			else if (h1s->req.state < H1_MSG_DONE || h1s->res.state < H1_MSG_DONE) {
 				h1c->flags |= H1C_F_IN_BUSY;
 				TRACE_STATE("switch h1c in busy mode", H1_EV_RX_DATA|H1_EV_H1C_BLK, h1c->conn, h1s);
@@ -1953,7 +1957,13 @@ static size_t h1_process_output(struct h1c *h1c, struct buffer *buf, size_t coun
 					h1_set_req_tunnel_mode(h1s);
 					TRACE_STATE("switch H1 request in tunnel mode", H1_EV_TX_DATA|H1_EV_TX_HDRS, h1c->conn, h1s);
 				}
-				else if (h1s->h1c->flags & H1C_F_IN_BUSY) {
+				else if ((h1m->flags & H1_MF_RESP) && h1s->req.state == H1_MSG_TUNNEL) {
+					TRACE_STATE("switch back H1 request from tunnel mode", H1_EV_RX_DATA|H1_EV_H1C_BLK, h1c->conn, h1s);
+					h1s->req.state = H1_MSG_DONE;
+					h1s->flags |= H1S_F_PARSING_DONE;
+				}
+
+				if (h1s->h1c->flags & H1C_F_IN_BUSY) {
 					h1s->h1c->flags &= ~H1C_F_IN_BUSY;
 					h1c->conn->xprt->subscribe(h1c->conn, h1c->conn->xprt_ctx, SUB_RETRY_RECV, &h1c->wait_event);
 					TRACE_STATE("h1c no more busy", H1_EV_TX_DATA|H1_EV_H1C_BLK|H1_EV_H1C_WAKE, h1c->conn, h1s);
