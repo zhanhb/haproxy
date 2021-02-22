@@ -9580,12 +9580,23 @@ static int cli_parse_set_ocspresponse(char **args, char *payload, struct appctx 
 }
 
 #if (HA_OPENSSL_VERSION_NUMBER >= 0x1000100fL)
+/* This function returns a sample struct filled with an <arg> content.
+ * If the <arg> contains a string, it is returned in the sample flagged as
+ * SMP_F_CONST. If the <arg> contains a variable descriptor, the sample is
+ * filled with the content of the variable by using vars_get_by_desc().
+ *
+ * Keep in mind that the sample content may be written to a pre-allocated
+ * trash chunk as returned by get_trash_chunk().
+ *
+ * This function returns 0 if an error occurs, otherwise it returns 1.
+ */
 static inline int sample_conv_var2smp_str(const struct arg *arg, struct sample *smp)
 {
 	switch (arg->type) {
 	case ARGT_STR:
 		smp->data.type = SMP_T_STR;
 		smp->data.u.str = arg->data.str;
+		smp->flags = SMP_F_CONST;
 		return 1;
 	case ARGT_VAR:
 		if (!vars_get_by_desc(&arg->data.var, smp))
@@ -9600,6 +9611,64 @@ static inline int sample_conv_var2smp_str(const struct arg *arg, struct sample *
 	}
 }
 
+/* This function checks an <arg> and fills it with a variable type if the
+ * <arg> string contains a valid variable name. If failed, the function
+ * tries to perform a base64 decode operation on the same string, and
+ * fills the <arg> with the decoded content.
+ *
+ * Validation is skipped if the <arg> string is empty.
+ *
+ * This function returns 0 if the variable lookup fails and the specified
+ * <arg> string is not a valid base64 encoded string, as well if
+ * unexpected argument type is specified or memory allocation error
+ * occurs. Otherwise it returns 1.
+ */
+static inline int sample_check_arg_base64(struct arg *arg, char **err)
+{
+	char *dec = NULL;
+	int dec_size;
+
+	if (arg->type != ARGT_STR) {
+		memprintf(err, "unexpected argument type");
+		return 0;
+	}
+
+	if (arg->data.str.data == 0) /* empty */
+		return 1;
+
+	if (vars_check_arg(arg, NULL))
+		return 1;
+
+	if (arg->data.str.data % 4) {
+		memprintf(err, "argument needs to be base64 encoded, and "
+		               "can either be a string or a variable");
+		return 0;
+	}
+
+	dec_size = (arg->data.str.data / 4 * 3)
+	           - (arg->data.str.area[arg->data.str.data-1] == '=' ? 1 : 0)
+	           - (arg->data.str.area[arg->data.str.data-2] == '=' ? 1 : 0);
+
+	if ((dec = malloc(dec_size)) == NULL) {
+		memprintf(err, "memory allocation error");
+		return 0;
+	}
+
+	dec_size = base64dec(arg->data.str.area, arg->data.str.data, dec, dec_size);
+	if (dec_size < 0) {
+		memprintf(err, "argument needs to be base64 encoded, and "
+		               "can either be a string or a variable");
+		free(dec);
+		return 0;
+	}
+
+	/* base64 decoded */
+	chunk_destroy(&arg->data.str);
+	arg->data.str.area = dec;
+	arg->data.str.data = dec_size;
+	return 1;
+}
+
 static int check_aes_gcm(struct arg *args, struct sample_conv *conv,
 						  const char *file, int line, char **err)
 {
@@ -9612,10 +9681,21 @@ static int check_aes_gcm(struct arg *args, struct sample_conv *conv,
 		memprintf(err, "key size must be 128, 192 or 256 (bits).");
 		return 0;
 	}
-	/* Try to decode a variable. */
-	vars_check_arg(&args[1], NULL);
-	vars_check_arg(&args[2], NULL);
-	vars_check_arg(&args[3], NULL);
+
+	/* Try to decode variables. */
+	if (!sample_check_arg_base64(&args[1], err)) {
+		memprintf(err, "failed to parse nonce : %s", *err);
+		return 0;
+	}
+	if (!sample_check_arg_base64(&args[2], err)) {
+		memprintf(err, "failed to parse key : %s", *err);
+		return 0;
+	}
+	if (!sample_check_arg_base64(&args[3], err)) {
+		memprintf(err, "failed to parse aead_tag : %s", *err);
+		return 0;
+	}
+
 	return 1;
 }
 
@@ -9623,36 +9703,40 @@ static int check_aes_gcm(struct arg *args, struct sample_conv *conv,
 static int sample_conv_aes_gcm_dec(const struct arg *arg_p, struct sample *smp, void *private)
 {
 	struct sample nonce, key, aead_tag;
-	struct buffer *smp_trash, *smp_trash_alloc;
+	struct buffer *smp_trash = NULL, *smp_trash_alloc = NULL;
 	EVP_CIPHER_CTX *ctx;
 	int dec_size, ret;
 
-	smp_set_owner(&nonce, smp->px, smp->sess, smp->strm, smp->opt);
-	if (!sample_conv_var2smp_str(&arg_p[1], &nonce))
-		return 0;
-
-	smp_set_owner(&key, smp->px, smp->sess, smp->strm, smp->opt);
-	if (!sample_conv_var2smp_str(&arg_p[2], &key))
-		return 0;
-
-	smp_set_owner(&aead_tag, smp->px, smp->sess, smp->strm, smp->opt);
-	if (!sample_conv_var2smp_str(&arg_p[3], &aead_tag))
-		return 0;
-
-	smp_trash = get_trash_chunk();
 	smp_trash_alloc = alloc_trash_chunk();
 	if (!smp_trash_alloc)
 		return 0;
+
+	/* smp copy */
+	smp_trash_alloc->data = smp->data.u.str.data;
+	if (unlikely(smp_trash_alloc->data > smp_trash_alloc->size))
+		smp_trash_alloc->data = smp_trash_alloc->size;
+	memcpy(smp_trash_alloc->area, smp->data.u.str.area, smp_trash_alloc->data);
 
 	ctx = EVP_CIPHER_CTX_new();
 
 	if (!ctx)
 		goto err;
 
-	dec_size = base64dec(nonce.data.u.str.area, nonce.data.u.str.data, smp_trash->area, smp_trash->size);
-	if (dec_size < 0)
+	smp_trash = alloc_trash_chunk();
+	if (!smp_trash)
 		goto err;
-	smp_trash->data = dec_size;
+
+	smp_set_owner(&nonce, smp->px, smp->sess, smp->strm, smp->opt);
+	if (!sample_conv_var2smp_str(&arg_p[1], &nonce))
+		goto err;
+
+	if (arg_p[1].type == ARGT_VAR) {
+		dec_size = base64dec(nonce.data.u.str.area, nonce.data.u.str.data, smp_trash->area, smp_trash->size);
+		if (dec_size < 0)
+			goto err;
+		smp_trash->data = dec_size;
+		nonce.data.u.str = *smp_trash;
+	}
 
 	/* Set cipher type and mode */
 	switch(arg_p[0].data.sint) {
@@ -9667,32 +9751,47 @@ static int sample_conv_aes_gcm_dec(const struct arg *arg_p, struct sample *smp, 
 		break;
 	}
 
-	EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_IVLEN, smp_trash->data, NULL);
+	EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_IVLEN, nonce.data.u.str.data, NULL);
 
 	/* Initialise IV */
-	if(!EVP_DecryptInit_ex(ctx, NULL, NULL, NULL, (unsigned char *) smp_trash->area))
+	if(!EVP_DecryptInit_ex(ctx, NULL, NULL, NULL, (unsigned char *) nonce.data.u.str.area))
 		goto err;
 
-	dec_size = base64dec(key.data.u.str.area, key.data.u.str.data, smp_trash->area, smp_trash->size);
-	if (dec_size < 0)
+	smp_set_owner(&key, smp->px, smp->sess, smp->strm, smp->opt);
+	if (!sample_conv_var2smp_str(&arg_p[2], &key))
 		goto err;
-	smp_trash->data = dec_size;
+
+	if (arg_p[2].type == ARGT_VAR) {
+		dec_size = base64dec(key.data.u.str.area, key.data.u.str.data, smp_trash->area, smp_trash->size);
+		if (dec_size < 0)
+			goto err;
+		smp_trash->data = dec_size;
+		key.data.u.str = *smp_trash;
+	}
 
 	/* Initialise key */
-	if (!EVP_DecryptInit_ex(ctx, NULL, NULL, (unsigned char *) smp_trash->area, NULL))
+	if (!EVP_DecryptInit_ex(ctx, NULL, NULL, (unsigned char *) key.data.u.str.area, NULL))
 		goto err;
 
 	if (!EVP_DecryptUpdate(ctx, (unsigned char *) smp_trash->area, (int *) &smp_trash->data,
-						  (unsigned char *) smp->data.u.str.area, (int) smp->data.u.str.data))
+	                       (unsigned char *) smp_trash_alloc->area, (int) smp_trash_alloc->data))
 		goto err;
 
-	dec_size = base64dec(aead_tag.data.u.str.area, aead_tag.data.u.str.data, smp_trash_alloc->area, smp_trash_alloc->size);
-	if (dec_size < 0)
+	smp_set_owner(&aead_tag, smp->px, smp->sess, smp->strm, smp->opt);
+	if (!sample_conv_var2smp_str(&arg_p[3], &aead_tag))
 		goto err;
-	smp_trash_alloc->data = dec_size;
+
+	if (arg_p[3].type == ARGT_VAR) {
+		dec_size = base64dec(aead_tag.data.u.str.area, aead_tag.data.u.str.data, smp_trash_alloc->area, smp_trash_alloc->size);
+		if (dec_size < 0)
+			goto err;
+		smp_trash_alloc->data = dec_size;
+		aead_tag.data.u.str = *smp_trash_alloc;
+	}
+
 	dec_size = smp_trash->data;
 
-	EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_TAG, smp_trash_alloc->data, (void *) smp_trash_alloc->area);
+	EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_TAG, aead_tag.data.u.str.data, (void *) aead_tag.data.u.str.area);
 	ret = EVP_DecryptFinal_ex(ctx, (unsigned char *) smp_trash->area + smp_trash->data, (int *) &smp_trash->data);
 
 	if (ret <= 0)
@@ -9701,12 +9800,14 @@ static int sample_conv_aes_gcm_dec(const struct arg *arg_p, struct sample *smp, 
 	smp->data.u.str.data = dec_size + smp_trash->data;
 	smp->data.u.str.area = smp_trash->area;
 	smp->data.type = SMP_T_BIN;
-	smp->flags &= ~SMP_F_CONST;
+	smp_dup(smp);
 	free_trash_chunk(smp_trash_alloc);
+	free_trash_chunk(smp_trash);
 	return 1;
 
 err:
 	free_trash_chunk(smp_trash_alloc);
+	free_trash_chunk(smp_trash);
 	return 0;
 }
 # endif
