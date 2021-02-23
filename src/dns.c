@@ -553,6 +553,8 @@ static void dns_check_dns_response(struct dns_resolution *res)
 						srv->hostname        = NULL;
 						srv->hostname_dn     = NULL;
 						srv->hostname_dn_len = 0;
+						memset(&srv->addr, 0, sizeof(srv->addr));
+						srv->svc_port = 0;
 						dns_unlink_resolution(srv->dns_requester);
 					}
 					HA_SPIN_UNLOCK(SERVER_LOCK, &srv->lock);
