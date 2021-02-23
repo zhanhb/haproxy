@@ -828,6 +828,8 @@ switchstate:
 					if ((int)(st->table->localupdate - st->update) < 0)
 						st->update = st->table->localupdate + (2147483648U);
 					st->teaching_origin = st->last_pushed = st->update;
+					if ((int)(st->last_pushed - st->table->commitupdate) > 0)
+						st->table->commitupdate = st->last_pushed;
 					HA_SPIN_UNLOCK(STK_TABLE_LOCK, &st->table->lock);
 				}
 
@@ -954,6 +956,8 @@ switchstate:
 						if ((int)(st->table->localupdate - st->update) < 0)
 							st->update = st->table->localupdate + (2147483648U);
 						st->teaching_origin = st->last_pushed = st->update;
+						if ((int)(st->last_pushed - st->table->commitupdate) > 0)
+							st->table->commitupdate = st->last_pushed;
 						HA_SPIN_UNLOCK(STK_TABLE_LOCK, &st->table->lock);
 					}
 
