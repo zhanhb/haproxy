@@ -1215,12 +1215,14 @@ static int dns_validate_dns_response(unsigned char *resp, unsigned char *bufend,
 				    !dns_hostname_cmp(tmp_record->target, dns_answer_record->name, tmp_record->data_len)) {
 					/* Always use the received additional record to refresh info */
 					tmp_record->ar_item = dns_answer_record;
+					dns_answer_record = NULL;
 					break;
 				}
 			}
-			if (tmp_record->ar_item != dns_answer_record)
+			if (dns_answer_record) {
 				pool_free(dns_answer_item_pool, dns_answer_record);
-			dns_answer_record = NULL;
+				dns_answer_record = NULL;
+			}
 		}
 	} /* for i 0 to arcount */
 
