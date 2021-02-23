@@ -1097,7 +1097,8 @@ static int dns_validate_dns_response(unsigned char *resp, unsigned char *bufend,
 		}
 
 		if (found == 1) {
-			tmp_record->last_seen = now.tv_sec;
+			if (tmp_record->type != DNS_RTYPE_SRV || tmp_record->ar_item != NULL)
+				tmp_record->last_seen = now.tv_sec;
 			pool_free(dns_answer_item_pool, dns_answer_record);
 			dns_answer_record = NULL;
 		}
@@ -1287,6 +1288,7 @@ static int dns_validate_dns_response(unsigned char *resp, unsigned char *bufend,
 				    !dns_hostname_cmp(tmp_record->target, dns_answer_record->name, tmp_record->data_len)) {
 					/* Always use the received additional record to refresh info */
 					tmp_record->ar_item = dns_answer_record;
+					tmp_record->last_seen = dns_answer_record->last_seen;
 					dns_answer_record = NULL;
 					break;
 				}
