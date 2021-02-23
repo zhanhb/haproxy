@@ -791,6 +791,8 @@ struct ckch_store *ckchs_dup(const struct ckch_store *src)
 		return NULL;
 
 	dst = ckch_store_new(src->path, src->multi ? SSL_SOCK_NUM_KEYTYPES : 1);
+	if (!dst)
+		return NULL;
 
 #if HA_OPENSSL_VERSION_NUMBER >= 0x1000200fL
 	if (src->multi) {
