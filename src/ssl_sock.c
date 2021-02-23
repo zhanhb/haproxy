@@ -3037,6 +3037,9 @@ static void ssl_sock_free_cert_key_and_chain_contents(struct cert_key_and_chain 
 static struct cert_key_and_chain *ssl_sock_copy_cert_key_and_chain(struct cert_key_and_chain *src,
                                                                    struct cert_key_and_chain *dst)
 {
+	if (!src || !dst)
+		return NULL;
+
 	if (src->cert) {
 		dst->cert = src->cert;
 		X509_up_ref(src->cert);
@@ -3583,6 +3586,9 @@ static struct ckch_store *ckchs_dup(const struct ckch_store *src)
 {
 	struct ckch_store *dst;
 	int pathlen;
+
+	if (!src)
+		return NULL;
 
 	pathlen = strlen(src->path);
 	dst = calloc(1, sizeof(*dst) + pathlen + 1);
