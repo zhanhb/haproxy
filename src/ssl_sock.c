@@ -4916,6 +4916,7 @@ static int ssl_sock_init(struct connection *conn, void **xprt_ctx)
 	}
 	ctx->wait_event.tasklet->process = ssl_sock_io_cb;
 	ctx->wait_event.tasklet->context = ctx;
+	ctx->wait_event.tasklet->state  |= TASK_HEAVY; // assign it to the bulk queue during handshake
 	ctx->wait_event.events = 0;
 	ctx->sent_early_data = 0;
 	ctx->early_buf = BUF_NULL;
@@ -5513,8 +5514,13 @@ struct task *ssl_sock_io_cb(struct task *t, void *context, unsigned short state)
 		MT_LIST_DEL(&conn->list);
 	HA_SPIN_UNLOCK(OTHER_LOCK, &idle_conns[tid].takeover_lock);
 	/* First if we're doing an handshake, try that */
-	if (ctx->conn->flags & CO_FL_SSL_WAIT_HS)
+	if (ctx->conn->flags & CO_FL_SSL_WAIT_HS) {
 		ssl_sock_handshake(ctx->conn, CO_FL_SSL_WAIT_HS);
+		if (!(ctx->conn->flags & CO_FL_SSL_WAIT_HS)) {
+			/* handshake completed, leave the bulk queue */
+			_HA_ATOMIC_AND(&tl->state, ~TASK_SELF_WAKING);
+		}
+	}
 	/* If we had an error, or the handshake is done and I/O is available,
 	 * let the upper layer know.
 	 * If no mux was set up yet, then call conn_create_mux()
