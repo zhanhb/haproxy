@@ -403,6 +403,7 @@ unsigned int run_tasks_from_lists(unsigned int budgets[])
 	unsigned int done = 0;
 	unsigned int queue;
 	unsigned short state;
+	char heavy_calls = 0;
 	void *ctx;
 
 	for (queue = 0; queue < TL_CLASSES;) {
@@ -449,7 +450,20 @@ unsigned int run_tasks_from_lists(unsigned int budgets[])
 
 		budgets[queue]--;
 		t = (struct task *)LIST_ELEM(tl_queues[queue].n, struct tasklet *, list);
-		state = t->state & (TASK_SHARED_WQ|TASK_SELF_WAKING|TASK_KILLED);
+		state = t->state & (TASK_SHARED_WQ|TASK_SELF_WAKING|TASK_HEAVY|TASK_KILLED);
+
+		if (state & TASK_HEAVY) {
+			/* This is a heavy task. We'll call no more than one
+			 * per function call. If we called one already, we'll
+			 * return and announce the max possible weight so that
+			 * the caller doesn't come back too soon.
+			 */
+			if (heavy_calls) {
+				done = INT_MAX;  // 11ms instead of 3 without this
+				break; // too many heavy tasks processed already
+			}
+			heavy_calls = 1;
+		}
 
 		ti->flags &= ~TI_FL_STUCK; // this thread is still running
 		activity[tid].ctxsw++;

@@ -340,7 +340,7 @@ static inline void tasklet_wakeup_on(struct tasklet *tl, int thr)
 
 	if (likely(thr < 0)) {
 		/* this tasklet runs on the caller thread */
-		if (tl->state & TASK_SELF_WAKING) {
+		if (tl->state & (TASK_SELF_WAKING|TASK_HEAVY)) {
 			LIST_ADDQ(&sched->tasklets[TL_BULK], &tl->list);
 			sched->tl_class_mask |= 1 << TL_BULK;
 		}
