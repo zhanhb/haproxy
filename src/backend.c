@@ -1163,7 +1163,8 @@ static struct connection *conn_backend_get(struct stream *s, struct server *srv,
 		if (!srv->curr_idle_thr[i] || i == tid)
 			continue;
 
-		HA_SPIN_LOCK(OTHER_LOCK, &idle_conns[i].takeover_lock);
+		if (HA_SPIN_TRYLOCK(OTHER_LOCK, &idle_conns[i].takeover_lock) != 0)
+			continue;
 		mt_list_for_each_entry_safe(conn, &mt_list[i], list, elt1, elt2) {
 			if (conn->mux->takeover && conn->mux->takeover(conn, i) == 0) {
 				MT_LIST_DEL_SAFE(elt1);
