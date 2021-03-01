@@ -2776,6 +2776,12 @@ static size_t h1_snd_buf(struct conn_stream *cs, struct buffer *buf, size_t coun
 		return 0;
 	}
 
+	if (h1c->flags & H1C_F_CS_ERROR) {
+		cs->flags |= CS_FL_ERROR;
+		TRACE_DEVEL("H1 connection is in error, leaving in error", H1_EV_STRM_SEND|H1_EV_H1C_ERR|H1_EV_H1S_ERR|H1_EV_STRM_ERR, h1c->conn, h1s);
+		return 0;
+	}
+
 	/* Inherit some flags from the upper layer */
 	h1c->flags &= ~(H1C_F_CO_MSG_MORE|H1C_F_CO_STREAMER);
 	if (flags & CO_SFL_MSG_MORE)
@@ -2801,6 +2807,12 @@ static size_t h1_snd_buf(struct conn_stream *cs, struct buffer *buf, size_t coun
 		if ((h1c->wait_event.events & SUB_RETRY_SEND) || !h1_send(h1c))
 			break;
 	}
+
+	if (h1c->flags & H1C_F_CS_ERROR) {
+		TRACE_DEVEL("reporting error to the app-layer stream", H1_EV_STRM_SEND|H1_EV_H1S_ERR|H1_EV_STRM_ERR, h1c->conn, h1s);
+		cs->flags |= CS_FL_ERROR;
+	}
+
 	h1_refresh_timeout(h1c);
 	TRACE_LEAVE(H1_EV_STRM_SEND, h1c->conn, h1s, 0, (size_t[]){total});
 	return total;
