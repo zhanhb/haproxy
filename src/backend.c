@@ -865,8 +865,10 @@ int assign_server_address(struct stream *s)
 			if (!conn_get_dst(cli_conn)) {
 				/* do nothing if we can't retrieve the address */
 			} else if (cli_conn->dst->ss_family == AF_INET) {
+				((struct sockaddr_in *)s->target_addr)->sin_family = AF_INET;
 				((struct sockaddr_in *)s->target_addr)->sin_addr = ((struct sockaddr_in *)cli_conn->dst)->sin_addr;
 			} else if (cli_conn->dst->ss_family == AF_INET6) {
+				((struct sockaddr_in6 *)s->target_addr)->sin6_family = AF_INET6;
 				((struct sockaddr_in6 *)s->target_addr)->sin6_addr = ((struct sockaddr_in6 *)cli_conn->dst)->sin6_addr;
 			}
 		}
