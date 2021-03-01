@@ -34,6 +34,7 @@
 #include <proto/log.h>
 #include <proto/proto_http.h>
 #include <proto/proxy.h>
+#include <proto/queue.h>
 #include <proto/sample.h>
 #include <proto/session.h>
 #include <proto/signal.h>
@@ -1439,8 +1440,6 @@ spoe_handle_connecting_appctx(struct appctx *appctx)
 			goto stop;
 
 		default:
-			/* HELLO handshake is finished, set the idle timeout and
-			 * add the applet in the list of running applets. */
 			agent->rt[tid].applets_idle++;
 			appctx->st0 = SPOE_APPCTX_ST_IDLE;
 			HA_SPIN_LOCK(SPOE_APPLET_LOCK, &agent->rt[tid].lock);
@@ -1723,6 +1722,20 @@ spoe_handle_processing_appctx(struct appctx *appctx)
 	return 0;
   stop:
 	if (appctx->st0 == SPOE_APPCTX_ST_PROCESSING) {
+		struct server *srv = objt_server(si_strm(si)->target);
+
+		/* With several threads, close the applet if there are pending
+		 * connections or if the server is full. Otherwise, add the
+		 * applet in the idle list.
+		 */
+		if (global.nbthread > 1 &&
+		    (agent->b.be->nbpend ||
+		     (srv && (srv->nbpend || (srv->maxconn && srv->served >=srv_dynamic_maxconn(srv)))))) {
+			SPOE_APPCTX(appctx)->status_code = SPOE_FRM_ERR_NONE;
+			appctx->st0 = SPOE_APPCTX_ST_DISCONNECT;
+			appctx->st1 = SPOE_APPCTX_ERR_NONE;
+			goto next;
+		}
 		appctx->st0 = SPOE_APPCTX_ST_IDLE;
 		agent->rt[tid].applets_idle++;
 	}
