@@ -60,7 +60,7 @@ DECLARE_POOL(dns_requester_pool,  "dns_requester",  sizeof(struct dns_requester)
 
 static unsigned int resolution_uuid = 1;
 unsigned int dns_failed_resolutions = 0;
-static struct task *dns_process_resolvers(struct task *t, void *context, unsigned short state);
+static struct task *dns_process_resolvers(struct task *t, void *context, unsigned int state);
 static void dns_free_resolution(struct dns_resolution *resolution);
 static void _dns_unlink_resolution(struct dns_requester *requester);
 static void enter_resolver_code();
@@ -715,7 +715,7 @@ static void dns_srvrq_cleanup_srv(struct server *srv)
 /* Takes care to cleanup a server resolution when it is outdated. This only
  * happens for a server relying on a SRV record.
  */
-static struct task *dns_srvrq_expire_task(struct task *t, void *context, unsigned short state)
+static struct task *dns_srvrq_expire_task(struct task *t, void *context, unsigned int state)
 {
 	struct server *srv = context;
 
@@ -2475,7 +2475,7 @@ static void dns_resolve_send(struct dgram_conn *dgram)
  * resolutions and retry them if possible. Else a timeout is reported. Then, it
  * checks the wait list to trigger new resolutions.
  */
-static struct task *dns_process_resolvers(struct task *t, void *context, unsigned short state)
+static struct task *dns_process_resolvers(struct task *t, void *context, unsigned int state)
 {
 	struct dns_resolvers  *resolvers = context;
 	struct dns_resolution *res, *resback;

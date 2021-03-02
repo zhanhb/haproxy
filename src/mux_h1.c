@@ -254,9 +254,9 @@ DECLARE_STATIC_POOL(pool_head_h1s, "h1s", sizeof(struct h1s));
 static int h1_recv(struct h1c *h1c);
 static int h1_send(struct h1c *h1c);
 static int h1_process(struct h1c *h1c);
-static struct task *h1_io_cb(struct task *t, void *ctx, unsigned short state);
+static struct task *h1_io_cb(struct task *t, void *ctx, unsigned int state);
 static void h1_shutw_conn(struct connection *conn);
-static struct task *h1_timeout_task(struct task *t, void *context, unsigned short state);
+static struct task *h1_timeout_task(struct task *t, void *context, unsigned int state);
 static void h1_wake_stream_for_recv(struct h1s *h1s);
 static void h1_wake_stream_for_send(struct h1s *h1s);
 
@@ -2331,7 +2331,7 @@ static int h1_process(struct h1c * h1c)
 	return -1;
 }
 
-struct task *h1_io_cb(struct task *t, void *ctx, unsigned short status)
+struct task *h1_io_cb(struct task *t, void *ctx, unsigned int status)
 {
 	struct connection *conn;
 	struct tasklet *tl = (struct tasklet *)t;
@@ -2421,7 +2421,7 @@ static int h1_wake(struct connection *conn)
 /* Connection timeout management. The principle is that if there's no receipt
  * nor sending for a certain amount of time, the connection is closed.
  */
-static struct task *h1_timeout_task(struct task *t, void *context, unsigned short state)
+static struct task *h1_timeout_task(struct task *t, void *context, unsigned int state)
 {
 	struct h1c *h1c = context;
 	int expired = tick_is_expired(t->expire, now_ms);

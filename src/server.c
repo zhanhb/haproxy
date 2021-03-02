@@ -5352,7 +5352,7 @@ static void srv_update_status(struct server *s)
 	*s->adm_st_chg_cause = 0;
 }
 
-struct task *srv_cleanup_toremove_connections(struct task *task, void *context, unsigned short state)
+struct task *srv_cleanup_toremove_connections(struct task *task, void *context, unsigned int state)
 {
 	struct connection *conn;
 
@@ -5412,7 +5412,7 @@ static void srv_cleanup_connections(struct server *srv)
 	HA_SPIN_UNLOCK(OTHER_LOCK, &idle_conn_srv_lock);
 }
 
-struct task *srv_cleanup_idle_connections(struct task *task, void *context, unsigned short state)
+struct task *srv_cleanup_idle_connections(struct task *task, void *context, unsigned int state)
 {
 	struct server *srv;
 	struct eb32_node *eb;

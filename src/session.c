@@ -28,7 +28,7 @@ DECLARE_POOL(pool_head_sess_srv_list, "session server list",
 		sizeof(struct sess_srv_list));
 
 int conn_complete_session(struct connection *conn);
-static struct task *session_expire_embryonic(struct task *t, void *context, unsigned short state);
+static struct task *session_expire_embryonic(struct task *t, void *context, unsigned int state);
 
 /* Create a a new session and assign it to frontend <fe>, listener <li>,
  * origin <origin>, set the current date and clear the stick counters pointers.
@@ -324,7 +324,7 @@ static void session_prepare_log_prefix(struct session *sess)
  * disabled and finally kills the file descriptor. This function requires that
  * sess->origin points to the incoming connection.
  */
-static void session_kill_embryonic(struct session *sess, unsigned short state)
+static void session_kill_embryonic(struct session *sess, unsigned int state)
 {
 	int level = LOG_INFO;
 	struct connection *conn = __objt_conn(sess->origin);
@@ -377,7 +377,7 @@ static void session_kill_embryonic(struct session *sess, unsigned short state)
 /* Manages the embryonic session timeout. It is only called when the timeout
  * strikes and performs the required cleanup.
  */
-static struct task *session_expire_embryonic(struct task *t, void *context, unsigned short state)
+static struct task *session_expire_embryonic(struct task *t, void *context, unsigned int state)
 {
 	struct session *sess = context;
 
