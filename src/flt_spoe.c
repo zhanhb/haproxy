@@ -1199,6 +1199,7 @@ spoe_recv_frame(struct appctx *appctx, char *buf, size_t framesz)
 	if (ret <= 0) {
 		if (ret == 0) {
 		  retry:
+			si_applet_want_get(si);
 			return 1; /* retry */
 		}
 		SPOE_APPCTX(appctx)->status_code = SPOE_FRM_ERR_IO;
@@ -1958,6 +1959,11 @@ spoe_handle_appctx(struct appctx *appctx)
 
 	if (SPOE_APPCTX(appctx)->task->expire != TICK_ETERNITY)
 		task_queue(SPOE_APPCTX(appctx)->task);
+
+	if (si->flags & SI_FL_WANT_GET) {
+		si_oc(si)->flags |= CF_READ_DONTWAIT;
+		task_wakeup(si_strm(si)->task, TASK_WOKEN_IO);
+	}
 }
 
 struct applet spoe_applet = {
