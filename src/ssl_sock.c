@@ -220,8 +220,8 @@ static forceinline void ssl_sock_dump_errors(struct connection *conn)
 			ret = ERR_get_error();
 			if (ret == 0)
 				return;
-			fprintf(stderr, "fd[%04x] OpenSSL error[0x%lx] %s: %s\n",
-			        (unsigned short)conn->t.sock.fd, ret,
+			fprintf(stderr, "fd[%#x] OpenSSL error[0x%lx] %s: %s\n",
+			        conn->t.sock.fd, ret,
 			        ERR_func_error_string(ret), ERR_reason_error_string(ret));
 		}
 	}
