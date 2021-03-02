@@ -55,7 +55,7 @@
                            TASK_WOKEN_IO|TASK_WOKEN_SIGNAL|TASK_WOKEN_MSG| \
                            TASK_WOKEN_RES)
 
-#define TASK_F_USR1       0x80000  /* preserved user flag 1, application-specific, def:0 */
+#define TASK_F_USR1       0x8000  /* preserved user flag 1, application-specific, def:0 */
 
 enum {
 	TL_URGENT = 0,   /* urgent tasklets (I/O callbacks) */
