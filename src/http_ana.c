@@ -146,7 +146,6 @@ int http_wait_for_request(struct stream *s, struct channel *req, int an_bit)
 			if (sess->fe->options & PR_O_IGNORE_PRB)
 				goto failed_keep_alive;
 
-			stream_inc_http_err_ctr(s);
 			stream_inc_http_req_ctr(s);
 			proxy_inc_fe_req_ctr(sess->fe);
 			_HA_ATOMIC_ADD(&sess->fe->fe_counters.failed_req, 1);
@@ -173,7 +172,6 @@ int http_wait_for_request(struct stream *s, struct channel *req, int an_bit)
 			if (sess->fe->options & PR_O_IGNORE_PRB)
 				goto failed_keep_alive;
 
-			stream_inc_http_err_ctr(s);
 			stream_inc_http_req_ctr(s);
 			proxy_inc_fe_req_ctr(sess->fe);
 			_HA_ATOMIC_ADD(&sess->fe->fe_counters.failed_req, 1);
