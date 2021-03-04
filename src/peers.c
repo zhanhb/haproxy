@@ -1424,6 +1424,10 @@ switchstate:
 						uint32_t update;
 						struct shared_table *st;
 
+						/* ignore ack during teaching process */
+						if (curpeer->flags & PEER_F_TEACH_PROCESS)
+							goto ignore_msg;
+
 						table_id = intdecode(&msg_cur, msg_end);
 						if (!msg_cur || (msg_cur + sizeof(update) > msg_end)) {
 							/* malformed message */
@@ -2292,4 +2296,3 @@ void peers_register_table(struct peers *peers, struct stktable *table)
 
 	table->sync_task = peers->sync_task;
 }
-
