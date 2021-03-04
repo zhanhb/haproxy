@@ -865,10 +865,12 @@ void srv_shutdown_streams(struct server *srv, int why)
 {
 	struct stream *stream;
 	struct mt_list *elt1, elt2;
+	int thr;
 
-	mt_list_for_each_entry_safe(stream, &srv->actconns, by_srv, elt1, elt2)
-		if (stream->srv_conn == srv)
-			stream_shutdown(stream, why);
+	for (thr = 0; thr < global.nbthread; thr++)
+		mt_list_for_each_entry_safe(stream, &srv->actconns[thr], by_srv, elt1, elt2)
+			if (stream->srv_conn == srv)
+				stream_shutdown(stream, why);
 }
 
 /* Shutdown all connections of all backup servers of a proxy. The caller must
@@ -1718,6 +1720,7 @@ static void srv_settings_cpy(struct server *srv, struct server *src, int srv_tmp
 struct server *new_server(struct proxy *proxy)
 {
 	struct server *srv;
+	int i;
 
 	srv = calloc(1, sizeof *srv);
 	if (!srv)
@@ -1725,7 +1728,8 @@ struct server *new_server(struct proxy *proxy)
 
 	srv->obj_type = OBJ_TYPE_SERVER;
 	srv->proxy = proxy;
-	MT_LIST_INIT(&srv->actconns);
+	for (i = 0; i < MAX_THREADS; i++)
+		MT_LIST_INIT(&srv->actconns[i]);
 	srv->pendconns = EB_ROOT;
 
 	srv->next_state = SRV_ST_RUNNING; /* early server setup */

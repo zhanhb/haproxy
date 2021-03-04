@@ -8750,7 +8750,8 @@ void hlua_init(void)
 	socket_tcp.next = NULL;
 	socket_tcp.proxy = &socket_proxy;
 	socket_tcp.obj_type = OBJ_TYPE_SERVER;
-	MT_LIST_INIT(&socket_tcp.actconns);
+	for (i = 0; i < MAX_THREADS; i++)
+		MT_LIST_INIT(&socket_tcp.actconns[i]);
 	socket_tcp.pendconns = EB_ROOT;
 	socket_tcp.idle_conns = NULL;
 	socket_tcp.safe_conns = NULL;
@@ -8795,7 +8796,8 @@ void hlua_init(void)
 	socket_ssl.next = NULL;
 	socket_ssl.proxy = &socket_proxy;
 	socket_ssl.obj_type = OBJ_TYPE_SERVER;
-	MT_LIST_INIT(&socket_ssl.actconns);
+	for (i = 0; i < MAX_THREADS; i++)
+		MT_LIST_INIT(&socket_ssl.actconns[i]);
 	socket_ssl.pendconns = EB_ROOT;
 	socket_ssl.idle_conns = NULL;
 	socket_ssl.safe_conns = NULL;
