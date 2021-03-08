@@ -478,7 +478,7 @@ static int fcgi_flt_http_headers(struct stream *s, struct filter *filter, struct
 	_HA_ATOMIC_ADD(&sess->fe->fe_counters.failed_rewrites, 1);
 	if (sess->fe != s->be)
 		_HA_ATOMIC_ADD(&s->be->be_counters.failed_rewrites, 1);
-	if (sess->listener->counters)
+	if (sess->listener && sess->listener->counters)
 		_HA_ATOMIC_ADD(&sess->listener->counters->failed_rewrites, 1);
   hdr_rule_err:
 	node = ebpt_first(&hdr_rules);
