@@ -1390,7 +1390,7 @@ static enum act_return tcp_exec_action_silent_drop(struct act_rule *rule, struct
 	}
 
 	HA_ATOMIC_ADD(&sess->fe->fe_counters.denied_req, 1);
-	if (sess->listener->counters)
+	if (sess->listener && sess->listener->counters)
 		HA_ATOMIC_ADD(&sess->listener->counters->denied_req, 1);
 
 	return ACT_RET_STOP;

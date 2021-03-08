@@ -1746,7 +1746,7 @@ int http_wait_for_request(struct stream *s, struct channel *req, int an_bit)
 			stream_inc_http_req_ctr(s);
 			proxy_inc_fe_req_ctr(sess->fe);
 			HA_ATOMIC_ADD(&sess->fe->fe_counters.failed_req, 1);
-			if (sess->listener->counters)
+			if (sess->listener && sess->listener->counters)
 				HA_ATOMIC_ADD(&sess->listener->counters->failed_req, 1);
 
 			if (!(s->flags & SF_FINST_MASK))
@@ -1779,7 +1779,7 @@ int http_wait_for_request(struct stream *s, struct channel *req, int an_bit)
 			stream_inc_http_req_ctr(s);
 			proxy_inc_fe_req_ctr(sess->fe);
 			HA_ATOMIC_ADD(&sess->fe->fe_counters.failed_req, 1);
-			if (sess->listener->counters)
+			if (sess->listener && sess->listener->counters)
 				HA_ATOMIC_ADD(&sess->listener->counters->failed_req, 1);
 
 			if (!(s->flags & SF_FINST_MASK))
@@ -1809,7 +1809,7 @@ int http_wait_for_request(struct stream *s, struct channel *req, int an_bit)
 			stream_inc_http_req_ctr(s);
 			proxy_inc_fe_req_ctr(sess->fe);
 			HA_ATOMIC_ADD(&sess->fe->fe_counters.failed_req, 1);
-			if (sess->listener->counters)
+			if (sess->listener && sess->listener->counters)
 				HA_ATOMIC_ADD(&sess->listener->counters->failed_req, 1);
 
 			if (!(s->flags & SF_FINST_MASK))
@@ -2209,7 +2209,7 @@ int http_wait_for_request(struct stream *s, struct channel *req, int an_bit)
 	http_reply_and_close(s, txn->status, http_error_message(s));
 
 	HA_ATOMIC_ADD(&sess->fe->fe_counters.failed_req, 1);
-	if (sess->listener->counters)
+	if (sess->listener && sess->listener->counters)
 		HA_ATOMIC_ADD(&sess->listener->counters->failed_req, 1);
 
  return_prx_cond:
@@ -3626,7 +3626,7 @@ int http_process_req_common(struct stream *s, struct channel *req, int an_bit, s
 	HA_ATOMIC_ADD(&sess->fe->fe_counters.denied_req, 1);
 	if (sess->fe != s->be)
 		HA_ATOMIC_ADD(&s->be->be_counters.denied_req, 1);
-	if (sess->listener->counters)
+	if (sess->listener && sess->listener->counters)
 		HA_ATOMIC_ADD(&sess->listener->counters->denied_req, 1);
 	goto done_without_exp;
 
@@ -3645,7 +3645,7 @@ int http_process_req_common(struct stream *s, struct channel *req, int an_bit, s
 	HA_ATOMIC_ADD(&sess->fe->fe_counters.denied_req, 1);
 	if (sess->fe != s->be)
 		HA_ATOMIC_ADD(&s->be->be_counters.denied_req, 1);
-	if (sess->listener->counters)
+	if (sess->listener && sess->listener->counters)
 		HA_ATOMIC_ADD(&sess->listener->counters->denied_req, 1);
 	goto return_prx_cond;
 
@@ -3664,7 +3664,7 @@ int http_process_req_common(struct stream *s, struct channel *req, int an_bit, s
 	http_reply_and_close(s, txn->status, http_error_message(s));
 
 	HA_ATOMIC_ADD(&sess->fe->fe_counters.failed_req, 1);
-	if (sess->listener->counters)
+	if (sess->listener && sess->listener->counters)
 		HA_ATOMIC_ADD(&sess->listener->counters->failed_req, 1);
 
  return_prx_cond:
@@ -4006,7 +4006,7 @@ int http_process_request(struct stream *s, struct channel *req, int an_bit)
 	http_reply_and_close(s, txn->status, http_error_message(s));
 
 	HA_ATOMIC_ADD(&sess->fe->fe_counters.failed_req, 1);
-	if (sess->listener->counters)
+	if (sess->listener && sess->listener->counters)
 		HA_ATOMIC_ADD(&sess->listener->counters->failed_req, 1);
 
 	if (!(s->flags & SF_ERR_MASK))
@@ -4212,7 +4212,7 @@ int http_wait_for_request_body(struct stream *s, struct channel *req, int an_bit
  return_err_msg:
 	req->analysers &= AN_REQ_FLT_END;
 	HA_ATOMIC_ADD(&sess->fe->fe_counters.failed_req, 1);
-	if (sess->listener->counters)
+	if (sess->listener && sess->listener->counters)
 		HA_ATOMIC_ADD(&sess->listener->counters->failed_req, 1);
 	return 0;
 }
@@ -5026,7 +5026,7 @@ int http_request_forward_body(struct stream *s, struct channel *req, int an_bit)
 
  return_bad_req: /* let's centralize all bad requests */
 	HA_ATOMIC_ADD(&sess->fe->fe_counters.failed_req, 1);
-	if (sess->listener->counters)
+	if (sess->listener && sess->listener->counters)
 		HA_ATOMIC_ADD(&sess->listener->counters->failed_req, 1);
 
  return_bad_req_stats_ok:
@@ -5878,7 +5878,7 @@ int http_process_res_common(struct stream *s, struct channel *rep, int an_bit, s
 
 			HA_ATOMIC_ADD(&s->be->be_counters.denied_resp, 1);
 			HA_ATOMIC_ADD(&sess->fe->fe_counters.denied_resp, 1);
-			if (sess->listener->counters)
+			if (sess->listener && sess->listener->counters)
 				HA_ATOMIC_ADD(&sess->listener->counters->denied_resp, 1);
 
 			goto return_srv_prx_502;
@@ -6031,7 +6031,7 @@ int http_process_res_common(struct stream *s, struct channel *rep, int an_bit, s
 
 		HA_ATOMIC_ADD(&s->be->be_counters.denied_resp, 1);
 		HA_ATOMIC_ADD(&sess->fe->fe_counters.denied_resp, 1);
-		if (sess->listener->counters)
+		if (sess->listener && sess->listener->counters)
 			HA_ATOMIC_ADD(&sess->listener->counters->denied_resp, 1);
 
 		ha_alert("Blocking cacheable cookie in response from instance %s, server %s.\n",
