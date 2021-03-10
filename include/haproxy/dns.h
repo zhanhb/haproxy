@@ -31,6 +31,7 @@ extern unsigned int dns_failed_resolutions;
 struct dns_resolvers *find_resolvers_by_id(const char *id);
 struct dns_srvrq *find_srvrq_by_name(const char *name, struct proxy *px);
 struct dns_srvrq *new_dns_srvrq(struct server *srv, char *fqdn);
+struct dns_answer_item *find_srvrq_answer_record(const struct dns_requester *requester);
 
 int dns_str_to_dn_label(const char *str, int str_len, char *dn, int dn_len);
 int dns_dn_label_to_str(const char *dn, int dn_len, char *str, int str_len);

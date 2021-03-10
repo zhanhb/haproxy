@@ -214,6 +214,36 @@ struct dns_srvrq *new_dns_srvrq(struct server *srv, char *fqdn)
 	return NULL;
 }
 
+/* finds and return the SRV answer item associated to a requester (whose type is 'server').
+ *
+ * returns NULL in case of error or not found.
+ */
+struct dns_answer_item *find_srvrq_answer_record(const struct dns_requester *requester)
+{
+	struct dns_resolution *res;
+	struct dns_answer_item *item;
+	struct server          *srv;
+
+	if (!requester)
+		return NULL;
+
+	if ((srv = objt_server(requester->owner)) == NULL)
+		return NULL;
+	/* check if the server is managed by a SRV record */
+	if (srv->srvrq == NULL)
+		return NULL;
+
+	res = srv->srvrq->dns_requester->resolution;
+	/* search an ANSWER record whose target points to the server's hostname and whose port is
+	 * the same as server's svc_port */
+	list_for_each_entry(item, &res->response.answer_list, list) {
+		if (dns_hostname_cmp(srv->hostname_dn, item->target, srv->hostname_dn_len) == 0 &&
+		    (srv->svc_port == item->port))
+			return item;
+	}
+
+	return NULL;
+}
 
 /* 2 bytes random generator to generate DNS query ID */
 static inline uint16_t dns_rnd16(void)
