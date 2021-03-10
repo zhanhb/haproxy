@@ -1733,11 +1733,21 @@ static struct dns_resolution *dns_pick_resolution(struct dns_resolvers *resolver
 	return res;
 }
 
+void dns_purge_resolution_answer_records(struct dns_resolution *resolution)
+{
+	struct dns_answer_item *item, *itemback;
+
+	list_for_each_entry_safe(item, itemback, &resolution->response.answer_list, list) {
+		LIST_DEL(&item->list);
+		pool_free(dns_answer_item_pool, item->ar_item);
+		pool_free(dns_answer_item_pool, item);
+	}
+}
+
 /* Releases a resolution from its requester(s) and move it back to the pool */
 static void dns_free_resolution(struct dns_resolution *resolution)
 {
 	struct dns_requester *req, *reqback;
-	struct dns_answer_item *item, *itemback;
 
 	/* clean up configuration */
 	dns_reset_resolution(resolution);
@@ -1748,16 +1758,7 @@ static void dns_free_resolution(struct dns_resolution *resolution)
 		LIST_DEL(&req->list);
 		req->resolution = NULL;
 	}
-
-	list_for_each_entry_safe(item, itemback, &resolution->response.answer_list, list) {
-		LIST_DEL(&item->list);
-		if (item->ar_item) {
-			pool_free(dns_answer_item_pool, item->ar_item);
-			item->ar_item = NULL;
-		}
-		pool_free(dns_answer_item_pool, item);
-	}
-
+	dns_purge_resolution_answer_records(resolution);
 	LIST_DEL(&resolution->list);
 	pool_free(dns_resolution_pool, resolution);
 }
