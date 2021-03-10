@@ -3828,7 +3828,25 @@ int snr_resolution_cb(struct dns_requester *requester, struct dns_nameserver *na
 	if (!s)
 		return 1;
 
+	if (s->srvrq) {
+		struct dns_answer_item *srv_item;
+
+		/* If DNS resolution is disabled ignore it. */
+		if (s->flags & SRV_F_NO_RESOLUTION)
+			return 1;
+
+		/* The server is based on a SRV record, thus, find the
+		 * associated answer record. If not found, it means the SRV item
+		 * has expired and this resolution must be ignored.
+		 */
+		srv_item = find_srvrq_answer_record(requester);
+		if (!srv_item)
+			return 1;
+	}
+
 	resolution = s->dns_requester->resolution;
+	if (!resolution)
+		return 1;
 
 	/* initializing variables */
 	firstip = NULL;		/* pointer to the first valid response found */
@@ -3893,6 +3911,7 @@ int snr_resolution_cb(struct dns_requester *requester, struct dns_nameserver *na
 	update_server_addr(s, firstip, firstip_sin_family, (char *) chk->area);
 
  update_status:
+
 	snr_update_srv_status(s, has_no_ip);
 	return 1;
 
