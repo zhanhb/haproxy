@@ -557,7 +557,7 @@ static void dns_check_dns_response(struct dns_resolution *res)
 		struct dns_answer_item *ar_item = item->ar_item;
 
 		/* clean up obsolete Additional record */
-		if (ar_item && (ar_item->last_seen + resolvers->hold.obsolete / 1000) < now.tv_sec) {
+		if (ar_item && tick_is_lt(tick_add(ar_item->last_seen, resolvers->hold.obsolete), now_ms)) {
 			/* Cleaning up the AR item will trigger an extra DNS  resolution, except if the SRV
 			 * item is also obsolete.
 			 */
@@ -566,7 +566,7 @@ static void dns_check_dns_response(struct dns_resolution *res)
 		}
 
 		/* Remove obsolete items */
-		if ((item->last_seen + resolvers->hold.obsolete / 1000) < now.tv_sec) {
+		if (tick_is_lt(tick_add(item->last_seen, resolvers->hold.obsolete), now_ms)) {
 			if (item->type != DNS_RTYPE_SRV)
 				goto rm_obselete_item;
 
@@ -881,6 +881,7 @@ static int dns_validate_dns_response(unsigned char *resp, unsigned char *bufend,
 
 		/* initialization */
 		dns_answer_record->ar_item = NULL;
+		dns_answer_record->last_seen = TICK_ETERNITY;
 
 		offset = 0;
 		len = dns_read_name(resp, bufend, reader, tmpname, DNS_MAX_NAME_SIZE, &offset, 0);
@@ -1076,12 +1077,12 @@ static int dns_validate_dns_response(unsigned char *resp, unsigned char *bufend,
 		}
 
 		if (found == 1) {
-			tmp_record->last_seen = now.tv_sec;
+			tmp_record->last_seen = now_ms;
 			pool_free(dns_answer_item_pool, dns_answer_record);
 			dns_answer_record = NULL;
 		}
 		else {
-			dns_answer_record->last_seen = now.tv_sec;
+			dns_answer_record->last_seen = now_ms;
 			dns_answer_record->ar_item = NULL;
 			LIST_ADDQ(&dns_p->answer_list, &dns_answer_record->list);
 			dns_answer_record = NULL;
@@ -1131,6 +1132,7 @@ static int dns_validate_dns_response(unsigned char *resp, unsigned char *bufend,
 		dns_answer_record = pool_alloc(dns_answer_item_pool);
 		if (dns_answer_record == NULL)
 			goto invalid_resp;
+		dns_answer_record->last_seen = TICK_ETERNITY;
 
 		offset = 0;
 		len = dns_read_name(resp, bufend, reader, tmpname, DNS_MAX_NAME_SIZE, &offset, 0);
@@ -1257,12 +1259,12 @@ static int dns_validate_dns_response(unsigned char *resp, unsigned char *bufend,
 		}
 
 		if (found == 1) {
-			tmp_record->ar_item->last_seen = now.tv_sec;
+			tmp_record->ar_item->last_seen = now_ms;
 			pool_free(dns_answer_item_pool, dns_answer_record);
 			dns_answer_record = NULL;
 		}
 		else {
-			dns_answer_record->last_seen = now.tv_sec;
+			dns_answer_record->last_seen = now_ms;
 			dns_answer_record->ar_item = NULL;
 
 			// looking for the SRV record in the response list linked to this additional record
