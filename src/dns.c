@@ -653,7 +653,7 @@ static void dns_check_dns_response(struct dns_resolution *res)
 					    item->data_len == srv->hostname_dn_len &&
 					    !dns_hostname_cmp(srv->hostname_dn, item->target, item->data_len)) {
 						dns_unlink_resolution(srv->dns_requester);
-						snr_update_srv_status(srv, 1);
+						srvrq_update_srv_status(srv, 1);
 						free(srv->hostname);
 						free(srv->hostname_dn);
 						srv->hostname        = NULL;
@@ -759,7 +759,7 @@ static void dns_check_dns_response(struct dns_resolution *res)
 				}
 
 				/* Update the server status */
-				snr_update_srv_status(srv, (srv->addr.ss_family != AF_INET && srv->addr.ss_family != AF_INET6));
+				srvrq_update_srv_status(srv, (srv->addr.ss_family != AF_INET && srv->addr.ss_family != AF_INET6));
 
 				srv->svc_port = item->port;
 				srv->flags   &= ~SRV_F_MAPPORTS;
