@@ -652,7 +652,7 @@ static void dns_check_dns_response(struct dns_resolution *res)
 					if (srv->srvrq == srvrq && srv->svc_port == item->port &&
 					    item->data_len == srv->hostname_dn_len &&
 					    !dns_hostname_cmp(srv->hostname_dn, item->target, item->data_len)) {
-						dns_unlink_resolution(srv->dns_requester);
+						dns_unlink_resolution(srv->dns_requester, 0);
 						srvrq_update_srv_status(srv, 1);
 						free(srv->hostname);
 						free(srv->hostname_dn);
@@ -733,7 +733,7 @@ static void dns_check_dns_response(struct dns_resolution *res)
 					/* Unlink A/AAAA resolution for this server if there is an AR item.
 					 * It is usless to perform an extra resolution
 					 */
-					dns_unlink_resolution(srv->dns_requester);
+					dns_unlink_resolution(srv->dns_requester, 0);
 				}
 
 				if (!srv->hostname_dn) {
@@ -1875,8 +1875,9 @@ int dns_link_resolution(void *requester, int requester_type, int requester_locke
 
 /* Removes a requester from a DNS resolution. It takes takes care of all the
  * consequences. It also cleans up some parameters from the requester.
+ * if <safe> is set to 1, the corresponding resolution is not released.
  */
-void dns_unlink_resolution(struct dns_requester *requester)
+void dns_unlink_resolution(struct dns_requester *requester, int safe)
 {
 	struct dns_resolution *res;
 	struct dns_requester  *req;
@@ -1894,6 +1895,15 @@ void dns_unlink_resolution(struct dns_requester *requester)
 	if (!LIST_ISEMPTY(&res->requesters))
 		req = LIST_NEXT(&res->requesters, struct dns_requester *, list);
 	else {
+		if (safe) {
+			/* Don't release it yet. */
+			dns_reset_resolution(res);
+			res->hostname_dn = NULL;
+			res->hostname_dn_len = 0;
+			dns_purge_resolution_answer_records(res);
+			return;
+		}
+
 		dns_free_resolution(res);
 		return;
 	}
@@ -2196,6 +2206,11 @@ static struct task *dns_process_resolvers(struct task *t, void *context, unsigne
 
 	/* Handle all expired resolutions from the active list */
 	list_for_each_entry_safe(res, resback, &resolvers->resolutions.curr, list) {
+		if (LIST_ISEMPTY(&res->requesters)) {
+			dns_free_resolution(res);
+			continue;
+		}
+
 		/* When we find the first resolution in the future, then we can
 		 * stop here */
 		exp = tick_add(res->last_query, resolvers->timeout.retry);
@@ -2244,6 +2259,11 @@ static struct task *dns_process_resolvers(struct task *t, void *context, unsigne
 
 	/* Handle all resolutions in the wait list */
 	list_for_each_entry_safe(res, resback, &resolvers->resolutions.wait, list) {
+		if (LIST_ISEMPTY(&res->requesters)) {
+			dns_free_resolution(res);
+			continue;
+		}
+
 		exp = tick_add(res->last_resolution, dns_resolution_timeout(res));
 		if (tick_isset(res->last_resolution) && !tick_is_expired(exp, now_ms))
 			continue;
@@ -2814,7 +2834,7 @@ enum act_return dns_action_do_resolve(struct act_rule *rule, struct proxy *px,
 	s->dns_ctx.hostname_dn = NULL;
 	s->dns_ctx.hostname_dn_len = 0;
 	if (s->dns_ctx.dns_requester) {
-		dns_unlink_resolution(s->dns_ctx.dns_requester);
+		dns_unlink_resolution(s->dns_ctx.dns_requester, 0);
 		pool_free(dns_requester_pool, s->dns_ctx.dns_requester);
 		s->dns_ctx.dns_requester = NULL;
 	}
