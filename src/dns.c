@@ -1302,7 +1302,7 @@ static int dns_validate_dns_response(unsigned char *resp, unsigned char *bufend,
 				continue;
 
 			ar_item = tmp_record->ar_item;
-			if (ar_item->type != dns_answer_record->type ||
+			if (ar_item->type != dns_answer_record->type || ar_item->last_seen == now_ms ||
 			    len != tmp_record->data_len ||
 			    dns_hostname_cmp(dns_answer_record->name, tmp_record->target, tmp_record->data_len))
 				continue;
