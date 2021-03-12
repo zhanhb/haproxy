@@ -1555,6 +1555,7 @@ static int proxy_parse_httpcheck(char **args, int section, struct proxy *curpx,
 		chk = LIST_PREV(&rs->rules, typeof(chk), list);
 		if (chk->action != TCPCHK_ACT_SEND || !(chk->send.http.flags & TCPCHK_SND_HTTP_FROM_OPT))
 			index = chk->index + 1;
+		chk = NULL;
 	}
 
 	if (strcmp(args[cur_arg], "connect") == 0)

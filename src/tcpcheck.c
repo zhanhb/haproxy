@@ -3739,6 +3739,7 @@ static int proxy_parse_tcpcheck(char **args, int section, struct proxy *curpx,
 	if (!LIST_ISEMPTY(&rs->rules)) {
 		chk = LIST_PREV(&rs->rules, typeof(chk), list);
 		index = chk->index + 1;
+		chk = NULL;
 	}
 
 	cur_arg = 1;
