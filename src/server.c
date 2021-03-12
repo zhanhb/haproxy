@@ -3729,7 +3729,7 @@ int srvrq_update_srv_status(struct server *s, int has_no_ip)
 int snr_update_srv_status(struct server *s, int has_no_ip)
 {
 	struct dns_resolvers  *resolvers  = s->resolvers;
-	struct dns_resolution *resolution = s->dns_requester->resolution;
+	struct dns_resolution *resolution = (s->dns_requester ? s->dns_requester->resolution : NULL);
 	int exp;
 
 	/* If resolution is NULL we're dealing with SRV records Additional records */
@@ -3858,7 +3858,7 @@ int snr_resolution_cb(struct dns_requester *requester, struct dns_nameserver *na
 			return 1;
 	}
 
-	resolution = s->dns_requester->resolution;
+	resolution = (s->dns_requester ? s->dns_requester->resolution : NULL);
 	if (!resolution)
 		return 1;
 
@@ -4130,10 +4130,10 @@ int srv_set_fqdn(struct server *srv, const char *hostname, int dns_locked)
 
 	if (!dns_locked)
 		HA_SPIN_LOCK(DNS_LOCK, &srv->resolvers->lock);
-	/* run time DNS resolution was not active for this server
+	/* run time DNS/SRV resolution was not active for this server
 	 * and we can't enable it at run time for now.
 	 */
-	if (!srv->dns_requester)
+	if (!srv->dns_requester && !srv->srvrq)
 		goto err;
 
 	chunk_reset(&trash);
@@ -4144,7 +4144,7 @@ int srv_set_fqdn(struct server *srv, const char *hostname, int dns_locked)
 	if (hostname_dn_len == -1)
 		goto err;
 
-	resolution = srv->dns_requester->resolution;
+	resolution = (srv->dns_requester ? srv->dns_requester->resolution : NULL);
 	if (resolution &&
 	    resolution->hostname_dn &&
 	    !strcmp(resolution->hostname_dn, hostname_dn))

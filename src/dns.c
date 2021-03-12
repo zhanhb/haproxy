@@ -2437,7 +2437,7 @@ static int dns_finalize_config(void)
 					continue;
 				}
 			}
-			if (dns_link_resolution(srv, OBJ_TYPE_SERVER, 0) == -1) {
+			if (!srv->srvrq && dns_link_resolution(srv, OBJ_TYPE_SERVER, 0) == -1) {
 				ha_alert("config : %s '%s', unable to set DNS resolution for server '%s'.\n",
 					 proxy_type_str(px), px->id, srv->id);
 				err_code |= (ERR_ALERT|ERR_ABORT);
