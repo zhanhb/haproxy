@@ -149,7 +149,7 @@ int http_wait_for_request(struct stream *s, struct channel *req, int an_bit)
 			stream_inc_http_req_ctr(s);
 			proxy_inc_fe_req_ctr(sess->fe);
 			_HA_ATOMIC_ADD(&sess->fe->fe_counters.failed_req, 1);
-			if (sess->listener->counters)
+			if (sess->listener && sess->listener->counters)
 				_HA_ATOMIC_ADD(&sess->listener->counters->failed_req, 1);
 
 			txn->status = 400;
@@ -175,7 +175,7 @@ int http_wait_for_request(struct stream *s, struct channel *req, int an_bit)
 			stream_inc_http_req_ctr(s);
 			proxy_inc_fe_req_ctr(sess->fe);
 			_HA_ATOMIC_ADD(&sess->fe->fe_counters.failed_req, 1);
-			if (sess->listener->counters)
+			if (sess->listener && sess->listener->counters)
 				_HA_ATOMIC_ADD(&sess->listener->counters->failed_req, 1);
 
 			txn->status = 408;
@@ -202,7 +202,7 @@ int http_wait_for_request(struct stream *s, struct channel *req, int an_bit)
 			stream_inc_http_req_ctr(s);
 			proxy_inc_fe_req_ctr(sess->fe);
 			_HA_ATOMIC_ADD(&sess->fe->fe_counters.failed_req, 1);
-			if (sess->listener->counters)
+			if (sess->listener && sess->listener->counters)
 				_HA_ATOMIC_ADD(&sess->listener->counters->failed_req, 1);
 
 			txn->status = 400;
@@ -218,7 +218,7 @@ int http_wait_for_request(struct stream *s, struct channel *req, int an_bit)
 		req->flags |= CF_READ_DONTWAIT; /* try to get back here ASAP */
 		s->res.flags &= ~CF_EXPECT_MORE; /* speed up sending a previous response */
 
-		if (sess->listener->options & LI_O_NOQUICKACK && htx_is_not_empty(htx) &&
+		if (sess->listener && (sess->listener->options & LI_O_NOQUICKACK) && htx_is_not_empty(htx) &&
 		    objt_conn(sess->origin) && conn_ctrl_ready(__objt_conn(sess->origin))) {
 			/* We need more data, we have to re-enable quick-ack in case we
 			 * previously disabled it, otherwise we might cause the client
