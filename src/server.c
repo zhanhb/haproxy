@@ -4068,7 +4068,7 @@ struct server *snr_check_ip_callback(struct server *srv, void *ip, unsigned char
 		HA_SPIN_LOCK(SERVER_LOCK, &tmpsrv->lock);
 		if ((tmpsrv->hostname_dn == NULL) ||
 		    (srv->hostname_dn_len != tmpsrv->hostname_dn_len) ||
-		    (strcmp(srv->hostname_dn, tmpsrv->hostname_dn) != 0) ||
+		    (strcasecmp(srv->hostname_dn, tmpsrv->hostname_dn) != 0) ||
 		    (srv->puid == tmpsrv->puid)) {
 			HA_SPIN_UNLOCK(SERVER_LOCK, &tmpsrv->lock);
 			continue;
@@ -4147,7 +4147,8 @@ int srv_set_fqdn(struct server *srv, const char *hostname, int dns_locked)
 	resolution = (srv->dns_requester ? srv->dns_requester->resolution : NULL);
 	if (resolution &&
 	    resolution->hostname_dn &&
-	    !strcmp(resolution->hostname_dn, hostname_dn))
+	    resolution->hostname_dn_len == hostname_dn_len &&
+	    strcasecmp(resolution->hostname_dn, hostname_dn) == 0)
 		goto end;
 
 	dns_unlink_resolution(srv->dns_requester, 0);
