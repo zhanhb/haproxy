@@ -30,7 +30,7 @@ THREAD_LOCAL struct timeval before_poll;     /* system date before calling poll(
 THREAD_LOCAL struct timeval after_poll;      /* system date after leaving poll() */
 
 static THREAD_LOCAL struct timeval tv_offset;  /* per-thread time ofsset relative to global time */
-static volatile unsigned long long global_now; /* common date between all threads (32:32) */
+volatile unsigned long long global_now;      /* common date between all threads (32:32) */
 
 /*
  * adds <ms> ms to <from>, set the result to <tv> and returns a pointer <tv>
