@@ -1,6 +1,39 @@
 ChangeLog :
 ===========
 
+2021/03/18 : 2.2.11
+    - BUG/MEDIUM: lists: Avoid an infinite loop in MT_LIST_TRY_ADDQ().
+    - BUG/MINOR: hlua: Don't strip last non-LWS char in hlua_pushstrippedstring()
+    - BUG/MINOR: ssl: don't truncate the file descriptor to 16 bits in debug mode
+    - BUG/MEDIUM: session: NULL dereference possible when accessing the listener
+    - BUG/MEDIUM: stick-tables: fix ref counter in table entry using multiple http tracksc.
+    - BUG/MEDIUM: filters: Set CF_FL_ANALYZE on channels when filters are attached
+    - BUG/MINOR: tcpcheck: Update .health threshold of agent inside an agent-check
+    - BUG/MINOR: proxy/session: Be sure to have a listener to increment its counters
+    - BUG/MINOR: session: Add some forgotten tests on session's listener
+    - BUG/MINOR: tcpcheck: Fix double free on error path when parsing tcp/http-check
+    - CLEANUP: tcp-rules: add missing actions in the tcp-request error message
+    - Revert "BUG/MINOR: resolvers: Only renew TTL for SRV records with an additional record"
+    - BUG/MINOR: resolvers: Consider server to have no IP on DNS resolution error
+    - BUG/MINOR: resolvers: Reset server address on DNS error only on status change
+    - BUG/MINOR: resolvers: Unlink DNS resolution to set RMAINT on SRV resolution
+    - BUG/MEDIUM: resolvers: Don't set an address-less server as UP
+    - BUG/MEDIUM: resolvers: Fix the loop looking for an existing ADD item
+    - MINOR: resolvers: new function find_srvrq_answer_record()
+    - BUG/MINOR; resolvers: Ignore DNS resolution for expired SRV item
+    - BUG/MEDIUM: resolvers: Trigger a DNS resolution if an ADD item is obsolete
+    - MINOR: resolvers: Use a function to remove answers attached to a resolution
+    - MINOR: resolvers: Purge answer items when a SRV resolution triggers an error
+    - MINOR: resolvers: Add function to change the srv status based on SRV resolution
+    - MINOR: resolvers: Directly call srvrq_update_srv_state() when possible
+    - BUG/MEDIUM: resolvers: Don't release resolution from a requester callbacks
+    - BUG/MEDIUM: resolvers: Skip DNS resolution at startup if SRV resolution is set
+    - MINOR: resolvers: Use milliseconds for cached items in resolver responses
+    - MINOR: resolvers: Don't try to match immediatly renewed ADD items
+    - BUG/MINOR: resolvers: Add missing case-insensitive comparisons of DNS hostnames
+    - MINOR: time: export the global_now variable
+    - BUG/MINOR: freq_ctr/threads: make use of the last updated global time
+
 2021/03/03 : 2.2.10
     - MINOR: check: do not ignore a connection header for http-check send
     - BUILD: ssl: fix typo in HAVE_SSL_CTX_ADD_SERVER_CUSTOM_EXT macro
