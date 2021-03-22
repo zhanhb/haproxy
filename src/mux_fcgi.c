@@ -2957,13 +2957,14 @@ struct task *fcgi_io_cb(struct task *t, void *ctx, unsigned short status)
 		conn_in_list = conn->flags & CO_FL_LIST_MASK;
 		if (conn_in_list)
 			MT_LIST_DEL(&conn->list);
+
+		HA_SPIN_UNLOCK(OTHER_LOCK, &idle_conns[tid].takeover_lock);
 	} else {
 		/* we're certain the connection was not in an idle list */
 		conn = fconn->conn;
 		TRACE_ENTER(FCGI_EV_FCONN_WAKE, conn);
 		conn_in_list = 0;
 	}
-	HA_SPIN_UNLOCK(OTHER_LOCK, &idle_conns[tid].takeover_lock);
 
 	if (!(fconn->wait_event.events & SUB_RETRY_SEND))
 		ret = fcgi_send(fconn);
