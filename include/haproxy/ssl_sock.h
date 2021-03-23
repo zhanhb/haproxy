@@ -104,7 +104,7 @@ int ssl_sock_load_cert(char *path, struct bind_conf *bind_conf, char **err);
 void ssl_free_global_issuers(void);
 int ssl_sock_load_cert_list_file(char *file, int dir, struct bind_conf *bind_conf, struct proxy *curproxy, char **err);
 int ssl_init_single_engine(const char *engine_id, const char *def_algorithms);
-int ssl_store_load_locations_file(char *path);
+int ssl_store_load_locations_file(char *path, int create_if_none);
 
 /* ssl shctx macro */
 
