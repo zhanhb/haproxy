@@ -237,9 +237,6 @@ struct hlua_mem_allocator {
 
 static struct hlua_mem_allocator hlua_global_allocator;
 
- /* > 0 if lua is in a non-rentrant part, thus with a non-dumpable stack */
-THREAD_LOCAL unsigned int hlua_not_dumpable = 0;
-
 /* These functions converts types between HAProxy internal args or
  * sample and LUA types. Another function permits to check if the
  * LUA stack contains arguments according with an required ARG_T
@@ -8242,9 +8239,7 @@ static void *hlua_alloc(void *ud, void *ptr, size_t osize, size_t nsize)
 		/* it's a free */
 		if (ptr)
 			zone->allocated -= osize;
-		hlua_not_dumpable++;
 		free(ptr);
-		hlua_not_dumpable--;
 		return NULL;
 	}
 
@@ -8253,9 +8248,7 @@ static void *hlua_alloc(void *ud, void *ptr, size_t osize, size_t nsize)
 		if (zone->limit && zone->allocated + nsize > zone->limit)
 			return NULL;
 
-		hlua_not_dumpable++;
 		ptr = malloc(nsize);
-		hlua_not_dumpable--;
 		if (ptr)
 			zone->allocated += nsize;
 		return ptr;
@@ -8265,9 +8258,7 @@ static void *hlua_alloc(void *ud, void *ptr, size_t osize, size_t nsize)
 	if (zone->limit && zone->allocated + nsize - osize > zone->limit)
 		return NULL;
 
-	hlua_not_dumpable++;
 	ptr = realloc(ptr, nsize);
-	hlua_not_dumpable--;
 	if (ptr)
 		zone->allocated += nsize - osize;
 	return ptr;
