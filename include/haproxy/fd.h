@@ -59,6 +59,7 @@ extern volatile int ha_used_fds; // Number of FDs we're currently using
  * The file descriptor is also closed.
  */
 void fd_delete(int fd);
+void fd_dodelete(int fd, int do_close);
 
 /* Deletes an FD from the fdsets.
  * The file descriptor is kept open.
@@ -419,7 +420,13 @@ static inline void fd_update_events(int fd, unsigned char evts)
 		if (fd_set_running(fd) == -1)
 			return;
 		fdtab[fd].iocb(fd);
-		fd_clr_running(fd);
+		if (fdtab[fd].running_mask & tid_bit &&
+		    fd_clr_running(fd) == 0 && !fdtab[fd].thread_mask) {
+			/* note: if there was contention, we're necessarily
+			 * in a delete case and not just a remove one.
+			 */
+			fd_dodelete(fd, 1);
+		}
 	}
 
 	/* we had to stop this FD and it still must be stopped after the I/O
