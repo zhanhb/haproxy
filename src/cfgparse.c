@@ -8209,65 +8209,13 @@ int check_config_validity()
 			}
 		}
 
-		/* check validity for 'tcp-request' layer 4 rules */
-		list_for_each_entry(arule, &curproxy->tcp_req.l4_rules, list) {
-			err = NULL;
-			if (arule->check_ptr && !arule->check_ptr(arule, curproxy, &err)) {
-				ha_alert("Proxy '%s': %s.\n", curproxy->id, err);
-				free(err);
-				cfgerr++;
-			}
-		}
-
-		/* check validity for 'tcp-request' layer 5 rules */
-		list_for_each_entry(arule, &curproxy->tcp_req.l5_rules, list) {
-			err = NULL;
-			if (arule->check_ptr && !arule->check_ptr(arule, curproxy, &err)) {
-				ha_alert("Proxy '%s': %s.\n", curproxy->id, err);
-				free(err);
-				cfgerr++;
-			}
-		}
-
-		/* check validity for 'tcp-request' layer 6 rules */
-		list_for_each_entry(arule, &curproxy->tcp_req.inspect_rules, list) {
-			err = NULL;
-			if (arule->check_ptr && !arule->check_ptr(arule, curproxy, &err)) {
-				ha_alert("Proxy '%s': %s.\n", curproxy->id, err);
-				free(err);
-				cfgerr++;
-			}
-		}
-
-		/* check validity for 'http-request' layer 7 rules */
-		list_for_each_entry(arule, &curproxy->http_req_rules, list) {
-			err = NULL;
-			if (arule->check_ptr && !arule->check_ptr(arule, curproxy, &err)) {
-				ha_alert("Proxy '%s': %s.\n", curproxy->id, err);
-				free(err);
-				cfgerr++;
-			}
-		}
-
-		/* check validity for 'http-response' layer 7 rules */
-		list_for_each_entry(arule, &curproxy->http_res_rules, list) {
-			err = NULL;
-			if (arule->check_ptr && !arule->check_ptr(arule, curproxy, &err)) {
-				ha_alert("Proxy '%s': %s.\n", curproxy->id, err);
-				free(err);
-				cfgerr++;
-			}
-		}
-
-		/* move any "block" rules at the beginning of the http-request rules */
-		if (!LIST_ISEMPTY(&curproxy->block_rules)) {
-			/* insert block_rules into http_req_rules at the beginning */
-			curproxy->block_rules.p->n    = curproxy->http_req_rules.n;
-			curproxy->http_req_rules.n->p = curproxy->block_rules.p;
-			curproxy->block_rules.n->p    = &curproxy->http_req_rules;
-			curproxy->http_req_rules.n    = curproxy->block_rules.n;
-			LIST_INIT(&curproxy->block_rules);
-		}
+		/* check validity for 'tcp-request' layer 4/5/6/7 rules */
+		cfgerr += check_action_rules(&curproxy->tcp_req.l4_rules, curproxy, &err_code);
+		cfgerr += check_action_rules(&curproxy->tcp_req.l5_rules, curproxy, &err_code);
+		cfgerr += check_action_rules(&curproxy->tcp_req.inspect_rules, curproxy, &err_code);
+		cfgerr += check_action_rules(&curproxy->tcp_rep.inspect_rules, curproxy, &err_code);
+		cfgerr += check_action_rules(&curproxy->http_req_rules, curproxy, &err_code);
+		cfgerr += check_action_rules(&curproxy->http_res_rules, curproxy, &err_code);
 
 		if (curproxy->table.peers.name) {
 			struct peers *curpeers;

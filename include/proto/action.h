@@ -68,6 +68,11 @@ static inline void action_build_list(struct list *keywords, struct chunk *chk)
 		*p = '\0';
 }
 
+/* Check an action ruleset validity. It returns the number of error encountered
+ * andd err_code is updated if a warning is emitted.
+ */
+int check_action_rules(struct list *rules, struct proxy *px, int *err_code);
+
 /* for an action ACT_ACTION_TRK_SC*, return a tracking index starting at zero
  * for SC0. Unknown actions also return zero.
  */

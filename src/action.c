@@ -16,9 +16,32 @@
 #include <common/standard.h>
 
 #include <proto/action.h>
+#include <proto/log.h>
 #include <proto/proxy.h>
 #include <proto/stick_table.h>
 
+
+/* Check an action ruleset validity. It returns the number of error encountered
+ * andd err_code is updated if a warning is emitted.
+ */
+int check_action_rules(struct list *rules, struct proxy *px, int *err_code)
+{
+	struct act_rule *rule;
+	char *errmsg = NULL;
+	int err = 0;
+
+	list_for_each_entry(rule, rules, list) {
+		if (rule->check_ptr && !rule->check_ptr(rule, px, &errmsg)) {
+			ha_alert("Proxy '%s': %s.\n", px->id, errmsg);
+			err++;
+		}
+
+		free(errmsg);
+		errmsg = NULL;
+	}
+
+	return err;
+}
 
 /* Find and check the target table used by an action ACT_ACTION_TRK_*. This
  * function should be called during the configuration validity check.
