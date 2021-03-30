@@ -1344,7 +1344,12 @@ static enum act_return tcp_exec_action_silent_drop(struct act_rule *rule, struct
 	 * network and has no effect on local net.
 	 */
 #ifdef IP_TTL
-	setsockopt(conn->handle.fd, SOL_IP, IP_TTL, &one, sizeof(one));
+	if (conn->addr.from.ss_family == AF_INET)
+		setsockopt(conn->handle.fd, SOL_IP, IP_TTL, &one, sizeof(one));
+#endif
+#ifdef IPV6_UNICAST_HOPS
+	if (conn->addr.from.ss_family == AF_INET6)
+		setsockopt(conn->handle.fd, SOL_IPV6, IPV6_UNICAST_HOPS, &one, sizeof(one));
 #endif
  out:
 	/* kill the stream if any */
