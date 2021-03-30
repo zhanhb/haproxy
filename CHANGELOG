@@ -1,6 +1,13 @@
 ChangeLog :
 ===========
 
+2021/03/30 : 2.3.9
+    - BUG/MEDIUM: mux-h1: make h1_shutw_conn() idempotent
+    - MEDIUM: backend: use a trylock to grab a connection on high FD counts as well
+    - BUG/MINOR: payload: Wait for more data if buffer is empty in payload/payload_lv
+    - BUG/MINOR: stats: Apply proper styles in HTML status page.
+    - BUG/MEDIUM: time: make sure to always initialize the global tick
+
 2021/03/25 : 2.3.8
     - MINOR: time: export the global_now variable
     - BUG/MINOR: freq_ctr/threads: make use of the last updated global time
