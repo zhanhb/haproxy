@@ -1358,7 +1358,7 @@ int connect_server(struct stream *s)
 				// see it possibly larger.
 				ALREADY_CHECKED(i);
 
-				if (HA_SPIN_TRYLOCK(IDLE_CONNS_LOCK, &idle_conns[i].takeover_lock) != 0)
+				if (HA_SPIN_TRYLOCK(OTHER_LOCK, &idle_conns[i].takeover_lock) != 0)
 					continue;
 
 				tokill_conn = MT_LIST_POP(&srv->idle_conns[i],
