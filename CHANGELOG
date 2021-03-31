@@ -1,6 +1,15 @@
 ChangeLog :
 ===========
 
+2021/03/31 : 1.7.14
+    - BUILD: ebtree: fix build on libmusl after recent introduction of eb_memcmp()
+    - MINOR: tools: make url2ipv4 return the exact number of bytes parsed
+    - BUG/MINOR: http_fetch: make hdr_ip() reject trailing characters
+    - BUG/MINOR: http_fetch: make hdr_ip() resistant to empty fields
+    - BUG/MINOR: tcp: fix silent-drop workaround for IPv6
+    - BUILD: tcp: use IPPROTO_IPV6 instead of SOL_IPV6 on FreeBSD/MacOS
+    - BUG/MINOR: spoe: fix handling of truncated frame
+
 2021/03/19 : 1.7.13
     - MINOR: tcp: avoid confusion in time parsing init
     - BUG/MINOR: cli: don't call the kw->io_release if kw->parse failed
