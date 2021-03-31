@@ -1,6 +1,37 @@
 ChangeLog :
 ===========
 
+2021/03/31 : 2.2.12
+    - MINOR: time: also provide a global, monotonic global_now_ms timer
+    - BUG/MEDIUM: freq_ctr/threads: use the global_now_ms variable
+    - MINOR/BUG: mworker/cli: do not use the unix_bind prefix for the master CLI socket
+    - MEDIUM: lua: Use a per-thread counter to track some non-reentrant parts of lua
+    - BUG/MEDIUM: debug/lua: Don't dump the lua stack if not dumpable
+    - BUG/MINOR: ssl: Prevent disk access when using "add ssl crt-list"
+    - BUILD: ssl: guard ecdh functions with SSL_CTX_set_tmp_ecdh macro
+    - MINOR: lua: Slightly improve function dumping the lua traceback
+    - BUG/MEDIUM: debug/lua: Use internal hlua function to dump the lua traceback
+    - BUG/MEDIUM: lua: Always init the lua stack before referencing the context
+    - MINOR: fd: make fd_clr_running() return the remaining running mask
+    - MINOR: fd: remove the unneeded running bit from fd_insert()
+    - BUG/MEDIUM: fd: do not wait on FD removal in fd_delete()
+    - CLEANUP: fd: remove unused fd_set_running_excl()
+    - BUG/MEDIUM: fd: Take the fd_mig_lock when closing if no DWCAS is available.
+    - BUG/MEDIUM: thread: Fix a deadlock if an isolated thread is marked as harmless
+    - MINOR: tools: make url2ipv4 return the exact number of bytes parsed
+    - BUG/MINOR: http_fetch: make hdr_ip() reject trailing characters
+    - BUG/MEDIUM: mux-h1: make h1_shutw_conn() idempotent
+    - BUG/MINOR: payload: Wait for more data if buffer is empty in payload/payload_lv
+    - BUG/MINOR: stats: Apply proper styles in HTML status page.
+    - BUG/MEDIUM: time: make sure to always initialize the global tick
+    - BUG/MINOR: tcp: fix silent-drop workaround for IPv6
+    - BUILD: tcp: use IPPROTO_IPV6 instead of SOL_IPV6 on FreeBSD/MacOS
+    - BUG/MINOR: ssl: Fix update of default certificate
+    - BUG/MINOR: ssl: Prevent removal of crt-list line if the instance is a default one
+    - BUG/MINOR: http_fetch: make hdr_ip() resistant to empty fields
+    - BUG/MINOR: ssl: Add missing free on SSL_CTX in ckch_inst_free
+    - REGTESTS: ssl: add missing file simple.crt-list from previous SSL fix
+
 2021/03/18 : 2.2.11
     - BUG/MEDIUM: lists: Avoid an infinite loop in MT_LIST_TRY_ADDQ().
     - BUG/MINOR: hlua: Don't strip last non-LWS char in hlua_pushstrippedstring()
