@@ -1048,7 +1048,7 @@ handle_spoe_agentack_frame(struct appctx *appctx, char *frame, size_t size)
 {
 	struct spoe_context  *ctx = APPCTX_SPOE(appctx).ctx;
 	uint64_t              stream_id, frame_id;
-	int                   idx = 0;
+	int                   idx = 0, i;
 	size_t                min_size = (7  /* TYPE + METADATA */);
 
 	/* Check frame type */
@@ -1064,8 +1064,17 @@ handle_spoe_agentack_frame(struct appctx *appctx, char *frame, size_t size)
 	idx += 4;
 
 	/* Get the stream-id and the frame-id */
-	idx += decode_spoe_varint(frame+idx, frame+size, &stream_id);
-	idx += decode_spoe_varint(frame+idx, frame+size, &frame_id);
+	if ((i = decode_spoe_varint(frame+idx, frame+size, &stream_id)) == -1) {
+		spoe_status_code = SPOE_FRM_ERR_INVALID;
+		return -1;
+	}
+	idx += i;
+
+	if ((i = decode_spoe_varint(frame+idx, frame+size, &frame_id)) == -1) {
+		spoe_status_code = SPOE_FRM_ERR_INVALID;
+		return -1;
+	}
+	idx += i;
 
 	/* Check stream-id and frame-id */
 	if (ctx->stream_id != (unsigned int)stream_id ||
