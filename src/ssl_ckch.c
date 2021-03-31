@@ -913,6 +913,8 @@ void ckch_inst_free(struct ckch_inst *inst)
 		ebmb_delete(&sni->name);
 		free(sni);
 	}
+	SSL_CTX_free(inst->ctx);
+	inst->ctx = NULL;
 	LIST_DEL(&inst->by_ckchs);
 	LIST_DEL(&inst->by_crtlist_entry);
 	free(inst);
