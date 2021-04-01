@@ -3340,9 +3340,16 @@ int ckch_inst_new_load_multi_store(const char *path, struct ckch_store *ckchs,
 
 
 	/* Mark a default context if none exists, using the ctx that has the most shared keys */
-	if (!bind_conf->default_ctx) {
-		for (i = SSL_SOCK_POSSIBLE_KT_COMBOS - 1; i >= 0; i--) {
-			if (key_combos[i].ctx) {
+	for (i = SSL_SOCK_POSSIBLE_KT_COMBOS - 1; i >= 0; i--) {
+		if (key_combos[i].ctx) {
+			if (!ckch_inst->ctx) {
+				/* Always keep a reference to the newly constructed SSL_CTX in the
+				 * instance. This way if the instance has no SNIs, the SSL_CTX will
+				 * still be linked. */
+				SSL_CTX_up_ref(key_combos[i].ctx);
+				ckch_inst->ctx = key_combos[i].ctx;
+			}
+			if (!bind_conf->default_ctx) {
 				bind_conf->default_ctx = key_combos[i].ctx;
 				bind_conf->default_ssl_conf = ssl_conf;
 				ckch_inst->is_default = 1;
