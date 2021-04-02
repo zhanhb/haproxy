@@ -1,6 +1,10 @@
 ChangeLog :
 ===========
 
+2021/04/02 : 2.2.13
+    - BUG/MEDIUM: ssl: ckch_inst->ctx not assigned with multi-bundle certificates
+    - REGTESTS: ssl: "set ssl cert" and multi-certificates bundle
+
 2021/03/31 : 2.2.12
     - MINOR: time: also provide a global, monotonic global_now_ms timer
     - BUG/MEDIUM: freq_ctr/threads: use the global_now_ms variable
