@@ -113,6 +113,23 @@ extern THREAD_LOCAL struct thread_info *ti; /* thread_info for the current threa
 		*(val) = new;						\
 		__old_xchg;						\
 	})
+
+#define HA_ATOMIC_FETCH_AND(val, i)					\
+	({								\
+		typeof((val)) __p_val = (val);				\
+		typeof(*(val)) __old_val = *__p_val;			\
+		*__p_val &= (i);					\
+		__old_val;						\
+	})
+
+#define HA_ATOMIC_FETCH_OR(val, i)					\
+	({								\
+		typeof((val)) __p_val = (val);				\
+		typeof(*(val)) __old_val = *__p_val;			\
+		*__p_val |= (i);					\
+		__old_val;						\
+	})
+
 #define HA_ATOMIC_BTS(val, bit)						\
 	({								\
 		typeof((val)) __p_bts = (val);				\
@@ -297,6 +314,8 @@ static inline unsigned long thread_isolated()
 #define HA_ATOMIC_XADD(val, i)       __sync_fetch_and_add(val, i)
 #define HA_ATOMIC_AND(val, flags)    __sync_and_and_fetch(val, flags)
 #define HA_ATOMIC_OR(val, flags)     __sync_or_and_fetch(val,  flags)
+#define HA_ATOMIC_FETCH_AND(val, flags) __sync_fetch_and_and(val, flags)
+#define HA_ATOMIC_FETCH_OR(val, flags)  __sync_fetch_and_or(val,  flags)
 
 /* the CAS is a bit complicated. The older API doesn't support returning the
  * value and the swap's result at the same time. So here we take what looks
@@ -374,6 +393,8 @@ static inline unsigned long thread_isolated()
 #define HA_ATOMIC_SUB(val, i)        __atomic_sub_fetch(val, i, __ATOMIC_SEQ_CST)
 #define HA_ATOMIC_AND(val, flags)    __atomic_and_fetch(val, flags, __ATOMIC_SEQ_CST)
 #define HA_ATOMIC_OR(val, flags)     __atomic_or_fetch(val,  flags, __ATOMIC_SEQ_CST)
+#define HA_ATOMIC_FETCH_AND(val, flags) __atomic_fetch_and(val, flags, __ATOMIC_SEQ_CST)
+#define HA_ATOMIC_FETCH_OR(val, flags)  __atomic_fetch_or(val,  flags, __ATOMIC_SEQ_CST)
 #define HA_ATOMIC_BTS(val, bit)						\
 	({								\
 		typeof(*(val)) __b_bts = (1UL << (bit));		\
@@ -1275,9 +1296,17 @@ int thread_get_default_count();
 #define _HA_ATOMIC_AND HA_ATOMIC_AND
 #endif /* !_HA_ATOMIC_AND */
 
+#ifndef _HA_ATOMIC_FETCH_AND
+#define _HA_ATOMIC_FETCH_AND HA_ATOMIC_FETCH_AND
+#endif /* !_HA_ATOMIC_FETCH_AND */
+
 #ifndef _HA_ATOMIC_OR
 #define _HA_ATOMIC_OR HA_ATOMIC_OR
 #endif /* !_HA_ATOMIC_OR */
+
+#ifndef _HA_ATOMIC_FETCH_OR
+#define _HA_ATOMIC_FETCH_OR HA_ATOMIC_FETCH_OR
+#endif /* !_HA_ATOMIC_FETCH_OR */
 
 #ifndef _HA_ATOMIC_XCHG
 #define _HA_ATOMIC_XCHG HA_ATOMIC_XCHG
