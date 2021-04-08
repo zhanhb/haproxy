@@ -159,7 +159,7 @@ static inline int h1_recv_allowed(const struct h1c *h1c)
 	if (h1c->conn->flags & (CO_FL_ERROR|CO_FL_SOCK_RD_SH))
 		return 0;
 
-	if (!(h1c->flags & (H1C_F_IN_ALLOC|H1C_F_IN_FULL|H1C_F_IN_BUSY)))
+	if (!(h1c->flags & (H1C_F_IN_ALLOC|H1C_F_IN_FULL)))
 		return 1;
 
 	return 0;
@@ -1512,6 +1512,9 @@ static size_t h1_process_input(struct h1c *h1c, struct buffer *buf, size_t count
 
 	data = htx->data;
 	if (h1s->flags & errflag)
+		goto end;
+
+	if (h1c->flags & H1C_F_IN_BUSY)
 		goto end;
 
 	do {
