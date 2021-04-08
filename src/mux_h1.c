@@ -373,7 +373,7 @@ static inline int h1_recv_allowed(const struct h1c *h1c)
 		return 0;
 	}
 
-	if (!(h1c->flags & (H1C_F_IN_ALLOC|H1C_F_IN_FULL|H1C_F_IN_BUSY)))
+	if (!(h1c->flags & (H1C_F_IN_ALLOC|H1C_F_IN_FULL)))
 		return 1;
 
 	TRACE_DEVEL("recv not allowed because input is blocked", H1_EV_H1C_RECV|H1_EV_H1C_BLK, h1c->conn);
@@ -1452,6 +1452,9 @@ static size_t h1_process_input(struct h1c *h1c, struct buffer *buf, size_t count
 
 	data = htx->data;
 	if (h1s->flags & errflag)
+		goto end;
+
+	if (h1c->flags & H1C_F_IN_BUSY)
 		goto end;
 
 	do {
