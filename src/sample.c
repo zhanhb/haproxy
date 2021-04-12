@@ -2004,12 +2004,12 @@ found:
 	if (!smp->data.u.str.len)
 		return 1;
 
-	smp->data.u.str.str = start;
-
 	/* Compute remaining size if needed
            Note: smp->data.u.str.size cannot be set to 0 */
 	if (smp->data.u.str.size)
 		smp->data.u.str.size -= start - smp->data.u.str.str;
+
+	smp->data.u.str.str = start;
 
 	return 1;
 }
