@@ -462,7 +462,7 @@ static int smp_fetch_meth(const struct arg *args, struct sample *smp, const char
 			struct htx *htx;
 			struct htx_sl *sl;
 
-			htx = smp_prefetch_htx(smp, chn, 0);
+			htx = smp_prefetch_htx(smp, chn, 1);
 			if (!htx)
 				return 0;
 
