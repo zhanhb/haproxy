@@ -1964,9 +1964,10 @@ int build_logline(struct stream *s, char *dst, size_t maxsize, struct list *list
 			case LOG_FMT_RETRIES:  // %rq
 				if (s->flags & SF_REDISP)
 					LOGCHAR('+');
-				ret = ltoa_o((s->si[1].conn_retries>0) ?
-				                (be->conn_retries - s->si[1].conn_retries) :
-				                be->conn_retries, tmplog, dst + maxsize - tmplog);
+				ret = ltoa_o(((s->si[1].conn_retries > 0)
+					      ? (be->conn_retries - s->si[1].conn_retries)
+					      : ((s->si[1].state != SI_ST_INI) ? be->conn_retries : 0)),
+					     tmplog, dst + maxsize - tmplog);
 				if (ret == NULL)
 					goto out;
 				tmplog = ret;
