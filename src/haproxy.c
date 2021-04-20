@@ -2790,6 +2790,7 @@ void deinit(void)
 			free(s->safe_conns);
 			free(s->available_conns);
 			free(s->curr_idle_thr);
+			free(s->lb_nodes);
 
 			if (s->use_ssl == 1 || s->check.use_ssl == 1 || (s->proxy->options & PR_O_TCPCHK_SSL)) {
 				if (xprt_get(XPRT_SSL) && xprt_get(XPRT_SSL)->destroy_srv)
