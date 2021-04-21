@@ -2841,7 +2841,7 @@ int main(int argc, char **argv)
 	if (nb_oldpids)
 		nb_oldpids = tell_old_pids(oldpids_sig);
 
-	if ((getenv("HAPROXY_MWORKER_REEXEC") == NULL)) {
+	if ((global.mode & MODE_MWORKER) && (getenv("HAPROXY_MWORKER_REEXEC") == NULL)) {
 		nb_oldpids = 0;
 		free(oldpids);
 		oldpids = NULL;
