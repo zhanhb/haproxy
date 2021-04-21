@@ -2049,6 +2049,15 @@ static struct task *process_peer_sync(struct task * task)
 	if (!stopping) {
 		/* Normal case (not soft stop)*/
 
+		/* resync timeout set to TICK_ETERNITY means we just start
+		 * a new process and timer was not initialized.
+		 * We must arm this timer to switch to a request to a remote
+		 * node if incoming connection from old local process never
+		 * comes.
+		 */
+		if (peers->resync_timeout == TICK_ETERNITY)
+			peers->resync_timeout = tick_add(now_ms, MS_TO_TICKS(5000));
+
 		if (((peers->flags & PEERS_RESYNC_STATEMASK) == PEERS_RESYNC_FROMLOCAL) &&
 		     (!nb_oldpids || tick_is_expired(peers->resync_timeout, now_ms)) &&
 		     !(peers->flags & PEERS_F_RESYNC_ASSIGN)) {
