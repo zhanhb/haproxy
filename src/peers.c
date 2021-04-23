@@ -2150,9 +2150,6 @@ static struct task *process_peer_sync(struct task * task)
 				/* add DO NOT STOP flag if not present */
 				HA_ATOMIC_ADD(&jobs, 1);
 				peers->flags |= PEERS_F_DONOTSTOP;
-				ps = peers->local;
-				for (st = ps->tables; st ; st = st->next)
-					st->table->syncing++;
 
 				/* disconnect all connected peers to process a local sync
 				 * this must be done only the first time we are switching
@@ -2178,7 +2175,7 @@ static struct task *process_peer_sync(struct task * task)
 				HA_ATOMIC_SUB(&jobs, 1);
 				peers->flags &= ~PEERS_F_DONOTSTOP;
 				for (st = ps->tables; st ; st = st->next)
-					st->table->syncing--;
+					HA_ATOMIC_SUB(&st->table->refcnt, 1);
 			}
 		}
 		else if (!ps->appctx) {
@@ -2204,7 +2201,7 @@ static struct task *process_peer_sync(struct task * task)
 					HA_ATOMIC_SUB(&jobs, 1);
 					peers->flags &= ~PEERS_F_DONOTSTOP;
 					for (st = ps->tables; st ; st = st->next)
-						st->table->syncing--;
+						HA_ATOMIC_SUB(&st->table->refcnt, 1);
 				}
 			}
 		}
@@ -2274,6 +2271,13 @@ void peers_register_table(struct peers *peers, struct stktable *table)
 			id = curpeer->tables->local_id;
 		st->local_id = id + 1;
 
+		/* If peer is local we inc table
+		 * refcnt to protect against flush
+		 * until this process pushed all
+		 * table content to the new one
+		 */
+		if (curpeer->local)
+			HA_ATOMIC_ADD(&st->table->refcnt, 1);
 		curpeer->tables = st;
 	}
 
