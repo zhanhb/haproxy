@@ -2882,12 +2882,11 @@ static int h2_recv(struct h2c *h2c)
 			ret = 0;
 	} while (ret > 0);
 
-	if (max && !ret) {
-		if (conn_xprt_read0_pending(h2c->conn))
-			h2c->flags |= H2_CF_RCVD_SHUT;
-		else if (h2_recv_allowed(h2c))
-			conn->xprt->subscribe(conn, conn->xprt_ctx, SUB_RETRY_RECV, &h2c->wait_event);
-	}
+	if (max && !ret && h2_recv_allowed(h2c))
+		conn->xprt->subscribe(conn, conn->xprt_ctx, SUB_RETRY_RECV, &h2c->wait_event);
+
+	if (conn_xprt_read0_pending(h2c->conn))
+		h2c->flags |= H2_CF_RCVD_SHUT;
 
 	if (!b_data(buf)) {
 		h2_release_buf(h2c, &h2c->dbuf);
