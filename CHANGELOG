@@ -1,6 +1,44 @@
 ChangeLog :
 ===========
 
+2021/04/23 : 2.3.10
+    - BUILD: backend: fix build breakage in idle conn locking fix
+    - BUG/MINOR: tcp: fix silent-drop workaround for IPv6
+    - BUILD: tcp: use IPPROTO_IPV6 instead of SOL_IPV6 on FreeBSD/MacOS
+    - BUG/MINOR: ssl: Fix update of default certificate
+    - BUG/MINOR: ssl: Prevent removal of crt-list line if the instance is a default one
+    - BUG/MINOR: http_fetch: make hdr_ip() resistant to empty fields
+    - BUG/MINOR: ssl: Add missing free on SSL_CTX in ckch_inst_free
+    - REGTESTS: ssl: "set ssl cert" and multi-certificates bundle
+    - DOC: Explicitly state only IPv4 are supported by forwardfor/originalto options
+    - REGTESTS: ssl: mark set_ssl_cert_bundle.vtc as broken
+    - CONTRIB: halog: fix issue with array of type char
+    - BUG/MINOR: tools: fix parsing "us" unit for timers
+    - DOC: clarify that compression works for HTTP/2
+    - MINOR: No longer rely on deprecated sample fetches for predefined ACLs
+    - BUG/MEDIUM: sample: Fix adjusting size in field converter
+    - DOC: ssl: Certificate hot update only works on fronted certificates
+    - BUG/MEDIUM: threads: Ignore current thread to end its harmless period
+    - BUG/MINOR: checks: Set missing id to the dummy checks frontend
+    - MINOR: logs: Add support of checks as session origin to format lf strings
+    - BUG/MINOR: connection: Fix fc_http_major and bc_http_major for TCP connections
+    - MINOR: connection: Make bc_http_major compatible with tcp-checks
+    - BUG/MINOR: ssl-samples: Fix ssl_bc_* samples when called from a health-check
+    - BUG/MINOR: http-fetch: Make method smp safe if headers were already forwarded
+    - BUG/MINOR: http_htx: Remove BUG_ON() from http_get_stline() function
+    - BUG/MINOR: logs: Report the true number of retries if there was no connection
+    - BUG/MINOR: mux-h1: Release idle server H1 connection if data are received
+    - BUG/MINOR: server: free srv.lb_nodes in free_server
+    - BUG/MAJOR: mux-h2: Properly detect too large frames when decoding headers
+    - BUG/MEDIUM: mux-h2: Fix dfl calculation when merging CONTINUATION frames
+    - BUG/MEDIUM: config: fix cpu-map notation with both process and threads
+    - BUG/MINOR: mworker/init: don't reset nb_oldpids in non-mworker cases
+    - BUG/MINOR: mworker: don't use oldpids[] anymore for reload
+    - BUG/MEDIUM: mux-h2: Properly handle shutdowns when received with data
+    - BUG/MINOR: peers: remove useless table check if initial resync is finished
+    - BUG/MEDIUM: peers: re-work connection to new process during reload.
+    - BUG/MEDIUM: peers: re-work refcnt on table to protect against flush
+
 2021/03/30 : 2.3.9
     - BUG/MEDIUM: mux-h1: make h1_shutw_conn() idempotent
     - MEDIUM: backend: use a trylock to grab a connection on high FD counts as well
