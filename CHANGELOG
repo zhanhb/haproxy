@@ -1,6 +1,47 @@
 ChangeLog :
 ===========
 
+2021/04/29 : 2.2.14
+    - DOC: Explicitly state only IPv4 are supported by forwardfor/originalto options
+    - REGTESTS: ssl: mark set_ssl_cert_bundle.vtc as broken
+    - CONTRIB: halog: fix issue with array of type char
+    - BUG/MINOR: tools: fix parsing "us" unit for timers
+    - DOC: clarify that compression works for HTTP/2
+    - MINOR: No longer rely on deprecated sample fetches for predefined ACLs
+    - BUG/MEDIUM: sample: Fix adjusting size in field converter
+    - DOC: ssl: Certificate hot update only works on fronted certificates
+    - BUG/MEDIUM: threads: Ignore current thread to end its harmless period
+    - BUG/MINOR: checks: Set missing id to the dummy checks frontend
+    - MINOR: logs: Add support of checks as session origin to format lf strings
+    - BUG/MINOR: connection: Fix fc_http_major and bc_http_major for TCP connections
+    - MINOR: connection: Make bc_http_major compatible with tcp-checks
+    - BUG/MINOR: ssl-samples: Fix ssl_bc_* samples when called from a health-check
+    - BUG/MINOR: http-fetch: Make method smp safe if headers were already forwarded
+    - BUG/MINOR: http_htx: Remove BUG_ON() from http_get_stline() function
+    - BUG/MINOR: logs: Report the true number of retries if there was no connection
+    - BUG/MINOR: mux-h1: Release idle server H1 connection if data are received
+    - BUG/MINOR: server: free srv.lb_nodes in free_server
+    - BUG/MAJOR: mux-h2: Properly detect too large frames when decoding headers
+    - BUG/MEDIUM: mux-h2: Fix dfl calculation when merging CONTINUATION frames
+    - BUG/MEDIUM: config: fix cpu-map notation with both process and threads
+    - BUG/MINOR: mworker/init: don't reset nb_oldpids in non-mworker cases
+    - BUG/MINOR: mworker: don't use oldpids[] anymore for reload
+    - BUG/MEDIUM: mux-h2: Properly handle shutdowns when received with data
+    - BUG/MINOR: peers: remove useless table check if initial resync is finished
+    - BUG/MEDIUM: peers: re-work connection to new process during reload.
+    - BUG/MEDIUM: peers: re-work refcnt on table to protect against flush
+    - BUG/MINOR: mux-fcgi: Don't send normalized uri to FCGI application
+    - BUG/MINOR: htx: Preserve HTX flags when draining data from an HTX message
+    - BUG/MINOR: applet: Notify the other side if data were consumed by an applet
+    - BUG/MEDIUM: peers: initialize resync timer to get an initial full resync
+    - BUG/MEDIUM: peers: register last acked value as origin receiving a resync req
+    - BUG/MEDIUM: peers: stop considering ack messages teaching a full resync
+    - BUG/MEDIUM: peers: reset starting point if peers appears longly disconnected
+    - BUG/MEDIUM: peers: reset commitupdate value in new conns
+    - BUG/MEDIUM: peers: re-work updates lookup during the sync on the fly
+    - BUG/MEDIUM: peers: reset tables stage flags stages on new conns
+    - MINOR: peers: add informative flags about resync process for debugging
+
 2021/04/02 : 2.2.13
     - BUG/MEDIUM: ssl: ckch_inst->ctx not assigned with multi-bundle certificates
     - REGTESTS: ssl: "set ssl cert" and multi-certificates bundle
