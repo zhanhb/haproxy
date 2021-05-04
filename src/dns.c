@@ -1790,8 +1790,24 @@ static void dns_resolve_send(struct dgram_conn *dgram)
 			goto snd_error;
 
 		ret = send(fd, trash.area, len, 0);
-		if (ret != len)
+		if (ret != len) {
+			if (ret == -1) {
+				if (errno == EAGAIN) {
+					/* retry once the socket is ready */
+					fd_cant_send(fd);
+					continue;
+				}
+
+				/* purge the fd and set sock.fd to -1
+				 * to create a new one during next
+				 * send_query attempt to the same
+				 * nameserver
+				 */
+				fd_delete(fd);
+				dgram->t.sock.fd = -1;
+			}
 			goto snd_error;
+		}
 
 		ns->counters.sent++;
 		res->nb_queries++;
