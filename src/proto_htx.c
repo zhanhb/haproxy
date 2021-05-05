@@ -1404,8 +1404,13 @@ static __inline int do_l7_retry(struct stream *s, struct stream_interface *si)
 	if (si->conn_retries < 0)
 		return -1;
 
-	if (objt_server(s->target))
+	if (objt_server(s->target)) {
+		if (s->flags & SF_CURR_SESS) {
+			s->flags &= ~SF_CURR_SESS;
+			_HA_ATOMIC_SUB(&__objt_server(s->target)->cur_sess, 1);
+		}
 		_HA_ATOMIC_ADD(&__objt_server(s->target)->counters.retries, 1);
+	}
 	_HA_ATOMIC_ADD(&s->be->be_counters.retries, 1);
 
 	req = &s->req;
