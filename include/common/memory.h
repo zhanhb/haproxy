@@ -34,11 +34,7 @@
 #include <common/hathreads.h>
 #include <common/initcall.h>
 
-#ifndef DEBUG_DONT_SHARE_POOLS
 #define MEM_F_SHARED	0x1
-#else
-#define MEM_F_SHARED	0
-#endif
 #define MEM_F_EXACT	0x2
 
 /* reserve an extra void* at the end of a pool for linking */
