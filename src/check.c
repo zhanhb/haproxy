@@ -852,13 +852,14 @@ static struct task *process_chk_conn(struct task *t, void *context, unsigned sho
 {
 	struct check *check = context;
 	struct proxy *proxy = check->proxy;
-	struct conn_stream *cs = check->cs;
-	struct connection *conn = cs_conn(cs);
+	struct conn_stream *cs;
+	struct connection *conn;
 	int rv;
 	int expired = tick_is_expired(t->expire, now_ms);
 
 	if (check->server)
 		HA_SPIN_LOCK(SERVER_LOCK, &check->server->lock);
+
 	if (!(check->state & CHK_ST_INPROGRESS)) {
 		/* no check currently running */
 		if (!expired) /* woke up too early */
@@ -881,91 +882,93 @@ static struct task *process_chk_conn(struct task *t, void *context, unsigned sho
 
 		check->current_step = NULL;
 		tcpcheck_main(check);
-		goto out_unlock;
+		expired = 0;
 	}
-	else {
-		/* there was a test running.
-		 * First, let's check whether there was an uncaught error,
-		 * which can happen on connect timeout or error.
+
+	cs = check->cs;
+	conn = cs_conn(cs);
+
+	/* there was a test running.
+	 * First, let's check whether there was an uncaught error,
+	 * which can happen on connect timeout or error.
+	 */
+	if (check->result == CHK_RES_UNKNOWN) {
+		if ((conn && ((conn->flags & CO_FL_ERROR) || (cs->flags & CS_FL_ERROR))) || expired) {
+			chk_report_conn_err(check, 0, expired);
+		}
+		else {
+			if (check->state & CHK_ST_CLOSE_CONN) {
+				cs_destroy(cs);
+				cs = NULL;
+				conn = NULL;
+				check->cs = NULL;
+				check->state &= ~CHK_ST_CLOSE_CONN;
+				tcpcheck_main(check);
+			}
+			if (check->result == CHK_RES_UNKNOWN)
+				goto out_unlock; /* timeout not reached, wait again */
+		}
+	}
+
+	/* check complete or aborted */
+
+	check->current_step = NULL;
+
+	if (conn && conn->xprt) {
+		/* The check was aborted and the connection was not yet closed.
+		 * This can happen upon timeout, or when an external event such
+		 * as a failed response coupled with "observe layer7" caused the
+		 * server state to be suddenly changed.
 		 */
-		if (check->result == CHK_RES_UNKNOWN) {
-			if ((conn->flags & CO_FL_ERROR) || cs->flags & CS_FL_ERROR || expired) {
-				chk_report_conn_err(check, 0, expired);
-			}
-			else {
-				if (check->state & CHK_ST_CLOSE_CONN) {
-					cs_destroy(cs);
-					cs = NULL;
-					conn = NULL;
-					check->cs = NULL;
-					check->state &= ~CHK_ST_CLOSE_CONN;
-					tcpcheck_main(check);
-				}
-				if (check->result == CHK_RES_UNKNOWN)
-					goto out_unlock; /* timeout not reached, wait again */
-			}
+		conn_sock_drain(conn);
+		cs_close(cs);
+	}
+
+	if (cs) {
+		if (check->wait_list.events)
+			cs->conn->mux->unsubscribe(cs, check->wait_list.events, &check->wait_list);
+		/* We may have been scheduled to run, and the
+		 * I/O handler expects to have a cs, so remove
+		 * the tasklet
+		 */
+		tasklet_remove_from_tasklet_list(check->wait_list.tasklet);
+		cs_destroy(cs);
+		cs = check->cs = NULL;
+		conn = NULL;
+	}
+
+	if (check->sess != NULL) {
+		vars_prune(&check->vars, check->sess, NULL);
+		session_free(check->sess);
+		check->sess = NULL;
+	}
+
+	if (check->server) {
+		if (check->result == CHK_RES_FAILED) {
+			/* a failure or timeout detected */
+			check_notify_failure(check);
 		}
-
-		/* check complete or aborted */
-
-		check->current_step = NULL;
-
-		if (conn && conn->xprt) {
-			/* The check was aborted and the connection was not yet closed.
-			 * This can happen upon timeout, or when an external event such
-			 * as a failed response coupled with "observe layer7" caused the
-			 * server state to be suddenly changed.
-			 */
-			conn_sock_drain(conn);
-			cs_close(cs);
+		else if (check->result == CHK_RES_CONDPASS) {
+			/* check is OK but asks for stopping mode */
+			check_notify_stopping(check);
 		}
-
-		if (cs) {
-			if (check->wait_list.events)
-				cs->conn->mux->unsubscribe(cs, check->wait_list.events, &check->wait_list);
-			/* We may have been scheduled to run, and the
-			 * I/O handler expects to have a cs, so remove
-			 * the tasklet
-			 */
-			tasklet_remove_from_tasklet_list(check->wait_list.tasklet);
-			cs_destroy(cs);
-			cs = check->cs = NULL;
-			conn = NULL;
+		else if (check->result == CHK_RES_PASSED) {
+			/* a success was detected */
+			check_notify_success(check);
 		}
+	}
+	task_set_affinity(t, MAX_THREADS_MASK);
+	check_release_buf(check, &check->bi);
+	check_release_buf(check, &check->bo);
+	check->state &= ~(CHK_ST_INPROGRESS|CHK_ST_IN_ALLOC|CHK_ST_OUT_ALLOC);
 
-		if (check->sess != NULL) {
-			vars_prune(&check->vars, check->sess, NULL);
-			session_free(check->sess);
-			check->sess = NULL;
+	if (check->server) {
+		rv = 0;
+		if (global.spread_checks > 0) {
+			rv = srv_getinter(check) * global.spread_checks / 100;
+			rv -= (int) (2 * rv * (ha_random32() / 4294967295.0));
 		}
-
-		if (check->server) {
-			if (check->result == CHK_RES_FAILED) {
-				/* a failure or timeout detected */
-				check_notify_failure(check);
-			}
-			else if (check->result == CHK_RES_CONDPASS) {
-				/* check is OK but asks for stopping mode */
-				check_notify_stopping(check);
-			}
-			else if (check->result == CHK_RES_PASSED) {
-				/* a success was detected */
-				check_notify_success(check);
-			}
-		}
-		task_set_affinity(t, MAX_THREADS_MASK);
-		check_release_buf(check, &check->bi);
-		check_release_buf(check, &check->bo);
-		check->state &= ~(CHK_ST_INPROGRESS|CHK_ST_IN_ALLOC|CHK_ST_OUT_ALLOC);
-
-		if (check->server) {
-			rv = 0;
-			if (global.spread_checks > 0) {
-				rv = srv_getinter(check) * global.spread_checks / 100;
-				rv -= (int) (2 * rv * (ha_random32() / 4294967295.0));
-			}
-			t->expire = tick_add(now_ms, MS_TO_TICKS(srv_getinter(check) + rv));
-		}
+		t->expire = tick_add(now_ms, MS_TO_TICKS(srv_getinter(check) + rv));
 	}
 
  reschedule:
