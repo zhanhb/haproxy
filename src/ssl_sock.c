@@ -489,6 +489,8 @@ static int ssl_init_single_engine(const char *engine_id, const char *def_algorit
 	}
 
 	el = calloc(1, sizeof(*el));
+	if (!el)
+		goto fail_alloc;
 	el->e = engine;
 	LIST_ADD(&openssl_engines, &el->list);
 	nb_engines++;
@@ -496,6 +498,7 @@ static int ssl_init_single_engine(const char *engine_id, const char *def_algorit
 		global.ssl_used_async_engines = nb_engines;
 	return 0;
 
+fail_alloc:
 fail_set_method:
 	/* release the functional reference from ENGINE_init() */
 	ENGINE_finish(engine);
