@@ -594,6 +594,11 @@ int cfg_parse_listen(const char *file, int linenum, char **args, int kwm)
 		/* default compression options */
 		if (defproxy.comp != NULL) {
 			curproxy->comp = calloc(1, sizeof(struct comp));
+			if (!curproxy->comp) {
+				ha_alert("parsing [%s:%d] : out of memory for default compression options", file, linenum);
+				err_code |= ERR_ALERT | ERR_ABORT;
+				goto out;
+			}
 			curproxy->comp->algos = defproxy.comp->algos;
 			curproxy->comp->types = defproxy.comp->types;
 		}
