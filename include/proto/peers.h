@@ -56,7 +56,7 @@ static inline struct xprt_ops *peer_xprt(struct peer *p)
 
 int peers_init_sync(struct peers *peers);
 int peers_alloc_dcache(struct peers *peers);
-void peers_register_table(struct peers *, struct stktable *table);
+int peers_register_table(struct peers *, struct stktable *table);
 void peers_setup_frontend(struct proxy *fe);
 
 #endif /* _PROTO_PEERS_H */
