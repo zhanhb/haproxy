@@ -1035,6 +1035,10 @@ static int tcp_parse_tcp_rep(char **args, int section_type, struct proxy *curpx,
 	}
 
 	rule = calloc(1, sizeof(*rule));
+	if (!rule) {
+		memprintf(err, "parsing [%s:%d] : out of memory", file, line);
+		return -1;
+	}
 	LIST_INIT(&rule->list);
 	arg = 1;
 	where = 0;
@@ -1149,6 +1153,10 @@ static int tcp_parse_tcp_req(char **args, int section_type, struct proxy *curpx,
 	}
 
 	rule = calloc(1, sizeof(*rule));
+	if (!rule) {
+		memprintf(err, "parsing [%s:%d] : out of memory", file, line);
+		return -1;
+	}
 	LIST_INIT(&rule->list);
 	arg = 1;
 	where = 0;
