@@ -111,9 +111,7 @@ matrix:
     compiler: clang
 
 install:
-  - git clone https://github.com/VTest/VTest.git ../vtest
-  # Special flags due to: https://github.com/vtest/VTest/issues/12
-  - make -C ../vtest FLAGS="-O2 -s -Wall"
+  - scripts/build-vtest.sh
   - travis_wait bash -c 'scripts/build-ssl.sh >build-ssl.log 2>&1' || (cat build-ssl.log && exit 1)
 
 script:
