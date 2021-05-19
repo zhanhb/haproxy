@@ -127,6 +127,9 @@ int make_arg_list(const char *in, int len, uint64_t mask, struct arg **argp,
 
 	arg = *argp = calloc(nbarg + 1, sizeof(*arg));
 
+	if (!arg)
+		goto alloc_err;
+
 	/* Note: empty arguments after a comma always exist. */
 	while (pos < nbarg) {
 		unsigned int uint;
@@ -329,5 +332,9 @@ int make_arg_list(const char *in, int len, uint64_t mask, struct arg **argp,
  not_impl:
 	memprintf(err_msg, "parsing for type '%s' was not implemented, please report this bug",
 	          arg_type_names[(mask >> (pos * ARGT_BITS)) & ARGT_MASK]);
+	goto err;
+
+ alloc_err:
+	memprintf(err_msg, "out of memory");
 	goto err;
 }
