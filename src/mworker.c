@@ -133,13 +133,13 @@ void mworker_proc_list_to_env()
 /*
  * unserialize the proc list from the environment
  */
-void mworker_env_to_proc_list()
+int mworker_env_to_proc_list()
 {
 	char *msg, *token = NULL, *s1;
 
 	msg = getenv("HAPROXY_PROCESSES");
 	if (!msg)
-		return;
+		return 0;
 
 	while ((token = strtok_r(msg, "|", &s1))) {
 		struct mworker_proc *child;
@@ -149,6 +149,10 @@ void mworker_env_to_proc_list()
 		msg = NULL;
 
 		child = calloc(1, sizeof(*child));
+		if (!child) {
+			ha_alert("Out of memory while trying to allocate a worker process structure.");
+			return -1;
+		}
 
 		while ((subtoken = strtok_r(token, ";", &s2))) {
 
@@ -195,6 +199,8 @@ void mworker_env_to_proc_list()
 	}
 
 	unsetenv("HAPROXY_PROCESSES");
+
+	return 0;
 }
 
 /* Signal blocking and unblocking */
