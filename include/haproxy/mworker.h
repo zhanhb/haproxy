@@ -18,7 +18,7 @@
 #include <haproxy/signal-t.h>
 
 void mworker_proc_list_to_env();
-void mworker_env_to_proc_list();
+int mworker_env_to_proc_list();
 
 
 void mworker_block_signals();
