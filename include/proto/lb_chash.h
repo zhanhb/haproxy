@@ -26,7 +26,7 @@
 #include <types/proxy.h>
 #include <types/server.h>
 
-void chash_init_server_tree(struct proxy *p);
+int chash_init_server_tree(struct proxy *p);
 struct server *chash_get_next_server(struct proxy *p, struct server *srvtoavoid);
 struct server *chash_get_server_hash(struct proxy *p, unsigned int hash, const struct server *avoid);
 
