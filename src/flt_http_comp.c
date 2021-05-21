@@ -229,7 +229,6 @@ comp_http_payload(struct stream *s, struct filter *filter, struct http_msg *msg,
 							goto error;
 						to_forward += b_data(&trash);
 					}
-					msg->flags &= ~HTTP_MSGF_COMPRESSING;
 					/* We let the mux add last empty chunk and empty trailers */
 				}
 				/* fall through */
