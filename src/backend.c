@@ -1667,7 +1667,7 @@ int connect_server(struct stream *s)
 		}
 
 #ifdef USE_OPENSSL
-		if (srv->ssl_ctx.sni) {
+		if (!(s->flags & SF_SRV_REUSED) && srv->ssl_ctx.sni) {
 			struct sample *smp;
 			int rewind;
 
