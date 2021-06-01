@@ -1522,7 +1522,7 @@ skip_reuse:
 		return err;
 
 #ifdef USE_OPENSSL
-	if (srv && srv->ssl_ctx.sni) {
+	if (!(s->flags & SF_SRV_REUSED) && srv && srv->ssl_ctx.sni) {
 		struct sample *smp;
 
 		smp = sample_fetch_as_type(s->be, s->sess, s, SMP_OPT_DIR_REQ | SMP_OPT_FINAL,
