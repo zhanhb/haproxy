@@ -68,6 +68,11 @@
 #define POOL_LINK(pool, item) ((void **)(item))
 #endif
 
+/* A special pointer for the pool's free_list that indicates someone is
+ * currently manipulating it. Serves as a short-lived lock.
+ */
+#define POOL_BUSY ((void *)1)
+
 #ifndef MAX_BASE_POOLS
 #define MAX_BASE_POOLS 64
 #endif
@@ -91,9 +96,6 @@ struct pool_free_list {
 	uintptr_t seq;
 };
 
-/* Note below, in case of lockless pools, we still need the lock only for
- * the flush() operation.
- */
 struct pool_head {
 	void **free_list;
 #ifdef CONFIG_HAP_LOCKLESS_POOLS
