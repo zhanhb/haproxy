@@ -194,11 +194,16 @@ void *__pool_refill_alloc(struct pool_head *pool, unsigned int avail)
 		if (++allocated > avail)
 			break;
 
-		free_list = pool->free_list;
+		free_list = _HA_ATOMIC_LOAD(&pool->free_list);
 		do {
-			*POOL_LINK(pool, ptr) = free_list;
-			__ha_barrier_store();
-		} while (_HA_ATOMIC_CAS(&pool->free_list, &free_list, ptr) == 0);
+			while (unlikely(free_list == POOL_BUSY)) {
+				pl_cpu_relax();
+				free_list = _HA_ATOMIC_LOAD(&pool->free_list);
+			}
+			_HA_ATOMIC_STORE(POOL_LINK(pool, ptr), (void *)free_list);
+			__ha_barrier_atomic_store();
+		} while (!_HA_ATOMIC_CAS(&pool->free_list, &free_list, ptr));
+		__ha_barrier_atomic_store();
 	}
 	__ha_barrier_atomic_store();
 
@@ -223,22 +228,27 @@ void *pool_refill_alloc(struct pool_head *pool, unsigned int avail)
  */
 void pool_flush(struct pool_head *pool)
 {
-	struct pool_free_list cmp, new;
 	void **next, *temp;
 	int removed = 0;
 
 	if (!pool)
 		return;
-	HA_SPIN_LOCK(POOL_LOCK, &pool->flush_lock);
+
+	/* The loop below atomically detaches the head of the free list and
+	 * replaces it with a NULL. Then the list can be released.
+	 */
+	next = pool->free_list;
 	do {
-		cmp.free_list = pool->free_list;
-		cmp.seq = pool->seq;
-		new.free_list = NULL;
-		new.seq = cmp.seq + 1;
-	} while (!_HA_ATOMIC_DWCAS(&pool->free_list, &cmp, &new));
+		while (unlikely(next == POOL_BUSY)) {
+			pl_cpu_relax();
+			next = _HA_ATOMIC_LOAD(&pool->free_list);
+		}
+		if (next == NULL)
+			return;
+	} while (unlikely((next = _HA_ATOMIC_XCHG(&pool->free_list, POOL_BUSY)) == POOL_BUSY));
+	_HA_ATOMIC_STORE(&pool->free_list, NULL);
 	__ha_barrier_atomic_store();
-	HA_SPIN_UNLOCK(POOL_LOCK, &pool->flush_lock);
-	next = cmp.free_list;
+
 	while (next) {
 		temp = next;
 		next = *POOL_LINK(pool, temp);

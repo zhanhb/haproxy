@@ -46,6 +46,11 @@
 #define POOL_LINK(pool, item) ((void **)(item))
 #endif
 
+/* A special pointer for the pool's free_list that indicates someone is
+ * currently manipulating it. Serves as a short-lived lock.
+ */
+#define POOL_BUSY ((void *)1)
+
 #ifndef MAX_BASE_POOLS
 #define MAX_BASE_POOLS 64
 #endif
@@ -211,31 +216,41 @@ static inline void *__pool_get_from_cache(struct pool_head *pool)
  */
 static inline void *__pool_get_first(struct pool_head *pool)
 {
-	struct pool_free_list cmp, new;
 	void *ret = __pool_get_from_cache(pool);
 
 	if (ret)
 		return ret;
 
-	cmp.seq = pool->seq;
-	__ha_barrier_load();
-
-	cmp.free_list = pool->free_list;
+	/* we'll need to reference the first element to figure the next one. We
+	 * must temporarily lock it so that nobody allocates then releases it,
+	 * or the dereference could fail.
+	 */
+	ret = pool->free_list;
 	do {
-		if (cmp.free_list == NULL)
-			return NULL;
-		new.seq = cmp.seq + 1;
-		__ha_barrier_load();
-		new.free_list = *POOL_LINK(pool, cmp.free_list);
-	} while (HA_ATOMIC_DWCAS((void *)&pool->free_list, (void *)&cmp, (void *)&new) == 0);
-	__ha_barrier_atomic_store();
+		while (unlikely(ret == POOL_BUSY)) {
+			pl_cpu_relax();
+			ret = _HA_ATOMIC_LOAD(&pool->free_list);
+		}
+		if (ret == NULL)
+			return ret;
+	} while (unlikely((ret = _HA_ATOMIC_XCHG(&pool->free_list, POOL_BUSY)) == POOL_BUSY));
 
+	if (unlikely(ret == NULL)) {
+		_HA_ATOMIC_STORE(&pool->free_list, NULL);
+		goto out;
+	}
+
+	/* this releases the lock */
+	_HA_ATOMIC_STORE(&pool->free_list, *POOL_LINK(pool, ret));
 	_HA_ATOMIC_ADD(&pool->used, 1);
 #ifdef DEBUG_MEMORY_POOLS
 	/* keep track of where the element was allocated from */
-	*POOL_LINK(pool, cmp.free_list) = (void *)pool;
+	*POOL_LINK(pool, ret) = (void *)pool;
 #endif
-	return cmp.free_list;
+
+ out:
+	__ha_barrier_atomic_store();
+	return ret;
 }
 
 static inline void *pool_get_first(struct pool_head *pool)
@@ -283,14 +298,19 @@ static inline void *pool_alloc(struct pool_head *pool)
  */
 static inline void __pool_free(struct pool_head *pool, void *ptr)
 {
-	void **free_list = pool->free_list;
+	void **free_list;
 
+	_HA_ATOMIC_SUB(&pool->used, 1);
+	free_list = _HA_ATOMIC_LOAD(&pool->free_list);
 	do {
-		*POOL_LINK(pool, ptr) = (void *)free_list;
-		__ha_barrier_store();
+		while (unlikely(free_list == POOL_BUSY)) {
+			pl_cpu_relax();
+			free_list = _HA_ATOMIC_LOAD(&pool->free_list);
+		}
+		_HA_ATOMIC_STORE(POOL_LINK(pool, ptr), (void *)free_list);
+		__ha_barrier_atomic_store();
 	} while (!_HA_ATOMIC_CAS(&pool->free_list, &free_list, ptr));
 	__ha_barrier_atomic_store();
-	_HA_ATOMIC_SUB(&pool->used, 1);
 }
 
 /* frees an object to the local cache, possibly pushing oldest objects to the
