@@ -4576,6 +4576,8 @@ static int cli_parse_delete_server(char **args, char *payload, struct appctx *ap
 	}
 
 	/* remove srv from addr_node tree */
+	eb32_delete(&srv->conf.id);
+	ebpt_delete(&srv->conf.name);
 	ebpt_delete(&srv->addr_node);
 
 	/* remove srv from idle_node tree for idle conn cleanup */
