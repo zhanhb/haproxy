@@ -30,6 +30,8 @@
 #include <proto/sample.h>
 #include <proto/stream.h>
 
+#define COMP_STATE_PROCESSING 0x01
+
 const char *http_comp_flt_id = "compression filter";
 
 struct flt_ops comp_ops;
@@ -44,6 +46,8 @@ struct comp_state {
 	int consumed;
 	int initialized;
 	int finished;
+
+	unsigned int      flags;      /* COMP_STATE_* */
 };
 
 /* Pools used to allocate comp_state structs */
@@ -121,6 +125,7 @@ comp_start_analyze(struct stream *s, struct filter *filter, struct channel *chn)
 		st->consumed    = 0;
 		st->initialized = 0;
 		st->finished    = 0;
+		st->flags       = 0;
 		filter->ctx     = st;
 
 		/* Register post-analyzer on AN_RES_WAIT_HTTP because we need to
@@ -168,6 +173,7 @@ comp_http_headers(struct stream *s, struct filter *filter, struct http_msg *msg)
 			register_data_filter(s, msg->chn, filter);
 			if (!IS_HTX_STRM(s))
 				st->hdrs_len = s->txn->rsp.sov;
+			st->flags |= COMP_STATE_PROCESSING;
 		}
 	}
 
@@ -246,7 +252,7 @@ comp_http_payload(struct stream *s, struct filter *filter, struct http_msg *msg,
 			case HTX_BLK_TLR:
 			case HTX_BLK_EOT:
 			case HTX_BLK_EOM:
-				if (msg->flags & HTTP_MSGF_COMPRESSING) {
+				if (st->flags & COMP_STATE_PROCESSING) {
 					if (htx_compression_buffer_init(htx, &trash) < 0) {
 						msg->chn->flags |= CF_WAKE_WRITE;
 						goto end;
@@ -264,6 +270,7 @@ comp_http_payload(struct stream *s, struct filter *filter, struct http_msg *msg,
 					}
 					/* We let the mux add last empty chunk and empty trailers */
 				}
+				st->flags &= ~COMP_STATE_PROCESSING;
 				/* fall through */
 
 			default:
