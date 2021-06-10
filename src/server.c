@@ -2927,17 +2927,14 @@ static void srv_update_state(struct server *srv, int version, char **params)
 				char *tmp;
 
 				/* we can't apply previous state if SRV record has changed */
-				if (srv->srvrq && strcmp(srv->srvrq->name, srvrecord) != 0) {
-					chunk_appendf(msg, ", SRV record mismatch between configuration ('%s') and state file ('%s) for server '%s'. Previous state not applied", srv->srvrq->name, srvrecord, srv->id);
+				if (!srv->srvrq) {
+					chunk_appendf(msg, ", no SRV resolution for server '%s'. Previous state not applied", srv->id);
 					HA_SPIN_UNLOCK(SERVER_LOCK, &srv->lock);
 					goto out;
 				}
 
-				/* create or find a SRV resolution for this srv record */
-				if (srv->srvrq == NULL && (srv->srvrq = find_srvrq_by_name(srvrecord, srv->proxy)) == NULL)
-					srv->srvrq = new_dns_srvrq(srv, srvrecord);
-				if (srv->srvrq == NULL) {
-					chunk_appendf(msg, ", can't create or find SRV resolution '%s' for server '%s'", srvrecord, srv->id);
+				if (strcmp(srv->srvrq->name, srvrecord) != 0) {
+					chunk_appendf(msg, ", SRV record mismatch between configuration ('%s') and state file ('%s) for server '%s'. Previous state not applied", srv->srvrq->name, srvrecord, srv->id);
 					HA_SPIN_UNLOCK(SERVER_LOCK, &srv->lock);
 					goto out;
 				}
