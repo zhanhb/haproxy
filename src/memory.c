@@ -145,8 +145,6 @@ struct pool_head *create_pool(char *name, unsigned int size, unsigned int flags)
 		}
 #ifndef CONFIG_HAP_LOCKLESS_POOLS
 		HA_SPIN_INIT(&pool->lock);
-#else
-		HA_SPIN_INIT(&pool->flush_lock);
 #endif
 	}
 	pool->users++;

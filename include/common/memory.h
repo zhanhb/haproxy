@@ -70,19 +70,9 @@ extern struct pool_cache_head pool_cache[][MAX_BASE_POOLS];
 extern THREAD_LOCAL size_t pool_cache_bytes;   /* total cache size */
 extern THREAD_LOCAL size_t pool_cache_count;   /* #cache objects   */
 
-#ifdef CONFIG_HAP_LOCKLESS_POOLS
-struct pool_free_list {
-	void **free_list;
-	uintptr_t seq;
-};
-#endif
-
 struct pool_head {
 	void **free_list;
-#ifdef CONFIG_HAP_LOCKLESS_POOLS
-	uintptr_t seq;
-	HA_SPINLOCK_T flush_lock;
-#else
+#ifndef CONFIG_HAP_LOCKLESS_POOLS
 	__decl_hathreads(HA_SPINLOCK_T lock); /* the spin lock */
 #endif
 	unsigned int used;	/* how many chunks are currently in use */
