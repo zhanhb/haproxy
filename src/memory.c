@@ -387,7 +387,8 @@ void *pool_refill_alloc(struct pool_head *pool, unsigned int avail)
  */
 void pool_flush(struct pool_head *pool)
 {
-	void *temp, *next;
+	void *temp, **next;
+
 	if (!pool)
 		return;
 
@@ -397,10 +398,17 @@ void pool_flush(struct pool_head *pool)
 		temp = next;
 		next = *POOL_LINK(pool, temp);
 		pool->allocated--;
+	}
+
+	next = pool->free_list;
+	pool->free_list = NULL;
+	HA_SPIN_UNLOCK(POOL_LOCK, &pool->lock);
+
+	while (next) {
+		temp = next;
+		next = *POOL_LINK(pool, temp);
 		pool_free_area(temp, pool->size + POOL_EXTRA);
 	}
-	pool->free_list = next;
-	HA_SPIN_UNLOCK(POOL_LOCK, &pool->lock);
 	/* here, we should have pool->allocate == pool->used */
 }
 
