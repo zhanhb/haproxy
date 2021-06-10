@@ -1888,6 +1888,7 @@ static void dns_resolve_recv(struct dgram_conn *dgram)
 	unsigned short query_id;
 	struct eb32_node *eb;
 	struct dns_requester *req;
+	int keep_answer_items;
 
 	fd = dgram->t.sock.fd;
 
@@ -2041,8 +2042,11 @@ static void dns_resolve_recv(struct dgram_conn *dgram)
 		goto report_res_success;
 
 	report_res_error:
+		keep_answer_items = 0;
 		list_for_each_entry(req, &res->requesters, list)
-			req->requester_error_cb(req, dns_resp);
+			keep_answer_items |= req->requester_error_cb(req, dns_resp);
+		if (!keep_answer_items)
+			dns_purge_resolution_answer_records(res);
 		dns_reset_resolution(res);
 		LIST_DEL(&res->list);
 		LIST_ADDQ(&resolvers->resolutions.wait, &res->list);
@@ -2174,12 +2178,15 @@ static struct task *dns_process_resolvers(struct task *t, void *context, unsigne
 		 * the list */
 		if (!res->try) {
 			struct dns_requester *req;
+			int keep_answer_items = 0;
 
 			/* Notify the result to the requesters */
 			if (!res->nb_responses)
 				res->status = RSLV_STATUS_TIMEOUT;
 			list_for_each_entry(req, &res->requesters, list)
-				req->requester_error_cb(req, res->status);
+				keep_answer_items |= req->requester_error_cb(req, res->status);
+			if (!keep_answer_items)
+				dns_purge_resolution_answer_records(res);
 
 			/* Clean up resolution info and remove it from the
 			 * current list */
