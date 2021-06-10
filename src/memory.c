@@ -263,21 +263,14 @@ void pool_gc(struct pool_head *pool_ctx)
 		thread_isolate();
 
 	list_for_each_entry(entry, &pools, list) {
-		while ((int)((volatile int)entry->allocated - (volatile int)entry->used) > (int)entry->minavail) {
-			struct pool_free_list cmp, new;
-
-			cmp.seq = entry->seq;
-			__ha_barrier_load();
-			cmp.free_list = entry->free_list;
-			__ha_barrier_load();
-			if (cmp.free_list == NULL)
-				break;
-			new.free_list = *POOL_LINK(entry, cmp.free_list);
-			new.seq = cmp.seq + 1;
-			if (HA_ATOMIC_DWCAS(&entry->free_list, &cmp, &new) == 0)
-				continue;
-			free(cmp.free_list);
-			_HA_ATOMIC_SUB(&entry->allocated, 1);
+		void *temp;
+		//qfprintf(stderr, "Flushing pool %s\n", entry->name);
+		while (entry->free_list &&
+		       (int)(entry->allocated - entry->used) > (int)entry->minavail) {
+			temp = entry->free_list;
+			entry->free_list = *POOL_LINK(entry, temp);
+			entry->allocated--;
+			free(temp);
 		}
 	}
 
