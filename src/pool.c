@@ -268,9 +268,8 @@ void pool_flush(struct pool_head *pool)
 		removed++;
 		pool_free_area(temp, pool->size + POOL_EXTRA);
 	}
-	pool->free_list = next;
 	_HA_ATOMIC_SUB(&pool->allocated, removed);
-	/* here, we should have pool->allocate == pool->used */
+	/* here, we should have pool->allocated == pool->used */
 }
 
 /*
