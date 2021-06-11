@@ -1741,6 +1741,7 @@ struct server *new_server(struct proxy *proxy)
 	for (i = 0; i < MAX_THREADS; i++)
 		MT_LIST_INIT(&srv->actconns[i]);
 	srv->pendconns = EB_ROOT;
+	LIST_INIT(&srv->srv_rec_item);
 	LIST_INIT(&srv->ip_rec_item);
 
 	srv->next_state = SRV_ST_RUNNING; /* early server setup */
@@ -1890,6 +1891,9 @@ static int server_template_init(struct server *srv, struct proxy *px)
 				goto err;
 		}
 #endif
+		/* append to list of servers available to receive an hostname */
+		LIST_ADDQ(&newsrv->srvrq->attached_servers, &newsrv->srv_rec_item);
+
 		/* Set this new server ID. */
 		srv_set_id_from_prefix(newsrv, srv->tmpl_info.prefix, i);
 
@@ -2917,6 +2921,8 @@ static void srv_update_state(struct server *srv, int version, char **params)
 			 */
 			else if (fqdn && !srv->hostname && srvrecord) {
 				int res;
+				int i;
+				char *tmp;
 
 				/* we can't apply previous state if SRV record has changed */
 				if (srv->srvrq && strcmp(srv->srvrq->name, srvrecord) != 0) {
@@ -2946,6 +2952,21 @@ static void srv_update_state(struct server *srv, int version, char **params)
 				if ((srv->check.state & CHK_ST_CONFIGURED) &&
 				    !(srv->flags & SRV_F_CHECKPORT))
 					srv->check.port = port;
+
+				/* Remove from available list and insert in tree
+				 * since this server has an hostname
+				 */
+				LIST_DEL_INIT(&srv->srv_rec_item);
+				srv->host_dn.key = tmp = strdup(srv->hostname_dn);
+
+				/* convert the key in lowercase because tree
+				 * lookup is case sensitive but we don't care
+				 */
+				for (i = 0; tmp[i]; i++)
+					tmp[i] = tolower(tmp[i]);
+
+				/* insert in tree */
+				ebis_insert(&srv->srvrq->named_servers, &srv->host_dn);
 
 				/* Unset SRV_F_MAPPORTS for SRV records.
 				 * SRV_F_MAPPORTS is unfortunately set by parse_server()
@@ -3854,18 +3875,11 @@ int snr_resolution_cb(struct dns_requester *requester, struct dns_nameserver *na
 		return 1;
 
 	if (s->srvrq) {
-		struct dns_answer_item *srv_item;
-
-		/* If DNS resolution is disabled ignore it. */
-		if (s->flags & SRV_F_NO_RESOLUTION)
-			return 1;
-
-		/* The server is based on a SRV record, thus, find the
-		 * associated answer record. If not found, it means the SRV item
-		 * has expired and this resolution must be ignored.
+		/* If DNS resolution is disabled ignore it.
+		 * This is the case if the server was associated to
+		 * a SRV record and this record is now expired.
 		 */
-		srv_item = find_srvrq_answer_record(requester);
-		if (!srv_item)
+		if (s->flags & SRV_F_NO_RESOLUTION)
 			return 1;
 	}
 
@@ -3959,7 +3973,6 @@ int snr_resolution_cb(struct dns_requester *requester, struct dns_nameserver *na
  */
 int srvrq_resolution_error_cb(struct dns_requester *requester, int error_code)
 {
-	struct server *s;
 	struct dns_srvrq *srvrq;
 	struct dns_resolution *res;
 	struct dns_resolvers *resolvers;
@@ -4003,22 +4016,8 @@ int srvrq_resolution_error_cb(struct dns_requester *requester, int error_code)
 				return 1;
 	}
 
-	/* Remove any associated server */
-	for (s = srvrq->proxy->srv; s != NULL; s = s->next) {
-		HA_SPIN_LOCK(SERVER_LOCK, &s->lock);
-		if (s->srvrq == srvrq) {
-			dns_unlink_resolution(s->dns_requester, 1);
-			srvrq_update_srv_status(s, 1);
-			free(s->hostname);
-			free(s->hostname_dn);
-			s->hostname        = NULL;
-			s->hostname_dn     = NULL;
-			s->hostname_dn_len = 0;
-			memset(&s->addr, 0, sizeof(s->addr));
-			s->svc_port = 0;
-		}
-		HA_SPIN_UNLOCK(SERVER_LOCK, &s->lock);
-	}
+	/* Remove any associated server ref */
+	dns_detach_from_resolution_answer_items(res,  requester, 1);
 
 	return 0;
 }
@@ -4043,7 +4042,7 @@ int snr_resolution_error_cb(struct dns_requester *requester, int error_code)
 	if (!snr_update_srv_status(s, 1)) {
 		memset(&s->addr, 0, sizeof(s->addr));
 		HA_SPIN_UNLOCK(SERVER_LOCK, &s->lock);
-		LIST_DEL_INIT(&s->ip_rec_item);
+		dns_detach_from_resolution_answer_items(requester->resolution, requester, 1);
 		return 0;
 	}
 	HA_SPIN_UNLOCK(SERVER_LOCK, &s->lock);
