@@ -328,7 +328,9 @@ struct server {
 	} ssl_ctx;
 #endif
 	struct dns_srvrq *srvrq;		/* Pointer representing the DNS SRV requeest, if any */
+	struct list srv_rec_item;		/* to attach server to a srv record item */
 	struct list ip_rec_item;		/* to attach server to a A or AAAA record item */
+	struct ebpt_node host_dn;		/* hostdn store for srvrq and state file matching*/
 	__decl_thread(HA_SPINLOCK_T lock);   /* may enclose the proxy's lock, must not be taken under */
 	struct {
 		const char *file;		/* file where the section appears */
