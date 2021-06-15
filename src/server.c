@@ -4508,10 +4508,10 @@ static int cli_parse_set_server(char **args, char *payload, struct appctx *appct
 	if (!sv)
 		return 1;
 
-	HA_SPIN_LOCK(SERVER_LOCK, &sv->lock);
-
 	if (strcmp(args[3], "weight") == 0) {
+		HA_SPIN_LOCK(SERVER_LOCK, &sv->lock);
 		warning = server_parse_weight_change_request(sv, args[4]);
+		HA_SPIN_UNLOCK(SERVER_LOCK, &sv->lock);
 		if (warning) {
 			appctx->ctx.cli.severity = LOG_ERR;
 			appctx->ctx.cli.msg = warning;
@@ -4519,6 +4519,7 @@ static int cli_parse_set_server(char **args, char *payload, struct appctx *appct
 		}
 	}
 	else if (strcmp(args[3], "state") == 0) {
+		HA_SPIN_LOCK(SERVER_LOCK, &sv->lock);
 		if (strcmp(args[4], "ready") == 0)
 			srv_adm_set_ready(sv);
 		else if (strcmp(args[4], "drain") == 0)
@@ -4530,8 +4531,10 @@ static int cli_parse_set_server(char **args, char *payload, struct appctx *appct
 			appctx->ctx.cli.msg = "'set server <srv> state' expects 'ready', 'drain' and 'maint'.\n";
 			appctx->st0 = CLI_ST_PRINT;
 		}
+		HA_SPIN_UNLOCK(SERVER_LOCK, &sv->lock);
 	}
 	else if (strcmp(args[3], "health") == 0) {
+		HA_SPIN_LOCK(SERVER_LOCK, &sv->lock);
 		if (sv->track) {
 			appctx->ctx.cli.severity = LOG_ERR;
 			appctx->ctx.cli.msg = "cannot change health on a tracking server.\n";
@@ -4554,8 +4557,10 @@ static int cli_parse_set_server(char **args, char *payload, struct appctx *appct
 			appctx->ctx.cli.msg = "'set server <srv> health' expects 'up', 'stopping', or 'down'.\n";
 			appctx->st0 = CLI_ST_PRINT;
 		}
+		HA_SPIN_UNLOCK(SERVER_LOCK, &sv->lock);
 	}
 	else if (strcmp(args[3], "agent") == 0) {
+		HA_SPIN_LOCK(SERVER_LOCK, &sv->lock);
 		if (!(sv->agent.state & CHK_ST_ENABLED)) {
 			appctx->ctx.cli.severity = LOG_ERR;
 			appctx->ctx.cli.msg = "agent checks are not enabled on this server.\n";
@@ -4574,8 +4579,10 @@ static int cli_parse_set_server(char **args, char *payload, struct appctx *appct
 			appctx->ctx.cli.msg = "'set server <srv> agent' expects 'up' or 'down'.\n";
 			appctx->st0 = CLI_ST_PRINT;
 		}
+		HA_SPIN_UNLOCK(SERVER_LOCK, &sv->lock);
 	}
 	else if (strcmp(args[3], "agent-addr") == 0) {
+		HA_SPIN_LOCK(SERVER_LOCK, &sv->lock);
 		if (!(sv->agent.state & CHK_ST_ENABLED)) {
 			appctx->ctx.cli.severity = LOG_ERR;
 			appctx->ctx.cli.msg = "agent checks are not enabled on this server.\n";
@@ -4587,6 +4594,7 @@ static int cli_parse_set_server(char **args, char *payload, struct appctx *appct
 				appctx->st0 = CLI_ST_PRINT;
 			}
 		}
+		HA_SPIN_UNLOCK(SERVER_LOCK, &sv->lock);
 	}
 	else if (strcmp(args[3], "agent-send") == 0) {
 		if (!(sv->agent.state & CHK_ST_ENABLED)) {
@@ -4612,22 +4620,25 @@ static int cli_parse_set_server(char **args, char *payload, struct appctx *appct
 			appctx->ctx.cli.severity = LOG_ERR;
 			appctx->ctx.cli.msg = "'set server <srv> check-port' expects an integer as argument.\n";
 			appctx->st0 = CLI_ST_PRINT;
-			goto out_unlock;
+			goto out;
 		}
 		if ((i < 0) || (i > 65535)) {
 			appctx->ctx.cli.severity = LOG_ERR;
 			appctx->ctx.cli.msg = "provided port is not valid.\n";
 			appctx->st0 = CLI_ST_PRINT;
-			goto out_unlock;
+			goto out;
 		}
+		HA_SPIN_LOCK(SERVER_LOCK, &sv->lock);
 		/* prevent the update of port to 0 if MAPPORTS are in use */
 		if ((sv->flags & SRV_F_MAPPORTS) && (i == 0)) {
 			appctx->ctx.cli.severity = LOG_ERR;
 			appctx->ctx.cli.msg = "can't unset 'port' since MAPPORTS is in use.\n";
 			appctx->st0 = CLI_ST_PRINT;
-			goto out_unlock;
+			HA_SPIN_UNLOCK(SERVER_LOCK, &sv->lock);
+			goto out;
 		}
 		sv->check.port = i;
+		HA_SPIN_UNLOCK(SERVER_LOCK, &sv->lock);
 		appctx->ctx.cli.severity = LOG_NOTICE;
 		appctx->ctx.cli.msg = "health check port updated.\n";
 		appctx->st0 = CLI_ST_PRINT;
@@ -4639,7 +4650,7 @@ static int cli_parse_set_server(char **args, char *payload, struct appctx *appct
 			appctx->ctx.cli.severity = LOG_ERR;
 			appctx->ctx.cli.msg = "set server <b>/<s> addr requires an address and optionally a port.\n";
 			appctx->st0 = CLI_ST_PRINT;
-			goto out_unlock;
+			goto out;
 		}
 		else {
 			addr = args[4];
@@ -4647,6 +4658,7 @@ static int cli_parse_set_server(char **args, char *payload, struct appctx *appct
 		if (strcmp(args[5], "port") == 0) {
 			port = args[6];
 		}
+		HA_SPIN_LOCK(SERVER_LOCK, &sv->lock);
 		warning = update_server_addr_port(sv, addr, port, "stats socket command");
 		if (warning) {
 			appctx->ctx.cli.severity = LOG_WARNING;
@@ -4654,15 +4666,26 @@ static int cli_parse_set_server(char **args, char *payload, struct appctx *appct
 			appctx->st0 = CLI_ST_PRINT;
 		}
 		srv_clr_admin_flag(sv, SRV_ADMF_RMAINT);
+		HA_SPIN_UNLOCK(SERVER_LOCK, &sv->lock);
 	}
 	else if (strcmp(args[3], "fqdn") == 0) {
 		if (!*args[4]) {
 			appctx->ctx.cli.severity = LOG_ERR;
 			appctx->ctx.cli.msg = "set server <b>/<s> fqdn requires a FQDN.\n";
 			appctx->st0 = CLI_ST_PRINT;
-			goto out_unlock;
+			goto out;
 		}
-		warning = update_server_fqdn(sv, args[4], "stats socket command", 0);
+		if (!sv->resolvers) {
+			appctx->ctx.cli.severity = LOG_ERR;
+			appctx->ctx.cli.msg = "set server <b>/<s> fqdn failed because no resolution is configured.\n";
+			appctx->st0 = CLI_ST_PRINT;
+			goto out;
+		}
+		HA_SPIN_LOCK(DNS_LOCK, &sv->resolvers->lock);
+		HA_SPIN_LOCK(SERVER_LOCK, &sv->lock);
+		warning = update_server_fqdn(sv, args[4], "stats socket command", 1);
+		HA_SPIN_UNLOCK(SERVER_UNLOCK, &sv->lock);
+		HA_SPIN_UNLOCK(DNS_LOCK, &sv->resolvers->lock);
 		if (warning) {
 			appctx->ctx.cli.severity = LOG_WARNING;
 			appctx->ctx.cli.msg = warning;
@@ -4674,8 +4697,7 @@ static int cli_parse_set_server(char **args, char *payload, struct appctx *appct
 		appctx->ctx.cli.msg = "'set server <srv>' only supports 'agent', 'health', 'state', 'weight', 'addr', 'fqdn' and 'check-port'.\n";
 		appctx->st0 = CLI_ST_PRINT;
 	}
- out_unlock:
-	HA_SPIN_UNLOCK(SERVER_LOCK, &sv->lock);
+ out:
 	return 1;
 }
 
