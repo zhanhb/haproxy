@@ -2661,6 +2661,7 @@ void deinit(void)
 
 
 			task_destroy(s->warmup);
+			task_destroy(s->srvrq_check);
 
 			free(s->id);
 			free(s->cookie);

@@ -2964,8 +2964,9 @@ static void srv_update_state(struct server *srv, int version, char **params)
 				for (i = 0; tmp[i]; i++)
 					tmp[i] = tolower(tmp[i]);
 
-				/* insert in tree */
+				/* insert in tree and set the srvrq expiration date */
 				ebis_insert(&srv->srvrq->named_servers, &srv->host_dn);
+				task_schedule(srv->srvrq_check, tick_add(now_ms, srv->srvrq->resolvers->hold.timeout));
 
 				/* Unset SRV_F_MAPPORTS for SRV records.
 				 * SRV_F_MAPPORTS is unfortunately set by parse_server()
