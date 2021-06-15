@@ -4541,6 +4541,10 @@ static int cli_parse_set_server(char **args, char *payload, struct appctx *appct
 			cli_err(appctx, "set server <b>/<s> fqdn failed because no resolution is configured.\n");
 			goto out;
 		}
+		if (sv->srvrq) {
+			cli_err(appctx, "set server <b>/<s> fqdn failed because SRV resolution is configured.\n");
+			goto out;
+		}
 		HA_SPIN_LOCK(DNS_LOCK, &sv->resolvers->lock);
 		HA_SPIN_LOCK(SERVER_LOCK, &sv->lock);
 		/* ensure runtime resolver will process this new fqdn */
