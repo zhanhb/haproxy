@@ -4681,6 +4681,12 @@ static int cli_parse_set_server(char **args, char *payload, struct appctx *appct
 			appctx->st0 = CLI_ST_PRINT;
 			goto out;
 		}
+		if (sv->srvrq) {
+			appctx->ctx.cli.severity = LOG_ERR;
+			appctx->ctx.cli.msg = "set server <b>/<s> fqdn failed because SRV resolution is configured.\n";
+			appctx->st0 = CLI_ST_PRINT;
+			goto out;
+		}
 		HA_SPIN_LOCK(DNS_LOCK, &sv->resolvers->lock);
 		HA_SPIN_LOCK(SERVER_LOCK, &sv->lock);
 		warning = update_server_fqdn(sv, args[4], "stats socket command", 1);
