@@ -1,6 +1,8 @@
 #ifndef __TYPES_SHCTX
 #define __TYPES_SHCTX
 
+#include <common/hathreads.h>
+
 #ifndef SHSESS_BLOCK_MIN_SIZE
 #define SHSESS_BLOCK_MIN_SIZE 128
 #endif
@@ -36,6 +38,8 @@ struct shared_context {
 #else
 	unsigned int waiters;
 #endif
+#else
+	__decl_hathreads(HA_SPINLOCK_T lock);  // used when USE_PRIVATE_CACHE=1
 #endif
 	struct list avail;  /* list for active and free blocks */
 	struct list hot;     /* list for locked blocks */
