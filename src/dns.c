@@ -582,6 +582,26 @@ static void dns_srvrq_cleanup_srv(struct server *srv)
 	HA_SPIN_UNLOCK(SERVER_LOCK, &srv->lock);
 	LIST_DEL(&srv->srv_rec_item);
 	LIST_ADDQ(&srv->srvrq->attached_servers, &srv->srv_rec_item);
+
+	srv->srvrq_check->expire = TICK_ETERNITY;
+}
+
+/* Takes care to cleanup a server resolution when it is outdated. This only
+ * happens for a server relying on a SRV record.
+ */
+static struct task *dns_srvrq_expire_task(struct task *t, void *context, unsigned short state)
+{
+	struct server *srv = context;
+
+	if (!tick_is_expired(t->expire, now_ms))
+		goto end;
+
+	HA_SPIN_LOCK(DNS_LOCK, &srv->srvrq->resolvers);
+	dns_srvrq_cleanup_srv(srv);
+	HA_SPIN_UNLOCK(DNS_LOCK, &srv->srvrq->resolvers);
+
+ end:
+	return t;
 }
 
 /* Checks for any obsolete record, also identify any SRV request, and try to
@@ -715,6 +735,7 @@ srv_found:
 			if (srv) {
 				/* re-enable DNS resolution for this server by default */
 				srv->flags &= ~SRV_F_NO_RESOLUTION;
+				srv->srvrq_check->expire = TICK_ETERNITY;
 
 				/* Check if an Additional Record is associated to this SRV record.
 				 * Perform some sanity checks too to ensure the record can be used.
@@ -2505,17 +2526,29 @@ static int dns_finalize_config(void)
 				continue;
 			}
 			srv->resolvers = resolvers;
-
-			if (srv->srvrq && !srv->srvrq->resolvers) {
-				srv->srvrq->resolvers = srv->resolvers;
-				if (dns_link_resolution(srv->srvrq, OBJ_TYPE_SRVRQ, 0) == -1) {
-					ha_alert("config : %s '%s' : unable to set DNS resolution for server '%s'.\n",
+			srv->srvrq_check = NULL;
+			if (srv->srvrq) {
+				if (!srv->srvrq->resolvers) {
+					srv->srvrq->resolvers = srv->resolvers;
+					if (dns_link_resolution(srv->srvrq, OBJ_TYPE_SRVRQ, 0) == -1) {
+						ha_alert("config : %s '%s' : unable to set DNS resolution for server '%s'.\n",
+							 proxy_type_str(px), px->id, srv->id);
+						err_code |= (ERR_ALERT|ERR_ABORT);
+						continue;
+					}
+				}
+				srv->srvrq_check = task_new(MAX_THREADS_MASK);
+				if (!srv->srvrq_check) {
+					ha_alert("config: %s '%s' : unable to create SRVRQ task for server '%s'.\n",
 						 proxy_type_str(px), px->id, srv->id);
 					err_code |= (ERR_ALERT|ERR_ABORT);
-					continue;
+					goto err;
 				}
+				srv->srvrq_check->process = dns_srvrq_expire_task;
+				srv->srvrq_check->context = srv;
+				srv->srvrq_check->expire = TICK_ETERNITY;
 			}
-			if (!srv->srvrq && dns_link_resolution(srv, OBJ_TYPE_SERVER, 0) == -1) {
+			else if (dns_link_resolution(srv, OBJ_TYPE_SERVER, 0) == -1) {
 				ha_alert("config : %s '%s', unable to set DNS resolution for server '%s'.\n",
 					 proxy_type_str(px), px->id, srv->id);
 				err_code |= (ERR_ALERT|ERR_ABORT);
