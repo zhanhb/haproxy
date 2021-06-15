@@ -574,6 +574,11 @@ static void dns_srvrq_cleanup_srv(struct server *srv)
 	memset(&srv->addr, 0, sizeof(srv->addr));
 	srv->svc_port = 0;
 	srv->flags |= SRV_F_NO_RESOLUTION;
+
+	ebpt_delete(&srv->host_dn);
+	free(srv->host_dn.key);
+	srv->host_dn.key = NULL;
+
 	HA_SPIN_UNLOCK(SERVER_LOCK, &srv->lock);
 	LIST_DEL(&srv->srv_rec_item);
 	LIST_ADDQ(&srv->srvrq->attached_servers, &srv->srv_rec_item);
@@ -672,6 +677,7 @@ static void dns_check_dns_response(struct dns_resolution *res)
 							/* server found, we remove it from tree */
 							ebpt_delete(node);
 							free(srv->host_dn.key);
+							srv->host_dn.key = NULL;
 							goto srv_found;
 						}
 
