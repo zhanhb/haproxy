@@ -627,6 +627,30 @@ int dns_read_name(unsigned char *buffer, unsigned char *bufend,
 	return 0;
 }
 
+/* Cleanup fqdn/port and address of a server attached to a SRV resolution. This
+ * happens when an SRV item is purged or when the server status is considered as
+ * obsolete.
+ *
+ * Must be called with the DNS lock held.
+ */
+static void dns_srvrq_cleanup_srv(struct server *srv)
+{
+	dns_unlink_resolution(srv->dns_requester, 0);
+	HA_SPIN_LOCK(SERVER_LOCK, &srv->lock);
+	srvrq_update_srv_status(srv, 1);
+	free(srv->hostname);
+	free(srv->hostname_dn);
+	srv->hostname = NULL;
+	srv->hostname_dn = NULL;
+	srv->hostname_dn_len = 0;
+	memset(&srv->addr, 0, sizeof(srv->addr));
+	srv->svc_port = 0;
+	srv->flags |= SRV_F_NO_RESOLUTION;
+	HA_SPIN_UNLOCK(SERVER_LOCK, &srv->lock);
+	LIST_DEL(&srv->srv_rec_item);
+	LIST_ADDQ(&srv->srvrq->attached_servers, &srv->srv_rec_item);
+}
+
 /* Checks for any obsolete record, also identify any SRV request, and try to
  * find a corresponding server.
 */
@@ -660,22 +684,8 @@ static void dns_check_dns_response(struct dns_resolution *res)
 			}
 			else if (item->type == DNS_RTYPE_SRV) {
 				/* Remove any associated server */
-				list_for_each_entry_safe(srv, srvback, &item->attached_servers, srv_rec_item) {
-					dns_unlink_resolution(srv->dns_requester, 0);
-					HA_SPIN_LOCK(SERVER_LOCK, &srv->lock);
-					srvrq_update_srv_status(srv, 1);
-					free(srv->hostname);
-					free(srv->hostname_dn);
-					srv->hostname = NULL;
-					srv->hostname_dn = NULL;
-					srv->hostname_dn_len = 0;
-					memset(&srv->addr, 0, sizeof(srv->addr));
-					srv->svc_port = 0;
-					srv->flags |= SRV_F_NO_RESOLUTION;
-					HA_SPIN_UNLOCK(SERVER_LOCK, &srv->lock);
-					LIST_DEL(&srv->srv_rec_item);
-					LIST_ADDQ(&srv->srvrq->attached_servers, &srv->srv_rec_item);
-				}
+				list_for_each_entry_safe(srv, srvback, &item->attached_servers, srv_rec_item)
+					dns_srvrq_cleanup_srv(srv);
 			}
 
 			LIST_DEL(&item->list);
@@ -1991,22 +2001,8 @@ void dns_detach_from_resolution_answer_items(struct dns_resolution *res,  struct
 		list_for_each_entry_safe(item, itemback, &res->response.answer_list, list) {
 			if (item->type == DNS_RTYPE_SRV) {
 				list_for_each_entry_safe(srv, srvback, &item->attached_servers, srv_rec_item) {
-					if (srv->srvrq == srvrq) {
-						HA_SPIN_LOCK(SERVER_LOCK, &srv->lock);
-						dns_unlink_resolution(srv->dns_requester, safe);
-						srvrq_update_srv_status(srv, 1);
-						free(srv->hostname);
-						free(srv->hostname_dn);
-						srv->hostname = NULL;
-						srv->hostname_dn = NULL;
-						srv->hostname_dn_len = 0;
-						memset(&srv->addr, 0, sizeof(srv->addr));
-						srv->svc_port = 0;
-						srv->flags |= SRV_F_NO_RESOLUTION;
-						HA_SPIN_UNLOCK(SERVER_LOCK, &srv->lock);
-						LIST_DEL(&srv->srv_rec_item);
-						LIST_ADDQ(&srvrq->attached_servers, &srv->srv_rec_item);
-					}
+					if (srv->srvrq == srvrq)
+						dns_srvrq_cleanup_srv(srv);
 				}
 			}
 		}
