@@ -1670,7 +1670,9 @@ static int h2c_frt_recv_preface(struct h2c *h2c)
 
 		if (ret1 < 0 || conn_xprt_read0_pending(h2c->conn)) {
 			h2c_error(h2c, H2_ERR_PROTOCOL_ERROR);
-			HA_ATOMIC_ADD(&h2c->px_counters->conn_proto_err, 1);
+			if (b_data(&h2c->dbuf) ||
+			    !(((const struct session *)h2c->conn->owner)->fe->options & PR_O_IGNORE_PRB))
+				HA_ATOMIC_ADD(&h2c->px_counters->conn_proto_err, 1);
 		}
 		ret2 = 0;
 		goto out;
@@ -3045,7 +3047,9 @@ static void h2_process_demux(struct h2c *h2c)
 				if (h2c->st0 == H2_CS_ERROR) {
 					TRACE_PROTO("failed to receive preface", H2_EV_RX_PREFACE|H2_EV_PROTO_ERR, h2c->conn);
 					h2c->st0 = H2_CS_ERROR2;
-					sess_log(h2c->conn->owner);
+					if (b_data(&h2c->dbuf) ||
+					    !(((const struct session *)h2c->conn->owner)->fe->options & PR_O_IGNORE_PRB))
+						sess_log(h2c->conn->owner);
 				}
 				goto fail;
 			}
