@@ -1492,11 +1492,9 @@ skip_reuse:
 			srv_conn->mux->reset(srv_conn);
 	}
 	else {
-		/* Only consider we're doing reuse if the connection was
-		 * ready.
-		 */
-		if (srv_conn->mux->ctl(srv_conn, MUX_STATUS, NULL) & MUX_STATUS_READY)
-			s->flags |= SF_SRV_REUSED;
+		s->flags |= SF_SRV_REUSED;
+		if (!(srv_conn->mux->ctl(srv_conn, MUX_STATUS, NULL) & MUX_STATUS_READY))
+			s->flags |= SF_SRV_REUSED_ANTICIPATED;
 	}
 
 	/* flag for logging source ip/port */
@@ -2177,6 +2175,8 @@ void back_handle_st_cer(struct stream *s)
 		 */
 
 		int delay = 1000;
+		const int reused = (s->flags & SF_SRV_REUSED) &&
+		                   !(s->flags & SF_SRV_REUSED_ANTICIPATED);
 
 		if (s->be->timeout.connect && s->be->timeout.connect < delay)
 			delay = s->be->timeout.connect;
@@ -2187,7 +2187,7 @@ void back_handle_st_cer(struct stream *s)
 		/* only wait when we're retrying on the same server */
 		if ((si->state == SI_ST_ASS ||
 		     (s->be->lbprm.algo & BE_LB_KIND) != BE_LB_KIND_RR ||
-		     (s->be->srv_act <= 1)) && !(s->flags & SF_SRV_REUSED)) {
+		     (s->be->srv_act <= 1)) && !reused) {
 			si->state = SI_ST_TAR;
 			si->exp = tick_add(now_ms, MS_TO_TICKS(delay));
 		}
