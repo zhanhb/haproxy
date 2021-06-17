@@ -1782,6 +1782,10 @@ static void dns_resolve_send(struct dgram_conn *dgram)
 		if (res->nb_queries == resolvers->nb_nameservers)
 			continue;
 
+		/* if fd was detected broken by previous send */
+		if (fd == -1)
+			goto snd_error;
+
 		len = dns_build_query(res->query_id, res->query_type,
 		                      resolvers->accepted_payload_size,
 		                      res->hostname_dn, res->hostname_dn_len,
@@ -1804,7 +1808,7 @@ static void dns_resolve_send(struct dgram_conn *dgram)
 				 * nameserver
 				 */
 				fd_delete(fd);
-				dgram->t.sock.fd = -1;
+				fd = dgram->t.sock.fd = -1;
 			}
 			goto snd_error;
 		}
