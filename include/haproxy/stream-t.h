@@ -88,6 +88,7 @@
 #define SF_IGNORE_PRST	0x00080000	/* ignore persistence */
 
 #define SF_SRV_REUSED   0x00100000	/* the server-side connection was reused */
+#define SF_SRV_REUSED_ANTICIPATED  0x00200000  /* the connection was reused but the mux is not ready yet */
 
 #define SF_WEBSOCKET    0x00400000	/* websocket stream */
 
