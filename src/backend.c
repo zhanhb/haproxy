@@ -1576,11 +1576,9 @@ int connect_server(struct stream *s)
 			srv_conn->mux->reset(srv_conn);
 	}
 	else {
-		/* Only consider we're doing reuse if the connection was
-		 * ready.
-		 */
-		if (srv_conn->mux->ctl(srv_conn, MUX_STATUS, NULL) & MUX_STATUS_READY)
-			s->flags |= SF_SRV_REUSED;
+		s->flags |= SF_SRV_REUSED;
+		if (!(srv_conn->mux->ctl(srv_conn, MUX_STATUS, NULL) & MUX_STATUS_READY))
+			s->flags |= SF_SRV_REUSED_ANTICIPATED;
 	}
 
 	/* flag for logging source ip/port */
