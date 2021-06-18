@@ -4597,6 +4597,7 @@ static int cli_parse_set_server(char **args, char *payload, struct appctx *appct
 		HA_SPIN_UNLOCK(SERVER_LOCK, &sv->lock);
 	}
 	else if (strcmp(args[3], "agent-send") == 0) {
+		HA_SPIN_LOCK(SERVER_LOCK, &sv->lock);
 		if (!(sv->agent.state & CHK_ST_ENABLED)) {
 			appctx->ctx.cli.severity = LOG_ERR;
 			appctx->ctx.cli.msg = "agent checks are not enabled on this server.\n";
@@ -4613,6 +4614,7 @@ static int cli_parse_set_server(char **args, char *payload, struct appctx *appct
 				sv->agent.send_string_len = strlen(args[4]);
 			}
 		}
+		HA_SPIN_UNLOCK(SERVER_LOCK, &sv->lock);
 	}
 	else if (strcmp(args[3], "check-port") == 0) {
 		int i = 0;
@@ -4684,7 +4686,7 @@ static int cli_parse_set_server(char **args, char *payload, struct appctx *appct
 		HA_SPIN_LOCK(DNS_LOCK, &sv->resolvers->lock);
 		HA_SPIN_LOCK(SERVER_LOCK, &sv->lock);
 		warning = update_server_fqdn(sv, args[4], "stats socket command", 1);
-		HA_SPIN_UNLOCK(SERVER_UNLOCK, &sv->lock);
+		HA_SPIN_UNLOCK(SERVER_LOCK, &sv->lock);
 		HA_SPIN_UNLOCK(DNS_LOCK, &sv->resolvers->lock);
 		if (warning) {
 			appctx->ctx.cli.severity = LOG_WARNING;
