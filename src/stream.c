@@ -379,7 +379,7 @@ static void stream_free(struct stream *s)
 			_HA_ATOMIC_SUB(&__objt_server(s->target)->cur_sess, 1);
 		}
 		if (may_dequeue_tasks(objt_server(s->target), s->be))
-			process_srv_queue(objt_server(s->target));
+			process_srv_queue(objt_server(s->target), 0);
 	}
 
 	if (unlikely(s->srv_conn)) {
@@ -781,7 +781,7 @@ static void sess_update_st_cer(struct stream *s)
 		_HA_ATOMIC_ADD(&s->be->be_counters.failed_conns, 1);
 		sess_change_server(s, NULL);
 		if (may_dequeue_tasks(objt_server(s->target), s->be))
-			process_srv_queue(objt_server(s->target));
+			process_srv_queue(objt_server(s->target), 0);
 
 		/* shutw is enough so stop a connecting socket */
 		si_shutw(si);
@@ -1050,7 +1050,7 @@ static void sess_update_stream_int(struct stream *s)
 			/* release other streams waiting for this server */
 			sess_change_server(s, NULL);
 			if (may_dequeue_tasks(srv, s->be))
-				process_srv_queue(srv);
+				process_srv_queue(srv, 0);
 
 			/* Failed and not retryable. */
 			si_shutr(si);
@@ -2033,7 +2033,7 @@ struct task *process_stream(struct task *t, void *context, unsigned short state)
 			}
 			sess_change_server(s, NULL);
 			if (may_dequeue_tasks(srv, s->be))
-				process_srv_queue(srv);
+				process_srv_queue(srv, 0);
 		}
 	}
 

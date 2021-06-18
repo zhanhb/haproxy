@@ -850,7 +850,7 @@ out_ok:
 			sess_change_server(s, srv);
 		} else {
 			if (may_dequeue_tasks(conn_slot, s->be))
-				process_srv_queue(conn_slot);
+				process_srv_queue(conn_slot, 0);
 		}
 	}
 
@@ -1789,7 +1789,7 @@ int srv_redispatch_connect(struct stream *s)
 
 		/* release other streams waiting for this server */
 		if (may_dequeue_tasks(srv, s->be))
-			process_srv_queue(srv);
+			process_srv_queue(srv, 0);
 		return 1;
 	}
 	/* if we get here, it's because we got SRV_STATUS_OK, which also

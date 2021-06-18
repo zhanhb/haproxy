@@ -3497,7 +3497,7 @@ void http_end_txn_clean_session(struct stream *s)
 			_HA_ATOMIC_SUB(&__objt_server(s->target)->cur_sess, 1);
 		}
 		if (may_dequeue_tasks(objt_server(s->target), be))
-			process_srv_queue(objt_server(s->target));
+			process_srv_queue(objt_server(s->target), 0);
 	}
 
 	s->target = NULL;
