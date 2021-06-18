@@ -40,7 +40,7 @@ int init_pendconn();
 struct pendconn *pendconn_add(struct stream *strm);
 int pendconn_dequeue(struct stream *strm);
 void pendconn_free(struct pendconn *p);
-void process_srv_queue(struct server *s);
+void process_srv_queue(struct server *s, int server_locked);
 unsigned int srv_dynamic_maxconn(const struct server *s);
 int pendconn_redistribute(struct server *s);
 int pendconn_grab_from_px(struct server *s);
