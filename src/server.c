@@ -4536,12 +4536,14 @@ static int cli_parse_set_server(char **args, char *payload, struct appctx *appct
 		HA_SPIN_UNLOCK(SERVER_LOCK, &sv->lock);
 	}
 	else if (strcmp(args[3], "agent-send") == 0) {
+		HA_SPIN_LOCK(SERVER_LOCK, &sv->lock);
 		if (!(sv->agent.state & CHK_ST_ENABLED))
 			cli_err(appctx, "agent checks are not enabled on this server.\n");
 		else {
 			if (!set_srv_agent_send(sv, args[4]))
 				cli_err(appctx, "cannot allocate memory for new string.\n");
 		}
+		HA_SPIN_UNLOCK(SERVER_LOCK, &sv->lock);
 	}
 	else if (strcmp(args[3], "check-port") == 0) {
 		int i = 0;
@@ -4600,7 +4602,7 @@ static int cli_parse_set_server(char **args, char *payload, struct appctx *appct
 			sv->flags &= ~SRV_F_NO_RESOLUTION;
 		}
 		warning = update_server_fqdn(sv, args[4], "stats socket command", 1);
-		HA_SPIN_UNLOCK(SERVER_UNLOCK, &sv->lock);
+		HA_SPIN_UNLOCK(SERVER_LOCK, &sv->lock);
 		HA_SPIN_UNLOCK(DNS_LOCK, &sv->resolvers->lock);
 		if (warning)
 			cli_msg(appctx, LOG_WARNING, warning);
