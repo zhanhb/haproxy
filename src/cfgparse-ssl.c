@@ -355,7 +355,7 @@ static int ssl_parse_global_keylog(char **args, int section_type, struct proxy *
 }
 #else
 static int ssl_parse_global_keylog(char **args, int section_type, struct proxy *curpx,
-                                       const struct proxy *defpx, const char *file, int line,
+                                       struct proxy *defpx, const char *file, int line,
                                        char **err)
 {
 	memprintf(err, "'%s' requires at least OpenSSL 1.1.1.", args[0]);
