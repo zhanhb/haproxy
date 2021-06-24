@@ -4003,8 +4003,8 @@ int snr_resolution_cb(struct dns_requester *requester, struct dns_nameserver *na
 	update_server_addr(s, firstip, firstip_sin_family, (char *) chk->area);
 
  update_status:
-
-	snr_update_srv_status(s, has_no_ip);
+	if (!snr_update_srv_status(s, has_no_ip) && has_no_ip)
+		memset(&s->addr, 0, sizeof(s->addr));
 	return 1;
 
  invalid:
