@@ -1531,8 +1531,6 @@ int dns_get_ip_from_response(struct dns_response_packet *dns_p,
 			*newip = newip6;
 			*newip_sin_family = AF_INET6;
 		}
-		if (!currentip_found)
-			goto not_found;
 	}
 	/* Case when the caller looks first for an IPv6 address */
 	else if (family_priority == AF_INET6) {
@@ -1544,8 +1542,6 @@ int dns_get_ip_from_response(struct dns_response_packet *dns_p,
 			*newip = newip4;
 			*newip_sin_family = AF_INET;
 		}
-		if (!currentip_found)
-			goto not_found;
 	}
 	/* Case when the caller have no preference (we prefer IPv6) */
 	else if (family_priority == AF_UNSPEC) {
@@ -1557,17 +1553,11 @@ int dns_get_ip_from_response(struct dns_response_packet *dns_p,
 			*newip = newip4;
 			*newip_sin_family = AF_INET;
 		}
-		if (!currentip_found)
-			goto not_found;
 	}
-
-	/* No reason why we should change the server's IP address */
-	return DNS_UPD_NO;
-
- not_found:
 
 	/* the ip of this record was chosen for the server */
 	if (owner && found_record) {
+		LIST_DEL_INIT(&owner->ip_rec_item);
 		LIST_ADDQ(&found_record->attached_servers, &owner->ip_rec_item);
 	}
 
@@ -1578,7 +1568,8 @@ int dns_get_ip_from_response(struct dns_response_packet *dns_p,
 		LIST_ADDQ(&dns_p->answer_list, &record->list);
 		break;
 	}
-	return DNS_UPD_SRVIP_NOT_FOUND;
+
+	return (currentip_found ? DNS_UPD_NO : DNS_UPD_SRVIP_NOT_FOUND);
 }
 
 /* Turns a domain name label into a string.
