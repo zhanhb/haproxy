@@ -3527,7 +3527,7 @@ static int check_proxy_tcpcheck(struct proxy *px)
 			if (next && next->action == TCPCHK_ACT_CONNECT) {
 				LIST_DEL(&chk->list);
 				LIST_ADD(&next->list, &chk->list);
-				chk->index = next->index;
+				chk->index = next->index + 1;
 			}
 		}
 
@@ -3548,7 +3548,7 @@ static int check_proxy_tcpcheck(struct proxy *px)
 				goto out;
 			}
 			LIST_ADDQ(px->tcpcheck_rules.list, &next->list);
-			next->index = chk->index;
+			next->index = chk->index + 1;
 		}
 	}
 
