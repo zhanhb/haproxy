@@ -3184,24 +3184,6 @@ spoe_start(struct stream *s, struct filter *filter)
 		return 0;
 	}
 
-	if (!LIST_ISEMPTY(&ctx->events[SPOE_EV_ON_TCP_REQ_FE]))
-		filter->pre_analyzers |= AN_REQ_INSPECT_FE;
-
-	if (!LIST_ISEMPTY(&ctx->events[SPOE_EV_ON_TCP_REQ_BE]))
-		filter->pre_analyzers |= AN_REQ_INSPECT_BE;
-
-	if (!LIST_ISEMPTY(&ctx->events[SPOE_EV_ON_TCP_RSP]))
-		filter->pre_analyzers |= AN_RES_INSPECT;
-
-	if (!LIST_ISEMPTY(&ctx->events[SPOE_EV_ON_HTTP_REQ_FE]))
-		filter->pre_analyzers |= AN_REQ_HTTP_PROCESS_FE;
-
-	if (!LIST_ISEMPTY(&ctx->events[SPOE_EV_ON_HTTP_REQ_BE]))
-		filter->pre_analyzers |= AN_REQ_HTTP_PROCESS_BE;
-
-	if (!LIST_ISEMPTY(&ctx->events[SPOE_EV_ON_HTTP_RSP]))
-		filter->pre_analyzers |= AN_RES_HTTP_PROCESS_FE;
-
 	return 1;
 }
 
@@ -3247,6 +3229,24 @@ spoe_start_analyze(struct stream *s, struct filter *filter, struct channel *chn)
 		goto out;
 
 	if (!(chn->flags & CF_ISRESP)) {
+		if (!LIST_ISEMPTY(&ctx->events[SPOE_EV_ON_TCP_REQ_FE]))
+			filter->pre_analyzers |= AN_REQ_INSPECT_FE;
+
+		if (!LIST_ISEMPTY(&ctx->events[SPOE_EV_ON_TCP_REQ_BE]))
+			filter->pre_analyzers |= AN_REQ_INSPECT_BE;
+
+		if (!LIST_ISEMPTY(&ctx->events[SPOE_EV_ON_TCP_RSP]))
+			filter->pre_analyzers |= AN_RES_INSPECT;
+
+		if (!LIST_ISEMPTY(&ctx->events[SPOE_EV_ON_HTTP_REQ_FE]))
+			filter->pre_analyzers |= AN_REQ_HTTP_PROCESS_FE;
+
+		if (!LIST_ISEMPTY(&ctx->events[SPOE_EV_ON_HTTP_REQ_BE]))
+			filter->pre_analyzers |= AN_REQ_HTTP_PROCESS_BE;
+
+		if (!LIST_ISEMPTY(&ctx->events[SPOE_EV_ON_HTTP_RSP]))
+			filter->pre_analyzers |= AN_RES_HTTP_PROCESS_FE;
+
 		if (filter->pre_analyzers & AN_REQ_INSPECT_FE)
 			chn->analysers |= AN_REQ_INSPECT_FE;
 		if (filter->pre_analyzers & AN_REQ_INSPECT_BE)
