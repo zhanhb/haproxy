@@ -2113,6 +2113,7 @@ int parse_server(const char *file, int linenum, char **args, struct proxy *curpr
 						err_code |= ERR_ALERT | ERR_FATAL;
 						goto out;
 					}
+					LIST_ADDQ(&newsrv->srvrq->attached_servers, &newsrv->srv_rec_item);
 				}
 				else if (srv_prepare_for_resolution(newsrv, fqdn) == -1) {
 					ha_alert("parsing [%s:%d] : Can't create DNS resolution for server '%s'\n",
