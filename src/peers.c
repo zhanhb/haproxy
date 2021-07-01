@@ -460,10 +460,10 @@ static int peer_prepare_switchmsg(struct shared_table *st, char *msg, size_t siz
 				case STD_T_SINT:
 				case STD_T_UINT:
 				case STD_T_ULL:
-					data |= 1 << data_type;
+					data |= 1ULL << data_type;
 					break;
 				case STD_T_FRQP:
-					data |= 1 << data_type;
+					data |= 1ULL << data_type;
 					intencode(data_type, &chunkq);
 					intencode(st->table->data_arg[data_type].u, &chunkq);
 					break;
@@ -920,6 +920,7 @@ switchstate:
 						goto out;
 					appctx->st0 = PEER_SESS_ST_END;
 					goto switchstate;
+
 				}
 				if (trash.str[reql-1] != '\n') {
 					/* Incomplete line, we quit */
@@ -1348,7 +1349,7 @@ switchstate:
 
 						for (data_type = 0 ; data_type < STKTABLE_DATA_TYPES ; data_type++) {
 
-							if ((1 << data_type) & st->remote_data) {
+							if ((1ULL << data_type) & st->remote_data) {
 								switch (stktable_data_types[data_type].std_type) {
 									case STD_T_SINT: {
 										int data;
