@@ -203,7 +203,7 @@ int conn_fd_check(struct connection *conn)
 	if (!(conn->flags & CO_FL_WAIT_L4_CONN))
 		return 1; /* strange we were called while ready */
 
-	if (!fd_send_ready(fd))
+	if (!fd_send_ready(fd) && !(fdtab[fd].state & (FD_POLL_ERR|FD_POLL_HUP)))
 		return 0;
 
 	/* Here we have 2 cases :
