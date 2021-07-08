@@ -1,6 +1,10 @@
 ChangeLog :
 ===========
 
+2021/07/08 : 2.3.12
+    - BUG/MAJOR: pools: fix incomplete backport of lockless pool fix
+    - BUG/MAJOR: pools: second fix for incomplete backport of lockless pool fix
+
 2021/07/07 : 2.3.11
     - BUG/MINOR: mux-fcgi: Don't send normalized uri to FCGI application
     - BUG/MINOR: htx: Preserve HTX flags when draining data from an HTX message
