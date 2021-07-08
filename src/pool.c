@@ -273,11 +273,16 @@ void *__pool_refill_alloc(struct pool_head *pool, unsigned int avail)
 		if (++allocated > avail)
 			break;
 
-		free_list = pool->free_list;
+		free_list = _HA_ATOMIC_LOAD(&pool->free_list);
 		do {
-			*POOL_LINK(pool, ptr) = free_list;
-			__ha_barrier_store();
-		} while (_HA_ATOMIC_CAS(&pool->free_list, &free_list, ptr) == 0);
+			while (unlikely(free_list == POOL_BUSY)) {
+				pl_cpu_relax();
+				free_list = _HA_ATOMIC_LOAD(&pool->free_list);
+			}
+			_HA_ATOMIC_STORE(POOL_LINK(pool, ptr), (void *)free_list);
+			__ha_barrier_atomic_store();
+		} while (!_HA_ATOMIC_CAS(&pool->free_list, &free_list, ptr));
+		__ha_barrier_atomic_store();
 	}
 	__ha_barrier_atomic_store();
 
