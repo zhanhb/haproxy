@@ -219,7 +219,7 @@ static inline void *__pool_get_first(struct pool_head *pool)
  */
 static inline void __pool_free(struct pool_head *pool, void *ptr)
 {
-	void **free_list = pool->free_list;
+	void **free_list;
 
 	_HA_ATOMIC_SUB(&pool->used, 1);
 
@@ -227,9 +227,14 @@ static inline void __pool_free(struct pool_head *pool, void *ptr)
 		pool_free_area(ptr, pool->size + POOL_EXTRA);
 		_HA_ATOMIC_SUB(&pool->allocated, 1);
 	} else {
+		free_list = _HA_ATOMIC_LOAD(&pool->free_list);
 		do {
-			*POOL_LINK(pool, ptr) = (void *)free_list;
-			__ha_barrier_store();
+                       while (unlikely(free_list == POOL_BUSY)) {
+                               __ha_cpu_relax();
+                               free_list = _HA_ATOMIC_LOAD(&pool->free_list);
+                       }
+                       _HA_ATOMIC_STORE(POOL_LINK(pool, ptr), (void *)free_list);
+                       __ha_barrier_atomic_store();
 		} while (!_HA_ATOMIC_CAS(&pool->free_list, &free_list, ptr));
 		__ha_barrier_atomic_store();
 	}
