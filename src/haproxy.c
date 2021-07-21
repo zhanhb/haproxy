@@ -2952,8 +2952,11 @@ int main(int argc, char **argv)
 				protocol_unbind_all();
 				exit(1); /* there has been an error */
 			}
-			else if (ret == 0) /* child breaks here */
+			else if (ret == 0) { /* child breaks here */
+				/* This one must not be exported, it's internal! */
+				unsetenv("HAPROXY_MWORKER_REEXEC");
 				break;
+			}
 			children[proc] = ret;
 			if (pidfd >= 0 && !(global.mode & MODE_MWORKER)) {
 				char pidstr[100];
