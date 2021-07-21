@@ -3161,6 +3161,8 @@ int main(int argc, char **argv)
 					exit(1); /* there has been an error */
 				}
 				else if (ret == 0) { /* child breaks here */
+                                        /* This one must not be exported, it's internal! */
+                                        unsetenv("HAPROXY_MWORKER_REEXEC");
 					ha_random_jump96(relative_pid);
 					break;
 				}
