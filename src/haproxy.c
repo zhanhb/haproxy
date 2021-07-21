@@ -1635,7 +1635,8 @@ static void init(int argc, char **argv)
 		mworker_wait();
 	}
 
-	if ((global.mode & MODE_MWORKER) && (getenv("HAPROXY_MWORKER_REEXEC") != NULL)) {
+	if ((global.mode & (MODE_MWORKER | MODE_CHECK)) == MODE_MWORKER &&
+	    (getenv("HAPROXY_MWORKER_REEXEC") != NULL)) {
 		atexit_flag = 1;
 		atexit(reexec_on_failure);
 	}
