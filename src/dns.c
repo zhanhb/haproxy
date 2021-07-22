@@ -681,6 +681,7 @@ static void dns_check_dns_response(struct dns_resolution *res)
 				/* convert the key to lookup in lower case */
 				for (i = 0 ; item->target[i] ; i++)
 					target[i] = tolower(item->target[i]);
+				target[i] = 0;
 
 				node = ebis_lookup(&srvrq->named_servers, target);
 				if (node) {
