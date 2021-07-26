@@ -2320,7 +2320,7 @@ static void h2_process_demux(struct h2c *h2c)
 				if (h2c->st0 == H2_CS_ERROR) {
 					h2c->st0 = H2_CS_ERROR2;
 					if (b_data(&h2c->dbuf) ||
-					    !(((const struct session *)h2c->conn->owner)->fe->options & PR_O_IGNORE_PRB))
+					    !(((const struct session *)h2c->conn->owner)->fe->options & (PR_O_NULLNOLOG|PR_O_IGNORE_PRB)))
 						sess_log(h2c->conn->owner);
 				}
 				goto fail;
