@@ -3296,7 +3296,7 @@ static int tcpcheck_main(struct check *check)
 	/* cleanup before leaving */
 	check->current_step = NULL;
 
-	if (check->result == CHK_RES_FAILED)
+	if (conn && check->result == CHK_RES_FAILED)
 		conn->flags |= CO_FL_ERROR;
 
  out:
