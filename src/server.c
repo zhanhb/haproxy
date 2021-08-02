@@ -2203,10 +2203,32 @@ struct server *new_server(struct proxy *proxy)
 	return srv;
 }
 
+/* Increment the dynamic server refcount. */
+static void srv_use_dynsrv(struct server *srv)
+{
+	BUG_ON(!(srv->flags & SRV_F_DYNAMIC));
+	HA_ATOMIC_INC(&srv->refcount_dynsrv);
+}
+
+/* Decrement the dynamic server refcount. */
+static uint srv_release_dynsrv(struct server *srv)
+{
+	BUG_ON(!(srv->flags & SRV_F_DYNAMIC));
+	return HA_ATOMIC_SUB_FETCH(&srv->refcount_dynsrv, 1);
+}
+
 /* Deallocate a server <srv> and its member. <srv> must be allocated.
  */
 void free_server(struct server *srv)
 {
+	/* For dynamic servers, decrement the reference counter. Only free the
+	 * server when reaching zero.
+	 */
+	if (srv->flags & SRV_F_DYNAMIC) {
+		if (srv_release_dynsrv(srv))
+			return;
+	}
+
 	task_destroy(srv->warmup);
 	task_destroy(srv->srvrq_check);
 
@@ -4428,6 +4450,9 @@ static int cli_parse_add_server(char **args, char *payload, struct appctx *appct
 
 	args[1] = sv_name;
 	errcode = _srv_parse_init(&srv, args, &argc, be, parse_flags, &errmsg);
+	if (srv)
+		srv_use_dynsrv(srv);
+
 	if (errcode) {
 		if (errmsg)
 			cli_dynerr(appctx, errmsg);
