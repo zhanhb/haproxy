@@ -4766,6 +4766,7 @@ void srv_update_status(struct server *s)
 				s->next_state = SRV_ST_STOPPING;
 			}
 			else {
+				s->last_change = now.tv_sec;
 				s->next_state = SRV_ST_STARTING;
 				if (s->slowstart > 0) {
 					if (s->warmup)
@@ -4824,6 +4825,8 @@ void srv_update_status(struct server *s)
 
 		if (prev_srv_count && s->proxy->srv_bck == 0 && s->proxy->srv_act == 0)
 			set_backend_down(s->proxy);
+		else if (!prev_srv_count && (s->proxy->srv_bck || s->proxy->srv_act))
+			s->proxy->last_change = now.tv_sec;
 
 		/* If the server is set with "on-marked-up shutdown-backup-sessions",
 		 * and it's not a backup server and its effective weight is > 0,
