@@ -2831,12 +2831,12 @@ static inline int _hlua_channel_dup(struct channel *chn, lua_State *L)
 	luaL_Buffer b;
 
 	ret = ci_getblk_nc(chn, &blk1, &len1, &blk2, &len2);
-	if (unlikely(ret == 0))
+	if (unlikely(ret <= 0)) {
+		if (ret < 0 || HLUA_CANT_YIELD(hlua_gethlua(L))) {
+			lua_pushnil(L);
+			return -1;
+		}
 		return 0;
-
-	if (unlikely(ret < 0)) {
-		lua_pushnil(L);
-		return -1;
 	}
 
 	luaL_buffinit(L, &b);
@@ -2937,8 +2937,13 @@ __LJMP static int hlua_channel_getline_yield(lua_State *L, int status, lua_KCont
 	}
 
 	ret = ci_getline_nc(chn, &blk1, &len1, &blk2, &len2);
-	if (ret == 0)
+	if (ret == 0) {
+		if (HLUA_CANT_YIELD(hlua_gethlua(L))) {
+			_hlua_channel_dup(chn, L);
+			return 1;
+		}
 		MAY_LJMP(hlua_yieldk(L, 0, 0, hlua_channel_getline_yield, TICK_ETERNITY, 0));
+	}
 
 	if (ret == -1) {
 		lua_pushnil(L);
@@ -2999,11 +3004,11 @@ __LJMP static int hlua_channel_append_yield(lua_State *L, int status, lua_KConte
 		max = len - l;
 
 	ret = ci_putblk(chn, str + l, max);
-	if (ret == -2 || ret == -3) {
-		lua_pushinteger(L, -1);
-		return 1;
-	}
-	if (ret == -1) {
+	if (ret < 0) {
+		if (ret == -2 || ret == -3 || HLUA_CANT_YIELD(hlua_gethlua(L))) {
+			lua_pushinteger(L, -1);
+			return 1;
+		}
 		chn->flags |= CF_WAKE_WRITE;
 		MAY_LJMP(hlua_yieldk(L, 0, 0, hlua_channel_append_yield, TICK_ETERNITY, 0));
 	}
@@ -3011,16 +3016,16 @@ __LJMP static int hlua_channel_append_yield(lua_State *L, int status, lua_KConte
 	lua_pop(L, 1);
 	lua_pushinteger(L, l);
 
-	max = channel_recv_limit(chn) - b_data(&chn->buf);
-	if (max == 0 && co_data(chn) == 0) {
-		/* There are no space available, and the output buffer is empty.
-		 * in this case, we cannot add more data, so we cannot yield,
-		 * we return the amount of copied data.
+	if (l < len) {
+		/* If there are no space available, and the output buffer is
+		 * empty, we cannot add more data, so we cannot yield, we return
+		 * the amount of copied data.
 		 */
-		return 1;
-	}
-	if (l < len)
+		max = channel_recv_limit(chn) - b_data(&chn->buf);
+		if ((max == 0 && co_data(chn) == 0) || HLUA_CANT_YIELD(hlua_gethlua(L)))
+			return 1;
 		MAY_LJMP(hlua_yieldk(L, 0, 0, hlua_channel_append_yield, TICK_ETERNITY, 0));
+	}
 	return 1;
 }
 
@@ -3093,6 +3098,8 @@ __LJMP static int hlua_channel_send_yield(lua_State *L, int status, lua_KContext
 	 * the request buffer if its not required.
 	 */
 	if (chn->buf.size == 0) {
+		if (HLUA_CANT_YIELD(hlua_gethlua(L)))
+			return 1;
 		si_rx_buff_blk(chn_prod(chn));
 		MAY_LJMP(hlua_yieldk(L, 0, 0, hlua_channel_send_yield, TICK_ETERNITY, 0));
 	}
@@ -3133,15 +3140,15 @@ __LJMP static int hlua_channel_send_yield(lua_State *L, int status, lua_KContext
 	lua_pop(L, 1);
 	lua_pushinteger(L, l);
 
-	/* If there is no space available, and the output buffer is empty.
-	 * in this case, we cannot add more data, so we cannot yield,
-	 * we return the amount of copied data.
-	 */
-	max = b_room(&chn->buf);
-	if (max == 0 && co_data(chn) == 0)
-		return 1;
-
 	if (l < len) {
+		/* If there is no space available, and the output buffer is empty.
+		 * in this case, we cannot add more data, so we cannot yield,
+		 * we return the amount of copied data.
+		 */
+		max = b_room(&chn->buf);
+		if ((max == 0 && co_data(chn) == 0) || HLUA_CANT_YIELD(hlua_gethlua(L)))
+			return 1;
+
 		/* If we are waiting for space in the response buffer, we
 		 * must set the flag WAKERESWR. This flag required the task
 		 * wake up if any activity is detected on the response buffer.
@@ -3207,7 +3214,7 @@ __LJMP static int hlua_channel_forward_yield(lua_State *L, int status, lua_KCont
 		/* The the input channel or the output channel are closed, we
 		 * must return the amount of data forwarded.
 		 */
-		if (channel_input_closed(chn) || channel_output_closed(chn))
+		if (channel_input_closed(chn) || channel_output_closed(chn) ||  HLUA_CANT_YIELD(hlua_gethlua(L)))
 			return 1;
 
 		/* If we are waiting for space data in the response buffer, we
