@@ -2574,6 +2574,7 @@ void deinit(void)
 
 __attribute__((noreturn)) void deinit_and_exit(int status)
 {
+	global.mode |= MODE_STOPPING;
 	deinit();
 	exit(status);
 }
