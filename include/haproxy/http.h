@@ -36,6 +36,7 @@ extern const uint8_t http_char_classes[256];
 enum http_meth_t find_http_meth(const char *str, const int len);
 int http_get_status_idx(unsigned int status);
 const char *http_get_reason(unsigned int status);
+int http_validate_scheme(const struct ist schm);
 struct ist http_get_scheme(const struct ist uri);
 struct ist http_get_authority(const struct ist uri, int no_userinfo);
 struct ist http_get_path(const struct ist uri);
