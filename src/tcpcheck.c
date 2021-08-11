@@ -1233,8 +1233,9 @@ enum tcpcheck_eval_ret tcpcheck_eval_send(struct check *check, struct tcpcheck_r
 	}
 
 	/* Data already pending in the output buffer, send them now */
-	if (b_data(&check->bo))
+	if ((IS_HTX_CONN(conn) && !htx_is_empty(htxbuf(&check->bo))) || (!IS_HTX_CONN(conn) && b_data(&check->bo))) {
 		goto do_send;
+	}
 
 	/* Always release input buffer when a new send is evaluated */
 	check_release_buf(check, &check->bi);
@@ -1375,7 +1376,7 @@ enum tcpcheck_eval_ret tcpcheck_eval_send(struct check *check, struct tcpcheck_r
 			goto out;
 		}
 	}
-	if ((IS_HTX_CONN(conn) && !htx_is_empty(htxbuf(&check->bo))) || b_data(&check->bo)) {
+	if ((IS_HTX_CONN(conn) && !htx_is_empty(htxbuf(&check->bo))) || (!IS_HTX_CONN(conn) && b_data(&check->bo))) {
 		cs->conn->mux->subscribe(cs, SUB_RETRY_SEND, &check->wait_list);
 		ret = TCPCHK_EVAL_WAIT;
 		goto out;
