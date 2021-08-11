@@ -571,6 +571,14 @@ static struct htx_sl *h2_prepare_htx_reqline(uint32_t fields, struct ist *phdr, 
 		}
 	}
 
+	/* The method is a non-empty token (RFC7231#4.1) */
+	if (!phdr[H2_PHDR_IDX_METH].len)
+		goto fail;
+	for (i = 0; i < phdr[H2_PHDR_IDX_METH].len; i++) {
+		if (!HTTP_IS_TOKEN(phdr[H2_PHDR_IDX_METH].ptr[i]))
+			htx->flags |= HTX_FL_PARSING_ERROR;
+	}
+
 	/* 7540#8.1.2.3: :path must not be empty */
 	if (!phdr[uri_idx].len)
 		goto fail;
