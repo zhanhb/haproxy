@@ -143,16 +143,29 @@ static char **per_thread_load = NULL;
 
 lua_State *hlua_init_state(int thread_id);
 
+/* This function takes the Lua global lock. Keep this function's visibility
+ * global so that it can appear in stack dumps and performance profiles!
+ */
+void lua_take_global_lock()
+{
+	HA_SPIN_LOCK(LUA_LOCK, &hlua_global_lock);
+}
+
+static inline void lua_drop_global_lock()
+{
+	HA_SPIN_UNLOCK(LUA_LOCK, &hlua_global_lock);
+}
+
 #define SET_SAFE_LJMP_L(__L, __HLUA) \
 	({ \
 		int ret; \
 		if ((__HLUA)->state_id == 0) \
-			HA_SPIN_LOCK(LUA_LOCK, &hlua_global_lock); \
+			lua_take_global_lock(); \
 		if (setjmp(safe_ljmp_env) != 0) { \
 			lua_atpanic(__L, hlua_panic_safe); \
 			ret = 0; \
 			if ((__HLUA)->state_id == 0) \
-				HA_SPIN_UNLOCK(LUA_LOCK, &hlua_global_lock); \
+				lua_drop_global_lock(); \
 		} else { \
 			lua_atpanic(__L, hlua_panic_ljmp); \
 			ret = 1; \
@@ -167,7 +180,7 @@ lua_State *hlua_init_state(int thread_id);
 	do { \
 		lua_atpanic(__L, hlua_panic_safe); \
 		if ((__HLUA)->state_id == 0) \
-			HA_SPIN_UNLOCK(LUA_LOCK, &hlua_global_lock); \
+			lua_drop_global_lock(); \
 	} while(0)
 
 #define SET_SAFE_LJMP(__HLUA) \
@@ -1274,7 +1287,7 @@ static enum hlua_exec hlua_ctx_resume(struct hlua *lua, int yield_allowed)
 	 * label "resume_execution".
 	 */
 	if (lua->state_id == 0)
-		HA_SPIN_LOCK(LUA_LOCK, &hlua_global_lock);
+		lua_take_global_lock();
 
 resume_execution:
 
@@ -1419,7 +1432,7 @@ resume_execution:
 
 	/* This is the main exit point, remove the Lua lock. */
 	if (lua->state_id == 0)
-		HA_SPIN_UNLOCK(LUA_LOCK, &hlua_global_lock);
+		lua_drop_global_lock();
 
 	return ret;
 }
