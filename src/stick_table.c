@@ -2120,9 +2120,13 @@ static enum act_parse_ret parse_set_gpt0(const char **args, int *arg, struct pro
 		}
 	}
 
+	/* value may be either an integer or an expression */
 	rule->arg.gpt.expr = NULL;
 	rule->arg.gpt.value = strtol(args[*arg], &error, 10);
-	if (*error != '\0') {
+	if (*error == '\0') {
+		/* valid integer, skip it */
+		(*arg)++;
+	} else {
 		rule->arg.gpt.expr = sample_parse_expr((char **)args, arg, px->conf.args.file,
 		                                       px->conf.args.line, err, &px->conf.args, NULL);
 		if (!rule->arg.gpt.expr)
@@ -2145,7 +2149,6 @@ static enum act_parse_ret parse_set_gpt0(const char **args, int *arg, struct pro
 			return ACT_RET_PRS_ERR;
 		}
 	}
-	(*arg)++;
 
 	rule->action = ACT_CUSTOM;
 	rule->action_ptr = action_set_gpt0;
