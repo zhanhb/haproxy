@@ -2370,6 +2370,11 @@ int check_config_validity()
 		}
 		next_pxid++;
 
+		if (curproxy->mode == PR_MODE_HTTP && global.tune.bufsize >= (256 << 20) && ONLY_ONCE()) {
+			ha_alert("global.tune.bufsize must be below 256 MB when HTTP is in use (current value = %d).\n",
+				 global.tune.bufsize);
+			cfgerr++;
+		}
 
 		if (curproxy->state == PR_STSTOPPED) {
 			/* ensure we don't keep listeners uselessly bound */
