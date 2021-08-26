@@ -879,7 +879,9 @@ struct htx_blk *htx_add_header(struct htx *htx, const struct ist name,
 {
 	struct htx_blk *blk;
 
-	/* FIXME: check name.len (< 256B) and value.len (< 1MB) */
+	if (name.len > 255 || value.len > 1048575)
+		return NULL;
+
 	blk = htx_add_blk(htx, HTX_BLK_HDR, name.len + value.len);
 	if (!blk)
 		return NULL;
@@ -898,7 +900,9 @@ struct htx_blk *htx_add_trailer(struct htx *htx, const struct ist name,
 {
 	struct htx_blk *blk;
 
-	/* FIXME: check name.len (< 256B) and value.len (< 1MB) */
+	if (name.len > 255 || value.len > 1048575)
+		return NULL;
+
 	blk = htx_add_blk(htx, HTX_BLK_TLR, name.len + value.len);
 	if (!blk)
 		return NULL;
