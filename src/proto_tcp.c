@@ -688,7 +688,7 @@ int tcp_connect_probe(struct connection *conn)
 	if (!(conn->flags & CO_FL_WAIT_L4_CONN))
 		return 1; /* strange we were called while ready */
 
-	if (!fd_send_ready(fd) && !(fdtab[fd].state & (FD_POLL_ERR|FD_POLL_HUP)))
+	if (!fd_send_ready(fd) && !(fdtab[fd].ev & (FD_POLL_ERR|FD_POLL_HUP)))
 		return 0;
 
 	/* we might be the first witness of FD_POLL_ERR. Note that FD_POLL_HUP
