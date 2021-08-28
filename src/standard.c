@@ -3836,9 +3836,9 @@ fail_wl:
 int dump_text(struct chunk *out, const char *buf, int bsize)
 {
 	unsigned char c;
-	int ptr = 0;
+	size_t ptr = 0;
 
-	while (buf[ptr] && ptr < bsize) {
+	while (ptr < bsize && buf[ptr]) {
 		c = buf[ptr];
 		if (isprint(c) && isascii(c) && c != '\\' && c != ' ' && c != '=') {
 			if (out->len > out->size - 1)
