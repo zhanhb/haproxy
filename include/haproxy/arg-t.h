@@ -82,6 +82,11 @@ enum {
 	ARGC_UBK,      /* use_backend message */
 	ARGC_USRV,     /* use-server message */
 	ARGC_HERR,     /* http-error */
+	ARGC_TCO,      /* tcp-request connection expression */
+	ARGC_TSE,      /* tcp-request session expression */
+	ARGC_TRQ,      /* tcp-request content expression */
+	ARGC_TRS,      /* tcp-response content expression */
+	ARGC_TCK,      /* tcp-check expression */
 };
 
 /* flags used when compiling and executing regex */
