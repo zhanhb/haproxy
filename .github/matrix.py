@@ -106,7 +106,7 @@ for CC in ["gcc", "clang"]:
         "OPENSSL_VERSION=1.0.2u",
         "LIBRESSL_VERSION=2.9.2",
         "LIBRESSL_VERSION=3.3.3",
-        "BORINGSSL=yes",
+#        "BORINGSSL=yes",
     ]:
         flags = ["USE_OPENSSL=1"]
         if ssl == "BORINGSSL=yes":
