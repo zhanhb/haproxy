@@ -456,8 +456,6 @@ int http_wait_for_request(struct stream *s, struct channel *req, int an_bit)
 	if (!(s->flags & SF_FINST_MASK))
 		s->flags |= SF_FINST_R;
 
-	req->analysers &= AN_REQ_FLT_END;
-	req->analyse_exp = TICK_ETERNITY;
 	DBG_TRACE_DEVEL("leaving on error",
 			STRM_EV_STRM_ANA|STRM_EV_HTTP_ANA|STRM_EV_HTTP_ERR, s, txn);
 	return 0;
@@ -965,8 +963,6 @@ int http_process_request(struct stream *s, struct channel *req, int an_bit)
 	if (!(s->flags & SF_FINST_MASK))
 		s->flags |= SF_FINST_R;
 
-	req->analysers &= AN_REQ_FLT_END;
-	req->analyse_exp = TICK_ETERNITY;
 	DBG_TRACE_DEVEL("leaving on error",
 			STRM_EV_STRM_ANA|STRM_EV_HTTP_ANA|STRM_EV_HTTP_ERR, s, txn);
 	return 0;
@@ -1004,10 +1000,6 @@ int http_process_tarpit(struct stream *s, struct channel *req, int an_bit)
 	s->logs.t_queue = tv_ms_elapsed(&s->logs.tv_accept, &now);
 
 	http_reply_and_close(s, txn->status, (!(req->flags & CF_READ_ERROR) ? http_error_message(s) : NULL));
-
-  end:
-	req->analysers &= AN_REQ_FLT_END;
-	req->analyse_exp = TICK_ETERNITY;
 
 	if (!(s->flags & SF_ERR_MASK))
 		s->flags |= SF_ERR_PRXCOND;
@@ -1400,8 +1392,6 @@ int http_request_forward_body(struct stream *s, struct channel *req, int an_bit)
 		txn->status = status;
 		http_reply_and_close(s, txn->status, http_error_message(s));
 	}
-	req->analysers   &= AN_REQ_FLT_END;
-	s->res.analysers &= AN_RES_FLT_END; /* we're in data phase, we want to abort both directions */
 	if (!(s->flags & SF_ERR_MASK))
 		s->flags |= SF_ERR_PRXCOND;
 	if (!(s->flags & SF_FINST_MASK))
@@ -1553,7 +1543,6 @@ int http_wait_for_response(struct stream *s, struct channel *rep, int an_bit)
 			else
 				txn->status = 502;
 
-			rep->analysers &= AN_RES_FLT_END;
 			s->si[1].flags |= SI_FL_NOLINGER;
 			http_reply_and_close(s, txn->status, http_error_message(s));
 
@@ -1582,7 +1571,6 @@ int http_wait_for_response(struct stream *s, struct channel *rep, int an_bit)
 				health_adjust(__objt_server(s->target), HANA_STATUS_HTTP_READ_TIMEOUT);
 			}
 
-			rep->analysers &= AN_RES_FLT_END;
 			txn->status = 504;
 			s->si[1].flags |= SI_FL_NOLINGER;
 			http_reply_and_close(s, txn->status, http_error_message(s));
@@ -1605,7 +1593,6 @@ int http_wait_for_response(struct stream *s, struct channel *rep, int an_bit)
 			if (objt_server(s->target))
 				_HA_ATOMIC_ADD(&__objt_server(s->target)->counters.cli_aborts, 1);
 
-			rep->analysers &= AN_RES_FLT_END;
 			txn->status = 400;
 			http_reply_and_close(s, txn->status, http_error_message(s));
 
@@ -1640,7 +1627,6 @@ int http_wait_for_response(struct stream *s, struct channel *rep, int an_bit)
 				health_adjust(__objt_server(s->target), HANA_STATUS_HTTP_BROKEN_PIPE);
 			}
 
-			rep->analysers &= AN_RES_FLT_END;
 			txn->status = 502;
 			s->si[1].flags |= SI_FL_NOLINGER;
 			http_reply_and_close(s, txn->status, http_error_message(s));
@@ -1904,9 +1890,6 @@ int http_wait_for_response(struct stream *s, struct channel *rep, int an_bit)
 		s->flags |= SF_FINST_H;
 
 	s->si[1].flags |= SI_FL_NOLINGER;
-	rep->analysers &= AN_RES_FLT_END;
-	s->req.analysers &= AN_REQ_FLT_END;
-	rep->analyse_exp = TICK_ETERNITY;
 	DBG_TRACE_DEVEL("leaving on error",
 			STRM_EV_STRM_ANA|STRM_EV_HTTP_ANA|STRM_EV_HTTP_ERR, s, txn);
 	return 0;
@@ -1917,8 +1900,6 @@ int http_wait_for_response(struct stream *s, struct channel *rep, int an_bit)
 	 * any other information so that the client retries.
 	 */
 	txn->status = 0;
-	rep->analysers   &= AN_RES_FLT_END;
-	s->req.analysers &= AN_REQ_FLT_END;
 	s->logs.logwait = 0;
 	s->logs.level = 0;
 	s->res.flags &= ~CF_EXPECT_MORE; /* speed up sending a previous response */
@@ -2479,8 +2460,6 @@ int http_response_forward_body(struct stream *s, struct channel *res, int an_bit
    return_error:
 	/* don't send any error message as we're in the body */
 	http_reply_and_close(s, txn->status, NULL);
-	res->analysers   &= AN_RES_FLT_END;
-	s->req.analysers &= AN_REQ_FLT_END; /* we're in data phase, we want to abort both directions */
 	if (!(s->flags & SF_FINST_MASK))
 		s->flags |= SF_FINST_D;
 	DBG_TRACE_DEVEL("leaving on error",
@@ -2704,7 +2683,6 @@ int http_apply_redirect_rule(struct redirect_rule *rule, struct stream *s, struc
 	if (rule->flags & REDIRECT_FLAG_FROM_REQ) {
 		/* let's log the request time */
 		s->logs.tv_request = now;
-		req->analysers &= AN_REQ_FLT_END;
 
 		if (s->sess->fe == s->be) /* report it if the request was intercepted by the frontend */
 			_HA_ATOMIC_ADD(&s->sess->fe->fe_counters.intercepted_req, 1);
@@ -4576,6 +4554,13 @@ void http_reply_and_close(struct stream *s, short status, struct http_reply *msg
 end:
 	s->res.wex = tick_add_ifset(now_ms, s->res.wto);
 	s->txn->flags &= ~TX_WAIT_NEXT_RQ;
+
+	/* At this staged, HTTP analysis is finished */
+	s->req.analysers &= AN_REQ_FLT_END;
+	s->req.analyse_exp = TICK_ETERNITY;
+
+	s->res.analysers &= AN_RES_FLT_END;
+	s->res.analyse_exp = TICK_ETERNITY;
 
 	channel_auto_read(&s->req);
 	channel_abort(&s->req);
