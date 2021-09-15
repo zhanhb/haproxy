@@ -48,6 +48,21 @@ static int mem_fail_rate = 0;
 static int mem_should_fail(const struct pool_head *);
 #endif
 
+#if defined(HA_HAVE_MALLOC_TRIM)
+/* ask the allocator to trim memory pools */
+static void trim_all_pools(void)
+{
+	if (using_libc_allocator)
+		malloc_trim(0);
+}
+
+#else
+
+static void trim_all_pools(void)
+{
+}
+#endif
+
 /* Try to find an existing shared pool with the same characteristics and
  * returns it, otherwise creates this one. NULL is returned if no memory
  * is available for a new creation. Two flags are supported :
@@ -224,9 +239,7 @@ void pool_flush(struct pool_head *pool)
 /* This function might ask the malloc library to trim its buffers. */
 void pool_gc(struct pool_head *pool_ctx)
 {
-#if defined(HA_HAVE_MALLOC_TRIM)
-	malloc_trim(0);
-#endif
+	trim_all_pools();
 }
 
 #elif defined(CONFIG_HAP_LOCKLESS_POOLS)
@@ -363,9 +376,8 @@ void pool_gc(struct pool_head *pool_ctx)
 		}
 	}
 
-#if defined(HA_HAVE_MALLOC_TRIM)
-	malloc_trim(0);
-#endif
+	trim_all_pools();
+
 	if (!isolated)
 		thread_release();
 }
@@ -493,9 +505,7 @@ void pool_gc(struct pool_head *pool_ctx)
 		}
 	}
 
-#if defined(HA_HAVE_MALLOC_TRIM)
-	malloc_trim(0);
-#endif
+	trim_all_pools();
 
 	if (!isolated)
 		thread_release();
