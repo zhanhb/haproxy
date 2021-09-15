@@ -35,6 +35,16 @@
 #define BITS_PER_INT    (8*sizeof(int))
 #endif
 
+#ifndef __WORDSIZE
+# if defined(__SIZEOF_LONG__) && __SIZEOF_LONG__ == 4
+#  define __WORDSIZE 32
+# elif defined(__SIZEOF_LONG__) && __SIZEOF_LONG__ == 8
+#  define __WORDSIZE 64
+# else
+#  error "Unknown machine word size (__WORDSIZE, __SIZEOF_LONG)"
+# endif
+#endif
+
 /* this is for libc5 for example */
 #ifndef TCP_NODELAY
 #define TCP_NODELAY     1
