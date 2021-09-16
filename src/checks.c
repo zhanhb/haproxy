@@ -34,6 +34,7 @@
 #include <common/compat.h>
 #include <common/config.h>
 #include <common/mini-clist.h>
+#include <common/net_helper.h>
 #include <common/standard.h>
 #include <common/time.h>
 #include <common/hathreads.h>
@@ -844,7 +845,6 @@ static void __event_srv_chk_r(struct conn_stream *cs)
 	struct task *t = check->task;
 	char *desc;
 	int done;
-	unsigned short msglen;
 
 	if (unlikely(check->result == CHK_RES_FAILED))
 		goto out_wakeup;
@@ -1317,7 +1317,11 @@ static void __event_srv_chk_r(struct conn_stream *cs)
 		}
 		break;
 
-	case PR_O2_LDAP_CHK:
+	case PR_O2_LDAP_CHK: {
+		char *ptr;
+		unsigned short nbytes = 0;
+		size_t msglen = 0;
+
 		if (!done && b_data(&check->bi) < 14)
 			goto wait_more_data;
 
@@ -1331,44 +1335,80 @@ static void __event_srv_chk_r(struct conn_stream *cs)
 		 */
 		if ((b_data(&check->bi) < 14) || (*(b_head(&check->bi)) != '\x30')) {
 			set_server_check_status(check, HCHK_STATUS_L7RSP, "Not LDAPv3 protocol");
+			goto out_wakeup;
 		}
-		else {
-			 /* size of LDAPMessage */
-			msglen = (*(b_head(&check->bi) + 1) & 0x80) ? (*(b_head(&check->bi) + 1) & 0x7f) : 0;
 
-			/* http://tools.ietf.org/html/rfc4511#section-4.2.2
-			 *   messageID: 0x02 0x01 0x01: INTEGER 1
-			 *   protocolOp: 0x61: bindResponse
+		ptr = b_head(&check->bi) + 1;
+		if (*ptr & 0x80) {
+			/* For message size encoded on several bytes, we only handle
+			 * size encoded on 2 or 4 bytes. There is no reason to make this
+			 * part to complex because only Active Directory is known to
+			 * encode BindReponse length on 4 bytes.
 			 */
-			if ((msglen > 2) ||
-			    (memcmp(b_head(&check->bi) + 2 + msglen, "\x02\x01\x01\x61", 4) != 0)) {
+			nbytes = (*ptr & 0x7f);
+			if (b_data(&check->bi) < 1 + nbytes) {
+				if (done) {
+					set_server_check_status(check, HCHK_STATUS_L7RSP, "Not LDAPv3 protocol");
+					goto out_wakeup;
+				}
+				goto wait_more_data;
+			}
+			switch (nbytes) {
+			case 4: msglen = read_n32(ptr+1); break;
+			case 2: msglen = read_n16(ptr+1); break;
+			default:
 				set_server_check_status(check, HCHK_STATUS_L7RSP, "Not LDAPv3 protocol");
 				goto out_wakeup;
 			}
+		}
+		else
+			msglen = *ptr;
+		ptr += 1 + nbytes;
 
-			/* size of bindResponse */
-			msglen += (*(b_head(&check->bi) + msglen + 6) & 0x80) ? (*(b_head(&check->bi) + msglen + 6) & 0x7f) : 0;
-
-			/* http://tools.ietf.org/html/rfc4511#section-4.1.9
-			 *   ldapResult: 0x0a 0x01: ENUMERATION
-			 */
-			if ((msglen > 4) ||
-			    (memcmp(b_head(&check->bi) + 7 + msglen, "\x0a\x01", 2) != 0)) {
+		if (b_data(&check->bi) < 2 + nbytes + msglen) {
+			if (done) {
 				set_server_check_status(check, HCHK_STATUS_L7RSP, "Not LDAPv3 protocol");
 				goto out_wakeup;
 			}
+			goto wait_more_data;
+		}
 
-			/* http://tools.ietf.org/html/rfc4511#section-4.1.9
-			 *   resultCode
-			 */
-			check->code = *(b_head(&check->bi) + msglen + 9);
-			if (check->code) {
-				set_server_check_status(check, HCHK_STATUS_L7STS, "See RFC: http://tools.ietf.org/html/rfc4511#section-4.1.9");
-			} else {
-				set_server_check_status(check, HCHK_STATUS_L7OKD, "Success");
-			}
+		/* http://tools.ietf.org/html/rfc4511#section-4.2.2
+		 *   messageID: 0x02 0x01 0x01: INTEGER 1
+		 *   protocolOp: 0x61: bindResponse
+		 */
+		if (memcmp(ptr, "\x02\x01\x01\x61", 4) != 0) {
+			set_server_check_status(check, HCHK_STATUS_L7RSP, "Not LDAPv3 protocol");
+			goto out_wakeup;
+		}
+		ptr += 4;
+
+		/* skip size of bindResponse */
+		nbytes = 0;
+		if (*ptr & 0x80)
+			nbytes = (*ptr & 0x7f);
+		ptr += 1 + nbytes;
+
+		/* http://tools.ietf.org/html/rfc4511#section-4.1.9
+		 *   ldapResult: 0x0a 0x01: ENUMERATION
+		 */
+		if (memcmp(ptr, "\x0a\x01", 2) != 0) {
+			set_server_check_status(check, HCHK_STATUS_L7RSP, "Not LDAPv3 protocol");
+			goto out_wakeup;
+		}
+		ptr += 2;
+
+		/* http://tools.ietf.org/html/rfc4511#section-4.1.9
+		 *   resultCode
+		 */
+		check->code = *ptr;
+		if (check->code) {
+			set_server_check_status(check, HCHK_STATUS_L7STS, "See RFC: http://tools.ietf.org/html/rfc4511#section-4.1.9");
+		} else {
+			set_server_check_status(check, HCHK_STATUS_L7OKD, "Success");
 		}
 		break;
+	}
 
 	case PR_O2_SPOP_CHK: {
 		unsigned int framesz;
