@@ -462,7 +462,6 @@ __decl_spinlock(log_lock);
 ssize_t fd_write_frag_line(int fd, size_t maxlen, const struct ist pfx[], size_t npfx, const struct ist msg[], size_t nmsg, int nl)
 {
 	struct iovec iovec[32];
-	size_t totlen = 0;
 	size_t sent = 0;
 	int vec = 0;
 	int attempts = 0;
@@ -489,7 +488,6 @@ ssize_t fd_write_frag_line(int fd, size_t maxlen, const struct ist pfx[], size_t
 		iovec[vec].iov_base = pfx->ptr;
 		iovec[vec].iov_len  = MIN(maxlen, pfx->len);
 		maxlen -= iovec[vec].iov_len;
-		totlen += iovec[vec].iov_len;
 		if (iovec[vec].iov_len)
 			vec++;
 		pfx++; npfx--;
