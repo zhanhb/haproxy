@@ -1318,8 +1318,11 @@ int http_handle_stats(struct stream *s, struct channel *req)
 	if (txn->meth == HTTP_METH_GET || txn->meth == HTTP_METH_HEAD)
 		appctx->st0 = STAT_HTTP_HEAD;
 	else if (txn->meth == HTTP_METH_POST && (msg->flags & HTTP_MSGF_CNT_LEN)) {
-		if (appctx->ctx.stats.flags & STAT_ADMIN)
+		if (appctx->ctx.stats.flags & STAT_ADMIN) {
 			appctx->st0 = STAT_HTTP_POST;
+			if (msg->msg_state < HTTP_MSG_DATA)
+				req->analysers |= AN_REQ_HTTP_BODY;
+		}
 		else {
 			/* POST without admin level */
 			appctx->ctx.stats.flags &= ~STAT_CHUNKED;
