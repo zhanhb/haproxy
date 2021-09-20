@@ -5,7 +5,7 @@ feature ignore_unknown_macro
 #        the port reserved for closed s1 server may be reused by another vtest
 
 #REQUIRE_VERSION=2.3
-#REGTEST_TYPE=broken
+#REGTEST_TYPE=slow
 
 # b1 : Don't send /c4 before /c3 was received by s2 server
 # b2 : Don't finish c2 before c1 and c3 before c4 (from syslog POV)
