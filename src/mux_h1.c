@@ -62,6 +62,7 @@
 #define H1S_F_ERROR          0x00000001 /* An error occurred on the H1 stream */
 #define H1S_F_REQ_ERROR      0x00000002 /* An error occurred during the request parsing/xfer */
 #define H1S_F_RES_ERROR      0x00000004 /* An error occurred during the response parsing/xfer */
+
 #define H1S_F_REOS           0x00000008 /* End of input stream seen even if not delivered yet */
 #define H1S_F_WANT_KAL       0x00000010
 #define H1S_F_WANT_TUN       0x00000020
@@ -72,7 +73,7 @@
 #define H1S_F_SPLICED_DATA   0x00000200 /* Set when the kernel splicing is in used */
 #define H1S_F_HAVE_I_TLR     0x00000800 /* Set during input process to know the trailers were processed */
 #define H1S_F_APPEND_EOM     0x00001000 /* Send EOM to the HTX buffer */
-/* 0x00002000 .. 0x00002000 unused */
+#define H1S_F_RX_CONGESTED   0x00002000 /* Cannot process input data RX path is congested (waiting for more space in channel's buffer) */
 #define H1S_F_HAVE_O_CONN    0x00004000 /* Set during output process to know connection mode was processed */
 
 /* H1 connection descriptor */
@@ -1060,7 +1061,8 @@ static size_t h1_process_eom(struct h1s *h1s, struct h1m *h1m, struct htx *htx, 
  * Parse HTTP/1 headers. It returns the number of bytes parsed if > 0, or 0 if
  * it couldn't proceed. Parsing errors are reported by setting H1S_F_*_ERROR
  * flag and filling h1s->err_pos and h1s->err_state fields. This functions is
- * responsible to update the parser state <h1m>.
+ * responsible to update the parser state <h1m>.  If more room is requested,
+ * H1S_F_RX_CONGESTED flag is set.
  */
 static size_t h1_process_headers(struct h1s *h1s, struct h1m *h1m, struct htx *htx,
 				 struct buffer *buf, size_t *ofs, size_t max)
@@ -1190,6 +1192,7 @@ static size_t h1_process_headers(struct h1s *h1s, struct h1m *h1m, struct htx *h
 			h1m_init_req(h1m);
 			h1m->flags |= (H1_MF_NO_PHDR|H1_MF_CLEAN_CONN_HDR);
 			ret = 0;
+			h1s->flags |= H1S_F_RX_CONGESTED;
 			goto end;
 		}
 
@@ -1213,6 +1216,7 @@ static size_t h1_process_headers(struct h1s *h1s, struct h1m *h1m, struct htx *h
 			h1m_init_res(h1m);
 			h1m->flags |= (H1_MF_NO_PHDR|H1_MF_CLEAN_CONN_HDR);
 			ret = 0;
+			h1s->flags |= H1S_F_RX_CONGESTED;
 			goto end;
 		}
 
@@ -1424,6 +1428,10 @@ static size_t h1_process_data(struct h1s *h1s, struct h1m *h1m, struct htx *htx,
 	/* update htx->extra, only when the body length is known */
 	if (h1m->flags & H1_MF_XFER_LEN)
 		htx->extra = h1m->curr_len;
+
+	if (b_data(buf) != *ofs && (h1m->state == H1_MSG_DATA || h1m->state == H1_MSG_TUNNEL))
+		h1s->flags |= H1S_F_RX_CONGESTED;
+
 	return total;
 }
 
@@ -1431,7 +1439,8 @@ static size_t h1_process_data(struct h1s *h1s, struct h1m *h1m, struct htx *htx,
  * Parse HTTP/1 trailers. It returns the number of bytes parsed if > 0, or 0 if
  * it couldn't proceed. Parsing errors are reported by setting H1S_F_*_ERROR
  * flag and filling h1s->err_pos and h1s->err_state fields. This functions is
- * responsible to update the parser state <h1m>.
+ * responsible to update the parser state <h1m>. If more room is requested,
+ * H1S_F_RX_CONGESTED flag is set.
  */
 static size_t h1_process_trailers(struct h1s *h1s, struct h1m *h1m, struct htx *htx,
 				  struct buffer *buf, size_t *ofs, size_t max)
@@ -1465,6 +1474,7 @@ static size_t h1_process_trailers(struct h1s *h1s, struct h1m *h1m, struct htx *
 		if (htx_is_empty(htx))
 			goto error;
 		ret = 0;
+		h1s->flags |= H1S_F_RX_CONGESTED;
 		goto end;
 	}
 
@@ -1491,6 +1501,8 @@ static size_t h1_process_trailers(struct h1s *h1s, struct h1m *h1m, struct htx *
  * Process incoming data. It parses data and transfer them from h1c->ibuf into
  * <buf>. It returns the number of bytes parsed and transferred if > 0, or 0 if
  * it couldn't proceed.
+ *
+ * WARNING: H1S_F_RX_CONGESTED flag must be removed before processing input data.
  */
 static size_t h1_process_input(struct h1c *h1c, struct buffer *buf, size_t count)
 {
@@ -1518,6 +1530,9 @@ static size_t h1_process_input(struct h1c *h1c, struct buffer *buf, size_t count
 
 	if (h1c->flags & H1C_F_IN_BUSY)
 		goto end;
+
+	/* Always remove congestion flags and try to process more input data */
+	h1s->flags &= ~H1S_F_RX_CONGESTED;
 
 	do {
 		size_t used = htx_used_space(htx);
@@ -1571,7 +1586,7 @@ static size_t h1_process_input(struct h1c *h1c, struct buffer *buf, size_t count
 		}
 
 		count -= htx_used_space(htx) - used;
-	} while (!(h1s->flags & errflag));
+	} while (!(h1s->flags & (errflag|H1S_F_RX_CONGESTED)));
 
 	if (h1s->flags & errflag)
 		goto parsing_err;
@@ -1591,7 +1606,14 @@ static size_t h1_process_input(struct h1c *h1c, struct buffer *buf, size_t count
 	if (!b_data(&h1c->ibuf))
 		h1_release_buf(h1c, &h1c->ibuf);
 
-	if ((h1s_data_pending(h1s) && !htx_is_empty(htx)) || (h1s->flags & H1S_F_APPEND_EOM))
+	/* When Input data are pending for this message, notify upper layer that
+	 * the mux need more space in the HTX buffer to continue if :
+	 *
+	 *   - The parser is blocked in MSG_DATA or MSG_TUNNEL state
+	 *   - Headers or trailers are pending to be copied.
+	 *   - EOM block is pending to be copied
+	 */
+	if ((h1s->flags & H1S_F_RX_CONGESTED) || (h1s->flags & H1S_F_APPEND_EOM))
 		h1s->cs->flags |= CS_FL_RCV_MORE | CS_FL_WANT_ROOM;
 
 	if (((h1s->flags & (H1S_F_REOS|H1S_F_APPEND_EOM)) == H1S_F_REOS) &&
