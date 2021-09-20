@@ -5508,7 +5508,7 @@ int http_msg_forward_chunked_body(struct stream *s, struct http_msg *msg)
 
 	/* Don't parse chunks if there is no input data */
 	if (!ci_data(chn))
-		goto waiting;
+		goto missing_data_or_waiting;
 
   switch_states:
 	switch (msg->msg_state) {
