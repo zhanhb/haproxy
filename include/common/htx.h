@@ -145,6 +145,7 @@
 #define HTX_FL_NONE              0x00000000
 #define HTX_FL_PARSING_ERROR     0x00000001 /* Set when a parsing error occurred */
 #define HTX_FL_UPGRADE           0x00000002 /* Set when an upgrade is in progress */
+#define HTX_FL_FRAGMENTED        0x00000020 /* Set when the HTX buffer is fragmented */
 
 
 /* HTX block's type (max 15). */
