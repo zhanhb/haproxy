@@ -148,6 +148,8 @@
 #define HTX_FL_EOI               0x00000010 /* Set when end-of-input is reached from the HTX point of view
 					     * (at worst, on the EOM block is missing)
 					     */
+#define HTX_FL_FRAGMENTED        0x00000020 /* Set when the HTX buffer is fragmented */
+
 
 /* HTX block's type (max 15). */
 enum htx_blk_type {
