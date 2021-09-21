@@ -2165,8 +2165,8 @@ int http_process_res_common(struct stream *s, struct channel *rep, int an_bit, s
 		s->flags |= SF_ERR_INTERNAL;
 	_HA_ATOMIC_ADD(&sess->fe->fe_counters.internal_errors, 1);
 	_HA_ATOMIC_ADD(&s->be->be_counters.internal_errors, 1);
-	if (objt_server(s->target))
-		_HA_ATOMIC_ADD(&__objt_server(s->target)->counters.internal_errors, 1);
+	if (sess->listener && sess->listener->counters)
+		_HA_ATOMIC_ADD(&sess->listener->counters->internal_errors, 1);
 	if (objt_server(s->target))
 		_HA_ATOMIC_ADD(&__objt_server(s->target)->counters.internal_errors, 1);
 	goto return_prx_err;
