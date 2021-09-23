@@ -1075,7 +1075,8 @@ int htx_wait_for_request_body(struct stream *s, struct channel *req, int an_bit)
 	 * been received or if the buffer is full.
 	 */
 	if (htx_get_tail_type(htx) > HTX_BLK_DATA ||
-	    channel_htx_full(req, htx, global.tune.maxrewrite))
+	    channel_htx_full(req, htx, global.tune.maxrewrite) ||
+	    si_rx_blocked_room(chn_prod(req)))
 		goto http_end;
 
  missing_data:
