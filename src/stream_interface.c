@@ -1365,8 +1365,13 @@ int si_cs_recv(struct conn_stream *cs)
 		max = channel_recv_max(ic);
 		ret = cs->conn->mux->rcv_buf(cs, &ic->buf, max, flags | (co_data(ic) ? CO_RFL_BUF_WET : 0));
 
-		if (cs->flags & CS_FL_WANT_ROOM)
+		if (cs->flags & CS_FL_WANT_ROOM) {
 			si_rx_room_blk(si);
+			/* Add READ_PARTIAL because some data are pending but
+			 * cannot be xferred to the channel
+			 */
+			ic->flags |= CF_READ_PARTIAL;
+		}
 
 		if (cs->flags & CS_FL_READ_PARTIAL) {
 			if (tick_isset(ic->rex))
