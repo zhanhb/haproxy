@@ -1792,6 +1792,15 @@ static size_t h1_process_output(struct h1c *h1c, struct buffer *buf, size_t coun
 					if (!v.len)
 						goto skip_hdr;
 				}
+				else if (isteq(n, ist("te"))) {
+					/* "te" may only be sent with "trailers" if this value
+					 * is present, otherwise it must be deleted.
+					 */
+					v = istist(v, ist("trailers"));
+					if (v.ptr == NULL || (v.len > 8 && v.ptr[8] != ','))
+						goto skip_hdr;
+					v = ist("trailers");
+				}
 
 				/* Try to adjust the case of the header name */
 				if (h1c->px->options2 & (PR_O2_H1_ADJ_BUGCLI|PR_O2_H1_ADJ_BUGSRV))
