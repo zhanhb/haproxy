@@ -2113,8 +2113,9 @@ default-server [param*]
 
   See also: "server" and section 5 about server options
 
-enable
-  This re-enables a disabled peers section which was previously disabled.
+enabled
+  This re-enables a peers section which was previously disabled via the
+  "disabled" keyword.
 
 peer <peername> <ip>:<port> [param*]
   Defines a peer inside a peers section.
