@@ -1,6 +1,9 @@
 ChangeLog :
 ===========
 
+2021/10/04 : 2.4.7
+    - BUG/MEDIUM: http-ana: Clear request analyzers when applying redirect rule
+
 2021/10/04 : 2.4.6
     - BUG/MEDIUM: filters: Fix a typo when a filter is attached blocking the release
 
