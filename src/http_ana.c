@@ -2686,6 +2686,7 @@ int http_apply_redirect_rule(struct redirect_rule *rule, struct stream *s, struc
 	if (rule->flags & REDIRECT_FLAG_FROM_REQ) {
 		/* let's log the request time */
 		s->logs.tv_request = now;
+		req->analysers &= AN_REQ_FLT_END;
 
 		if (s->sess->fe == s->be) /* report it if the request was intercepted by the frontend */
 			_HA_ATOMIC_ADD(&s->sess->fe->fe_counters.intercepted_req, 1);
