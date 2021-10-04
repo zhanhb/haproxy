@@ -1,6 +1,9 @@
 ChangeLog :
 ===========
 
+2021/10/04 : 2.4.6
+    - BUG/MEDIUM: filters: Fix a typo when a filter is attached blocking the release
+
 2021/10/01 : 2.4.5
     - MINOR: lua: Add a flag on lua context to know the yield capability at run time
     - BUG/MINOR: lua: Yield in channel functions only if lua context can yield
