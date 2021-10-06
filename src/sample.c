@@ -2346,6 +2346,37 @@ int sample_conv_var2smp_sint(const struct arg *arg, struct sample *smp)
 	}
 }
 
+/* This function returns a sample struct filled with an <arg> content.
+ * If the <arg> contains a string, it is returned in the sample flagged as
+ * SMP_F_CONST. If the <arg> contains a variable descriptor, the sample is
+ * filled with the content of the variable by using vars_get_by_desc().
+ *
+ * Keep in mind that the sample content may be written to a pre-allocated
+ * trash chunk as returned by get_trash_chunk().
+ *
+ * This function returns 0 if an error occurs, otherwise it returns 1.
+ */
+int sample_conv_var2smp_str(const struct arg *arg, struct sample *smp)
+{
+	switch (arg->type) {
+	case ARGT_STR:
+		smp->data.type = SMP_T_STR;
+		smp->data.u.str = arg->data.str;
+		smp->flags = SMP_F_CONST;
+		return 1;
+	case ARGT_VAR:
+		if (!vars_get_by_desc(&arg->data.var, smp))
+				return 0;
+		if (!sample_casts[smp->data.type][SMP_T_STR])
+				return 0;
+		if (!sample_casts[smp->data.type][SMP_T_STR](smp))
+				return 0;
+		return 1;
+	default:
+		return 0;
+	}
+}
+
 /* Takes a SINT on input, applies a binary twos complement and returns the SINT
  * result.
  */

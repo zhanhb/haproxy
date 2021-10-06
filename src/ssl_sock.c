@@ -9587,37 +9587,6 @@ static int cli_parse_set_ocspresponse(char **args, char *payload, struct appctx 
 }
 
 #if (HA_OPENSSL_VERSION_NUMBER >= 0x1000100fL)
-/* This function returns a sample struct filled with an <arg> content.
- * If the <arg> contains a string, it is returned in the sample flagged as
- * SMP_F_CONST. If the <arg> contains a variable descriptor, the sample is
- * filled with the content of the variable by using vars_get_by_desc().
- *
- * Keep in mind that the sample content may be written to a pre-allocated
- * trash chunk as returned by get_trash_chunk().
- *
- * This function returns 0 if an error occurs, otherwise it returns 1.
- */
-static inline int sample_conv_var2smp_str(const struct arg *arg, struct sample *smp)
-{
-	switch (arg->type) {
-	case ARGT_STR:
-		smp->data.type = SMP_T_STR;
-		smp->data.u.str = arg->data.str;
-		smp->flags = SMP_F_CONST;
-		return 1;
-	case ARGT_VAR:
-		if (!vars_get_by_desc(&arg->data.var, smp))
-				return 0;
-		if (!sample_casts[smp->data.type][SMP_T_STR])
-				return 0;
-		if (!sample_casts[smp->data.type][SMP_T_STR](smp))
-				return 0;
-		return 1;
-	default:
-		return 0;
-	}
-}
-
 /* This function checks an <arg> and fills it with a variable type if the
  * <arg> string contains a valid variable name. If failed, the function
  * tries to perform a base64 decode operation on the same string, and
