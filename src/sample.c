@@ -1513,6 +1513,25 @@ static int sample_conv_bin2base64(const struct arg *arg_p, struct sample *smp, v
 	return 1;
 }
 
+
+/* This function returns a sample struct filled with the conversion of variable
+ * <var> to sample type <type> (SMP_T_*), via a cast to the target type. If the
+ * variable cannot be retrieved or casted, 0 is returned, otherwise 1.
+ *
+ * Keep in mind that the sample content may be written to a pre-allocated
+ * trash chunk as returned by get_trash_chunk().
+ */
+int sample_conv_var2smp(const struct var_desc *var, struct sample *smp, int type)
+{
+	if (!vars_get_by_desc(var, smp))
+		return 0;
+	if (!sample_casts[smp->data.type][type])
+		return 0;
+	if (!sample_casts[smp->data.type][type](smp))
+		return 0;
+	return 1;
+}
+
 static int sample_conv_sha1(const struct arg *arg_p, struct sample *smp, void *private)
 {
 	blk_SHA_CTX ctx;
