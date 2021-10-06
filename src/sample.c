@@ -2790,7 +2790,7 @@ static int check_operator(struct arg *args, struct sample_conv *conv,
  *
  * This function returns 0 if an error occurs, otherwise it returns 1.
  */
-static inline int sample_conv_var2smp(const struct arg *arg, struct sample *smp)
+int sample_conv_var2smp_sint(const struct arg *arg, struct sample *smp)
 {
 	switch (arg->type) {
 	case ARGT_SINT:
@@ -2827,7 +2827,7 @@ static int sample_conv_binary_and(const struct arg *arg_p, struct sample *smp, v
 	struct sample tmp;
 
 	smp_set_owner(&tmp, smp->px, smp->sess, smp->strm, smp->opt);
-	if (!sample_conv_var2smp(arg_p, &tmp))
+	if (!sample_conv_var2smp_sint(arg_p, &tmp))
 		return 0;
 	smp->data.u.sint &= tmp.data.u.sint;
 	return 1;
@@ -2841,7 +2841,7 @@ static int sample_conv_binary_or(const struct arg *arg_p, struct sample *smp, vo
 	struct sample tmp;
 
 	smp_set_owner(&tmp, smp->px, smp->sess, smp->strm, smp->opt);
-	if (!sample_conv_var2smp(arg_p, &tmp))
+	if (!sample_conv_var2smp_sint(arg_p, &tmp))
 		return 0;
 	smp->data.u.sint |= tmp.data.u.sint;
 	return 1;
@@ -2855,7 +2855,7 @@ static int sample_conv_binary_xor(const struct arg *arg_p, struct sample *smp, v
 	struct sample tmp;
 
 	smp_set_owner(&tmp, smp->px, smp->sess, smp->strm, smp->opt);
-	if (!sample_conv_var2smp(arg_p, &tmp))
+	if (!sample_conv_var2smp_sint(arg_p, &tmp))
 		return 0;
 	smp->data.u.sint ^= tmp.data.u.sint;
 	return 1;
@@ -2895,7 +2895,7 @@ static int sample_conv_arith_add(const struct arg *arg_p, struct sample *smp, vo
 	struct sample tmp;
 
 	smp_set_owner(&tmp, smp->px, smp->sess, smp->strm, smp->opt);
-	if (!sample_conv_var2smp(arg_p, &tmp))
+	if (!sample_conv_var2smp_sint(arg_p, &tmp))
 		return 0;
 	smp->data.u.sint = arith_add(smp->data.u.sint, tmp.data.u.sint);
 	return 1;
@@ -2910,7 +2910,7 @@ static int sample_conv_arith_sub(const struct arg *arg_p,
 	struct sample tmp;
 
 	smp_set_owner(&tmp, smp->px, smp->sess, smp->strm, smp->opt);
-	if (!sample_conv_var2smp(arg_p, &tmp))
+	if (!sample_conv_var2smp_sint(arg_p, &tmp))
 		return 0;
 
 	/* We cannot represent -LLONG_MIN because abs(LLONG_MIN) is greater
@@ -2943,7 +2943,7 @@ static int sample_conv_arith_mul(const struct arg *arg_p,
 	long long int c;
 
 	smp_set_owner(&tmp, smp->px, smp->sess, smp->strm, smp->opt);
-	if (!sample_conv_var2smp(arg_p, &tmp))
+	if (!sample_conv_var2smp_sint(arg_p, &tmp))
 		return 0;
 
 	/* prevent divide by 0 during the check */
@@ -2987,7 +2987,7 @@ static int sample_conv_arith_div(const struct arg *arg_p,
 	struct sample tmp;
 
 	smp_set_owner(&tmp, smp->px, smp->sess, smp->strm, smp->opt);
-	if (!sample_conv_var2smp(arg_p, &tmp))
+	if (!sample_conv_var2smp_sint(arg_p, &tmp))
 		return 0;
 
 	if (tmp.data.u.sint) {
@@ -3015,7 +3015,7 @@ static int sample_conv_arith_mod(const struct arg *arg_p,
 	struct sample tmp;
 
 	smp_set_owner(&tmp, smp->px, smp->sess, smp->strm, smp->opt);
-	if (!sample_conv_var2smp(arg_p, &tmp))
+	if (!sample_conv_var2smp_sint(arg_p, &tmp))
 		return 0;
 
 	if (tmp.data.u.sint) {
