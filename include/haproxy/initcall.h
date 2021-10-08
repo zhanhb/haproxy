@@ -98,11 +98,11 @@ struct initcall {
  * as a pointer (args are cast to (void*)). Do not use this macro directly,
  * use INITCALL{0..3}() instead.
  */
-#define __GLOBL1(sym)   __asm__(".globl " #sym)
-#define __GLOBL(sym)    __GLOBL1(sym)
+#define __HA_GLOBL1(sym)   __asm__(".globl " #sym)
+#define __HA_GLOBL(sym)    __HA_GLOBL1(sym)
 #define __DECLARE_INITCALL(stg, linenum, function, a1, a2, a3)     \
-        __GLOBL(__start_init_##stg );                              \
-	__GLOBL(__stop_init_##stg );                               \
+        __HA_GLOBL(__start_init_##stg );                           \
+	__HA_GLOBL(__stop_init_##stg );                            \
 	static const struct initcall *__initcb_##linenum           \
 	    __attribute__((__used__,HA_SECTION(stg))) =            \
 	        (stg < STG_SIZE) ? &(const struct initcall) {      \
