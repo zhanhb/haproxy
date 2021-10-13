@@ -748,7 +748,7 @@ static enum act_parse_ret parse_store(const char **args, int *arg, struct proxy 
 	const char *var_name = args[*arg-1];
 	int var_len;
 	const char *kw_name;
-	int flags, set_var = 0;
+	int flags = 0, set_var = 0;
 
 	if (!strncmp(var_name, "set-var", 7)) {
 		var_name += 7;
@@ -794,12 +794,36 @@ static enum act_parse_ret parse_store(const char **args, int *arg, struct proxy 
 		return ACT_RET_PRS_ERR;
 
 	switch (rule->from) {
-	case ACT_F_TCP_REQ_SES: flags = SMP_VAL_FE_SES_ACC; break;
-	case ACT_F_TCP_REQ_CNT: flags = SMP_VAL_FE_REQ_CNT; break;
-	case ACT_F_TCP_RES_CNT: flags = SMP_VAL_BE_RES_CNT; break;
-	case ACT_F_HTTP_REQ:    flags = SMP_VAL_FE_HRQ_HDR; break;
-	case ACT_F_HTTP_RES:    flags = SMP_VAL_BE_HRS_HDR; break;
-	case ACT_F_TCP_CHK:     flags = SMP_VAL_BE_CHK_RUL; break;
+	case ACT_F_TCP_REQ_SES:
+		flags = SMP_VAL_FE_SES_ACC;
+		break;
+	case ACT_F_TCP_REQ_CNT:
+		if (px->cap & PR_CAP_FE)
+			flags |= SMP_VAL_FE_REQ_CNT;
+		if (px->cap & PR_CAP_BE)
+			flags |= SMP_VAL_BE_REQ_CNT;
+		break;
+	case ACT_F_TCP_RES_CNT:
+		if (px->cap & PR_CAP_FE)
+			flags |= SMP_VAL_FE_RES_CNT;
+		if (px->cap & PR_CAP_BE)
+			flags |= SMP_VAL_BE_RES_CNT;
+		break;
+	case ACT_F_HTTP_REQ:
+		if (px->cap & PR_CAP_FE)
+			flags |= SMP_VAL_FE_HRQ_HDR;
+		if (px->cap & PR_CAP_BE)
+			flags |= SMP_VAL_BE_HRQ_HDR;
+		break;
+	case ACT_F_HTTP_RES:
+		if (px->cap & PR_CAP_FE)
+			flags |= SMP_VAL_FE_HRS_HDR;
+		if (px->cap & PR_CAP_BE)
+			flags |= SMP_VAL_BE_HRS_HDR;
+		break;
+	case ACT_F_TCP_CHK:
+		flags = SMP_VAL_BE_CHK_RUL;
+		break;
 	default:
 		memprintf(err,
 			  "internal error, unexpected rule->from=%d, please report this bug!",
