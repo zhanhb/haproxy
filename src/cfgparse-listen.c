@@ -1336,6 +1336,7 @@ int cfg_parse_listen(const char *file, int linenum, char **args, int kwm)
 	}
 	else if (!strcmp(args[0], "http-request")) {	/* request access control: allow/deny/auth */
 		struct act_rule *rule;
+		int where = 0;
 
 		if (curproxy == &defproxy) {
 			ha_alert("parsing [%s:%d]: '%s' not allowed in 'defaults' section.\n", file, linenum, args[0]);
@@ -1359,14 +1360,18 @@ int cfg_parse_listen(const char *file, int linenum, char **args, int kwm)
 		}
 
 		err_code |= warnif_misplaced_http_req(curproxy, file, linenum, args[0]);
-		err_code |= warnif_cond_conflicts(rule->cond,
-	                                          (curproxy->cap & PR_CAP_FE) ? SMP_VAL_FE_HRQ_HDR : SMP_VAL_BE_HRQ_HDR,
-	                                          file, linenum);
+
+		if (curproxy->cap & PR_CAP_FE)
+			where |= SMP_VAL_FE_HRQ_HDR;
+		if (curproxy->cap & PR_CAP_BE)
+			where |= SMP_VAL_BE_HRQ_HDR;
+		err_code |= warnif_cond_conflicts(rule->cond, where, file, linenum);
 
 		LIST_ADDQ(&curproxy->http_req_rules, &rule->list);
 	}
 	else if (!strcmp(args[0], "http-response")) {	/* response access control */
 		struct act_rule *rule;
+		int where = 0;
 
 		if (curproxy == &defproxy) {
 			ha_alert("parsing [%s:%d]: '%s' not allowed in 'defaults' section.\n", file, linenum, args[0]);
@@ -1389,14 +1394,17 @@ int cfg_parse_listen(const char *file, int linenum, char **args, int kwm)
 			goto out;
 		}
 
-		err_code |= warnif_cond_conflicts(rule->cond,
-	                                          (curproxy->cap & PR_CAP_BE) ? SMP_VAL_BE_HRS_HDR : SMP_VAL_FE_HRS_HDR,
-	                                          file, linenum);
+		if (curproxy->cap & PR_CAP_FE)
+			where |= SMP_VAL_FE_HRS_HDR;
+		if (curproxy->cap & PR_CAP_BE)
+			where |= SMP_VAL_BE_HRS_HDR;
+		err_code |= warnif_cond_conflicts(rule->cond, where, file, linenum);
 
 		LIST_ADDQ(&curproxy->http_res_rules, &rule->list);
 	}
 	else if (!strcmp(args[0], "http-after-response")) {
 		struct act_rule *rule;
+		int where = 0;
 
 		if (curproxy == &defproxy) {
 			ha_alert("parsing [%s:%d]: '%s' not allowed in 'defaults' section.\n", file, linenum, args[0]);
@@ -1419,9 +1427,11 @@ int cfg_parse_listen(const char *file, int linenum, char **args, int kwm)
 			goto out;
 		}
 
-		err_code |= warnif_cond_conflicts(rule->cond,
-	                                          (curproxy->cap & PR_CAP_BE) ? SMP_VAL_BE_HRS_HDR : SMP_VAL_FE_HRS_HDR,
-	                                          file, linenum);
+		if (curproxy->cap & PR_CAP_FE)
+			where |= SMP_VAL_FE_HRS_HDR;
+		if (curproxy->cap & PR_CAP_BE)
+			where |= SMP_VAL_BE_HRS_HDR;
+		err_code |= warnif_cond_conflicts(rule->cond, where, file, linenum);
 
 		LIST_ADDQ(&curproxy->http_after_res_rules, &rule->list);
 	}
@@ -1451,6 +1461,7 @@ int cfg_parse_listen(const char *file, int linenum, char **args, int kwm)
 	}
 	else if (!strcmp(args[0], "redirect")) {
 		struct redirect_rule *rule;
+		int where = 0;
 
 		if (curproxy == &defproxy) {
 			ha_alert("parsing [%s:%d] : '%s' not allowed in 'defaults' section.\n", file, linenum, args[0]);
@@ -1467,9 +1478,12 @@ int cfg_parse_listen(const char *file, int linenum, char **args, int kwm)
 
 		LIST_ADDQ(&curproxy->redirect_rules, &rule->list);
 		err_code |= warnif_misplaced_redirect(curproxy, file, linenum, args[0]);
-		err_code |= warnif_cond_conflicts(rule->cond,
-	                                          (curproxy->cap & PR_CAP_FE) ? SMP_VAL_FE_HRQ_HDR : SMP_VAL_BE_HRQ_HDR,
-	                                          file, linenum);
+
+		if (curproxy->cap & PR_CAP_FE)
+			where |= SMP_VAL_FE_HRQ_HDR;
+		if (curproxy->cap & PR_CAP_BE)
+			where |= SMP_VAL_BE_HRQ_HDR;
+		err_code |= warnif_cond_conflicts(rule->cond, where, file, linenum);
 	}
 	else if (!strcmp(args[0], "use_backend")) {
 		struct switching_rule *rule;
@@ -1780,6 +1794,7 @@ int cfg_parse_listen(const char *file, int linenum, char **args, int kwm)
 			goto stats_error_parsing;
 		} else if (!strcmp(args[1], "admin")) {
 			struct stats_admin_rule *rule;
+			int where = 0;
 
 			if (curproxy == &defproxy) {
 				ha_alert("parsing [%s:%d]: '%s %s' not allowed in 'defaults' section.\n", file, linenum, args[0], args[1]);
@@ -1806,9 +1821,11 @@ int cfg_parse_listen(const char *file, int linenum, char **args, int kwm)
 				goto out;
 			}
 
-			err_code |= warnif_cond_conflicts(cond,
-			                                  (curproxy->cap & PR_CAP_FE) ? SMP_VAL_FE_HRQ_HDR : SMP_VAL_BE_HRQ_HDR,
-			                                  file, linenum);
+			if (curproxy->cap & PR_CAP_FE)
+				where |= SMP_VAL_FE_HRQ_HDR;
+			if (curproxy->cap & PR_CAP_BE)
+				where |= SMP_VAL_BE_HRQ_HDR;
+			err_code |= warnif_cond_conflicts(cond, where, file, linenum);
 
 			rule = calloc(1, sizeof(*rule));
 			rule->cond = cond;
@@ -1862,6 +1879,7 @@ int cfg_parse_listen(const char *file, int linenum, char **args, int kwm)
 			}
 		} else if (!strcmp(args[1], "http-request")) {    /* request access control: allow/deny/auth */
 			struct act_rule *rule;
+			int where = 0;
 
 			if (curproxy == &defproxy) {
 				ha_alert("parsing [%s:%d]: '%s' not allowed in 'defaults' section.\n", file, linenum, args[0]);
@@ -1889,9 +1907,11 @@ int cfg_parse_listen(const char *file, int linenum, char **args, int kwm)
 				goto out;
 			}
 
-			err_code |= warnif_cond_conflicts(rule->cond,
-			                                  (curproxy->cap & PR_CAP_FE) ? SMP_VAL_FE_HRQ_HDR : SMP_VAL_BE_HRQ_HDR,
-			                                  file, linenum);
+			if (curproxy->cap & PR_CAP_FE)
+				where |= SMP_VAL_FE_HRQ_HDR;
+			if (curproxy->cap & PR_CAP_BE)
+				where |= SMP_VAL_BE_HRQ_HDR;
+			err_code |= warnif_cond_conflicts(rule->cond, where, file, linenum);
 			LIST_ADDQ(&curproxy->uri_auth->http_req_rules, &rule->list);
 
 		} else if (!strcmp(args[1], "auth")) {
