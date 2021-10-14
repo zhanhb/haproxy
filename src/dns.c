@@ -169,7 +169,7 @@ struct dns_answer_item *find_srvrq_answer_record(const struct dns_requester *req
 	/* search an ANSWER record whose target points to the server's hostname and whose port is
 	 * the same as server's svc_port */
 	list_for_each_entry(item, &res->response.answer_list, list) {
-		if (dns_hostname_cmp(srv->hostname_dn, item->target, srv->hostname_dn_len) == 0 &&
+		if (dns_hostname_cmp(srv->hostname_dn, item->data.target, srv->hostname_dn_len) == 0 &&
 		    (srv->svc_port == item->port))
 			return item;
 	}
@@ -679,8 +679,8 @@ static void dns_check_dns_response(struct dns_resolution *res)
 				srv = NULL;
 
 				/* convert the key to lookup in lower case */
-				for (i = 0 ; item->target[i] ; i++)
-					target[i] = tolower(item->target[i]);
+				for (i = 0 ; item->data.target[i] ; i++)
+					target[i] = tolower(item->data.target[i]);
 				target[i] = 0;
 
 				node = ebis_lookup(&srvrq->named_servers, target);
@@ -712,7 +712,7 @@ static void dns_check_dns_response(struct dns_resolution *res)
 						HA_SPIN_LOCK(SERVER_LOCK, &srv->lock);
 
 						if ((item->data_len != srv->hostname_dn_len)
-						    || dns_hostname_cmp(srv->hostname_dn, item->target, item->data_len)) {
+						    || dns_hostname_cmp(srv->hostname_dn, item->data.target, item->data_len)) {
 							HA_SPIN_UNLOCK(SERVER_LOCK, &srv->lock);
 							break;
 						}
@@ -749,10 +749,10 @@ srv_found:
 
 					switch (item->ar_item->type) {
 						case DNS_RTYPE_A:
-							update_server_addr(srv, &item->ar_item->address.in4.sin_addr, AF_INET, "DNS additional record");
+							update_server_addr(srv, &item->ar_item->data.in4.sin_addr, AF_INET, "DNS additional record");
 						break;
 						case DNS_RTYPE_AAAA:
-							update_server_addr(srv, &item->ar_item->address.in6.sin6_addr, AF_INET6, "DNS additional record");
+							update_server_addr(srv, &item->ar_item->data.in6.sin6_addr, AF_INET6, "DNS additional record");
 						break;
 					}
 
@@ -768,7 +768,7 @@ srv_found:
 					const char *msg = NULL;
 					char hostname[DNS_MAX_NAME_SIZE+1];
 
-					if (dns_dn_label_to_str(item->target, item->data_len,
+					if (dns_dn_label_to_str(item->data.target, item->data_len,
 								hostname, sizeof(hostname)) == -1) {
 						HA_SPIN_UNLOCK(SERVER_LOCK, &srv->lock);
 						continue;
@@ -1060,8 +1060,8 @@ static int dns_validate_dns_response(unsigned char *resp, unsigned char *bufend,
 				if (dns_answer_record->data_len != 4)
 					goto invalid_resp;
 
-				dns_answer_record->address.in4.sin_family = AF_INET;
-				memcpy(&dns_answer_record->address.in4.sin_addr, reader, dns_answer_record->data_len);
+				dns_answer_record->data.in4.sin_family = AF_INET;
+				memcpy(&dns_answer_record->data.in4.sin_addr, reader, dns_answer_record->data_len);
 				break;
 
 			case DNS_RTYPE_CNAME:
@@ -1083,9 +1083,9 @@ static int dns_validate_dns_response(unsigned char *resp, unsigned char *bufend,
 				if (len == 0)
 					goto invalid_resp;
 
-				memcpy(dns_answer_record->target, tmpname, len);
-				dns_answer_record->target[len] = 0;
-				previous_dname = dns_answer_record->target;
+				memcpy(dns_answer_record->data.target, tmpname, len);
+				dns_answer_record->data.target[len] = 0;
+				previous_dname = dns_answer_record->data.target;
 				break;
 
 
@@ -1111,8 +1111,8 @@ static int dns_validate_dns_response(unsigned char *resp, unsigned char *bufend,
 					goto invalid_resp;
 
 				dns_answer_record->data_len = len;
-				memcpy(dns_answer_record->target, tmpname, len);
-				dns_answer_record->target[len] = 0;
+				memcpy(dns_answer_record->data.target, tmpname, len);
+				dns_answer_record->data.target[len] = 0;
 				if (dns_answer_record->ar_item != NULL) {
 					pool_free(dns_answer_item_pool, dns_answer_record->ar_item);
 					dns_answer_record->ar_item = NULL;
@@ -1124,8 +1124,8 @@ static int dns_validate_dns_response(unsigned char *resp, unsigned char *bufend,
 				if (dns_answer_record->data_len != 16)
 					goto invalid_resp;
 
-				dns_answer_record->address.in6.sin6_family = AF_INET6;
-				memcpy(&dns_answer_record->address.in6.sin6_addr, reader, dns_answer_record->data_len);
+				dns_answer_record->data.in6.sin6_family = AF_INET6;
+				memcpy(&dns_answer_record->data.in6.sin6_addr, reader, dns_answer_record->data_len);
 				break;
 
 		} /* switch (record type) */
@@ -1148,22 +1148,22 @@ static int dns_validate_dns_response(unsigned char *resp, unsigned char *bufend,
 
 			switch(tmp_record->type) {
 				case DNS_RTYPE_A:
-					if (!memcmp(&dns_answer_record->address.in4.sin_addr,
-						    &tmp_record->address.in4.sin_addr,
-						    sizeof(dns_answer_record->address.in4.sin_addr)))
+					if (!memcmp(&dns_answer_record->data.in4.sin_addr,
+						    &tmp_record->data.in4.sin_addr,
+						    sizeof(dns_answer_record->data.in4.sin_addr)))
 						found = 1;
 					break;
 
 				case DNS_RTYPE_AAAA:
-					if (!memcmp(&dns_answer_record->address.in6.sin6_addr,
-						    &tmp_record->address.in6.sin6_addr,
-						    sizeof(dns_answer_record->address.in6.sin6_addr)))
+					if (!memcmp(&dns_answer_record->data.in6.sin6_addr,
+						    &tmp_record->data.in6.sin6_addr,
+						    sizeof(dns_answer_record->data.in6.sin6_addr)))
 						found = 1;
 					break;
 
 			case DNS_RTYPE_SRV:
                                 if (dns_answer_record->data_len == tmp_record->data_len &&
-				    !dns_hostname_cmp(dns_answer_record->target, tmp_record->target, dns_answer_record->data_len) &&
+				    !dns_hostname_cmp(dns_answer_record->data.target, tmp_record->data.target, dns_answer_record->data_len) &&
 				    dns_answer_record->port == tmp_record->port) {
 					tmp_record->weight = dns_answer_record->weight;
                                         found = 1;
@@ -1294,8 +1294,8 @@ static int dns_validate_dns_response(unsigned char *resp, unsigned char *bufend,
 				if (dns_answer_record->data_len != 4)
 					goto invalid_resp;
 
-				dns_answer_record->address.in4.sin_family = AF_INET;
-				memcpy(&dns_answer_record->address.in4.sin_addr, reader, dns_answer_record->data_len);
+				dns_answer_record->data.in4.sin_family = AF_INET;
+				memcpy(&dns_answer_record->data.in4.sin_addr, reader, dns_answer_record->data_len);
 				break;
 
 			case DNS_RTYPE_AAAA:
@@ -1303,8 +1303,8 @@ static int dns_validate_dns_response(unsigned char *resp, unsigned char *bufend,
 				if (dns_answer_record->data_len != 16)
 					goto invalid_resp;
 
-				dns_answer_record->address.in6.sin6_family = AF_INET6;
-				memcpy(&dns_answer_record->address.in6.sin6_addr, reader, dns_answer_record->data_len);
+				dns_answer_record->data.in6.sin6_family = AF_INET6;
+				memcpy(&dns_answer_record->data.in6.sin6_addr, reader, dns_answer_record->data_len);
 				break;
 
 			default:
@@ -1333,21 +1333,21 @@ static int dns_validate_dns_response(unsigned char *resp, unsigned char *bufend,
 			ar_item = tmp_record->ar_item;
 			if (ar_item->type != dns_answer_record->type || ar_item->last_seen == now_ms ||
 			    len != tmp_record->data_len ||
-			    dns_hostname_cmp(dns_answer_record->name, tmp_record->target, tmp_record->data_len))
+			    dns_hostname_cmp(dns_answer_record->name, tmp_record->data.target, tmp_record->data_len))
 				continue;
 
 			switch(ar_item->type) {
 				case DNS_RTYPE_A:
-					if (!memcmp(&dns_answer_record->address.in4.sin_addr,
-						    &ar_item->address.in4.sin_addr,
-						    sizeof(dns_answer_record->address.in4.sin_addr)))
+					if (!memcmp(&dns_answer_record->data.in4.sin_addr,
+						    &ar_item->data.in4.sin_addr,
+						    sizeof(dns_answer_record->data.in4.sin_addr)))
 						found = 1;
 					break;
 
 				case DNS_RTYPE_AAAA:
-					if (!memcmp(&dns_answer_record->address.in6.sin6_addr,
-						    &ar_item->address.in6.sin6_addr,
-						    sizeof(dns_answer_record->address.in6.sin6_addr)))
+					if (!memcmp(&dns_answer_record->data.in6.sin6_addr,
+						    &ar_item->data.in6.sin6_addr,
+						    sizeof(dns_answer_record->data.in6.sin6_addr)))
 						found = 1;
 					break;
 
@@ -1372,7 +1372,7 @@ static int dns_validate_dns_response(unsigned char *resp, unsigned char *bufend,
 			list_for_each_entry(tmp_record, &dns_p->answer_list, list) {
 				if (tmp_record->type == DNS_RTYPE_SRV &&
 				    tmp_record->ar_item == NULL &&
-				    !dns_hostname_cmp(tmp_record->target, dns_answer_record->name, tmp_record->data_len)) {
+				    !dns_hostname_cmp(tmp_record->data.target, dns_answer_record->name, tmp_record->data_len)) {
 					/* Always use the received additional record to refresh info */
 					tmp_record->ar_item = dns_answer_record;
 					dns_answer_record = NULL;
@@ -1456,11 +1456,11 @@ int dns_get_ip_from_response(struct dns_response_packet *dns_p,
 
 		if (record->type == DNS_RTYPE_A) {
 			ip_type = AF_INET;
-			ip = &record->address.in4.sin_addr;
+			ip = &record->data.in4.sin_addr;
 		}
 		else if (record->type == DNS_RTYPE_AAAA) {
 			ip_type = AF_INET6;
-			ip = &record->address.in6.sin6_addr;
+			ip = &record->data.in6.sin6_addr;
 		}
 		else
 			continue;
