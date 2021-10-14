@@ -589,7 +589,7 @@ static void dns_check_dns_response(struct dns_resolution *res)
 				int ha_weight;
 				char hostname[DNS_MAX_NAME_SIZE+1];
 
-				if (dns_dn_label_to_str(item->target, item->data_len+1,
+				if (dns_dn_label_to_str(item->target, item->data_len,
 							hostname, sizeof(hostname)) == -1) {
 					HA_SPIN_UNLOCK(SERVER_LOCK, &srv->lock);
 					continue;
@@ -1166,12 +1166,14 @@ int dns_get_ip_from_response(struct dns_response_packet *dns_p,
 	return DNS_UPD_SRVIP_NOT_FOUND;
 }
 
-/* Turns a domain name label into a string.
+/* Turns a domain name label into a string: 3www7haproxy3org into www.haproxy.org
  *
- * <dn> must be a null-terminated string. <dn_len> must include the terminating
- * null byte. <str> must be allocated and its size must be passed in <str_len>.
+ * <dn> contains the input label of <dn_len> bytes long and does not need to be
+ * null-terminated. <str> must be allocated large enough to contain a full host
+ * name plus the trailing zero, and the allocated size must be passed in
+ * <str_len>.
  *
- *  In case of error, -1 is returned, otherwise, the number of bytes copied in
+ * In case of error, -1 is returned, otherwise, the number of bytes copied in
  * <str> (including the terminating null byte).
  */
 int dns_dn_label_to_str(const char *dn, int dn_len, char *str, int str_len)
@@ -1179,11 +1181,11 @@ int dns_dn_label_to_str(const char *dn, int dn_len, char *str, int str_len)
 	char *ptr;
 	int i, sz;
 
-	if (str_len < dn_len - 1)
+	if (str_len < dn_len)
 		return -1;
 
 	ptr = str;
-	for (i = 0; i < dn_len-1; ++i) {
+	for (i = 0; i < dn_len; ++i) {
 		sz = dn[i];
 		if (i)
 			*ptr++ = '.';
