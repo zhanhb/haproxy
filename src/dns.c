@@ -518,7 +518,7 @@ static void dns_check_dns_response(struct dns_resolution *res)
 					HA_SPIN_LOCK(SERVER_LOCK, &srv->lock);
 					if (srv->srvrq == srvrq && srv->svc_port == item->port &&
 					    item->data_len == srv->hostname_dn_len &&
-					    !dns_hostname_cmp(srv->hostname_dn, item->target, item->data_len)) {
+					    !dns_hostname_cmp(srv->hostname_dn, item->data.target, item->data_len)) {
 						dns_unlink_resolution(srv->dns_requester, 0);
 						srvrq_update_srv_status(srv, 1);
 						free(srv->hostname);
@@ -552,7 +552,7 @@ static void dns_check_dns_response(struct dns_resolution *res)
 				HA_SPIN_LOCK(SERVER_LOCK, &srv->lock);
 				if (srv->srvrq == srvrq && srv->svc_port == item->port &&
 				    item->data_len == srv->hostname_dn_len &&
-				    !dns_hostname_cmp(srv->hostname_dn, item->target, item->data_len)) {
+				    !dns_hostname_cmp(srv->hostname_dn, item->data.target, item->data_len)) {
 					int ha_weight;
 
 					/* DNS weight range if from 0 to 65535
@@ -589,7 +589,7 @@ static void dns_check_dns_response(struct dns_resolution *res)
 				int ha_weight;
 				char hostname[DNS_MAX_NAME_SIZE+1];
 
-				if (dns_dn_label_to_str(item->target, item->data_len,
+				if (dns_dn_label_to_str(item->data.target, item->data_len,
 							hostname, sizeof(hostname)) == -1) {
 					HA_SPIN_UNLOCK(SERVER_LOCK, &srv->lock);
 					continue;
@@ -848,8 +848,8 @@ static int dns_validate_dns_response(unsigned char *resp, unsigned char *bufend,
 					pool_free(dns_answer_item_pool, dns_answer_record);
 					return DNS_RESP_INVALID;
 				}
-				dns_answer_record->address.in4.sin_family = AF_INET;
-				memcpy(&dns_answer_record->address.in4.sin_addr, reader, dns_answer_record->data_len);
+				dns_answer_record->data.in4.sin_family = AF_INET;
+				memcpy(&dns_answer_record->data.in4.sin_addr, reader, dns_answer_record->data_len);
 				break;
 
 			case DNS_RTYPE_CNAME:
@@ -873,9 +873,9 @@ static int dns_validate_dns_response(unsigned char *resp, unsigned char *bufend,
 					return DNS_RESP_INVALID;
 				}
 
-				memcpy(dns_answer_record->target, tmpname, len);
-				dns_answer_record->target[len] = 0;
-				previous_dname = dns_answer_record->target;
+				memcpy(dns_answer_record->data.target, tmpname, len);
+				dns_answer_record->data.target[len] = 0;
+				previous_dname = dns_answer_record->data.target;
 				break;
 
 
@@ -903,8 +903,8 @@ static int dns_validate_dns_response(unsigned char *resp, unsigned char *bufend,
 					return DNS_RESP_INVALID;
 				}
 				dns_answer_record->data_len = len;
-				memcpy(dns_answer_record->target, tmpname, len);
-				dns_answer_record->target[len] = 0;
+				memcpy(dns_answer_record->data.target, tmpname, len);
+				dns_answer_record->data.target[len] = 0;
 				break;
 
 			case DNS_RTYPE_AAAA:
@@ -913,8 +913,8 @@ static int dns_validate_dns_response(unsigned char *resp, unsigned char *bufend,
 					pool_free(dns_answer_item_pool, dns_answer_record);
 					return DNS_RESP_INVALID;
 				}
-				dns_answer_record->address.in6.sin6_family = AF_INET6;
-				memcpy(&dns_answer_record->address.in6.sin6_addr, reader, dns_answer_record->data_len);
+				dns_answer_record->data.in6.sin6_family = AF_INET6;
+				memcpy(&dns_answer_record->data.in6.sin6_addr, reader, dns_answer_record->data_len);
 				break;
 
 		} /* switch (record type) */
@@ -937,22 +937,22 @@ static int dns_validate_dns_response(unsigned char *resp, unsigned char *bufend,
 
 			switch(tmp_record->type) {
 				case DNS_RTYPE_A:
-					if (!memcmp(&dns_answer_record->address.in4.sin_addr,
-						    &tmp_record->address.in4.sin_addr,
-						    sizeof(dns_answer_record->address.in4.sin_addr)))
+					if (!memcmp(&dns_answer_record->data.in4.sin_addr,
+						    &tmp_record->data.in4.sin_addr,
+						    sizeof(dns_answer_record->data.in4.sin_addr)))
 						found = 1;
 					break;
 
 				case DNS_RTYPE_AAAA:
-					if (!memcmp(&dns_answer_record->address.in6.sin6_addr,
-						    &tmp_record->address.in6.sin6_addr,
-						    sizeof(dns_answer_record->address.in6.sin6_addr)))
+					if (!memcmp(&dns_answer_record->data.in6.sin6_addr,
+						    &tmp_record->data.in6.sin6_addr,
+						    sizeof(dns_answer_record->data.in6.sin6_addr)))
 						found = 1;
 					break;
 
 			case DNS_RTYPE_SRV:
                                 if (dns_answer_record->data_len == tmp_record->data_len &&
-				    !dns_hostname_cmp(dns_answer_record->target, tmp_record->target, dns_answer_record->data_len) &&
+				    !dns_hostname_cmp(dns_answer_record->data.target, tmp_record->data.target, dns_answer_record->data_len) &&
 				    dns_answer_record->port == tmp_record->port) {
 					tmp_record->weight = dns_answer_record->weight;
                                         found = 1;
@@ -1033,11 +1033,11 @@ int dns_get_ip_from_response(struct dns_response_packet *dns_p,
 
 		if (record->type == DNS_RTYPE_A) {
 			ip_type = AF_INET;
-			ip = &record->address.in4.sin_addr;
+			ip = &record->data.in4.sin_addr;
 		}
 		else if (record->type == DNS_RTYPE_AAAA) {
 			ip_type = AF_INET6;
-			ip = &record->address.in6.sin6_addr;
+			ip = &record->data.in6.sin6_addr;
 		}
 		else
 			continue;
