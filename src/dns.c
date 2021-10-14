@@ -848,9 +848,8 @@ static int dns_validate_dns_response(unsigned char *resp, unsigned char *bufend,
 					pool_free(dns_answer_item_pool, dns_answer_record);
 					return DNS_RESP_INVALID;
 				}
-				dns_answer_record->address.sa_family = AF_INET;
-				memcpy(&(((struct sockaddr_in *)&dns_answer_record->address)->sin_addr),
-						reader, dns_answer_record->data_len);
+				dns_answer_record->address.in4.sin_family = AF_INET;
+				memcpy(&dns_answer_record->address.in4.sin_addr, reader, dns_answer_record->data_len);
 				break;
 
 			case DNS_RTYPE_CNAME:
@@ -914,9 +913,8 @@ static int dns_validate_dns_response(unsigned char *resp, unsigned char *bufend,
 					pool_free(dns_answer_item_pool, dns_answer_record);
 					return DNS_RESP_INVALID;
 				}
-				dns_answer_record->address.sa_family = AF_INET6;
-				memcpy(&(((struct sockaddr_in6 *)&dns_answer_record->address)->sin6_addr),
-						reader, dns_answer_record->data_len);
+				dns_answer_record->address.in6.sin6_family = AF_INET6;
+				memcpy(&dns_answer_record->address.in6.sin6_addr, reader, dns_answer_record->data_len);
 				break;
 
 		} /* switch (record type) */
@@ -939,16 +937,16 @@ static int dns_validate_dns_response(unsigned char *resp, unsigned char *bufend,
 
 			switch(tmp_record->type) {
 				case DNS_RTYPE_A:
-					if (!memcmp(&((struct sockaddr_in *)&dns_answer_record->address)->sin_addr,
-						    &((struct sockaddr_in *)&tmp_record->address)->sin_addr,
-						    sizeof(in_addr_t)))
+					if (!memcmp(&dns_answer_record->address.in4.sin_addr,
+						    &tmp_record->address.in4.sin_addr,
+						    sizeof(dns_answer_record->address.in4.sin_addr)))
 						found = 1;
 					break;
 
 				case DNS_RTYPE_AAAA:
-					if (!memcmp(&((struct sockaddr_in6 *)&dns_answer_record->address)->sin6_addr,
-						    &((struct sockaddr_in6 *)&tmp_record->address)->sin6_addr,
-						    sizeof(struct in6_addr)))
+					if (!memcmp(&dns_answer_record->address.in6.sin6_addr,
+						    &tmp_record->address.in6.sin6_addr,
+						    sizeof(dns_answer_record->address.in6.sin6_addr)))
 						found = 1;
 					break;
 
@@ -1034,12 +1032,12 @@ int dns_get_ip_from_response(struct dns_response_packet *dns_p,
 		unsigned char ip_type;
 
 		if (record->type == DNS_RTYPE_A) {
-			ip = &(((struct sockaddr_in *)&record->address)->sin_addr);
 			ip_type = AF_INET;
+			ip = &record->address.in4.sin_addr;
 		}
 		else if (record->type == DNS_RTYPE_AAAA) {
 			ip_type = AF_INET6;
-			ip = &(((struct sockaddr_in6 *)&record->address)->sin6_addr);
+			ip = &record->address.in6.sin6_addr;
 		}
 		else
 			continue;
