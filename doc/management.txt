@@ -1476,6 +1476,7 @@ add server <backend>/<server> [args]*
   - tfo
   - usesrc
   - weight
+  - ws
 
   Their syntax is similar to the server line from the configuration file,
   please refer to their individual documentation for details.
