@@ -633,9 +633,9 @@ int dns_read_name(unsigned char *buffer, unsigned char *bufend,
  *
  * Must be called with the DNS lock held.
  */
-static void dns_srvrq_cleanup_srv(struct server *srv)
+static void dns_srvrq_cleanup_srv(struct server *srv, int safe)
 {
-	dns_unlink_resolution(srv->dns_requester, 0);
+	dns_unlink_resolution(srv->dns_requester, safe);
 	HA_SPIN_LOCK(SERVER_LOCK, &srv->lock);
 	srvrq_update_srv_status(srv, 1);
 	free(srv->hostname);
@@ -669,7 +669,7 @@ static struct task *dns_srvrq_expire_task(struct task *t, void *context, unsigne
 		goto end;
 
 	HA_SPIN_LOCK(DNS_LOCK, &srv->srvrq->resolvers->lock);
-	dns_srvrq_cleanup_srv(srv);
+	dns_srvrq_cleanup_srv(srv, 0);
 	HA_SPIN_UNLOCK(DNS_LOCK, &srv->srvrq->resolvers->lock);
 
  end:
@@ -710,7 +710,7 @@ static void dns_check_dns_response(struct dns_resolution *res)
 			else if (item->type == DNS_RTYPE_SRV) {
 				/* Remove any associated server */
 				list_for_each_entry_safe(srv, srvback, &item->attached_servers, srv_rec_item)
-					dns_srvrq_cleanup_srv(srv);
+					dns_srvrq_cleanup_srv(srv, 0);
 			}
 
 			LIST_DEL(&item->list);
@@ -2020,7 +2020,7 @@ void dns_detach_from_resolution_answer_items(struct dns_resolution *res,  struct
 			if (item->type == DNS_RTYPE_SRV) {
 				list_for_each_entry_safe(srv, srvback, &item->attached_servers, srv_rec_item) {
 					if (srv->srvrq == srvrq)
-						dns_srvrq_cleanup_srv(srv);
+						dns_srvrq_cleanup_srv(srv, safe);
 				}
 			}
 		}
