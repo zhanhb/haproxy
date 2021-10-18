@@ -50,6 +50,7 @@
 struct list dns_resolvers  = LIST_HEAD_INIT(dns_resolvers);
 struct list dns_srvrq_list = LIST_HEAD_INIT(dns_srvrq_list);
 
+static THREAD_LOCAL struct list death_row; /* list of deferred resolutions to kill, local validity only */
 static THREAD_LOCAL uint64_t dns_query_id_seed = 0; /* random seed */
 
 DECLARE_STATIC_POOL(dns_answer_item_pool, "dns_answer_item", sizeof(struct dns_answer_item));
@@ -58,6 +59,9 @@ DECLARE_POOL(dns_requester_pool,  "dns_requester",  sizeof(struct dns_requester)
 
 static unsigned int resolution_uuid = 1;
 unsigned int dns_failed_resolutions = 0;
+static struct task *dns_process_resolvers(struct task *t, void *context, unsigned short state);
+static void dns_free_resolution(struct dns_resolution *resolution);
+static void _dns_unlink_resolution(struct dns_requester *requester, int safe);
 
 enum {
 	DNS_STAT_ID,
@@ -627,15 +631,51 @@ int dns_read_name(unsigned char *buffer, unsigned char *bufend,
 	return 0;
 }
 
+/* Reinitialize the list of aborted resolutions before calling certain
+ * functions relying on it. The list must be processed by calling
+ * free_aborted_resolutions() after operations.
+ */
+static void init_aborted_resolutions()
+{
+	LIST_INIT(&death_row);
+}
+
+static void abort_resolution(struct dns_resolution *res)
+{
+	LIST_DEL_INIT(&res->list);
+	LIST_ADDQ(&death_row, &res->list);
+}
+
+/* This releases any aborted resolution found in the death row. It is mandatory
+ * to call init_aborted_resolutions() first before the function (or loop) that
+ * needs to defer deletions. Note that some of them are in relation via internal
+ * objects and might cause the deletion of other ones from the same list, so we
+ * must absolutely not use a list_for_each_entry_safe() nor any such thing here,
+ * and solely rely on each call to remove the first remaining list element.
+ */
+static void free_aborted_resolutions()
+{
+	struct dns_resolution *res;
+
+	while (!LIST_ISEMPTY(&death_row)) {
+		res = LIST_NEXT(&death_row, struct dns_resolution *, list);
+		dns_free_resolution(res);
+	}
+
+	/* make sure nobody tries to add anything without having initialized it */
+	death_row = (struct list){ };
+}
+
 /* Cleanup fqdn/port and address of a server attached to a SRV resolution. This
  * happens when an SRV item is purged or when the server status is considered as
  * obsolete.
  *
- * Must be called with the DNS lock held.
+ * Must be called with the DNS lock held, and with the death_row already
+ * initialized via init_aborted_resolutions().
  */
-static void dns_srvrq_cleanup_srv(struct server *srv, int safe)
+static void dns_srvrq_cleanup_srv(struct server *srv)
 {
-	dns_unlink_resolution(srv->dns_requester, safe);
+	_dns_unlink_resolution(srv->dns_requester, 0);
 	HA_SPIN_LOCK(SERVER_LOCK, &srv->lock);
 	srvrq_update_srv_status(srv, 1);
 	free(srv->hostname);
@@ -669,7 +709,9 @@ static struct task *dns_srvrq_expire_task(struct task *t, void *context, unsigne
 		goto end;
 
 	HA_SPIN_LOCK(DNS_LOCK, &srv->srvrq->resolvers->lock);
-	dns_srvrq_cleanup_srv(srv, 0);
+	init_aborted_resolutions();
+	dns_srvrq_cleanup_srv(srv);
+	free_aborted_resolutions();
 	HA_SPIN_UNLOCK(DNS_LOCK, &srv->srvrq->resolvers->lock);
 
  end:
@@ -677,7 +719,8 @@ static struct task *dns_srvrq_expire_task(struct task *t, void *context, unsigne
 }
 
 /* Checks for any obsolete record, also identify any SRV request, and try to
- * find a corresponding server.
+ * find a corresponding server. Must be called with the death_row already
+ * initialized via init_aborted_resolutions().
 */
 static void dns_check_dns_response(struct dns_resolution *res)
 {
@@ -710,7 +753,7 @@ static void dns_check_dns_response(struct dns_resolution *res)
 			else if (item->type == DNS_RTYPE_SRV) {
 				/* Remove any associated server */
 				list_for_each_entry_safe(srv, srvback, &item->attached_servers, srv_rec_item)
-					dns_srvrq_cleanup_srv(srv, 0);
+					dns_srvrq_cleanup_srv(srv);
 			}
 
 			LIST_DEL_INIT(&item->list);
@@ -833,7 +876,7 @@ srv_found:
 					/* Unlink A/AAAA resolution for this server if there is an AR item.
 					 * It is usless to perform an extra resolution
 					 */
-					dns_unlink_resolution(srv->dns_requester, 0);
+					_dns_unlink_resolution(srv->dns_requester, 0);
 				}
 
 				if (!srv->hostname_dn) {
@@ -1950,7 +1993,8 @@ dns_get_requester(struct dns_requester **req, enum obj_type *owner,
 }
 
 /* Links a requester (a server or a dns_srvrq) with a resolution. It returns 0
- * on success, -1 otherwise.
+ * on success, -1 otherwise. Must be called with the death_row already initialized
+ * via init_aborted_resolutions().
  */
 int dns_link_resolution(void *requester, int requester_type, int requester_locked)
 {
@@ -2043,7 +2087,8 @@ int dns_link_resolution(void *requester, int requester_type, int requester_locke
 
 /* This function removes all server/srvrq references on answer items
  * if <safe> is set to 1, in case of srvrq, sub server resquesters unlink
- * is called using safe == 1 to make it usable into callbacks
+ * is called using safe == 1 to make it usable into callbacks. Must be called
+ * with the death_row already initialized via init_aborted_resolutions().
  */
 void dns_detach_from_resolution_answer_items(struct dns_resolution *res,  struct dns_requester *req, int safe)
 {
@@ -2059,7 +2104,7 @@ void dns_detach_from_resolution_answer_items(struct dns_resolution *res,  struct
 			if (item->type == DNS_RTYPE_SRV) {
 				list_for_each_entry_safe(srv, srvback, &item->attached_servers, srv_rec_item) {
 					if (srv->srvrq == srvrq)
-						dns_srvrq_cleanup_srv(srv, safe);
+						dns_srvrq_cleanup_srv(srv);
 				}
 			}
 		}
@@ -2069,9 +2114,10 @@ void dns_detach_from_resolution_answer_items(struct dns_resolution *res,  struct
 
 /* Removes a requester from a DNS resolution. It takes takes care of all the
  * consequences. It also cleans up some parameters from the requester.
- * if <safe> is set to 1, the corresponding resolution is not released.
+ * if <safe> is set to 1, the corresponding resolution is not released. Must be
+ * called with the death_row already initialized via init_aborted_resolutions().
  */
-void dns_unlink_resolution(struct dns_requester *requester, int safe)
+void _dns_unlink_resolution(struct dns_requester *requester, int safe)
 {
 	struct dns_resolution *res;
 	struct dns_requester  *req;
@@ -2101,7 +2147,7 @@ void dns_unlink_resolution(struct dns_requester *requester, int safe)
 			return;
 		}
 
-		dns_free_resolution(res);
+		abort_resolution(res);
 		return;
 	}
 
@@ -2126,12 +2172,22 @@ void dns_unlink_resolution(struct dns_requester *requester, int safe)
 	}
 }
 
+/* The public version of the function above that deals with the death row. */
+void dns_unlink_resolution(struct dns_requester *requester, int safe)
+{
+	init_aborted_resolutions();
+	_dns_unlink_resolution(requester, safe);
+	free_aborted_resolutions();
+}
+
 /* Called when a network IO is generated on a name server socket for an incoming
  * packet. It performs the following actions:
  *  - check if the packet requires processing (not outdated resolution)
  *  - ensure the DNS packet received is valid and call requester's callback
  *  - call requester's error callback if invalid response
  *  - check the dn_name in the packet against the one sent
+ *
+ * Must be called with the death_row already initialized via init_aborted_resolutions().
  */
 static void dns_resolve_recv(struct dgram_conn *dgram)
 {
@@ -2423,10 +2479,19 @@ static struct task *dns_process_resolvers(struct task *t, void *context, unsigne
 
 	HA_SPIN_LOCK(DNS_LOCK, &resolvers->lock);
 
-	/* Handle all expired resolutions from the active list */
-	list_for_each_entry_safe(res, resback, &resolvers->resolutions.curr, list) {
+	/* Handle all expired resolutions from the active list. Elements that
+	 * need to be removed will in fact be moved to the death_row. Other
+	 * ones will be handled normally.
+	 */
+
+	init_aborted_resolutions();
+	res  = LIST_NEXT(&resolvers->resolutions.curr, struct dns_resolution *, list);
+	while (&res->list != &resolvers->resolutions.curr) {
+		resback = LIST_NEXT(&res->list, struct dns_resolution *, list);
+
 		if (LIST_ISEMPTY(&res->requesters)) {
-			dns_free_resolution(res);
+			abort_resolution(res);
+			res = resback;
 			continue;
 		}
 
@@ -2454,8 +2519,12 @@ static struct task *dns_process_resolvers(struct task *t, void *context, unsigne
 			/* Clean up resolution info and remove it from the
 			 * current list */
 			dns_reset_resolution(res);
+
+			/* subsequent entries might have been deleted here */
+			resback = LIST_NEXT(&res->list, struct dns_resolution *, list);
 			LIST_DEL_INIT(&res->list);
 			LIST_ADDQ(&resolvers->resolutions.wait, &res->list);
+			res = resback;
 		}
 		else {
 			/* Otherwise resend the DNS query and requeue the resolution */
@@ -2476,13 +2545,15 @@ static struct task *dns_process_resolvers(struct task *t, void *context, unsigne
 					res->try--;
 			}
 			dns_send_query(res);
+			resback = LIST_NEXT(&res->list, struct dns_resolution *, list);
+			res = resback;
 		}
 	}
 
 	/* Handle all resolutions in the wait list */
 	list_for_each_entry_safe(res, resback, &resolvers->resolutions.wait, list) {
 		if (LIST_ISEMPTY(&res->requesters)) {
-			dns_free_resolution(res);
+			abort_resolution(res);
 			continue;
 		}
 
@@ -2496,6 +2567,9 @@ static struct task *dns_process_resolvers(struct task *t, void *context, unsigne
 			LIST_ADDQ(&resolvers->resolutions.wait, &res->list);
 		}
 	}
+
+	/* now we can purge all queued deletions */
+	free_aborted_resolutions();
 
 	dns_update_resolvers_timeout(resolvers);
 	HA_SPIN_UNLOCK(DNS_LOCK, &resolvers->lock);
@@ -2517,6 +2591,7 @@ static void dns_deinit(void)
 	struct dns_requester  *req, *reqback;
 	struct dns_srvrq      *srvrq, *srvrqback;
 
+	init_aborted_resolutions();
 	list_for_each_entry_safe(resolvers, resolversback, &dns_resolvers, list) {
 		list_for_each_entry_safe(ns, nsback, &resolvers->nameservers, list) {
 			free(ns->id);
@@ -2534,7 +2609,7 @@ static void dns_deinit(void)
 				LIST_DEL_INIT(&req->list);
 				pool_free(dns_requester_pool, req);
 			}
-			dns_free_resolution(res);
+			abort_resolution(res);
 		}
 
 		list_for_each_entry_safe(res, resback, &resolvers->resolutions.wait, list) {
@@ -2542,7 +2617,7 @@ static void dns_deinit(void)
 				LIST_DEL_INIT(&req->list);
 				pool_free(dns_requester_pool, req);
 			}
-			dns_free_resolution(res);
+			abort_resolution(res);
 		}
 
 		free(resolvers->id);
@@ -2558,6 +2633,8 @@ static void dns_deinit(void)
 		LIST_DEL_INIT(&srvrq->list);
 		free(srvrq);
 	}
+
+	free_aborted_resolutions();
 }
 
 /* Finalizes the DNS configuration by allocating required resources and checking
@@ -2569,6 +2646,8 @@ static int dns_finalize_config(void)
 	struct dns_resolvers *resolvers;
 	struct proxy	     *px;
 	int err_code = 0;
+
+	init_aborted_resolutions();
 
 	/* allocate pool of resolution per resolvers */
 	list_for_each_entry(resolvers, &dns_resolvers, list) {
@@ -2683,8 +2762,10 @@ static int dns_finalize_config(void)
 	if (err_code & (ERR_ALERT|ERR_ABORT))
 		goto err;
 
+	free_aborted_resolutions();
 	return err_code;
   err:
+	free_aborted_resolutions();
 	dns_deinit();
 	return err_code;
 
@@ -2974,6 +3055,8 @@ enum act_return dns_action_do_resolve(struct act_rule *rule, struct proxy *px,
 
 	resolvers = rule->arg.dns.resolvers;
 
+	init_aborted_resolutions();
+
 	/* we have a response to our DNS resolution */
  use_cache:
 	if (s->dns_ctx.dns_requester && s->dns_ctx.dns_requester->resolution != NULL) {
@@ -3056,6 +3139,7 @@ enum act_return dns_action_do_resolve(struct act_rule *rule, struct proxy *px,
 	ret = ACT_RET_YIELD;
 
   end:
+	free_aborted_resolutions();
 	if (locked)
 		HA_SPIN_UNLOCK(DNS_LOCK, &resolvers->lock);
 	return ret;
@@ -3065,7 +3149,7 @@ enum act_return dns_action_do_resolve(struct act_rule *rule, struct proxy *px,
 	s->dns_ctx.hostname_dn = NULL;
 	s->dns_ctx.hostname_dn_len = 0;
 	if (s->dns_ctx.dns_requester) {
-		dns_unlink_resolution(s->dns_ctx.dns_requester, 0);
+		_dns_unlink_resolution(s->dns_ctx.dns_requester, 0);
 		pool_free(dns_requester_pool, s->dns_ctx.dns_requester);
 		s->dns_ctx.dns_requester = NULL;
 	}
