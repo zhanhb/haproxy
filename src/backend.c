@@ -1343,6 +1343,16 @@ int connect_server(struct stream *s)
 	if (!IS_HTX_STRM(s))
 		goto skip_reuse;
 
+	/* disable reuse if websocket stream and the protocol to use is not the
+	 * same as the main protocol of the server.
+	 */
+	if (unlikely(s->flags & SF_WEBSOCKET) && srv) {
+		if (!srv_check_reuse_ws(srv)) {
+			DBG_TRACE_STATE("skip idle connections reuse: websocket stream", STRM_EV_STRM_PROC|STRM_EV_SI_ST, s);
+			goto skip_reuse;
+		}
+	}
+
 	/* first, search for a matching connection in the session's idle conns */
 	srv_conn = session_get_conn(s->sess, s->target, hash);
 	if (srv_conn)
@@ -1596,6 +1606,33 @@ skip_reuse:
 			srv_conn->send_proxy_ofs = 1;
 			srv_conn->flags |= CO_FL_SOCKS4;
 		}
+
+#if defined(USE_OPENSSL) && defined(TLSEXT_TYPE_application_layer_protocol_negotiation)
+		/* if websocket stream, try to update connection ALPN. */
+		if (unlikely(s->flags & SF_WEBSOCKET) &&
+		    srv && srv->use_ssl && srv->ssl_ctx.alpn_str) {
+			char *alpn = "";
+			int force = 0;
+
+			switch (srv->ws) {
+			case SRV_WS_AUTO:
+				alpn = "\x08http/1.1";
+				force = 0;
+				break;
+			case SRV_WS_H1:
+				alpn = "\x08http/1.1";
+				force = 1;
+				break;
+			case SRV_WS_H2:
+				alpn = "\x02h2";
+				force = 1;
+				break;
+			}
+
+			if (!conn_update_alpn(srv_conn, ist(alpn), force))
+				DBG_TRACE_STATE("update alpn for websocket", STRM_EV_STRM_PROC|STRM_EV_SI_ST, s);
+		}
+#endif
 	}
 	else {
 		/* Currently there seems to be no known cases of xprt ready
@@ -1654,7 +1691,9 @@ skip_reuse:
 	 * fail, and flag the connection as CO_FL_ERROR.
 	 */
 	if (init_mux) {
-		if (conn_install_mux_be(srv_conn, srv_cs, s->sess, NULL) < 0) {
+		const struct mux_ops *alt_mux =
+		  likely(!(s->flags & SF_WEBSOCKET)) ? NULL : srv_get_ws_proto(srv);
+		if (conn_install_mux_be(srv_conn, srv_cs, s->sess, alt_mux) < 0) {
 			conn_full_close(srv_conn);
 			return SF_ERR_INTERNAL;
 		}
