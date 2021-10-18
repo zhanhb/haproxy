@@ -837,6 +837,8 @@ static inline const char *conn_err_code_str(struct connection *c)
 	return NULL;
 }
 
+int conn_update_alpn(struct connection *conn, const struct ist alpn, int force);
+
 static inline const char *conn_get_ctrl_name(const struct connection *conn)
 {
 	if (!conn || !conn_ctrl_ready(conn))
