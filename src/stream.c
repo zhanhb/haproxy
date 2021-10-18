@@ -2226,7 +2226,7 @@ struct task *process_stream(struct task *t, void *context, unsigned short state)
 	if (unlikely(!(s->flags & SF_ERR_MASK))) {
 		if (req->flags & (CF_READ_ERROR|CF_READ_TIMEOUT|CF_WRITE_ERROR|CF_WRITE_TIMEOUT)) {
 			/* Report it if the client got an error or a read timeout expired */
-			req->analysers = 0;
+			req->analysers &= AN_REQ_FLT_END;
 			if (req->flags & CF_READ_ERROR) {
 				_HA_ATOMIC_ADD(&s->be->be_counters.cli_aborts, 1);
 				_HA_ATOMIC_ADD(&sess->fe->fe_counters.cli_aborts, 1);
@@ -2272,7 +2272,7 @@ struct task *process_stream(struct task *t, void *context, unsigned short state)
 		}
 		else if (res->flags & (CF_READ_ERROR|CF_READ_TIMEOUT|CF_WRITE_ERROR|CF_WRITE_TIMEOUT)) {
 			/* Report it if the server got an error or a read timeout expired */
-			res->analysers = 0;
+			res->analysers &= AN_RES_FLT_END;
 			if (res->flags & CF_READ_ERROR) {
 				_HA_ATOMIC_ADD(&s->be->be_counters.srv_aborts, 1);
 				_HA_ATOMIC_ADD(&sess->fe->fe_counters.srv_aborts, 1);
