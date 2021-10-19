@@ -995,6 +995,7 @@ static int dns_validate_dns_response(unsigned char *resp, unsigned char *bufend,
 		dns_answer_record->ar_item = NULL;
 		dns_answer_record->last_seen = TICK_ETERNITY;
 		LIST_INIT(&dns_answer_record->attached_servers);
+		LIST_INIT(&dns_answer_record->list);
 
 		offset = 0;
 		len = dns_read_name(resp, bufend, reader, tmpname, DNS_MAX_NAME_SIZE, &offset, 0);
