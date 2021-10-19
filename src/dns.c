@@ -1920,6 +1920,35 @@ static void dns_free_resolution(struct dns_resolution *resolution)
 	pool_free(dns_resolution_pool, resolution);
 }
 
+/* If *<req> is not NULL, returns it, otherwise tries to allocate a requester
+ * and makes it owned by this obj_type, with the proposed callback and error
+ * callback. On success, *req is assigned the allocated requester. Returns
+ * NULL on allocation failure.
+ */
+static struct dns_requester *
+dns_get_requester(struct dns_requester **req, enum obj_type *owner,
+		  int (*cb)(struct dns_requester *, struct dns_nameserver *),
+		  int (*err_cb)(struct dns_requester *, int))
+{
+	struct dns_requester *tmp;
+
+	if (*req)
+		return *req;
+
+	tmp = pool_alloc(dns_requester_pool);
+	if (!tmp)
+		goto end;
+
+	LIST_INIT(&tmp->list);
+	tmp->owner              = owner;
+	tmp->resolution         = NULL;
+	tmp->requester_cb       = cb;
+	tmp->requester_error_cb = err_cb;
+	*req = tmp;
+ end:
+	return tmp;
+}
+
 /* Links a requester (a server or a dns_srvrq) with a resolution. It returns 0
  * on success, -1 otherwise.
  */
@@ -1937,6 +1966,21 @@ int dns_link_resolution(void *requester, int requester_type, int requester_locke
 	switch (requester_type) {
 		case OBJ_TYPE_SERVER:
 			srv             = (struct server *)requester;
+
+			if (!requester_locked)
+				HA_SPIN_LOCK(SERVER_LOCK, &srv->lock);
+
+			req = dns_get_requester(&srv->dns_requester,
+						&srv->obj_type,
+						snr_resolution_cb,
+						snr_resolution_error_cb);
+
+			if (!requester_locked)
+				HA_SPIN_UNLOCK(SERVER_LOCK, &srv->lock);
+
+			if (!req)
+                               goto err;
+
 			hostname_dn     = &srv->hostname_dn;
 			hostname_dn_len = srv->hostname_dn_len;
 			resolvers       = srv->resolvers;
@@ -1947,6 +1991,14 @@ int dns_link_resolution(void *requester, int requester_type, int requester_locke
 
 		case OBJ_TYPE_SRVRQ:
 			srvrq           = (struct dns_srvrq *)requester;
+
+			req = dns_get_requester(&srvrq->dns_requester,
+						&srvrq->obj_type,
+						snr_resolution_cb,
+						srvrq_resolution_error_cb);
+			if (!req)
+				goto err;
+
 			hostname_dn     = &srvrq->hostname_dn;
 			hostname_dn_len = srvrq->hostname_dn_len;
 			resolvers       = srvrq->resolvers;
@@ -1955,6 +2007,14 @@ int dns_link_resolution(void *requester, int requester_type, int requester_locke
 
 		case OBJ_TYPE_STREAM:
 			stream          = (struct stream *)requester;
+
+			req = dns_get_requester(&stream->dns_ctx.dns_requester,
+						   &stream->obj_type,
+						   act_resolution_cb,
+						   act_resolution_error_cb);
+			if (!req)
+				goto err;
+
 			hostname_dn     = &stream->dns_ctx.hostname_dn;
 			hostname_dn_len = stream->dns_ctx.hostname_dn_len;
 			resolvers       = stream->dns_ctx.parent->arg.dns.resolvers;
@@ -1970,56 +2030,7 @@ int dns_link_resolution(void *requester, int requester_type, int requester_locke
 	if ((res = dns_pick_resolution(resolvers, hostname_dn, hostname_dn_len, query_type)) == NULL)
 		goto err;
 
-	if (srv) {
-		if (!requester_locked)
-			HA_SPIN_LOCK(SERVER_LOCK, &srv->lock);
-		if (srv->dns_requester == NULL) {
-			if ((req = pool_alloc(dns_requester_pool)) == NULL) {
-				if (!requester_locked)
-					HA_SPIN_UNLOCK(SERVER_LOCK, &srv->lock);
-				goto err;
-			}
-			req->owner         = &srv->obj_type;
-			srv->dns_requester = req;
-		}
-		else
-			req = srv->dns_requester;
-		if (!requester_locked)
-			HA_SPIN_UNLOCK(SERVER_LOCK, &srv->lock);
-
-		req->requester_cb       = snr_resolution_cb;
-		req->requester_error_cb = snr_resolution_error_cb;
-	}
-	else if (srvrq) {
-		if (srvrq->dns_requester == NULL) {
-			if ((req = pool_alloc(dns_requester_pool)) == NULL)
-				goto err;
-			req->owner           = &srvrq->obj_type;
-			srvrq->dns_requester = req;
-		}
-		else
-			req = srvrq->dns_requester;
-
-		req->requester_cb       = snr_resolution_cb;
-		req->requester_error_cb = srvrq_resolution_error_cb;
-	}
-	else if (stream) {
-		if (stream->dns_ctx.dns_requester == NULL) {
-			if ((req = pool_alloc(dns_requester_pool)) == NULL)
-				goto err;
-			req->owner           = &stream->obj_type;
-			stream->dns_ctx.dns_requester = req;
-		}
-		else
-			req = stream->dns_ctx.dns_requester;
-
-		req->requester_cb       = act_resolution_cb;
-		req->requester_error_cb = act_resolution_error_cb;
-	}
-	else
-		goto err;
-
-	req->resolution         = res;
+	req->resolution = res;
 
 	LIST_ADDQ(&res->requesters, &req->list);
 	return 0;
