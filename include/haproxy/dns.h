@@ -43,7 +43,6 @@ int dns_get_ip_from_response(struct dns_response_packet *dns_p,
                              void **newip, short *newip_sin_family,
                              struct server *owner);
 
-void dns_purge_resolution_answer_records(struct dns_resolution *resolution);
 int dns_link_resolution(void *requester, int requester_type, int requester_locked);
 void dns_unlink_resolution(struct dns_requester *requester, int safe);
 void dns_detach_from_resolution_answer_items(struct dns_resolution *res,  struct dns_requester *req, int safe);
