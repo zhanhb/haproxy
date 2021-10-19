@@ -1363,7 +1363,8 @@ static struct dns_resolution *dns_pick_resolution(struct dns_resolvers *resolver
 	return res;
 }
 
-void dns_purge_resolution_answer_records(struct dns_resolution *resolution)
+/* deletes and frees all answer_items from the resolution's answer_list */
+static void dns_purge_resolution_answer_records(struct dns_resolution *resolution)
 {
 	struct dns_answer_item *item, *itemback;
 
