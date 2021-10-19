@@ -383,7 +383,7 @@ static int resolv_send_query(struct resolv_resolution *resolution)
 	}
 
 	/* Push the resolution at the end of the active list */
-	LIST_DELETE(&resolution->list);
+	LIST_DEL_INIT(&resolution->list);
 	LIST_APPEND(&resolvers->resolutions.curr, &resolution->list);
 	return 0;
 }
@@ -593,7 +593,7 @@ static void resolv_srvrq_cleanup_srv(struct server *srv, int safe)
 	ha_free(&srv->host_dn.key);
 
 	HA_SPIN_UNLOCK(SERVER_LOCK, &srv->lock);
-	LIST_DELETE(&srv->srv_rec_item);
+	LIST_DEL_INIT(&srv->srv_rec_item);
 	LIST_APPEND(&srv->srvrq->attached_servers, &srv->srv_rec_item);
 
 	srv->srvrq_check->expire = TICK_ETERNITY;
@@ -654,7 +654,7 @@ static void resolv_check_response(struct resolv_resolution *res)
 					resolv_srvrq_cleanup_srv(srv, 0);
 			}
 
-			LIST_DELETE(&item->list);
+			LIST_DEL_INIT(&item->list);
 			if (item->ar_item) {
 				pool_free(resolv_answer_item_pool, item->ar_item);
 				item->ar_item = NULL;
@@ -1618,7 +1618,7 @@ int resolv_get_ip_from_response(struct resolv_response *r_res,
 	list_for_each_entry(record, &r_res->answer_list, list) {
 		/* Move the first record to the end of the list, for internal
 		 * round robin */
-		LIST_DELETE(&record->list);
+		LIST_DEL_INIT(&record->list);
 		LIST_APPEND(&r_res->answer_list, &record->list);
 		break;
 	}
@@ -1821,7 +1821,7 @@ static void resolv_purge_resolution_answer_records(struct resolv_resolution *res
 	struct resolv_answer_item *item, *itemback;
 
 	list_for_each_entry_safe(item, itemback, &resolution->response.answer_list, list) {
-		LIST_DELETE(&item->list);
+		LIST_DEL_INIT(&item->list);
 		pool_free(resolv_answer_item_pool, item->ar_item);
 		pool_free(resolv_answer_item_pool, item);
 	}
@@ -1847,13 +1847,13 @@ static void resolv_free_resolution(struct resolv_resolution *resolution)
 	resolution->hostname_dn_len = 0;
 
 	list_for_each_entry_safe(req, reqback, &resolution->requesters, list) {
-		LIST_DELETE(&req->list);
+		LIST_DEL_INIT(&req->list);
 		req->resolution = NULL;
 	}
 	resolv_purge_resolution_answer_records(resolution);
 	resolv_purge_resolution_query_items(resolution);
 
-	LIST_DELETE(&resolution->list);
+	LIST_DEL_INIT(&resolution->list);
 	pool_free(resolv_resolution_pool, resolution);
 }
 
@@ -2021,7 +2021,7 @@ void resolv_unlink_resolution(struct resolv_requester *requester, int safe)
 	resolv_detach_from_resolution_answer_items(res,  requester, safe);
 
 	/* Clean up the requester */
-	LIST_DELETE(&requester->list);
+	LIST_DEL_INIT(&requester->list);
 	requester->resolution = NULL;
 
 	/* We need to find another requester linked on this resolution */
@@ -2227,7 +2227,7 @@ static int resolv_process_responses(struct dns_nameserver *ns)
 		if (!keep_answer_items)
 			resolv_purge_resolution_answer_records(res);
 		resolv_reset_resolution(res);
-		LIST_DELETE(&res->list);
+		LIST_DEL_INIT(&res->list);
 		LIST_APPEND(&resolvers->resolutions.wait, &res->list);
 		continue;
 
@@ -2247,7 +2247,7 @@ static int resolv_process_responses(struct dns_nameserver *ns)
 		}
 
 		resolv_reset_resolution(res);
-		LIST_DELETE(&res->list);
+		LIST_DEL_INIT(&res->list);
 		LIST_APPEND(&resolvers->resolutions.wait, &res->list);
 		continue;
 	}
@@ -2300,7 +2300,7 @@ static struct task *process_resolvers(struct task *t, void *context, unsigned in
 			/* Clean up resolution info and remove it from the
 			 * current list */
 			resolv_reset_resolution(res);
-			LIST_DELETE(&res->list);
+			LIST_DEL_INIT(&res->list);
 			LIST_APPEND(&resolvers->resolutions.wait, &res->list);
 		}
 		else {
@@ -2338,7 +2338,7 @@ static struct task *process_resolvers(struct task *t, void *context, unsigned in
 
 		if (resolv_run_resolution(res) != 1) {
 			res->last_resolution = now_ms;
-			LIST_DELETE(&res->list);
+			LIST_DEL_INIT(&res->list);
 			LIST_APPEND(&resolvers->resolutions.wait, &res->list);
 		}
 	}
@@ -2379,14 +2379,14 @@ static void resolvers_deinit(void)
 					task_destroy(ns->stream->task_rsp);
 				free(ns->stream);
 			}
-			LIST_DELETE(&ns->list);
+			LIST_DEL_INIT(&ns->list);
 			EXTRA_COUNTERS_FREE(ns->extra_counters);
 			free(ns);
 		}
 
 		list_for_each_entry_safe(res, resback, &resolvers->resolutions.curr, list) {
 			list_for_each_entry_safe(req, reqback, &res->requesters, list) {
-				LIST_DELETE(&req->list);
+				LIST_DEL_INIT(&req->list);
 				pool_free(resolv_requester_pool, req);
 			}
 			resolv_free_resolution(res);
@@ -2394,7 +2394,7 @@ static void resolvers_deinit(void)
 
 		list_for_each_entry_safe(res, resback, &resolvers->resolutions.wait, list) {
 			list_for_each_entry_safe(req, reqback, &res->requesters, list) {
-				LIST_DELETE(&req->list);
+				LIST_DEL_INIT(&req->list);
 				pool_free(resolv_requester_pool, req);
 			}
 			resolv_free_resolution(res);
@@ -2403,14 +2403,14 @@ static void resolvers_deinit(void)
 		free(resolvers->id);
 		free((char *)resolvers->conf.file);
 		task_destroy(resolvers->t);
-		LIST_DELETE(&resolvers->list);
+		LIST_DEL_INIT(&resolvers->list);
 		free(resolvers);
 	}
 
 	list_for_each_entry_safe(srvrq, srvrqback, &resolv_srvrq_list, list) {
 		free(srvrq->name);
 		free(srvrq->hostname_dn);
-		LIST_DELETE(&srvrq->list);
+		LIST_DEL_INIT(&srvrq->list);
 		free(srvrq);
 	}
 }
