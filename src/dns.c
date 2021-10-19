@@ -367,7 +367,7 @@ static int dns_send_query(struct dns_resolution *resolution)
 	}
 
 	/* Push the resolution at the end of the active list */
-	LIST_DEL(&resolution->list);
+	LIST_DEL_INIT(&resolution->list);
 	LIST_ADDQ(&resolvers->resolutions.curr, &resolution->list);
 	return 0;
 }
@@ -580,7 +580,7 @@ static void dns_srvrq_cleanup_srv(struct server *srv, int safe)
 	srv->host_dn.key = NULL;
 
 	HA_SPIN_UNLOCK(SERVER_LOCK, &srv->lock);
-	LIST_DEL(&srv->srv_rec_item);
+	LIST_DEL_INIT(&srv->srv_rec_item);
 	LIST_ADDQ(&srv->srvrq->attached_servers, &srv->srv_rec_item);
 
 	srv->srvrq_check->expire = TICK_ETERNITY;
@@ -641,7 +641,7 @@ static void dns_check_dns_response(struct dns_resolution *res)
 					dns_srvrq_cleanup_srv(srv, 0);
 			}
 
-			LIST_DEL(&item->list);
+			LIST_DEL_INIT(&item->list);
 			if (item->ar_item) {
 				pool_free(dns_answer_item_pool, item->ar_item);
 				item->ar_item = NULL;
@@ -1608,7 +1608,7 @@ int dns_get_ip_from_response(struct dns_response_packet *dns_p,
 	list_for_each_entry(record, &dns_p->answer_list, list) {
 		/* Move the first record to the end of the list, for internal
 		 * round robin */
-		LIST_DEL(&record->list);
+		LIST_DEL_INIT(&record->list);
 		LIST_ADDQ(&dns_p->answer_list, &record->list);
 		break;
 	}
@@ -1812,7 +1812,7 @@ static void dns_purge_resolution_answer_records(struct dns_resolution *resolutio
 	struct dns_answer_item *item, *itemback;
 
 	list_for_each_entry_safe(item, itemback, &resolution->response.answer_list, list) {
-		LIST_DEL(&item->list);
+		LIST_DEL_INIT(&item->list);
 		pool_free(dns_answer_item_pool, item->ar_item);
 		pool_free(dns_answer_item_pool, item);
 	}
@@ -1840,11 +1840,11 @@ static void dns_free_resolution(struct dns_resolution *resolution)
 	resolution->hostname_dn_len = 0;
 
 	list_for_each_entry_safe(req, reqback, &resolution->requesters, list) {
-		LIST_DEL(&req->list);
+		LIST_DEL_INIT(&req->list);
 		req->resolution = NULL;
 	}
 	dns_purge_resolution_answer_records(resolution);
-	LIST_DEL(&resolution->list);
+	LIST_DEL_INIT(&resolution->list);
 	pool_free(dns_resolution_pool, resolution);
 }
 
@@ -2013,7 +2013,7 @@ void dns_unlink_resolution(struct dns_requester *requester, int safe)
 	dns_detach_from_resolution_answer_items(res,  requester, safe);
 
 	/* Clean up the requester */
-	LIST_DEL(&requester->list);
+	LIST_DEL_INIT(&requester->list);
 	requester->resolution = NULL;
 
 	/* We need to find another requester linked on this resolution */
@@ -2238,7 +2238,7 @@ static void dns_resolve_recv(struct dgram_conn *dgram)
 		if (!keep_answer_items)
 			dns_purge_resolution_answer_records(res);
 		dns_reset_resolution(res);
-		LIST_DEL(&res->list);
+		LIST_DEL_INIT(&res->list);
 		LIST_ADDQ(&resolvers->resolutions.wait, &res->list);
 		continue;
 
@@ -2258,7 +2258,7 @@ static void dns_resolve_recv(struct dgram_conn *dgram)
 		}
 
 		dns_reset_resolution(res);
-		LIST_DEL(&res->list);
+		LIST_DEL_INIT(&res->list);
 		LIST_ADDQ(&resolvers->resolutions.wait, &res->list);
 		continue;
 	}
@@ -2381,7 +2381,7 @@ static struct task *dns_process_resolvers(struct task *t, void *context, unsigne
 			/* Clean up resolution info and remove it from the
 			 * current list */
 			dns_reset_resolution(res);
-			LIST_DEL(&res->list);
+			LIST_DEL_INIT(&res->list);
 			LIST_ADDQ(&resolvers->resolutions.wait, &res->list);
 		}
 		else {
@@ -2419,7 +2419,7 @@ static struct task *dns_process_resolvers(struct task *t, void *context, unsigne
 
 		if (dns_run_resolution(res) != 1) {
 			res->last_resolution = now_ms;
-			LIST_DEL(&res->list);
+			LIST_DEL_INIT(&res->list);
 			LIST_ADDQ(&resolvers->resolutions.wait, &res->list);
 		}
 	}
@@ -2451,13 +2451,13 @@ static void dns_deinit(void)
 			if (ns->dgram && ns->dgram->t.sock.fd != -1)
 				fd_delete(ns->dgram->t.sock.fd);
 			free(ns->dgram);
-			LIST_DEL(&ns->list);
+			LIST_DEL_INIT(&ns->list);
 			free(ns);
 		}
 
 		list_for_each_entry_safe(res, resback, &resolvers->resolutions.curr, list) {
 			list_for_each_entry_safe(req, reqback, &res->requesters, list) {
-				LIST_DEL(&req->list);
+				LIST_DEL_INIT(&req->list);
 				pool_free(dns_requester_pool, req);
 			}
 			dns_free_resolution(res);
@@ -2465,7 +2465,7 @@ static void dns_deinit(void)
 
 		list_for_each_entry_safe(res, resback, &resolvers->resolutions.wait, list) {
 			list_for_each_entry_safe(req, reqback, &res->requesters, list) {
-				LIST_DEL(&req->list);
+				LIST_DEL_INIT(&req->list);
 				pool_free(dns_requester_pool, req);
 			}
 			dns_free_resolution(res);
@@ -2474,14 +2474,14 @@ static void dns_deinit(void)
 		free(resolvers->id);
 		free((char *)resolvers->conf.file);
 		task_destroy(resolvers->t);
-		LIST_DEL(&resolvers->list);
+		LIST_DEL_INIT(&resolvers->list);
 		free(resolvers);
 	}
 
 	list_for_each_entry_safe(srvrq, srvrqback, &dns_srvrq_list, list) {
 		free(srvrq->name);
 		free(srvrq->hostname_dn);
-		LIST_DEL(&srvrq->list);
+		LIST_DEL_INIT(&srvrq->list);
 		free(srvrq);
 	}
 }
