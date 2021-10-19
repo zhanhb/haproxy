@@ -774,6 +774,9 @@ static int dns_validate_dns_response(unsigned char *resp, unsigned char *bufend,
 		if (dns_answer_record == NULL)
 			return (DNS_RESP_INVALID);
 
+		/* initialization */
+		LIST_INIT(&dns_answer_record->list);
+
 		offset = 0;
 		len = dns_read_name(resp, bufend, reader, tmpname, DNS_MAX_NAME_SIZE, &offset, 0);
 
