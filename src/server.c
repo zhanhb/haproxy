@@ -4018,7 +4018,7 @@ int srvrq_resolution_error_cb(struct dns_requester *requester, int error_code)
 	}
 
 	/* Remove any associated server ref */
-	dns_detach_from_resolution_answer_items(res,  requester, 1);
+	dns_detach_from_resolution_answer_items(res,  requester);
 
 	return 0;
 }
@@ -4043,7 +4043,7 @@ int snr_resolution_error_cb(struct dns_requester *requester, int error_code)
 	if (!snr_update_srv_status(s, 1)) {
 		memset(&s->addr, 0, sizeof(s->addr));
 		HA_SPIN_UNLOCK(SERVER_LOCK, &s->lock);
-		dns_detach_from_resolution_answer_items(requester->resolution, requester, 1);
+		dns_detach_from_resolution_answer_items(requester->resolution, requester);
 		return 0;
 	}
 	HA_SPIN_UNLOCK(SERVER_LOCK, &s->lock);
@@ -4166,7 +4166,7 @@ int srv_set_fqdn(struct server *srv, const char *hostname, int dns_locked)
 	    strcasecmp(resolution->hostname_dn, hostname_dn) == 0)
 		goto end;
 
-	dns_unlink_resolution(srv->dns_requester, 0);
+	dns_unlink_resolution(srv->dns_requester);
 
 	free(srv->hostname);
 	free(srv->hostname_dn);
