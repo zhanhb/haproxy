@@ -127,7 +127,7 @@ enum {
 	CO_FL_CTRL_READY    = 0x00000100, /* FD was registered, fd_delete() needed */
 	CO_FL_XPRT_READY    = 0x00000200, /* xprt_init() done, xprt_close() needed */
 
-	/* unused : 0x00000400 */
+	CO_FL_WANT_DRAIN    = 0x00000400, /* try to drain pending data when closing */
 
 	/* This flag is used by data layers to indicate they had to stop
 	 * receiving data because a buffer was full. The connection handler

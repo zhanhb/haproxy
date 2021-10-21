@@ -417,7 +417,7 @@ int conn_sock_drain(struct connection *conn)
 	if (fdtab[conn->handle.fd].ev & (FD_POLL_ERR|FD_POLL_HUP))
 		goto shut;
 
-	if (!fd_recv_ready(conn->handle.fd))
+	if (!(conn->flags & CO_FL_WANT_DRAIN) && !fd_recv_ready(conn->handle.fd))
 		return 0;
 
 	/* no drain function defined, use the generic one */
