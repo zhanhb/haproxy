@@ -56,6 +56,11 @@
                            TASK_WOKEN_RES)
 
 #define TASK_F_USR1       0x00008000  /* nature of this task: 0=task 1=tasklet */
+/* unused: 0x10000..0x80000000 */
+
+/* These flags are persistent across scheduler calls */
+#define TASK_PERSISTENT   (TASK_SHARED_WQ | TASK_SELF_WAKING | TASK_KILLED | \
+                           TASK_HEAVY | TASK_F_USR1)
 
 enum {
 	TL_URGENT = 0,   /* urgent tasklets (I/O callbacks) */

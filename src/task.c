@@ -453,10 +453,9 @@ unsigned int run_tasks_from_lists(unsigned int budgets[])
 		}
 
 		budgets[queue]--;
-		t = (struct task *)LIST_ELEM(tl_queues[queue].n, struct tasklet *, list);
-		state = t->state & (TASK_SHARED_WQ|TASK_SELF_WAKING|TASK_HEAVY|TASK_KILLED|TASK_F_USR1);
 
-		if (state & TASK_HEAVY) {
+		t = (struct task *)LIST_ELEM(tl_queues[queue].n, struct tasklet *, list);
+		if (t->state & TASK_HEAVY) {
 			/* This is a heavy task. We'll call no more than one
 			 * per function call. If we called one already, we'll
 			 * return and announce the max possible weight so that
@@ -471,6 +470,8 @@ unsigned int run_tasks_from_lists(unsigned int budgets[])
 
 		ti->flags &= ~TI_FL_STUCK; // this thread is still running
 		activity[tid].ctxsw++;
+
+		t = (struct task *)LIST_ELEM(tl_queues[queue].n, struct tasklet *, list);
 		ctx = t->context;
 		process = t->process;
 		t->calls++;
@@ -481,7 +482,8 @@ unsigned int run_tasks_from_lists(unsigned int budgets[])
 		if (TASK_IS_TASKLET(t)) {
 			LIST_DEL_INIT(&((struct tasklet *)t)->list);
 			__ha_barrier_store();
-			state = _HA_ATOMIC_XCHG(&t->state, state);
+
+			state = _HA_ATOMIC_FETCH_AND(&t->state, TASK_PERSISTENT);
 			__ha_barrier_atomic_store();
 			process(t, ctx, state);
 			done++;
@@ -492,7 +494,11 @@ unsigned int run_tasks_from_lists(unsigned int budgets[])
 
 		LIST_DEL_INIT(&((struct tasklet *)t)->list);
 		__ha_barrier_store();
-		state = _HA_ATOMIC_XCHG(&t->state, state|TASK_RUNNING|TASK_F_USR1);
+
+		state = t->state;
+		while (!_HA_ATOMIC_CAS(&t->state, &state, (state & TASK_PERSISTENT) | TASK_RUNNING))
+			;
+
 		__ha_barrier_atomic_store();
 
 		/* OK then this is a regular task */
