@@ -59,6 +59,9 @@
 #define TASK_F_USR1       0x00010000  /* preserved user flag 1, application-specific, def:0 */
 /* unused: 0x20000..0x80000000 */
 
+/* These flags are persistent across scheduler calls */
+#define TASK_PERSISTENT   (TASK_SHARED_WQ | TASK_SELF_WAKING | TASK_KILLED | \
+                           TASK_HEAVY | TASK_F_TASKLET | TASK_F_USR1)
 
 enum {
 	TL_URGENT = 0,   /* urgent tasklets (I/O callbacks) */
