@@ -699,7 +699,7 @@ static inline void __b_put_varint(struct buffer *b, uint64_t v)
 		v = (v - 0xF0) >> 4;
 
 		while (1) {
-			if (tail++ == wrap)
+			if (++tail == wrap)
 				tail -= size;
 			data++;
 			if (v < 0x80)
@@ -734,7 +734,7 @@ static inline int b_put_varint(struct buffer *b, uint64_t v)
 		v = (v - 0xF0) >> 4;
 
 		while (1) {
-			if (tail++ == wrap)
+			if (++tail == wrap)
 				tail -= size;
 			data++;
 			if (data == size || v < 0x80)
@@ -773,7 +773,7 @@ static inline int b_get_varint(struct buffer *b, uint64_t *vptr)
 		v = *head;
 		bits += 4;
 		while (1) {
-			if (head++ == wrap)
+			if (++head == wrap)
 				head -= size;
 			data--;
 			if (!data || !(*head & 0x80))
@@ -815,7 +815,7 @@ static inline int b_peek_varint(struct buffer *b, size_t ofs, uint64_t *vptr)
 		v = *head;
 		bits += 4;
 		while (1) {
-			if (head++ == wrap)
+			if (++head == wrap)
 				head -= size;
 			data--;
 			if (!data || !(*head & 0x80))
