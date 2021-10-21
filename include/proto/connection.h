@@ -134,6 +134,8 @@ static inline void conn_ctrl_init(struct connection *conn)
 static inline void conn_ctrl_close(struct connection *conn)
 {
 	if ((conn->flags & (CO_FL_XPRT_READY|CO_FL_CTRL_READY)) == CO_FL_CTRL_READY) {
+		if ((conn->flags & (CO_FL_WANT_DRAIN | CO_FL_SOCK_RD_SH)) == CO_FL_WANT_DRAIN)
+			conn_sock_drain(conn);
 		fd_delete(conn->handle.fd);
 		conn->handle.fd = DEAD_FD_MAGIC;
 		conn->flags &= ~CO_FL_CTRL_READY;

@@ -144,7 +144,8 @@ enum {
 	/* unused : 0x00000010 */
 	CO_FL_XPRT_WR_ENA   = 0x00000020,  /* sending data is desired */
 	CO_FL_CURR_WR_ENA   = 0x00000040,  /* sending is currently desired */
-	/* unused : 0x00000080 */
+
+	CO_FL_WANT_DRAIN    = 0x00000080, /* try to drain pending data when closing */
 
 	/* These flags indicate whether the Control and Transport layers are initialized */
 	CO_FL_CTRL_READY    = 0x00000100, /* FD was registered, fd_delete() needed */
