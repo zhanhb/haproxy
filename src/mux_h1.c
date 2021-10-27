@@ -43,7 +43,10 @@
 #define H1C_F_IN_ALLOC       0x00000010 /* mux is blocked on lack of input buffer */
 #define H1C_F_IN_FULL        0x00000020 /* mux is blocked on input buffer full */
 #define H1C_F_IN_BUSY        0x00000040 /* mux is blocked on input waiting the other side */
-/* 0x00000040 - 0x00000400 unused */
+/* 0x00000080 - 0x000002000 unused */
+
+#define H1C_F_ST_SILENT_SHUT 0x00004000 /* silent (or dirty) shutdown must be performed */
+/* 0x000008000 unused */
 
 #define H1C_F_CS_WAIT_CONN   0x00000800 /* waiting for the connection establishment */
 #define H1C_F_CS_ERROR       0x00001000 /* connection must be closed ASAP because an error occurred */
@@ -136,7 +139,7 @@ static int h1_recv(struct h1c *h1c);
 static int h1_send(struct h1c *h1c);
 static int h1_process(struct h1c *h1c);
 static struct task *h1_io_cb(struct task *t, void *ctx, unsigned short state);
-static void h1_shutw_conn(struct connection *conn, enum cs_shw_mode mode);
+static void h1_shutw_conn(struct connection *conn);
 static struct task *h1_timeout_task(struct task *t, void *context, unsigned short state);
 
 /*****************************************************/
@@ -2144,7 +2147,7 @@ static int h1_send(struct h1c *h1c)
 	if (!b_data(&h1c->obuf)) {
 		h1_release_buf(h1c, &h1c->obuf);
 		if (h1c->flags & H1C_F_CS_SHUTW_NOW)
-			h1_shutw_conn(conn, CS_SHW_NORMAL);
+			h1_shutw_conn(conn);
 	}
 	else if (!(h1c->wait_event.events & SUB_RETRY_SEND))
 		conn->xprt->subscribe(conn, conn->xprt_ctx, SUB_RETRY_SEND, &h1c->wait_event);
@@ -2465,13 +2468,15 @@ static void h1_shutw(struct conn_stream *cs, enum cs_shw_mode mode)
 
   do_shutw:
 	h1c->flags |= H1C_F_CS_SHUTW_NOW;
+	if (mode != CS_SHW_NORMAL)
+		h1c->flags |= H1C_F_ST_SILENT_SHUT;
 	if ((cs->flags & CS_FL_SHW) || b_data(&h1c->obuf))
 		return;
 
-	h1_shutw_conn(cs->conn, mode);
+	h1_shutw_conn(cs->conn);
 }
 
-static void h1_shutw_conn(struct connection *conn, enum cs_shw_mode mode)
+static void h1_shutw_conn(struct connection *conn)
 {
 	struct h1c *h1c = conn->ctx;
 
@@ -2479,7 +2484,7 @@ static void h1_shutw_conn(struct connection *conn, enum cs_shw_mode mode)
 		return;
 
 	conn_xprt_shutw(conn);
-	conn_sock_shutw(conn, (mode == CS_SHW_NORMAL));
+	conn_sock_shutw(conn, (h1c && !(h1c->flags & H1C_F_ST_SILENT_SHUT)));
 	h1c->flags = (h1c->flags & ~H1C_F_CS_SHUTW_NOW) | H1C_F_CS_SHUTDOWN;
 }
 
