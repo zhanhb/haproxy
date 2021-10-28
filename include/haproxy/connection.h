@@ -1070,7 +1070,8 @@ static inline int conn_install_mux_fe(struct connection *conn, void *ctx)
  * <ctx>. If the mux protocol is forced, we use it to find the best mux. Returns
  * < 0 on error.
  */
-static inline int conn_install_mux_be(struct connection *conn, void *ctx, struct session *sess)
+static inline int conn_install_mux_be(struct connection *conn, void *ctx, struct session *sess,
+                                      const struct mux_ops *force_mux_ops)
 {
 	struct server *srv = objt_server(conn->target);
 	struct proxy  *prx = objt_proxy(conn->target);
@@ -1082,8 +1083,12 @@ static inline int conn_install_mux_be(struct connection *conn, void *ctx, struct
 	if (!prx) // target must be either proxy or server
 		return -1;
 
-	if (srv && srv->mux_proto)
+	if (srv && srv->mux_proto && likely(!force_mux_ops)) {
 		mux_ops = srv->mux_proto->mux;
+	}
+	else if (srv && unlikely(force_mux_ops)) {
+		mux_ops = force_mux_ops;
+	}
 	else {
 		struct ist mux_proto;
 		const char *alpn_str = NULL;

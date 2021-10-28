@@ -61,7 +61,7 @@ int conn_create_mux(struct connection *conn)
 			if (conn_install_mux_chk(conn, conn->ctx, sess) < 0)
 				goto fail;
 		}
-		else if (conn_install_mux_be(conn, conn->ctx, sess) < 0)
+		else if (conn_install_mux_be(conn, conn->ctx, sess, NULL) < 0)
 			goto fail;
 		srv = objt_server(conn->target);
 
