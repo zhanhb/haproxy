@@ -2127,12 +2127,12 @@ void _dns_unlink_resolution(struct dns_requester *requester)
 		return;
 	res = requester->resolution;
 
-	/* remove ref from the resolution answer item list to the requester */
-	dns_detach_from_resolution_answer_items(res,  requester);
-
 	/* Clean up the requester */
 	LIST_DEL_INIT(&requester->list);
 	requester->resolution = NULL;
+
+	/* remove ref from the resolution answer item list to the requester */
+	dns_detach_from_resolution_answer_items(res,  requester);
 
 	/* We need to find another requester linked on this resolution */
 	if (!LIST_ISEMPTY(&res->requesters))
