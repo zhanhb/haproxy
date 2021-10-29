@@ -4031,8 +4031,11 @@ int http_process_tarpit(struct stream *s, struct channel *req, int an_bit)
 	 */
 	channel_dont_connect(req);
 	if ((req->flags & (CF_SHUTR|CF_READ_ERROR)) == 0 &&
-	    !tick_is_expired(req->analyse_exp, now_ms))
+	    !tick_is_expired(req->analyse_exp, now_ms)) {
+		/* Be sure to drain all data from the request channel */
+		channel_erase(&s->req);
 		return 0;
+	}
 
 	/* We will set the queue timer to the time spent, just for
 	 * logging purposes. We fake a 500 server error, so that the
