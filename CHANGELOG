@@ -1,6 +1,69 @@
 ChangeLog :
 ===========
 
+2021/11/03 : 2.4.8
+    - CLEANUP: server: always include the storage for SSL settings
+    - CLEANUP: sample: rename sample_conv_var2smp() to *_sint
+    - CLEANUP: sample: uninline sample_conv_var2smp_str()
+    - MINOR: sample: provide a generic var-to-sample conversion function
+    - BUG/MEDIUM: sample: properly verify that variables cast to sample
+    - BUG/MEDIUM: mux_h2: Handle others remaining read0 cases on partial frames
+    - DOC: configuration: add clarification on escaping in keyword arguments
+    - MINOR: initcall: Rename __GLOBL and __GLOBL1.
+    - BUG/MINOR: http-ana: Don't eval front after-response rules if stopped on back
+    - BUG/MINOR: sample: Fix 'fix_tag_value' sample when waiting for more data
+    - BUG/MEDIUM: cpuset: fix cpuset size for FreeBSD
+    - BUG/MEDIUM: stream: Keep FLT_END analyzers if a stream detects a channel error
+    - Revert "CLEANUP: server: always include the storage for SSL settings"
+    - BUG/MEDIUM: tcpcheck: Properly catch early HTTP parsing errors
+    - BUG/MAJOR: dns: tcp session can remain attached to a list after a free
+    - BUG/MAJOR: dns: attempt to lock globaly for msg waiter list instead of use barrier
+    - MINOR: resolvers: fix the resolv_str_to_dn_label() API about trailing zero
+    - BUG/MEDIUM: resolver: make sure to always use the correct hostname length
+    - BUG/MINOR: resolvers: do not reject host names of length 255 in SRV records
+    - MINOR: resolvers: fix the resolv_dn_label_to_str() API about trailing zero
+    - BUG/MEDIUM: resolvers: fix truncated TLD consecutive to the API fix
+    - BUG/MEDIUM: resolvers: use correct storage for the target address
+    - MINOR: resolvers: merge address and target into a union "data"
+    - BUG/MAJOR: resolvers: add other missing references during resolution removal
+    - BUILD: resolvers: avoid a possible warning on null-deref
+    - BUG/MEDIUM: resolvers: always check a valid item in query_list
+    - BUG/MAJOR: buf: fix varint API post- vs pre- increment
+    - BUG/MINOR: task: do not set TASK_F_USR1 for no reason
+    - BUG/MINOR: mux-h2: do not prevent from sending a final GOAWAY frame
+    - BUG/MEDIUM: lua: fix memory leaks with realloc() on non-glibc systems
+    - MINOR: memprof: report the delta between alloc and free on realloc()
+    - MINOR: memprof: add one pointer size to the size of allocations
+    - BUILD: fix compilation on NetBSD
+    - BUG/MINOR: backend: fix improper insert in avail tree for always reuse
+    - BUILD: atomic: fix build on mac/arm64
+    - BUG/MINOR: mux-h1: Save shutdown mode if the shutdown is delayed
+    - BUG/MEDIUM: mux-h1: Perform a connection shutdown when the h1c is released
+    - CLEANUP: resolvers: do not export resolv_purge_resolution_answer_records()
+    - CLEANUP: always initialize the answer_list
+    - CLEANUP: resolvers: simplify resolv_link_resolution() regarding requesters
+    - CLEANUP: resolvers: replace all LIST_DELETE with LIST_DEL_INIT
+    - MEDIUM: resolvers: use a kill list to preserve the list consistency
+    - MEDIUM: resolvers: remove the last occurrences of the "safe" argument
+    - BUG/MEDIUM: resolvers: Don't recursively perform requester unlink
+    - BUG/MEDIUM: resolvers: Track api calls with a counter to free resolutions
+    - MINOR: halog: Add -qry parameter allowing to preserve the query string in -uX
+    - DOC: halog: Move the `-qry` parameter into the correct section in help text
+    - MINOR: halog: Rename -qry to -query
+    - CLEANUP: halog: Use consistent indentation in help()
+    - BUG/MINOR: halog: Add missing newlines in die() messages
+    - MINOR: halog: Add support for extracting captures using -hdr
+    - BUG/MEDIUM: http-ana: Drain request data waiting the tarpit timeout expiration
+    - BUG/MINOR: http: Authorization value can have multiple spaces after the scheme
+    - BUG/MEDIUM: stream-int: Block reads if channel cannot receive more data
+    - BUG/MEDIUM: sample: Cumulate frontend and backend sample validity flags
+    - BUG/MINOR: sample: fix backend direction flags consecutive to last fix
+    - DOC: config: Fix alphabetical order of fc_* samples
+    - BUILD/MINOR: cpuset freebsd build fix
+    - MINOR: stream: Improve dump of bogus streams
+    - DOC/peers: some grammar fixes for peers 2.1 spec
+    - SCRIPTS: git-show-backports: re-enable file-based filtering
+
 2021/10/04 : 2.4.7
     - BUG/MEDIUM: http-ana: Clear request analyzers when applying redirect rule
 
