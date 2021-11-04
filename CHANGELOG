@@ -1,6 +1,96 @@
 ChangeLog :
 ===========
 
+2021/11/04 : 2.3.15
+    - MINOR: lua: Add a flag on lua context to know the yield capability at run time
+    - BUG/MINOR: lua: Yield in channel functions only if lua context can yield
+    - BUG/MINOR: lua: Don't yield in channel.append() and channel.set()
+    - BUG/MINOR: stream: Don't release a stream if FLT_END is still registered
+    - BUG/MEDIUM: http-ana: Reset channels analysers when returning an error
+    - BUG/MINOR: filters: Always set FLT_END analyser when CF_FLT_ANALYZE flag is set
+    - BUG/MINOR: filters: Set right FLT_END analyser depending on channel
+    - BUG/MINOR: systemd: ExecStartPre must use -Ws
+    - BUG/MEDIUM: stream-int: Don't block SI on a channel policy if EOI is reached
+    - Revert "REGTESTS: mark http_abortonclose as broken"
+    - BUG/MINOR: compat: make sure __WORDSIZE is always defined
+    - CLEANUP: pools: factor all malloc_trim() calls into trim_all_pools()
+    - MINOR: pools: automatically disable malloc_trim() with external allocators
+    - MINOR: pools: use mallinfo2() when available instead of mallinfo()
+    - BUG/MINOR: tcpcheck: Improve LDAP response parsing to fix LDAP check
+    - DOC: management: certificate files must be sanitized before injection
+    - BUILD: ist: prevent gcc11 maybe-uninitialized warning on istalloc
+    - BUG/MINOR: cli/payload: do not search for args inside payload
+    - BUG/MINOR: server: allow 'enable health' only if check configured
+    - BUG/MINOR: h1-htx: Fix a typo when request parser is reset
+    - BUG/MINOR: http-ana: increment internal_errors counter on response error
+    - BUG/MEDIUM: mux-h1: Adjust conditions to ask more space in the channel buffer
+    - BUG/MEDIUM: stream-int: Notify stream that the mux wants more room to xfer data
+    - BUG/MEDIUM: stream: Stop waiting for more data if SI is blocked on RXBLK_ROOM
+    - BUG/MINOR: mux-h1/mux-fcgi: Sanitize TE header to only send "trailers"
+    - DOC: peers: fix doc "enable" statement on "peers" sections
+    - BUG/MEDIUM: lua: fix wakeup condition from sleep()
+    - BUG/MAJOR: lua: use task_wakeup() to properly run a task once
+    - MINOR: arg: Be able to forbid unresolved args when building an argument list
+    - BUG/MINOR: tcpcheck: Don't use arg list for default proxies during parsing
+    - BUG/MINOR: tcp-rules: Stop content rules eval on read error and end-of-input
+    - MINOR: tasks: catch TICK_ETERNITY with BUG_ON() in __task_queue()
+    - BUG/MEDIUM: filters: Fix a typo when a filter is attached blocking the release
+    - BUG/MEDIUM: http-ana: Clear request analyzers when applying redirect rule
+    - BUG/MEDIUM: leastconn: fix rare possibility of divide by zero
+    - MINOR: htx: Add an HTX flag to know when a message is fragmented
+    - MINOR: htx: Add a function to know if the free space wraps
+    - BUG/MEDIUM: stream-int: Defrag HTX message in si_cs_recv() if necessary
+    - BUG/MEDIUM: mux_h2: Handle others remaining read0 cases on partial frames
+    - MINOR: initcall: Rename __GLOBL and __GLOBL1.
+    - BUG/MINOR: http-ana: Don't eval front after-response rules if stopped on back
+    - BUG/MEDIUM: stream: Keep FLT_END analyzers if a stream detects a channel error
+    - CLEANUP: sample: rename sample_conv_var2smp() to *_sint
+    - CLEANUP: sample: uninline sample_conv_var2smp_str()
+    - MINOR: sample: provide a generic var-to-sample conversion function
+    - BUG/MEDIUM: sample: properly verify that variables cast to sample
+    - BUG/MEDIUM: tcpcheck: Properly catch early HTTP parsing errors
+    - MINOR: resolvers: fix the resolv_str_to_dn_label() API about trailing zero
+    - BUG/MEDIUM: resolver: make sure to always use the correct hostname length
+    - BUG/MINOR: resolvers: do not reject host names of length 255 in SRV records
+    - MINOR: resolvers: fix the resolv_dn_label_to_str() API about trailing zero
+    - BUG/MEDIUM: resolvers: fix truncated TLD consecutive to the API fix
+    - BUG/MEDIUM: resolvers: use correct storage for the target address
+    - MINOR: resolvers: merge address and target into a union "data"
+    - BUG/MAJOR: resolvers: add other missing references during resolution removal
+    - BUILD: resolvers: avoid a possible warning on null-deref
+    - BUG/MEDIUM: resolvers: always check a valid item in query_list
+    - BUG/MAJOR: buf: fix varint API post- vs pre- increment
+    - BUG/MINOR: mux-h2: do not prevent from sending a final GOAWAY frame
+    - BUILD: fix compilation on NetBSD
+    - BUG/MINOR: mux-h1: Save shutdown mode if the shutdown is delayed
+    - BUG/MEDIUM: mux-h1: Perform a connection shutdown when the h1c is released
+    - CLEANUP: resolvers: do not export resolv_purge_resolution_answer_records()
+    - CLEANUP: always initialize the answer_list
+    - CLEANUP: resolvers: simplify resolv_link_resolution() regarding requesters
+    - CLEANUP: resolvers: replace all LIST_DELETE with LIST_DEL_INIT
+    - MEDIUM: resolvers: use a kill list to preserve the list consistency
+    - MEDIUM: resolvers: remove the last occurrences of the "safe" argument
+    - BUG/MEDIUM: resolvers: Don't recursively perform requester unlink
+    - BUG/MEDIUM: resolvers: Track api calls with a counter to free resolutions
+    - BUG/MEDIUM: http-ana: Drain request data waiting the tarpit timeout expiration
+    - BUG/MINOR: http: Authorization value can have multiple spaces after the scheme
+    - BUG/MEDIUM: stream-int: Block reads if channel cannot receive more data
+    - BUG/MINOR: vars: improve accuracy of the rules used to check expression validity
+    - MINOR: sample: add missing ARGC_ entries
+    - BUG/MINOR: vars: properly set the argument parsing context in the expression
+    - BUG/MEDIUM: sample: Cumulate frontend and backend sample validity flags
+    - BUG/MINOR: sample: fix backend direction flags consecutive to last fix
+    - DOC: config: Fix alphabetical order of fc_* samples
+    - MINOR: halog: Add -qry parameter allowing to preserve the query string in -uX
+    - DOC: halog: Move the `-qry` parameter into the correct section in help text
+    - MINOR: halog: Rename -qry to -query
+    - CLEANUP: halog: Use consistent indentation in help()
+    - BUG/MINOR: halog: Add missing newlines in die() messages
+    - MINOR: halog: Add support for extracting captures using -hdr
+    - MINOR: stream: Improve dump of bogus streams
+    - DOC/peers: some grammar fixes for peers 2.1 spec
+    - SCRIPTS: git-show-backports: re-enable file-based filtering
+
 2021/09/07 : 2.3.14
     - BUG/MEDIUM: h2: match absolute-path not path-absolute for :path
     - BUG/MEDIUM: sock: really fix detection of early connection failures in for 2.3-
