@@ -1965,7 +1965,7 @@ int http_process_res_common(struct stream *s, struct channel *rep, int an_bit, s
 		cur_proxy = s->be;
 	while (1) {
 		/* evaluate http-response rules */
-		if (ret == HTTP_RULE_RES_CONT) {
+		if (ret == HTTP_RULE_RES_CONT || ret == HTTP_RULE_RES_STOP) {
 			ret = http_res_get_intercept_rule(cur_proxy, &cur_proxy->http_res_rules, s);
 
 			switch (ret) {
