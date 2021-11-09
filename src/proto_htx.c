@@ -1913,7 +1913,7 @@ int htx_process_res_common(struct stream *s, struct channel *rep, int an_bit, st
 		struct proxy *rule_set = cur_proxy;
 
 		/* evaluate http-response rules */
-		if (ret == HTTP_RULE_RES_CONT) {
+		if (ret == HTTP_RULE_RES_CONT || ret == HTTP_RULE_RES_STOP) {
 			ret = htx_res_get_intercept_rule(cur_proxy, &cur_proxy->http_res_rules, s);
 
 			if (ret == HTTP_RULE_RES_BADREQ)
