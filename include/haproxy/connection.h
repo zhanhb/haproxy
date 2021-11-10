@@ -318,7 +318,6 @@ static inline void cs_close(struct conn_stream *cs)
 {
 	cs_shutw(cs, CS_SHW_SILENT);
 	cs_shutr(cs, CS_SHR_RESET);
-	cs->flags = CS_FL_NONE;
 }
 
 /* completely close a conn_stream after draining possibly pending data (but do not detach it) */
@@ -326,7 +325,6 @@ static inline void cs_drain_and_close(struct conn_stream *cs)
 {
 	cs_shutw(cs, CS_SHW_SILENT);
 	cs_shutr(cs, CS_SHR_DRAIN);
-	cs->flags = CS_FL_NONE;
 }
 
 /* sets CS_FL_ERROR or CS_FL_ERR_PENDING on the cs */
