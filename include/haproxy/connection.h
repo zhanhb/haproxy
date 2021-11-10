@@ -264,7 +264,6 @@ static inline void cs_close(struct conn_stream *cs)
 {
 	cs_shutw(cs, CS_SHW_SILENT);
 	cs_shutr(cs, CS_SHR_RESET);
-	cs->flags = CS_FL_NONE;
 }
 
 /* sets CS_FL_ERROR or CS_FL_ERR_PENDING on the cs */
