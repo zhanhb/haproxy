@@ -65,12 +65,8 @@ static inline void pool_free_area(void *area, size_t __maybe_unused size)
 static inline void *pool_alloc_area(size_t size)
 {
 	size_t pad = (4096 - size) & 0xFF0;
-	int isolated;
 	void *ret;
 
-	isolated = thread_isolated();
-	if (!isolated)
-		thread_harmless_now();
 	ret = mmap(NULL, (size + 4095) & -4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
 	if (ret != MAP_FAILED) {
 		/* let's dereference the page before returning so that the real
@@ -83,8 +79,6 @@ static inline void *pool_alloc_area(size_t size)
 	} else {
 		ret = NULL;
 	}
-	if (!isolated)
-		thread_harmless_end();
 	return ret;
 }
 
@@ -101,9 +95,7 @@ static inline void pool_free_area(void *area, size_t size)
 	if (pad >= sizeof(void *) && *(void **)(area - sizeof(void *)) != area)
 		ABORT_NOW();
 
-	thread_harmless_now();
 	munmap(area - pad, (size + 4095) & -4096);
-	thread_harmless_end();
 }
 
 #endif /* DEBUG_UAF */
