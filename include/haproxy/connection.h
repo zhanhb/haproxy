@@ -242,6 +242,8 @@ static inline void conn_xprt_shutw_hard(struct connection *c)
 /* shut read */
 static inline void cs_shutr(struct conn_stream *cs, enum cs_shr_mode mode)
 {
+	if (cs->flags & CS_FL_SHR)
+		return;
 
 	/* clean data-layer shutdown */
 	if (cs->conn->mux && cs->conn->mux->shutr)
@@ -252,6 +254,8 @@ static inline void cs_shutr(struct conn_stream *cs, enum cs_shr_mode mode)
 /* shut write */
 static inline void cs_shutw(struct conn_stream *cs, enum cs_shw_mode mode)
 {
+	if (cs->flags & CS_FL_SHW)
+		return;
 
 	/* clean data-layer shutdown */
 	if (cs->conn->mux && cs->conn->mux->shutw)
