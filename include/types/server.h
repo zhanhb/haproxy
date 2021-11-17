@@ -295,6 +295,7 @@ struct server {
 			unsigned char *ptr;
 			int size;
 			int allocated_size;
+			char *sni; /* SNI used for the session */
 		} * reused_sess;
 		char *ciphers;			/* cipher suite to use if non-null */
 #if (HA_OPENSSL_VERSION_NUMBER >= 0x10101000L && !defined OPENSSL_IS_BORINGSSL && !defined LIBRESSL_VERSION_NUMBER)
