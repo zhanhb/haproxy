@@ -1404,8 +1404,10 @@ static int cli_io_handler_commit_cert(struct appctx *appctx)
 						ckchi->server->ssl_ctx.inst = ckchi;
 
 						/* flush the session cache of the server */
-						for (i = 0; i < global.nbthread; i++)
-							ha_free(&ckchi->server->ssl_ctx.reused_sess[i].ptr);
+						for (i = 0; i < global.nbthread; i++) {
+							ha_free(&ckchi->server->ssl_ctx.reused_sess[tid].ptr);
+							ha_free(&ckchi->server->ssl_ctx.reused_sess[i].sni);
+						}
 
 						HA_RWLOCK_WRUNLOCK(SSL_SERVER_LOCK, &ckchi->server->ssl_ctx.lock);
 
