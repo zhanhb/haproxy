@@ -3981,8 +3981,10 @@ static int ssl_sess_new_srv_cb(SSL *ssl, SSL_SESSION *sess)
 	if (!(s->ssl_ctx.options & SRV_SSL_O_NO_REUSE)) {
 		int len;
 		unsigned char *ptr;
+		const char *sni;
 
 		len = i2d_SSL_SESSION(sess, NULL);
+		sni = SSL_get_servername(ssl, TLSEXT_NAMETYPE_host_name);
 		if (s->ssl_ctx.reused_sess[tid].ptr && s->ssl_ctx.reused_sess[tid].allocated_size >= len) {
 			ptr = s->ssl_ctx.reused_sess[tid].ptr;
 		} else {
@@ -3993,6 +3995,19 @@ static int ssl_sess_new_srv_cb(SSL *ssl, SSL_SESSION *sess)
 		if (s->ssl_ctx.reused_sess[tid].ptr) {
 			s->ssl_ctx.reused_sess[tid].size = i2d_SSL_SESSION(sess,
 			    &ptr);
+		}
+
+		if (s->ssl_ctx.reused_sess[tid].sni) {
+			/* if the new sni is empty or isn' t the same as the old one */
+			if ((!sni) || strcmp(s->ssl_ctx.reused_sess[tid].sni, sni) != 0) {
+				free(s->ssl_ctx.reused_sess[tid].sni);
+				s->ssl_ctx.reused_sess[tid].sni = NULL;
+				if (sni)
+					s->ssl_ctx.reused_sess[tid].sni = strdup(sni);
+			}
+		} else if (sni) {
+			/* if there wasn't an old sni but there is a new one */
+			s->ssl_ctx.reused_sess[tid].sni = strdup(sni);
 		}
 	} else {
 		free(s->ssl_ctx.reused_sess[tid].ptr);
@@ -4977,8 +4992,10 @@ void ssl_sock_free_srv_ctx(struct server *srv)
 	if (srv->ssl_ctx.reused_sess) {
 		int i;
 
-		for (i = 0; i < global.nbthread; i++)
+		for (i = 0; i < global.nbthread; i++) {
 			free(srv->ssl_ctx.reused_sess[i].ptr);
+			free(srv->ssl_ctx.reused_sess[i].sni);
+		}
 		free(srv->ssl_ctx.reused_sess);
 	}
 
@@ -6252,19 +6269,21 @@ void ssl_sock_set_servername(struct connection *conn, const char *hostname)
 {
 #ifdef SSL_CTRL_SET_TLSEXT_HOSTNAME
 	struct ssl_sock_ctx *ctx;
-
+	struct server *s;
 	char *prev_name;
 
 	if (!ssl_sock_is_ssl(conn))
 		return;
 	ctx = conn->xprt_ctx;
+	s = __objt_server(conn->target);
 
 	/* if the SNI changes, we must destroy the reusable context so that a
-	 * new connection will present a new SNI. As an optimization we could
-	 * later imagine having a small cache of ssl_ctx to hold a few SNI per
-	 * server.
-	 */
-	prev_name = (char *)SSL_get_servername(ctx->ssl, TLSEXT_NAMETYPE_host_name);
+	 * new connection will present a new SNI. compare with the SNI
+	 * previously stored in the reused_sess */
+	/* the RWLOCK is used to ensure that we are not trying to flush the
+	 * cache from the CLI */
+
+	prev_name = s->ssl_ctx.reused_sess[tid].sni;
 	if ((!prev_name && hostname) ||
 	    (prev_name && (!hostname || strcmp(hostname, prev_name) != 0)))
 		SSL_set_session(ctx->ssl, NULL);
