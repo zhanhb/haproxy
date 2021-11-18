@@ -2429,16 +2429,11 @@ static int ssl_sock_switchctx_cbk(SSL *ssl, int *al, void *arg)
 	if (!s->strict_sni) {
 		/* no certificate match, is the default_ctx */
 		ssl_sock_switchctx_set(ssl, s->default_ctx);
+		goto allow_early;
 	}
-allow_early:
-#ifdef OPENSSL_IS_BORINGSSL
-	if (allow_early)
-		SSL_set_early_data_enabled(ssl, 1);
-#else
-	if (!allow_early)
-		SSL_set_max_early_data(ssl, 0);
-#endif
-	return 1;
+
+	/* other cases fallback on abort, if strict-sni is set but no node was found */
+
  abort:
 	/* abort handshake (was SSL_TLSEXT_ERR_ALERT_FATAL) */
 	conn->err_code = CO_ER_SSL_HANDSHAKE;
@@ -2448,6 +2443,16 @@ allow_early:
 	*al = SSL_AD_UNRECOGNIZED_NAME;
 	return 0;
 #endif
+
+allow_early:
+#ifdef OPENSSL_IS_BORINGSSL
+	if (allow_early)
+		SSL_set_early_data_enabled(ssl, 1);
+#else
+	if (!allow_early)
+		SSL_set_max_early_data(ssl, 0);
+#endif
+	return 1;
 }
 
 #else /* OPENSSL_IS_BORINGSSL */
