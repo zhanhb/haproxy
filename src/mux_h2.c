@@ -2911,7 +2911,7 @@ static int h2_recv(struct h2c *h2c)
 	}
 
 	if (h2c->flags & H2_CF_RCVD_SHUT)
-		return 0;
+		return 1;
 
 	do {
 		b_realign_if_empty(buf);
