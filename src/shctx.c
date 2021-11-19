@@ -72,6 +72,7 @@ struct shared_block *shctx_row_reserve_hot(struct shared_context *shctx, int dat
 				ret->block_count = freed;
 				ret->refcount = 1;
 				enough = 1;
+				break;
 			}
 
 			count++;
