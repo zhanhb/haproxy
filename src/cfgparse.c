@@ -2831,6 +2831,16 @@ int check_config_validity()
 		cfgerr += check_action_rules(&curproxy->http_req_rules, curproxy, &err_code);
 		cfgerr += check_action_rules(&curproxy->http_res_rules, curproxy, &err_code);
 
+		/* move any "block" rules at the beginning of the http-request rules */
+		if (!LIST_ISEMPTY(&curproxy->block_rules)) {
+			/* insert block_rules into http_req_rules at the beginning */
+			curproxy->block_rules.p->n    = curproxy->http_req_rules.n;
+			curproxy->http_req_rules.n->p = curproxy->block_rules.p;
+			curproxy->block_rules.n->p    = &curproxy->http_req_rules;
+			curproxy->http_req_rules.n    = curproxy->block_rules.n;
+			LIST_INIT(&curproxy->block_rules);
+		}
+
 		if (curproxy->table && curproxy->table->peers.name) {
 			struct peers *curpeers;
 
