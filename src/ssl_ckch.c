@@ -1405,7 +1405,7 @@ static int cli_io_handler_commit_cert(struct appctx *appctx)
 
 						/* flush the session cache of the server */
 						for (i = 0; i < global.nbthread; i++) {
-							ha_free(&ckchi->server->ssl_ctx.reused_sess[tid].ptr);
+							ha_free(&ckchi->server->ssl_ctx.reused_sess[i].ptr);
 							ha_free(&ckchi->server->ssl_ctx.reused_sess[i].sni);
 						}
 
