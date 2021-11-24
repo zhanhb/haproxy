@@ -1,6 +1,44 @@
 ChangeLog :
 ===========
 
+2021/11/24 : 2.4.9
+    - MINOR: connection: add a new CO_FL_WANT_DRAIN flag to force drain on close
+    - MINOR: mux-h2: perform a full cycle shutdown+drain on close
+    - MINOR: mux-h2: add trace on extended connect usage
+    - BUG/MEDIUM: mux-h2: reject upgrade if no RFC8441 support
+    - BUG/MINOR: resolvers: fix sent messages were counted twice
+    - BUG/MINOR: resolvers: throw log message if trash not large enough for query
+    - BUG/MINOR: cache: properly ignore unparsable max-age in quotes
+    - DOC: config: Fix typo in ssl_fc_unique_id description
+    - BUG/MINOR: http-ana: Apply stop to the current section for http-response rules
+    - Revert "BUG/MINOR: http-ana: Don't eval front after-response rules if stopped on back"
+    - DOC: lua: Be explicit with the Reply object limits
+    - MINOR: mux-h1: Slightly Improve H1 traces
+    - BUG/MEDIUM: conn-stream: Don't reset CS flags on close
+    - BUG/MINOR: mworker: doesn't launch the program postparser
+    - BUG/MINOR: mux-h2: Fix H2_CF_DEM_SHORT_READ value
+    - BUG/MEDIUM: connection: make cs_shutr/cs_shutw//cs_close() idempotent
+    - BUG/MINOR: stick-table/cli: Check for invalid ipv6 key
+    - BUG/MEDIUM: mux-h1: Handle delayed silent shut in h1_process() to release H1C
+    - BUILD: makefile: simplify detection of libatomic
+    - BUG/MEDIUM: ssl: backend TLS resumption with sni and TLSv1.3
+    - BUG/MINOR: ssl: free correctly the sni in the backend SSL cache
+    - CLEANUP: ssl: fix wrong #else commentary
+    - BUG/MEDIUM: ssl: abort with the correct SSL error when SNI not found
+    - BUG/MEDIUM: mux-h2: always process a pending shut read
+    - BUG/MEDIUM: cache/cli: make "show cache" thread-safe
+    - BUG/MEDIUM: shctx: leave the block allocator when enough blocks are found
+    - BUG/MINOR: shctx: do not look for available blocks when the first one is enough
+    - MINOR: shctx: add a few BUG_ON() for consistency checks
+    - BUG/MINOR: ssl: make SSL counters atomic
+    - MINOR: stream/mux: implement websocket stream flag
+    - MINOR: connection: implement function to update ALPN
+    - MINOR: connection: add alternative mux_ops param for conn_install_mux_be
+    - MEDIUM: server/backend: implement websocket protocol selection
+    - MINOR: server: add ws keyword
+    - MINOR: promex: backend aggregated server check status
+    - BUG/MINOR: cache: Fix loop on cache entries in "show cache"
+
 2021/11/03 : 2.4.8
     - CLEANUP: server: always include the storage for SSL settings
     - CLEANUP: sample: rename sample_conv_var2smp() to *_sint
