@@ -1,6 +1,26 @@
 ChangeLog :
 ===========
 
+2021/11/24 : 2.3.16
+    - BUG/MEDIUM: mux-h1: Fix H1C_F_ST_SILENT_SHUT value
+    - BUG/MEDIUM: ssl: backend TLS resumption with sni and TLSv1.3
+    - DOC: config: Fix typo in ssl_fc_unique_id description
+    - BUG/MINOR: http-ana: Apply stop to the current section for http-response rules
+    - Revert "BUG/MINOR: http-ana: Don't eval front after-response rules if stopped on back"
+    - DOC: lua: Be explicit with the Reply object limits
+    - BUG/MEDIUM: conn-stream: Don't reset CS flags on close
+    - BUG/MINOR: mworker: doesn't launch the program postparser
+    - BUG/MINOR: mux-h2: Fix H2_CF_DEM_SHORT_READ value
+    - BUG/MEDIUM: connection: make cs_shutr/cs_shutw//cs_close() idempotent
+    - BUG/MINOR: stick-table/cli: Check for invalid ipv6 key
+    - MINOR: connection: add a new CO_FL_WANT_DRAIN flag to force drain on close
+    - MINOR: mux-h2: perform a full cycle shutdown+drain on close
+    - BUG/MEDIUM: ssl: abort with the correct SSL error when SNI not found
+    - BUG/MEDIUM: mux-h2: always process a pending shut read
+    - BUG/MEDIUM: shctx: leave the block allocator when enough blocks are found
+    - BUG/MINOR: shctx: do not look for available blocks when the first one is enough
+    - MINOR: shctx: add a few BUG_ON() for consistency checks
+
 2021/11/04 : 2.3.15
     - MINOR: lua: Add a flag on lua context to know the yield capability at run time
     - BUG/MINOR: lua: Yield in channel functions only if lua context can yield
