@@ -204,7 +204,33 @@ void srv_set_dyncookie(struct server *s)
  */
 int srv_check_reuse_ws(struct server *srv)
 {
-	if (srv->mux_proto || srv->use_ssl != 1 || !srv->ssl_ctx.alpn_str) {
+#if defined(USE_OPENSSL) && defined(TLSEXT_TYPE_application_layer_protocol_negotiation)
+	if (!srv->mux_proto && srv->use_ssl && srv->ssl_ctx.alpn_str) {
+		/* ALPN selection.
+		 * Based on the assumption that only "h2" and "http/1.1" token
+		 * are used on server ALPN.
+		 */
+		const struct ist alpn = ist2(srv->ssl_ctx.alpn_str,
+		                             srv->ssl_ctx.alpn_len);
+
+		switch (srv->ws) {
+		case SRV_WS_AUTO:
+			/* for auto mode, consider reuse as possible if the
+			 * server uses a single protocol ALPN
+			 */
+			if (!istchr(alpn, ','))
+				return 1;
+			break;
+
+		case SRV_WS_H2:
+			return isteq(alpn, ist("\x02h2"));
+
+		case SRV_WS_H1:
+			return isteq(alpn, ist("\x08http/1.1"));
+		}
+	}
+	else {
+#endif /* defined(OPENSSL) && defined(TLSEXT_TYPE_application_layer_protocol_negotiation) */
 		/* explicit srv.mux_proto or no ALPN : srv.mux_proto is used
 		 * for mux selection.
 		 */
@@ -232,31 +258,9 @@ int srv_check_reuse_ws(struct server *srv)
 				return 1;
 			break;
 		}
+#if defined(USE_OPENSSL) && defined(TLSEXT_TYPE_application_layer_protocol_negotiation)
 	}
-	else {
-		/* ALPN selection.
-		 * Based on the assumption that only "h2" and "http/1.1" token
-		 * are used on server ALPN.
-		 */
-		const struct ist alpn = ist2(srv->ssl_ctx.alpn_str,
-		                             srv->ssl_ctx.alpn_len);
-
-		switch (srv->ws) {
-		case SRV_WS_AUTO:
-			/* for auto mode, consider reuse as possible if the
-			 * server uses a single protocol ALPN
-			 */
-			if (!istchr(alpn, ','))
-				return 1;
-			break;
-
-		case SRV_WS_H2:
-			return isteq(alpn, ist("\x02h2"));
-
-		case SRV_WS_H1:
-			return isteq(alpn, ist("\x08http/1.1"));
-		}
-	}
+#endif /* defined(OPENSSL) && defined(TLSEXT_TYPE_application_layer_protocol_negotiation) */
 
 	return 0;
 }
