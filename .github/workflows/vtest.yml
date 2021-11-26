@@ -81,6 +81,9 @@ jobs:
       run: make -C contrib/wurfl
     - name: Compile HAProxy with ${{ matrix.CC }}
       run: |
+        echo "::group::Show platform specific defines"
+        echo | ${{ matrix.CC }} -dM -xc -E -
+        echo "::endgroup::"
         make -j$(nproc) all \
           ERR=1 \
           TARGET=${{ matrix.TARGET }} \
