@@ -698,7 +698,6 @@ static void mworker_reexec()
 	int i = 0;
 	char *msg = NULL;
 	struct rlimit limit;
-	struct per_thread_deinit_fct *ptdf;
 
 	mworker_block_signals();
 #if defined(USE_SYSTEMD)
@@ -719,11 +718,9 @@ static void mworker_reexec()
 	/* close the listeners FD */
 	mworker_cli_proxy_stop();
 
-	/* close the poller FD and the thread waker pipe FD */
-	list_for_each_entry(ptdf, &per_thread_deinit_list, list)
-		ptdf->fct();
 	if (fdtab)
 		deinit_pollers();
+
 #ifdef HAVE_SSL_RAND_KEEP_RANDOM_DEVICES_OPEN
 	/* close random device FDs */
 	RAND_keep_random_devices_open(0);
@@ -801,8 +798,13 @@ static void mworker_reexec_waitmode()
 void mworker_reload()
 {
 	struct mworker_proc *child;
+	struct per_thread_deinit_fct *ptdf;
 
 	ha_notice("Reloading HAProxy\n");
+
+	/* close the poller FD and the thread waker pipe FD */
+	list_for_each_entry(ptdf, &per_thread_deinit_list, list)
+		ptdf->fct();
 
 	/* increment the number of reloads */
 	list_for_each_entry(child, &proc_list, list) {
