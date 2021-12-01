@@ -3786,10 +3786,9 @@ int cfg_parse_log_forward(const char *file, int linenum, char **args, int kwm)
 			goto out;
 		}
 
+		init_new_proxy(px);
 		px->next = cfg_log_forward;
 		cfg_log_forward = px;
-
-		init_new_proxy(px);
 		px->conf.file = strdup(file);
 		px->conf.line = linenum;
 		px->mode = PR_MODE_SYSLOG;
