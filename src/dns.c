@@ -1536,6 +1536,8 @@ static int dns_validate_dns_response(unsigned char *resp, unsigned char *bufend,
 	cause = DNS_RESP_INVALID;
 
  return_error:
+	if (dns_query)
+		LIST_DEL_INIT(&dns_query->list);
 	pool_free(dns_answer_item_pool, dns_answer_record);
 	return cause;
 }
