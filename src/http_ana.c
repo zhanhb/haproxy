@@ -1506,7 +1506,7 @@ int http_wait_for_response(struct stream *s, struct channel *rep, int an_bit)
 			struct connection *conn = NULL;
 
 			if (objt_cs(s->si[1].end))
-				conn = objt_cs(s->si[1].end)->conn;
+				conn = __objt_cs(s->si[1].end)->conn;
 
 			if (si_b->flags & SI_FL_L7_RETRY &&
 			    (!conn || conn->err_code != CO_ER_SSL_EARLY_FAILED)) {
@@ -2037,13 +2037,13 @@ int http_process_res_common(struct stream *s, struct channel *rep, int an_bit, s
 		 * requests and this one isn't. Note that servers which don't have cookies
 		 * (eg: some backup servers) will return a full cookie removal request.
 		 */
-		if (!objt_server(s->target)->cookie) {
+		if (!__objt_server(s->target)->cookie) {
 			chunk_printf(&trash,
 				     "%s=; Expires=Thu, 01-Jan-1970 00:00:01 GMT; path=/",
 				     s->be->cookie_name);
 		}
 		else {
-			chunk_printf(&trash, "%s=%s", s->be->cookie_name, objt_server(s->target)->cookie);
+			chunk_printf(&trash, "%s=%s", s->be->cookie_name, __objt_server(s->target)->cookie);
 
 			if (s->be->cookie_maxidle || s->be->cookie_maxlife) {
 				/* emit last_date, which is mandatory */
@@ -2116,10 +2116,10 @@ int http_process_res_common(struct stream *s, struct channel *rep, int an_bit, s
 		 * the 'checkcache' option, and send an alert.
 		 */
 		ha_alert("Blocking cacheable cookie in response from instance %s, server %s.\n",
-			 s->be->id, objt_server(s->target) ? objt_server(s->target)->id : "<dispatch>");
+			 s->be->id, objt_server(s->target) ? __objt_server(s->target)->id : "<dispatch>");
 		send_log(s->be, LOG_ALERT,
 			 "Blocking cacheable cookie in response from instance %s, server %s.\n",
-			 s->be->id, objt_server(s->target) ? objt_server(s->target)->id : "<dispatch>");
+			 s->be->id, objt_server(s->target) ? __objt_server(s->target)->id : "<dispatch>");
 		goto deny;
 	}
 
@@ -5009,8 +5009,8 @@ static void http_debug_stline(const char *dir, struct stream *s, const struct ht
 
         chunk_printf(&trash, "%08x:%s.%s[%04x:%04x]: ", s->uniq_id, s->be->id,
                      dir,
-                     objt_conn(sess->origin) ? (unsigned short)objt_conn(sess->origin)->handle.fd : -1,
-                     objt_cs(s->si[1].end) ? (unsigned short)objt_cs(s->si[1].end)->conn->handle.fd : -1);
+                     objt_conn(sess->origin) ? (unsigned short)__objt_conn(sess->origin)->handle.fd : -1,
+                     objt_cs(s->si[1].end) ? (unsigned short)__objt_cs(s->si[1].end)->conn->handle.fd : -1);
 
         max = HTX_SL_P1_LEN(sl);
         UBOUND(max, trash.size - trash.data - 3);
@@ -5040,8 +5040,8 @@ static void http_debug_hdr(const char *dir, struct stream *s, const struct ist n
 
         chunk_printf(&trash, "%08x:%s.%s[%04x:%04x]: ", s->uniq_id, s->be->id,
                      dir,
-                     objt_conn(sess->origin) ? (unsigned short)objt_conn(sess->origin)->handle.fd : -1,
-                     objt_cs(s->si[1].end) ? (unsigned short)objt_cs(s->si[1].end)->conn->handle.fd : -1);
+                     objt_conn(sess->origin) ? (unsigned short)__objt_conn(sess->origin)->handle.fd : -1,
+                     objt_cs(s->si[1].end) ? (unsigned short)__objt_cs(s->si[1].end)->conn->handle.fd : -1);
 
         max = n.len;
         UBOUND(max, trash.size - trash.data - 3);
