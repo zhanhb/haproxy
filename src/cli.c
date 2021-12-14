@@ -1586,6 +1586,13 @@ static int cli_parse_expert_mode(char **args, char *payload, struct appctx *appc
 	return 1;
 }
 
+/* shows HAProxy version */
+static int cli_parse_show_version(char **args, char *payload, struct appctx *appctx, void *private)
+{
+	char *msg = NULL;
+
+	return cli_dynmsg(appctx, LOG_INFO, memprintf(&msg, "%s\n", haproxy_version));
+}
 
 int cli_parse_default(char **args, char *payload, struct appctx *appctx, void *private)
 {
@@ -2818,6 +2825,7 @@ static struct cli_kw_list cli_kws = {{ },{
 	{ { "show", "cli", "level", NULL },    "show cli level   : display the level of the current CLI session", cli_parse_show_lvl, NULL, NULL, NULL, ACCESS_MASTER},
 	{ { "show", "fd", NULL }, "show fd [num] : dump list of file descriptors in use", cli_parse_show_fd, cli_io_handler_show_fd, NULL },
 	{ { "show", "activity", NULL }, "show activity : show per-thread activity stats (for support/developers)", cli_parse_default, cli_io_handler_show_activity, NULL },
+	{ { "show", "version", NULL },  "show version  : show version of the current process", cli_parse_show_version, NULL, NULL, NULL, ACCESS_MASTER },
 	{ { "operator", NULL },  "operator       : lower the level of the current CLI session to operator", cli_parse_set_lvl, NULL, NULL, NULL, ACCESS_MASTER},
 	{ { "user", NULL },      "user           : lower the level of the current CLI session to user", cli_parse_set_lvl, NULL, NULL, NULL, ACCESS_MASTER},
 	{ { "_getsocks", NULL }, NULL,  _getsocks, NULL },
