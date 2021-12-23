@@ -43,11 +43,24 @@ static int mem_fail_rate = 0;
 #if defined(HA_HAVE_MALLOC_TRIM)
 static int using_libc_allocator = 0;
 
-/* ask the allocator to trim memory pools */
+/* ask the allocator to trim memory pools.
+ * This must run under thread isolation so that competing threads trying to
+ * allocate or release memory do not prevent the allocator from completing
+ * its job. We just have to be careful as callers might already be isolated
+ * themselves.
+ */
 static void trim_all_pools(void)
 {
+	int isolated = thread_isolated();
+
+	if (!isolated)
+		thread_isolate();
+
 	if (using_libc_allocator)
 		malloc_trim(0);
+
+	if (!isolated)
+		thread_release();
 }
 
 /* check if we're using the same allocator as the one that provides
