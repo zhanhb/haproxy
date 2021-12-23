@@ -6581,6 +6581,10 @@ void ssl_sock_set_servername(struct connection *conn, const char *hostname)
 
 	if (!conn_is_ssl(conn))
 		return;
+
+	BUG_ON(!(conn->flags & CO_FL_WAIT_L6_CONN));
+	BUG_ON(!(conn->flags & CO_FL_SSL_WAIT_HS));
+
 	ctx = conn->xprt_ctx;
 	s = __objt_server(conn->target);
 
