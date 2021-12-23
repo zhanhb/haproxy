@@ -1,6 +1,27 @@
 ChangeLog :
 ===========
 
+2021/12/23 : 2.4.10
+    - BUILD/MINOR: server: fix compilation without SSL
+    - BUG/MEDIUM: cli: Properly set stream analyzers to process one command at a time
+    - BUG/MINOR: server: Don't rely on last default-server to init server SSL context
+    - BUG/MEDIUM: resolvers: Detach query item on response error
+    - BUG/MAJOR: segfault using multiple log forward sections.
+    - MINOR: mux-h1: Improve H1 traces by adding info about http parsers
+    - BUILD: bug: Fix error when compiling with -DDEBUG_STRICT_NOCRASH
+    - CI: Github Actions: temporarily disable BoringSSL builds
+    - MINOR: cli: "show version" displays the current process version
+    - BUILD: tree-wide: avoid warnings caused by redundant checks of obj_types
+    - IMPORT: slz: use the correct CRC32 instruction when running in 32-bit mode
+    - BUG/MINOR: cli/server: Don't crash when a server is added with a custom id
+    - DOC: spoe: Clarify use of the event directive in spoe-message section
+    - DOC: config: Specify %Ta is only available in HTTP mode
+    - DOC: config: retry-on list is space-delimited
+    - BUG/MEDIUM: mworker/cli: crash when trying to access an old PID in prompt mode
+    - MINOR: pools: work around possibly slow malloc_trim() during gc
+    - BUG/MINOR: backend: do not set sni on connection reuse
+    - BUG/MINOR: backend: restore the SF_SRV_REUSED flag original purpose
+
 2021/11/24 : 2.4.9
     - MINOR: connection: add a new CO_FL_WANT_DRAIN flag to force drain on close
     - MINOR: mux-h2: perform a full cycle shutdown+drain on close
