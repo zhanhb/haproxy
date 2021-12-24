@@ -24,6 +24,7 @@
 
 #include <haproxy/action-t.h>
 #include <haproxy/api.h>
+#include <haproxy/connection.h>
 #include <haproxy/fd.h>
 #include <haproxy/freq_ctr.h>
 #include <haproxy/obj_type.h>
@@ -341,6 +342,7 @@ static inline void stream_choose_redispatch(struct stream *s)
 		if (may_dequeue_tasks(objt_server(s->target), s->be))
 			process_srv_queue(objt_server(s->target), 0);
 
+		sockaddr_free(&s->target_addr);
 		s->flags &= ~(SF_DIRECT | SF_ASSIGNED | SF_ADDR_SET);
 		si->state = SI_ST_REQ;
 	} else {
