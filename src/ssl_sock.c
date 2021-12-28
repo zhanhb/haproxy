@@ -4669,7 +4669,7 @@ int ssl_sock_prepare_srv_ctx(struct server *srv)
 {
 	struct proxy *curproxy = srv->proxy;
 	int cfgerr = 0;
-	SSL_CTX *ctx = srv->ssl_ctx.ctx;
+	SSL_CTX *ctx;
 
 	/* Make sure openssl opens /dev/urandom before the chroot */
 	if (!ssl_initialize_random()) {
@@ -4692,6 +4692,26 @@ int ssl_sock_prepare_srv_ctx(struct server *srv)
 	}
 	if (srv->use_ssl == 1)
 		srv->xprt = &ssl_sock;
+
+	if (srv->ssl_ctx.client_crt) {
+		char *err = NULL;
+		int err_code = 0;
+
+		/* If there is a crt keyword there, the SSL_CTX will be created here. */
+		err_code = ssl_sock_load_srv_cert(srv->ssl_ctx.client_crt, srv, &err);
+		if (err_code != ERR_NONE) {
+			if ((err_code & ERR_WARN) && !(err_code & ERR_ALERT))
+				ha_warning("%s", err);
+			else
+				ha_alert("%s", err);
+
+			if (err_code & (ERR_FATAL|ERR_ABORT))
+				cfgerr++;
+		}
+		ha_free(&err);
+	}
+
+	ctx = srv->ssl_ctx.ctx;
 
 	/* The context will be uninitialized if there wasn't any "cert" option
 	 * in the server line. */
