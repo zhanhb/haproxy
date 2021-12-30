@@ -5069,20 +5069,17 @@ int ssl_sock_prepare_bind_conf(struct bind_conf *bind_conf)
 	return -err;
 }
 
-/* release ssl context allocated for servers. */
+/* release ssl context allocated for servers.  Most of the field free here
+ * must also be allocated in srv_ssl_settings_cpy() */
 void ssl_sock_free_srv_ctx(struct server *srv)
 {
 #ifdef TLSEXT_TYPE_application_layer_protocol_negotiation
-	if (srv->ssl_ctx.alpn_str) {
-		free(srv->ssl_ctx.alpn_str);
-		srv->ssl_ctx.alpn_str = NULL;
-	}
+	free(srv->ssl_ctx.alpn_str);
+	srv->ssl_ctx.alpn_str = NULL;
 #endif
 #ifdef OPENSSL_NPN_NEGOTIATED
-	if (srv->ssl_ctx.npn_str) {
-		free(srv->ssl_ctx.npn_str);
-		srv->ssl_ctx.npn_str = NULL;
-	}
+	free(srv->ssl_ctx.npn_str);
+	srv->ssl_ctx.npn_str = NULL;
 #endif
 	if (srv->ssl_ctx.reused_sess) {
 		int i;
@@ -5101,6 +5098,25 @@ void ssl_sock_free_srv_ctx(struct server *srv)
 		SSL_CTX_free(srv->ssl_ctx.ctx);
 		srv->ssl_ctx.ctx = NULL;
 	}
+
+	free(srv->ssl_ctx.ca_file);
+	srv->ssl_ctx.ca_file = NULL;
+	free(srv->ssl_ctx.crl_file);
+	srv->ssl_ctx.crl_file = NULL;
+	free(srv->ssl_ctx.client_crt);
+	srv->ssl_ctx.client_crt = NULL;
+	free(srv->ssl_ctx.verify_host);
+	srv->ssl_ctx.verify_host = NULL;
+#ifdef SSL_CTRL_SET_TLSEXT_HOSTNAME
+	free(srv->sni_expr);
+	srv->sni_expr = NULL;
+#endif
+	free(srv->ssl_ctx.ciphers);
+	srv->ssl_ctx.ciphers = NULL;
+#ifdef HAVE_SSL_CTX_SET_CIPHERSUITES
+	free(srv->ssl_ctx.ciphersuites);
+	srv->ssl_ctx.ciphersuites = NULL;
+#endif
 }
 
 /* Walks down the two trees in bind_conf and frees all the certs. The pointer may
