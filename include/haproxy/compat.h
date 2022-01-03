@@ -306,9 +306,10 @@ typedef struct { } empty_t;
 #endif
 
 /* Max number of file descriptors we send in one sendmsg(). Linux seems to be
- * able to send 253 fds per sendmsg(), not sure about the other OSes.
+ * able to send 253 fds per sendmsg(), however musl is limited to 252, not sure
+ * about the other OSes.
  */
-#define MAX_SEND_FD 253
+#define MAX_SEND_FD 252
 
 /* Make the new complex name for the xxhash function easier to remember
  * and use.
