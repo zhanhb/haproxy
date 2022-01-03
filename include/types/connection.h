@@ -504,12 +504,11 @@ struct tlv_ssl {
 #define PP2_CLIENT_CERT_SESS     0x04
 
 
-/*
- * Linux seems to be able to send 253 fds per sendmsg(), not sure
+/* Max number of file descriptors we send in one sendmsg(). Linux seems to be
+ * able to send 253 fds per sendmsg(), however musl is limited to 252, not sure
  * about the other OSes.
  */
-/* Max number of file descriptors we send in one sendmsg() */
-#define MAX_SEND_FD 253
+#define MAX_SEND_FD 252
 
 #endif /* _TYPES_CONNECTION_H */
 
