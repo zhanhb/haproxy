@@ -7346,7 +7346,7 @@ void ssl_sock_set_srv(struct server *s, signed char use_ssl)
 	if (s->use_ssl == 1)
 		s->xprt = &ssl_sock;
 	else
-		s->xprt = s->check.xprt = s->agent.xprt = xprt_get(XPRT_RAW);
+		s->xprt = xprt_get(XPRT_RAW);
 }
 
 /*
