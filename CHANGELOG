@@ -1,6 +1,10 @@
 ChangeLog :
 ===========
 
+2022/01/11 : 2.4.12
+    - BUG/MEDIUM: mworker: don't use _getsocks in wait mode
+    - BUG/MAJOR: mux-h1: Don't decrement .curr_len for unsent data
+
 2022/01/07 : 2.4.11
     - BUG/MEDIUM: backend: fix possible sockaddr leak on redispatch
     - BUG/MINOR: pools: don't mark ourselves as harmless in DEBUG_UAF mode
