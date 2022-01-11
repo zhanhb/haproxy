@@ -1,6 +1,59 @@
 ChangeLog :
 ===========
 
+2022/01/11 : 2.3.17
+    - BUG/MEDIUM: cli: Properly set stream analyzers to process one command at a time
+    - BUG/MEDIUM: resolvers: Detach query item on response error
+    - BUG/MAJOR: segfault using multiple log forward sections.
+    - DOC: configuration: issuers-chain-path only applies to bind lines
+    - CI: Expand use of GitHub Actions for CI
+    - CI: Stop hijacking the hosts file
+    - CI: Make the h2spec workflow more consistent with the VTest workflow
+    - CI: Github Actions: enable prometheus exporter
+    - CI: Github Actions: remove LibreSSL-3.0.2 builds
+    - CI: Github Actions: enable BoringSSL builds
+    - CI: Github Action: run "apt-get update" before packages restore
+    - CI: Pass the github.event_name to matrix.py
+    - CI: Clean up Windows CI
+    - CI: Set DEBUG=-DDEBUG_STRICT=1 in GitHub Actions
+    - CI: github actions: update LibreSSL to 3.3.0
+    - CI: github actions: enable 51degrees feature
+    - CI: GitHub Actions: enable daily Coverity scan
+    - CI: github actions: build several popular "contrib" tools
+    - CI: Pin VTest to a known good commit
+    - CI: Fix DEBUG_STRICT definition for Coverity
+    - CI: Fix the coverity builds
+    - CI: github actions: switch to stable LibreSSL release
+    - Revert "CI: Pin VTest to a known good commit"
+    - CI: github actions: update LibreSSL to 3.2.5
+    - CI: Github Actions: switch to LibreSSL-3.3.3
+    - CI: Github Actions: temporarily disable BoringSSL builds
+    - MEDIUM: task: extend the state field to 32 bits
+    - CLEANUP: ssl: Remove useless loop in tlskeys_list_get_next()
+    - CLEANUP: ssl: Remove useless local variable in tlskeys_list_get_next()
+    - MINOR: ssl: make tlskeys_list_get_next() take a list element
+    - REGTESTS: mark the abns test as broken again
+    - MINOR: cli: "show version" displays the current process version
+    - BUILD: tree-wide: avoid warnings caused by redundant checks of obj_types
+    - DOC: spoe: Clarify use of the event directive in spoe-message section
+    - DOC: config: Specify %Ta is only available in HTTP mode
+    - DOC: config: retry-on list is space-delimited
+    - BUG/MEDIUM: mworker/cli: crash when trying to access an old PID in prompt mode
+    - MINOR: pools: work around possibly slow malloc_trim() during gc
+    - BUG/MINOR: backend: do not set sni on connection reuse
+    - BUG/MINOR: backend: restore the SF_SRV_REUSED flag original purpose
+    - BUG/MINOR: pools: don't mark ourselves as harmless in DEBUG_UAF mode
+    - BUILD: cli: clear a maybe-unused  warning on some older compilers
+    - BUILD: ssl: unbreak the build with newer libressl
+    - DOC: fix misspelled keyword "resolve_retries" in resolvers
+    - BUILD: makefile: add -Wno-atomic-alignment to work around clang abusive warning
+    - CLEANUP: ssl: make ssl_sock_free_srv_ctx() zero the pointers after free
+    - BUG/MINOR: ssl: free the fields in srv->ssl_ctx
+    - BUILD/MINOR: tools: solaris build fix on dladdr.
+    - BUG/MINOR: cli: fix _getsocks with musl libc
+    - BUG/MEDIUM: http-ana: Preserve response's FLT_END analyser on L7 retry
+    - BUG/MEDIUM: mworker: don't use _getsocks in wait mode
+
 2021/11/24 : 2.3.16
     - BUG/MEDIUM: mux-h1: Fix H1C_F_ST_SILENT_SHUT value
     - BUG/MEDIUM: ssl: backend TLS resumption with sni and TLSv1.3
