@@ -166,7 +166,7 @@ static int get_http_auth(struct sample *smp, struct htx *htx)
 		while (p < h + ctx.vlen && *p == ' ')
 			++p;
 
-		chunk_initlen(&txn->auth.method_data, p + 1, 0, h + ctx.vlen - p);
+		chunk_initlen(&txn->auth.method_data, p, 0, h + ctx.vlen - p);
 	}
 
 	if (!strncasecmp("Basic", auth_method.area, auth_method.data)) {
