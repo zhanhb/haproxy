@@ -147,7 +147,7 @@ struct stream {
 	struct list back_refs;          /* list of users tracking this stream */
 	struct buffer_wait buffer_wait; /* position in the list of objects waiting for a buffer */
 
-	struct freq_ctr call_rate;      /* stream task call rate */
+	struct freq_ctr call_rate;      /* stream task call rate without making progress */
 
 	struct {
 		struct stksess *ts;
