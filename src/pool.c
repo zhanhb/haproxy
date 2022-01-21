@@ -286,6 +286,7 @@ void pool_evict_from_local_cache(struct pool_head *pool)
 		ph->count--;
 		pool_cache_bytes -= pool->size;
 		pool_cache_count--;
+		pool_check_pattern(ph, item, pool->size);
 		LIST_DELETE(&item->by_pool);
 		LIST_DELETE(&item->by_lru);
 		pool_put_to_shared_cache(pool, item);
@@ -308,6 +309,7 @@ void pool_evict_from_local_caches()
 		 */
 		ph = LIST_NEXT(&item->by_pool, struct pool_cache_head *, list);
 		pool = container_of(ph - tid, struct pool_head, cache);
+		pool_check_pattern(ph, item, pool->size);
 		LIST_DELETE(&item->by_pool);
 		LIST_DELETE(&item->by_lru);
 		ph->count--;
@@ -330,6 +332,7 @@ void pool_put_to_cache(struct pool_head *pool, void *ptr)
 	LIST_INSERT(&ph->list, &item->by_pool);
 	LIST_INSERT(&th_ctx->pool_lru_head, &item->by_lru);
 	ph->count++;
+	pool_fill_pattern(ph, item, pool->size);
 	pool_cache_count++;
 	pool_cache_bytes += pool->size;
 
