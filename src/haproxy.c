@@ -807,6 +807,9 @@ void reexec_on_failure()
 
 	setenv("HAPROXY_MWORKER_WAIT_ONLY", "1", 1);
 
+	/* do not keep unused FDs retrieved from the previous process */
+	sock_drop_unused_old_sockets();
+
 	ha_warning("Reexecuting Master process in waitpid mode\n");
 	mworker_reload();
 }
