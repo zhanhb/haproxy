@@ -660,6 +660,7 @@ void mworker_reload()
 #endif
 	setenv("HAPROXY_MWORKER_REEXEC", "1", 1);
 
+	mworker_cleanup_proc();
 	mworker_proc_list_to_env(); /* put the children description in the env */
 
 	/* during the reload we must ensure that every FDs that can't be
