@@ -621,6 +621,24 @@ static void get_cur_unixsocket()
 		cur_unixsocket = strdup(old_unixsocket);
 }
 
+/* After all protocols are bound, there may remain some old sockets that have
+ * been removed between the previous config and the new one. These ones must
+ * be dropped, otherwise they will remain open and may prevent a service from
+ * restarting.
+ */
+static void sock_drop_unused_old_sockets()
+{
+	while (xfer_sock_list != NULL) {
+		struct xfer_sock_list *tmpxfer = xfer_sock_list->next;
+
+		close(xfer_sock_list->fd);
+		free(xfer_sock_list->iface);
+		free(xfer_sock_list->namespace);
+		free(xfer_sock_list);
+		xfer_sock_list = tmpxfer;
+	}
+}
+
 /*
  * When called, this function reexec haproxy with -sf followed by current
  * children PIDs and possibly old children PIDs if they didn't leave yet.
@@ -3123,14 +3141,7 @@ int main(int argc, char **argv)
 	/* Ok, all listener should now be bound, close any leftover sockets
 	 * the previous process gave us, we don't need them anymore
 	 */
-	while (xfer_sock_list != NULL) {
-		struct xfer_sock_list *tmpxfer = xfer_sock_list->next;
-		close(xfer_sock_list->fd);
-		free(xfer_sock_list->iface);
-		free(xfer_sock_list->namespace);
-		free(xfer_sock_list);
-		xfer_sock_list = tmpxfer;
-	}
+	sock_drop_unused_old_sockets();
 
 	/* prepare pause/play signals */
 	signal_register_fct(SIGTTOU, sig_pause, SIGTTOU);
