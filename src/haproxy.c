@@ -657,6 +657,9 @@ int delete_oldpid(int pid)
 
 static void get_cur_unixsocket()
 {
+	/* get rid of the one found on the command line for now */
+	ha_free(&cur_unixsocket);
+
 	/* if -x was used, try to update the stat socket if not available anymore */
 	if (global.cli_fe) {
 		struct bind_conf *bind_conf;
@@ -1655,6 +1658,10 @@ static void init(int argc, char **argv)
 				if (old_unixsocket)
 					ha_warning("-x option already set, overwriting the value\n");
 				old_unixsocket = argv[1];
+
+				/* preset it now for early aborts */
+				free(cur_unixsocket);
+				cur_unixsocket = strdup(old_unixsocket);
 
 				argv++;
 				argc--;
