@@ -314,6 +314,7 @@ static inline void *pool_get_from_cache(struct pool_head *pool)
 	/* allocate hottest objects first */
 	item = LIST_NEXT(&ph->list, typeof(item), by_pool);
 #endif
+	BUG_ON(&item->by_pool == &ph->list);
 	ph->count--;
 	pool_cache_bytes -= pool->size;
 	pool_cache_count--;

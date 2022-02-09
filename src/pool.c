@@ -276,6 +276,7 @@ void pool_evict_from_local_cache(struct pool_head *pool, int full)
 	       (ph->count >= 16 + pool_cache_count / 8 &&
 		pool_cache_bytes > CONFIG_HAP_POOL_CACHE_SIZE * 3 / 4)) {
 		item = LIST_NEXT(&ph->list, typeof(item), by_pool);
+		BUG_ON(&item->by_pool == &ph->list);
 		ph->count--;
 		pool_cache_bytes -= pool->size;
 		pool_cache_count--;
@@ -297,6 +298,7 @@ void pool_evict_from_local_caches()
 
 	do {
 		item = LIST_PREV(&ti->pool_lru_head, struct pool_cache_item *, by_lru);
+		BUG_ON(&item->by_lru == &ti->pool_lru_head);
 		/* note: by definition we remove oldest objects so they also are the
 		 * oldest in their own pools, thus their next is the pool's head.
 		 */
