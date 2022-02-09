@@ -409,6 +409,7 @@ static inline void pool_free(struct pool_head *pool, void *ptr)
 		/* we'll get late corruption if we refill to the wrong pool or double-free */
 		if (*POOL_LINK(pool, ptr) != (void *)pool)
 			ABORT_NOW();
+		*POOL_LINK(pool, ptr) = __builtin_return_address(0);
 #endif
 		if (unlikely(mem_poison_byte >= 0))
 			memset(ptr, mem_poison_byte, pool->size);
