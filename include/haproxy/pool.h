@@ -73,7 +73,7 @@ int mem_should_fail(const struct pool_head *pool);
 extern THREAD_LOCAL size_t pool_cache_bytes;   /* total cache size */
 extern THREAD_LOCAL size_t pool_cache_count;   /* #cache objects   */
 
-void pool_evict_from_local_cache(struct pool_head *pool);
+void pool_evict_from_local_cache(struct pool_head *pool, int full);
 void pool_evict_from_local_caches();
 void pool_put_to_cache(struct pool_head *pool, void *ptr);
 

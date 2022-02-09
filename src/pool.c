@@ -267,13 +267,14 @@ void pool_free_nocache(struct pool_head *pool, void *ptr)
  * we don't want a single cache to use all the cache for itself). For this, the
  * list is scanned in reverse.
  */
-void pool_evict_from_local_cache(struct pool_head *pool)
+void pool_evict_from_local_cache(struct pool_head *pool, int full)
 {
 	struct pool_cache_head *ph = &pool->cache[tid];
 	struct pool_cache_item *item;
 
-	while (ph->count >= 16 + pool_cache_count / 8 &&
-	       pool_cache_bytes > CONFIG_HAP_POOL_CACHE_SIZE * 3 / 4) {
+	while ((ph->count && full) ||
+	       (ph->count >= 16 + pool_cache_count / 8 &&
+		pool_cache_bytes > CONFIG_HAP_POOL_CACHE_SIZE * 3 / 4)) {
 		item = LIST_NEXT(&ph->list, typeof(item), by_pool);
 		ph->count--;
 		pool_cache_bytes -= pool->size;
@@ -330,7 +331,7 @@ void pool_put_to_cache(struct pool_head *pool, void *ptr)
 
 	if (unlikely(pool_cache_bytes > CONFIG_HAP_POOL_CACHE_SIZE * 3 / 4)) {
 		if (ph->count >= 16 + pool_cache_count / 8)
-			pool_evict_from_local_cache(pool);
+			pool_evict_from_local_cache(pool, 0);
 		if (pool_cache_bytes > CONFIG_HAP_POOL_CACHE_SIZE)
 			pool_evict_from_local_caches();
 	}
@@ -469,6 +470,9 @@ void pool_gc(struct pool_head *pool_ctx)
 void *pool_destroy(struct pool_head *pool)
 {
 	if (pool) {
+#ifdef CONFIG_HAP_POOLS
+		pool_evict_from_local_cache(pool, 1);
+#endif
 		pool_flush(pool);
 		if (pool->used)
 			return pool;
