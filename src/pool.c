@@ -190,6 +190,8 @@ struct pool_head *create_pool(char *name, unsigned int size, unsigned int flags)
 		/* update per-thread pool cache if necessary */
 		for (thr = 0; thr < MAX_THREADS; thr++) {
 			LIST_INIT(&pool->cache[thr].list);
+			pool->cache[thr].tid = thr;
+			pool->cache[thr].pool = pool;
 		}
 #endif
 	}
@@ -311,7 +313,11 @@ void pool_evict_from_local_caches()
 		 * oldest in their own pools, thus their next is the pool's head.
 		 */
 		ph = LIST_NEXT(&item->by_pool, struct pool_cache_head *, list);
+		BUG_ON(ph->tid != tid);
+
 		pool = container_of(ph - tid, struct pool_head, cache);
+		BUG_ON(pool != ph->pool);
+
 		pool_check_pattern(ph, item, pool->size);
 		LIST_DELETE(&item->by_pool);
 		LIST_DELETE(&item->by_lru);
