@@ -4391,7 +4391,7 @@ static void htx_manage_server_side_cookies(struct stream *s, struct channel *res
 	while (1) {
 		int is_first = 1;
 
-		if (!http_find_header(htx, ist("Set-Cookie"), &ctx, 1)) {
+		if (is_cookie2 || !http_find_header(htx, ist("Set-Cookie"), &ctx, 1)) {
 			if (!http_find_header(htx, ist("Set-Cookie2"), &ctx, 1))
 				break;
 			is_cookie2 = 1;
