@@ -168,6 +168,44 @@ static inline void task_set_affinity(struct task *t, unsigned long thread_mask)
 		t->thread_mask = thread_mask;
 }
 
+/* Atomically drop the TASK_RUNNING bit while ensuring that any wakeup that
+ * happened since the flag was set will result in the task being queued (if
+ * it wasn't already). This is used to safely drop the flag from within the
+ * scheduler. The flag <f> is combined with existing flags before the test so
+ * that it's possible to inconditionally wakeup the task and drop the RUNNING
+ * flag if needed.
+ */
+#define task_drop_running(t, f) _task_drop_running(t, f, __FILE__, __LINE__)
+static inline void _task_drop_running(struct task *t, unsigned int f, const char *file, int line)
+{
+	unsigned short state, new_state;
+
+	state = _HA_ATOMIC_LOAD(&t->state);
+
+	while (1) {
+		new_state = state | f;
+		if (new_state & TASK_WOKEN_ANY)
+			new_state |= TASK_QUEUED;
+
+		if (_HA_ATOMIC_CAS(&t->state, &state, new_state & ~TASK_RUNNING))
+			break;
+	}
+
+	if ((new_state & ~state) & TASK_QUEUED) {
+#ifdef USE_THREAD
+		struct eb_root *root;
+
+		if (t->thread_mask == tid_bit || global.nbthread == 1)
+			root = &task_per_thread[tid].rqueue;
+		else
+			root = &rqueue;
+#else
+		struct eb_root *root = &task_per_thread[tid].rqueue;
+#endif
+		__task_wakeup(t, root);
+	}
+}
+
 /*
  * Unlink the task from the wait queue, and possibly update the last_timer
  * pointer. A pointer to the task itself is returned. The task *must* already

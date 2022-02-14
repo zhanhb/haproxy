@@ -257,6 +257,23 @@ int wake_expired_tasks()
 
 		/* timer looks expired, detach it from the queue */
 		task = eb32_entry(eb, struct task, wq);
+
+		/* Check for any competing run of the task (quite rare but may
+		 * involve a dangerous concurrent access on task->expire). In
+		 * order to protect against this, we'll take an exclusive access
+		 * on TASK_RUNNING before checking/touching task->expire. If the
+		 * task is already RUNNING on another thread, it will deal by
+		 * itself with the requeuing so we must not do anything and
+		 * simply quit the loop for now, because we cannot wait with the
+		 * WQ lock held as this would prevent the running thread from
+		 * requeuing the task. One annoying effect of holding RUNNING
+		 * here is that a concurrent task_wakeup() will refrain from
+		 * waking it up. This forces us to check for a wakeup after
+		 * releasing the flag.
+		 */
+		if (HA_ATOMIC_FETCH_OR(&task->state, TASK_RUNNING) & TASK_RUNNING)
+			break;
+
 		__task_unlink_wq(task);
 
 		/* It is possible that this task was left at an earlier place in the
@@ -275,9 +292,10 @@ int wake_expired_tasks()
 		if (!tick_is_expired(task->expire, now_ms)) {
 			if (tick_isset(task->expire))
 				__task_queue(task, &timers);
+			task_drop_running(task, 0);
 			goto lookup_next;
 		}
-		task_wakeup(task, TASK_WOKEN_TIMER);
+		task_drop_running(task, TASK_WOKEN_TIMER);
 		HA_RWLOCK_WRUNLOCK(TASK_WQ_LOCK, &wq_lock);
 	}
 
@@ -390,9 +408,21 @@ void process_runnable_tasks()
 		struct task *(*process)(struct task *t, void *ctx, unsigned short state);
 
 		t = (struct task *)LIST_ELEM(task_per_thread[tid].task_list.n, struct tasklet *, list);
-		state = (t->state & TASK_SHARED_WQ) | TASK_RUNNING;
-		state = _HA_ATOMIC_XCHG(&t->state, state);
+
+		/* We must be the exclusive owner of the TASK_RUNNING bit, and
+		 * have to be careful that the task is not being manipulated on
+		 * another thread finding it expired in wake_expired_tasks().
+		 * The TASK_RUNNING bit will be set during these operations,
+		 * they are extremely rare and do not last long so the best to
+		 * do here is to wait.
+		 */
+		state = _HA_ATOMIC_LOAD(&t->state);
+		do {
+			while (unlikely(state & TASK_RUNNING))
+				state = _HA_ATOMIC_LOAD(&t->state);
+		} while (!_HA_ATOMIC_CAS(&t->state, &state, (state & TASK_SHARED_WQ) | TASK_RUNNING));
 		__ha_barrier_atomic_store();
+
 		__tasklet_remove_from_tasklet_list((struct tasklet *)t);
 		if (!TASK_IS_TASKLET(t))
 			task_per_thread[tid].task_list_size--;
@@ -412,10 +442,16 @@ void process_runnable_tasks()
 
 		curr_task = (struct task *)t;
 		__ha_barrier_store();
-		if (likely(process == process_stream))
+
+		if (TASK_IS_TASKLET(t)) {
+			state = _HA_ATOMIC_AND(&t->state, ~TASK_RUNNING);
+			t = process(NULL, ctx, state);
+			/* note: t is always NULL now */
+		}
+		else if (likely(process == process_stream))
 			t = process_stream(t, ctx, state);
 		else if (process != NULL)
-			t = process(TASK_IS_TASKLET(t) ? NULL : t, ctx, state);
+			t = process(t, ctx, state);
 		else {
 			__task_free(t);
 			curr_task = NULL;
@@ -437,11 +473,8 @@ void process_runnable_tasks()
 				t->call_date = 0;
 			}
 
-			state = _HA_ATOMIC_AND(&t->state, ~TASK_RUNNING);
-			if (state & TASK_WOKEN_ANY)
-				task_wakeup(t, 0);
-			else
-				task_queue(t);
+			task_queue(t);
+			task_drop_running(t, 0);
 		}
 
 		max_processed--;
