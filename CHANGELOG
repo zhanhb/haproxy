@@ -1,6 +1,52 @@
 ChangeLog :
 ===========
 
+2022/02/16 : 2.5.2
+    - BUG/MEDIUM: connection: properly leave stopping list on error
+    - BUG/MEDIUM: htx: Adjust length to add DATA block in an empty HTX buffer
+    - BUG/MINOR: httpclient: don't send an empty body
+    - BUG/MINOR: httpclient: set default Accept and User-Agent headers
+    - BUG/MINOR: httpclient/lua: don't pop the lua stack when getting headers
+    - BUILD/MINOR: fix solaris build with clang.
+    - BUG/MEDIUM: server: avoid changing healthcheck ctx with set server ssl
+    - DOC: management: mark "set server ssl" as deprecated
+    - MEDIUM: cli: yield between each pipelined command
+    - MINOR: channel: add new function co_getdelim() to support multiple delimiters
+    - BUG/MINOR: cli: avoid O(bufsize) parsing cost on pipelined commands
+    - MEDIUM: h2/hpack: emit a Dynamic Table Size Update after settings change
+    - BUG/MEDIUM: cli: Never wait for more data on client shutdown
+    - BUG/MEDIUM: mcli: do not try to parse empty buffers
+    - BUG/MEDIUM: mcli: always realign wrapping buffers before parsing them
+    - BUG/MINOR: stream: make the call_rate only count the no-progress calls
+    - DEBUG: cli: add a new "debug dev fd" expert command
+    - BUILD: debug/cli: condition test of O_ASYNC to its existence
+    - DEBUG: pools: add new build option DEBUG_POOL_INTEGRITY
+    - REGTESTS: ssl: Fix ssl_errors regtest with OpenSSL 1.0.2
+    - BUG/MEDIUM: mworker: don't lose the stats socket on failed reload
+    - BUG/MINOR: mworker: does not add the -sf in wait mode
+    - BUG/MINOR: pools: always flush pools about to be destroyed
+    - DEBUG: pools: add extra sanity checks when picking objects from a local cache
+    - DEBUG: pools: let's add reverse mapping from cache heads to thread and pool
+    - DEBUG: pools: replace the link pointer with the caller's address on pool_free()
+    - BUG/MAJOR: sched: prevent rare concurrent wakeup of multi-threaded tasks
+    - BUG/MINOR: mworker: does not erase the pidfile upon reload
+    - DEBUG: fd: make sure we never try to insert/delete an impossible FD number
+    - MINOR: listener: replace the listener's spinlock with an rwlock
+    - BUG/MEDIUM: listener: read-lock the listener during accept()
+    - BUG/MINOR: httpclient: Revisit HC request and response buffers allocation
+    - BUG/MEDIUM: httpclient: Xfer the request when the stream is created
+    - BUG/MINOR: ssl: Remove empty lines from "show ssl ocsp-response <id>" output
+    - BUG/MINOR: jwt: Double free in deinit function
+    - BUG/MINOR: jwt: Missing pkey free during cleanup
+    - BUG/MINOR: jwt: Memory leak if same key is used in multiple jwt_verify calls
+    - BUG/MINOR: httpclient/cli: display junk characters in vsn
+    - BUG/MAJOR: http/htx: prevent unbounded loop in http_manage_server_side_cookies
+    - BUG/MAJOR: spoe: properly detach all agents when releasing the applet
+    - REGTESTS: server: close an occasional race on dynamic_server_ssl.vtc
+    - REGTESTS: peers: leave a bit more time to peers to synchronize
+    - BUG/MEDIUM: h2/hpack: fix emission of HPACK DTSU after settings change
+    - BUG/MINOR: mux-h2: update the session's idle delay before creating the stream
+
 2022/01/11 : 2.5.1
     - BUG/MINOR: cache: Fix loop on cache entries in "show cache"
     - BUG/MINOR: httpclient: allow to replace the host header
