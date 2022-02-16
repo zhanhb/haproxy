@@ -1,6 +1,36 @@
 ChangeLog :
 ===========
 
+2022/02/16 : 2.4.13
+    - BUG/MEDIUM: connection: properly leave stopping list on error
+    - BUG/MEDIUM: htx: Adjust length to add DATA block in an empty HTX buffer
+    - BUILD/MINOR: fix solaris build with clang.
+    - BUG/MEDIUM: server: avoid changing healthcheck ctx with set server ssl
+    - MEDIUM: cli: yield between each pipelined command
+    - MINOR: channel: add new function co_getdelim() to support multiple delimiters
+    - BUG/MINOR: cli: avoid O(bufsize) parsing cost on pipelined commands
+    - BUG/MEDIUM: cli: Never wait for more data on client shutdown
+    - BUG/MEDIUM: mcli: do not try to parse empty buffers
+    - BUG/MEDIUM: mcli: always realign wrapping buffers before parsing them
+    - MEDIUM: h2/hpack: emit a Dynamic Table Size Update after settings change
+    - DEBUG: cli: add a new "debug dev fd" expert command
+    - BUILD: debug/cli: condition test of O_ASYNC to its existence
+    - DEBUG: pools: add new build option DEBUG_POOL_INTEGRITY
+    - BUG/MEDIUM: mworker: don't lose the stats socket on failed reload
+    - BUG/MINOR: pools: always flush pools about to be destroyed
+    - DEBUG: pools: add extra sanity checks when picking objects from a local cache
+    - DEBUG: pools: let's add reverse mapping from cache heads to thread and pool
+    - DEBUG: pools: replace the link pointer with the caller's address on pool_free()
+    - BUG/MAJOR: sched: prevent rare concurrent wakeup of multi-threaded tasks
+    - BUG/MINOR: mworker: does not erase the pidfile upon reload
+    - MINOR: listener: replace the listener's spinlock with an rwlock
+    - BUG/MEDIUM: listener: read-lock the listener during accept()
+    - BUG/MAJOR: http/htx: prevent unbounded loop in http_manage_server_side_cookies
+    - BUG/MAJOR: spoe: properly detach all agents when releasing the applet
+    - REGTESTS: peers: leave a bit more time to peers to synchronize
+    - BUG/MEDIUM: h2/hpack: fix emission of HPACK DTSU after settings change
+    - BUG/MINOR: mux-h2: update the session's idle delay before creating the stream
+
 2022/01/11 : 2.4.12
     - BUG/MEDIUM: mworker: don't use _getsocks in wait mode
     - BUG/MAJOR: mux-h1: Don't decrement .curr_len for unsent data
