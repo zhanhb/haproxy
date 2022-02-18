@@ -1,6 +1,25 @@
 ChangeLog :
 ===========
 
+2022/02/18 : 2.5.3
+    - MINOR: sock: move the unused socket cleaning code into its own function
+    - BUG/MEDIUM: mworker: close unused transferred FDs on load failure
+    - BUG/MINOR: mworker: fix a FD leak of a sockpair upon a failed reload
+    - BUG/MINOR: sink: Use the right field in appctx context in release callback
+    - BUG/MEDIUM: resolvers: Really ignore trailing dot in domain names
+    - BUG/MEDIUM: fd: always align fdtab[] to 64 bytes
+    - BUG/MAJOR: compiler: relax alignment constraints on certain structures
+    - MINOR: httpclient: Don't limit data transfer to 1024 bytes
+    - BUG/MINOR: httpclient: reinit flags in httpclient_start()
+    - BUG/MINOR: mailers: negotiate SMTP, not ESMTP
+    - BUG/MINOR: ssl: Add missing return value check in ssl_ocsp_response_print
+    - BUG/MINOR: ssl: Fix leak in "show ssl ocsp-response" CLI command
+    - BUG/MINOR: ssl: Missing return value check in ssl_ocsp_response_print
+    - CLEANUP: httpclient/cli: fix indentation alignment of the help message
+    - BUG/MINOR: tools: url2sa reads ipv4 too far
+    - BUG/MEDIUM: httpclient: limit transfers to the maximum available room
+    - DEBUG: buffer: check in __b_put_blk() whether the buffer room is respected
+
 2022/02/16 : 2.5.2
     - BUG/MEDIUM: connection: properly leave stopping list on error
     - BUG/MEDIUM: htx: Adjust length to add DATA block in an empty HTX buffer
