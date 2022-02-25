@@ -1,6 +1,34 @@
 ChangeLog :
 ===========
 
+2022/02/25 : 2.4.14
+    - MINOR: sock: move the unused socket cleaning code into its own function
+    - BUG/MEDIUM: mworker: close unused transferred FDs on load failure
+    - BUG/MINOR: mworker: fix a FD leak of a sockpair upon a failed reload
+    - BUG/MINOR: sink: Use the right field in appctx context in release callback
+    - BUG/MEDIUM: resolvers: Really ignore trailing dot in domain names
+    - BUG/MEDIUM: fd: always align fdtab[] to 64 bytes
+    - BUG/MAJOR: compiler: relax alignment constraints on certain structures
+    - CI: ssl: enable parallel builds for OpenSSL on Linux
+    - CI: ssl: do not needlessly build the OpenSSL docs
+    - CI: ssl: keep the old method for ancient OpenSSL versions
+    - BUILD: fix compilation for OpenSSL-3.0.0-alpha17
+    - BUILD: adopt script/build-ssl.sh for OpenSSL-3.0.0beta2
+    - CI: github actions: add OpenSSL-3.0.0 builds
+    - CI: github actions: -Wno-deprecated-declarations with OpenSSL 3.0.0
+    - CI: github actions: relax OpenSSL-3.0.0 version comparision
+    - CI: github: switch to OpenSSL 3.0.0
+    - CI: github actions: update OpenSSL to 3.0.1
+    - BUG/MINOR: mailers: negotiate SMTP, not ESMTP
+    - BUG/MINOR: tools: url2sa reads ipv4 too far
+    - BUG/MEDIUM: htx: Be sure to have a buffer to perform a raw copy of a message
+    - BUG/MEDIUM: mux-h1: Don't wake h1s if mux is blocked on lack of output buffer
+    - BUG/MAJOR: mux-h2: Be sure to always report HTX parsing error to the app layer
+    - BUG/MINOR: proxy: preset the error message pointer to NULL in parse_new_proxy()
+    - REGTESTS: fix the race conditions in 40be_2srv_odd_health_checks
+    - CI: github: enable pool debugging by default
+    - BUG/MEDIUM: stream: Abort processing if response buffer allocation fails
+
 2022/02/16 : 2.4.13
     - BUG/MEDIUM: connection: properly leave stopping list on error
     - BUG/MEDIUM: htx: Adjust length to add DATA block in an empty HTX buffer
