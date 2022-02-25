@@ -1,6 +1,16 @@
 ChangeLog :
 ===========
 
+2022/02/25 : 2.5.4
+    - BUG/MEDIUM: htx: Be sure to have a buffer to perform a raw copy of a message
+    - BUG/MEDIUM: mux-h1: Don't wake h1s if mux is blocked on lack of output buffer
+    - BUG/MAJOR: mux-h2: Be sure to always report HTX parsing error to the app layer
+    - DOC: Fix usage/examples of deprecated ACLs
+    - BUG/MINOR: proxy: preset the error message pointer to NULL in parse_new_proxy()
+    - REGTESTS: fix the race conditions in 40be_2srv_odd_health_checks
+    - CI: github: enable pool debugging by default
+    - BUG/MEDIUM: stream: Abort processing if response buffer allocation fails
+
 2022/02/18 : 2.5.3
     - MINOR: sock: move the unused socket cleaning code into its own function
     - BUG/MEDIUM: mworker: close unused transferred FDs on load failure
