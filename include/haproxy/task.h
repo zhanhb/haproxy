@@ -247,13 +247,6 @@ static inline void _task_drop_running(struct task *t, unsigned int f, const char
 #else
 		struct eb_root *root = &sched->rqueue;
 #endif
-#ifdef DEBUG_TASK
-		if ((unsigned int)t->debug.caller_idx > 1)
-			ABORT_NOW();
-		t->debug.caller_idx = !t->debug.caller_idx;
-		t->debug.caller_file[t->debug.caller_idx] = file;
-		t->debug.caller_line[t->debug.caller_idx] = line;
-#endif
 		__task_wakeup(t, root);
 	}
 }
