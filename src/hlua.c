@@ -7256,6 +7256,8 @@ __LJMP static int hlua_httpclient_send(lua_State *L, enum http_meth_t meth)
 
 	hlua_hc = hlua_checkhttpclient(L, 1);
 
+	hlua_hc->sent = 0;
+
 	hlua_hc->hc->req.url = istdup(ist(url_str));
 	hlua_hc->hc->req.meth = meth;
 
