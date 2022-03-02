@@ -1,6 +1,47 @@
 ChangeLog :
 ===========
 
+2022/03/02 : 2.2.21
+    - BUG/MEDIUM: htx: Adjust length to add DATA block in an empty HTX buffer
+    - MEDIUM: cli: yield between each pipelined command
+    - MINOR: channel: add new function co_getdelim() to support multiple delimiters
+    - BUG/MINOR: cli: avoid O(bufsize) parsing cost on pipelined commands
+    - BUG/MEDIUM: cli: Never wait for more data on client shutdown
+    - BUG/MEDIUM: mcli: do not try to parse empty buffers
+    - BUG/MEDIUM: mcli: always realign wrapping buffers before parsing them
+    - BUG/MEDIUM: mworker: don't lose the stats socket on failed reload
+    - BUG/MINOR: mworker: does not erase the pidfile upon reload
+    - BUG/MAJOR: http/htx: prevent unbounded loop in http_manage_server_side_cookies
+    - BUG/MAJOR: spoe: properly detach all agents when releasing the applet
+    - MINOR: sock: move the unused socket cleaning code into its own function
+    - BUG/MEDIUM: mworker: close unused transferred FDs on load failure
+    - BUG/MINOR: mworker: fix a FD leak of a sockpair upon a failed reload
+    - BUG/MINOR: sink: Use the right field in appctx context in release callback
+    - BUG/MEDIUM: resolvers: Really ignore trailing dot in domain names
+    - BUG/MEDIUM: fd: always align fdtab[] to 64 bytes
+    - CI: ssl: enable parallel builds for OpenSSL on Linux
+    - CI: ssl: do not needlessly build the OpenSSL docs
+    - CI: ssl: keep the old method for ancient OpenSSL versions
+    - BUILD: fix compilation for OpenSSL-3.0.0-alpha17
+    - BUILD: adopt script/build-ssl.sh for OpenSSL-3.0.0beta2
+    - CI: github actions: add OpenSSL-3.0.0 builds
+    - CI: github actions: -Wno-deprecated-declarations with OpenSSL 3.0.0
+    - CI: github actions: relax OpenSSL-3.0.0 version comparision
+    - CI: github: switch to OpenSSL 3.0.0
+    - CI: github actions: update OpenSSL to 3.0.1
+    - BUG/MINOR: mailers: negotiate SMTP, not ESMTP
+    - BUG/MINOR: tools: url2sa reads ipv4 too far
+    - BUG/MEDIUM: mux-h1: Don't wake h1s if mux is blocked on lack of output buffer
+    - BUG/MAJOR: mux-h2: Be sure to always report HTX parsing error to the app layer
+    - BUG/MEDIUM: stream: Abort processing if response buffer allocation fails
+    - BUILD/MINOR: fix solaris build with clang.
+    - REGTESTS: fix the race conditions in secure_memcmp.vtc
+    - REORG: atomic: reimplement pl_cpu_relax() from atomic-ops.h
+    - CLEANUP: atomic: add a fetch-and-xxx variant for common operations
+    - BUG/MAJOR: sched: prevent rare concurrent wakeup of multi-threaded tasks
+    - CI: github actions: add the output of $CC -dM -E-
+    - CI: github actions: use cache for SSL libs
+
 2022/01/12 : 2.2.20
     - DOC: configuration: issuers-chain-path only applies to bind lines
     - CI: Expand use of GitHub Actions for CI
