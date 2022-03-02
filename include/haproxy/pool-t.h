@@ -84,9 +84,10 @@ struct pool_head {
 	unsigned int failed;	/* failed allocations */
 	/* 32-bit hole here */
 	struct list list;	/* list of all known pools */
+	void *base_addr;        /* allocation address, for free() */
 	char name[12];		/* name of the pool */
 #ifdef CONFIG_HAP_POOLS
-	struct pool_cache_head cache[MAX_THREADS]; /* pool caches */
+	struct pool_cache_head cache[MAX_THREADS] THREAD_ALIGNED(64); /* pool caches */
 #endif
 } __attribute__((aligned(64)));
 

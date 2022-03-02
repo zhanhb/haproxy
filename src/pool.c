@@ -175,11 +175,16 @@ struct pool_head *create_pool(char *name, unsigned int size, unsigned int flags)
 	}
 
 	if (!pool) {
-		if (!pool)
-			pool = calloc(1, sizeof(*pool));
+		void *pool_addr;
 
-		if (!pool)
+		pool_addr = calloc(1, sizeof(*pool) + __alignof__(*pool));
+		if (!pool_addr)
 			return NULL;
+
+		/* always provide an aligned pool */
+		pool = (struct pool_head*)((((size_t)pool_addr) + __alignof__(*pool)) & -(size_t)__alignof__(*pool));
+		pool->base_addr = pool_addr; // keep it, it's the address to free later
+
 		if (name)
 			strlcpy2(pool->name, name, sizeof(pool->name));
 		pool->size = size;
@@ -518,7 +523,7 @@ void *pool_destroy(struct pool_head *pool)
 		if (!pool->users) {
 			LIST_DELETE(&pool->list);
 			/* note that if used == 0, the cache is empty */
-			free(pool);
+			ha_free(&pool->base_addr);
 		}
 	}
 	return NULL;
