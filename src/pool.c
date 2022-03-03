@@ -496,7 +496,7 @@ void *pool_destroy(struct pool_head *pool)
 			HA_SPIN_DESTROY(&pool->lock);
 #endif
 			/* note that if used == 0, the cache is empty */
-			ha_free(&pool->base_addr);
+			free(pool->base_addr);
 		}
 	}
 	return NULL;
