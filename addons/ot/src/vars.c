@@ -173,7 +173,7 @@ static int flt_ot_normalize_name(char *var_name, size_t size, int *len, const ch
 	FLT_OT_FUNC("%p, %zu, %p, \"%s\", %p:%p", var_name, size, len, name, FLT_OT_DPTR_ARGS(err));
 
 	if (!FLT_OT_STR_ISVALID(name))
-		FLT_OT_RETURN(retval);
+		FLT_OT_RETURN_INT(retval);
 
 	/*
 	 * In case the name of the variable consists of several elements,
@@ -219,7 +219,7 @@ static int flt_ot_normalize_name(char *var_name, size_t size, int *len, const ch
 	if (retval == -1)
 		*len = retval;
 
-	FLT_OT_RETURN(retval);
+	FLT_OT_RETURN_INT(retval);
 }
 
 
@@ -256,7 +256,7 @@ static int flt_ot_var_name(const char *scope, const char *prefix, const char *na
 	if (retval == -1)
 		FLT_OT_ERR("failed to construct variable name '%s.%s.%s'", scope, prefix, name);
 
-	FLT_OT_RETURN(retval);
+	FLT_OT_RETURN_INT(retval);
 }
 
 
@@ -286,7 +286,7 @@ int flt_ot_var_register(const char *scope, const char *prefix, const char *name,
 
 	var_name_len = flt_ot_var_name(scope, prefix, name, var_name, sizeof(var_name), err);
 	if (var_name_len == -1)
-		FLT_OT_RETURN(retval);
+		FLT_OT_RETURN_INT(retval);
 
 	/* Set <size> to 0 to not release var_name memory in vars_check_arg(). */
 	(void)memset(&arg, 0, sizeof(arg));
@@ -302,7 +302,7 @@ int flt_ot_var_register(const char *scope, const char *prefix, const char *name,
 		retval = var_name_len;
 	}
 
-	FLT_OT_RETURN(retval);
+	FLT_OT_RETURN_INT(retval);
 }
 
 
@@ -335,7 +335,7 @@ int flt_ot_var_set(struct stream *s, const char *scope, const char *prefix, cons
 
 	var_name_len = flt_ot_var_name(scope, prefix, name, var_name, sizeof(var_name), err);
 	if (var_name_len == -1)
-		FLT_OT_RETURN(retval);
+		FLT_OT_RETURN_INT(retval);
 
 	flt_ot_smp_init(s, &smp, opt, SMP_T_STR, value);
 
@@ -347,7 +347,7 @@ int flt_ot_var_set(struct stream *s, const char *scope, const char *prefix, cons
 		retval = var_name_len;
 	}
 
-	FLT_OT_RETURN(retval);
+	FLT_OT_RETURN_INT(retval);
 }
 
 
@@ -381,11 +381,11 @@ int flt_ot_vars_unset(struct stream *s, const char *scope, const char *prefix, u
 
 	vars = flt_ot_get_vars(s, scope);
 	if (vars == NULL)
-		FLT_OT_RETURN(retval);
+		FLT_OT_RETURN_INT(retval);
 
 	var_prefix_len = flt_ot_var_name(NULL, prefix, NULL, var_prefix, sizeof(var_prefix), err);
 	if (var_prefix_len == -1)
-		FLT_OT_RETURN(retval);
+		FLT_OT_RETURN_INT(retval);
 
 	retval = 0;
 
@@ -412,7 +412,7 @@ int flt_ot_vars_unset(struct stream *s, const char *scope, const char *prefix, u
 	}
 	HA_RWLOCK_WRUNLOCK(VARS_LOCK, &(vars->rwlock));
 
-	FLT_OT_RETURN(retval);
+	FLT_OT_RETURN_INT(retval);
 }
 
 
@@ -445,11 +445,11 @@ struct otc_text_map *flt_ot_vars_get(struct stream *s, const char *scope, const 
 
 	vars = flt_ot_get_vars(s, scope);
 	if (vars == NULL)
-		FLT_OT_RETURN(retptr);
+		FLT_OT_RETURN_PTR(retptr);
 
 	rc = flt_ot_var_name(NULL, prefix, NULL, var_name, sizeof(var_name), err);
 	if (rc == -1)
-		FLT_OT_RETURN(retptr);
+		FLT_OT_RETURN_PTR(retptr);
 
 	HA_RWLOCK_RDLOCK(VARS_LOCK, &(vars->rwlock));
 	list_for_each_entry(var, &(vars->head), l) {
@@ -515,7 +515,7 @@ struct otc_text_map *flt_ot_vars_get(struct stream *s, const char *scope, const 
 		otc_text_map_destroy(&retptr, OTC_TEXT_MAP_FREE_KEY | OTC_TEXT_MAP_FREE_VALUE);
 	}
 
-	FLT_OT_RETURN(retptr);
+	FLT_OT_RETURN_PTR(retptr);
 }
 
 /*
