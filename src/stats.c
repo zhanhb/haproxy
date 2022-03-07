@@ -3415,6 +3415,7 @@ static void htx_stats_io_handler(struct appctx *appctx)
 			goto out;
 		}
 		channel_add_input(&s->res, 1);
+		res->flags |= CF_EOI;
 		appctx->st0 = STAT_HTTP_END;
 	}
 
