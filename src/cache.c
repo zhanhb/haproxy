@@ -1136,6 +1136,7 @@ static void htx_cache_io_handler(struct appctx *appctx)
 			si_rx_room_blk(si);
 			goto out;
 		}
+		res->flags |= CF_EOI;
 		appctx->st0 = HTX_CACHE_END;
 	}
 
