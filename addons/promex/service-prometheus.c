@@ -1510,6 +1510,7 @@ static void promex_appctx_handle_io(struct appctx *appctx)
 		case PROMEX_ST_DONE:
 			/* no more data are expected. Don't add TLR because mux-h1 will take care of it */
 			res_htx->flags |= HTX_FL_EOM;
+			res->flags |= CF_EOI;
 			appctx->st0 = PROMEX_ST_END;
 			/* fall through */
 
