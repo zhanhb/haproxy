@@ -7471,6 +7471,7 @@ static void hlua_applet_htx_fct(struct appctx *ctx)
 			goto out;
 		}
 		channel_add_input(res, 1);
+		res->flags |= CF_EOI;
 		strm->txn->status = ctx->ctx.hlua_apphttp.status;
 		ctx->ctx.hlua_apphttp.flags |= APPLET_RSP_SENT;
 	}
