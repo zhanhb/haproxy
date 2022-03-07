@@ -2365,6 +2365,7 @@ static void promex_appctx_handle_io(struct appctx *appctx)
 				goto out;
 			}
 			channel_add_input(res, 1);
+			res->flags |= CF_EOI;
 			appctx->st0 = PROMEX_ST_END;
 			/* fall through */
 
