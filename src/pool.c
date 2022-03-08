@@ -671,6 +671,7 @@ static int mem_parse_global_fail_alloc(char **args, int section_type, struct pro
 }
 #endif
 
+#if defined(HA_HAVE_MALLOC_TRIM)
 /* config parser for global "no-memory-trimming" */
 static int mem_parse_global_no_mem_trim(char **args, int section_type, struct proxy *curpx,
                                        const struct proxy *defpx, const char *file, int line,
@@ -681,13 +682,16 @@ static int mem_parse_global_no_mem_trim(char **args, int section_type, struct pr
 	disable_trim = 1;
 	return 0;
 }
+#endif
 
 /* register global config keywords */
 static struct cfg_kw_list mem_cfg_kws = {ILH, {
 #ifdef DEBUG_FAIL_ALLOC
 	{ CFG_GLOBAL, "tune.fail-alloc", mem_parse_global_fail_alloc },
 #endif
+#if defined(HA_HAVE_MALLOC_TRIM)
 	{ CFG_GLOBAL, "no-memory-trimming", mem_parse_global_no_mem_trim },
+#endif
 	{ 0, NULL, NULL }
 }};
 
