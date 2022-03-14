@@ -1,6 +1,21 @@
 ChangeLog :
 ===========
 
+2022/03/14 : 2.2.22
+    - BUG/MINOR: cli: shows correct mode in "show sess"
+    - BUG/MINOR: hlua: Set conn-stream/channel EOI flags at the end of request
+    - BUG/MINOR: stats: Set conn-stream/channel EOI flags at the end of request
+    - BUG/MINOR: cache: Set conn-stream/channel EOI flags at the end of request
+    - BUG/MINOR: promex: Set conn-stream/channel EOI flags at the end of request
+    - DEBUG: cache: Update underlying buffer when loading HTX message in cache applet
+    - BUG/MEDIUM: mcli: Properly handle errors and timeouts during reponse processing
+    - DEBUG: stream: Add the missing descriptions for stream trace events
+    - DEBUG: stream: Fix stream trace message to print response buffer state
+    - BUG/MAJOR: mux-pt: Always destroy the backend connection on detach
+    - BUG/MINOR: stream: make the call_rate only count the no-progress calls
+    - DOC: Fix usage/examples of deprecated ACLs
+    - BUILD: tree-wide: mark a few numeric constants as explicitly long long
+
 2022/03/02 : 2.2.21
     - BUG/MEDIUM: htx: Adjust length to add DATA block in an empty HTX buffer
     - MEDIUM: cli: yield between each pipelined command
