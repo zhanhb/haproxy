@@ -1,6 +1,47 @@
 ChangeLog :
 ===========
 
+2022/03/14 : 2.5.5
+    - CI: github actions: add the output of $CC -dM -E-
+    - CI: github actions: use cache for OpenTracing
+    - CI: refactor OpenTracing build script
+    - CI: github actions: use cache for SSL libs
+    - CI: Consistently use actions/checkout@v2
+    - BUILD: atomic: make the old HA_ATOMIC_LOAD() support const pointers
+    - BUILD: tree-wide: mark a few numeric constants as explicitly long long
+    - BUG/MEDIUM: mux-fcgi: Don't rely on SI src/dst addresses for FCGI health-checks
+    - BUG/MEDIUM: htx: Fix a possible null derefs in htx_xfer_blks()
+    - REGTESTS: fix the race conditions in normalize_uri.vtc
+    - REGTESTS: fix the race conditions in secure_memcmp.vtc
+    - BUG/MEDIUM: httpclient/lua: infinite appctx loop with POST
+    - BUG/MINOR: pool: always align pool_heads to 64 bytes
+    - BUG/MEDIUM: pools: fix ha_free() on area in the process of being freed
+    - BUILD: fix kFreeBSD build.
+    - MINOR: pools: add a new global option "no-memory-trimming"
+    - MINOR: stats: Add dark mode support for socket rows
+    - BUILD: pools: fix backport of no-memory-trimming on non-linux OS
+    - BUILD: fix recent build breakage of freebsd caused by kFreeBSD build fix
+    - BUG/MINOR: add missing modes in proxy_mode_str()
+    - BUG/MINOR: cli: shows correct mode in "show sess"
+    - BUG/MINOR: httpclient: Set conn-stream/channel EOI flags at the end of request
+    - BUG/MINOR: hlua: Set conn-stream/channel EOI flags at the end of request
+    - BUG/MINOR: stats: Set conn-stream/channel EOI flags at the end of request
+    - BUG/MINOR: cache: Set conn-stream/channel EOI flags at the end of request
+    - BUG/MINOR: promex: Set conn-stream/channel EOI flags at the end of request
+    - BUG/MEDIUM: stream: Use the front analyzers for new listener-less streams
+    - DEBUG: cache: Update underlying buffer when loading HTX message in cache applet
+    - BUG/MEDIUM: mcli: Properly handle errors and timeouts during reponse processing
+    - DEBUG: stream: Add the missing descriptions for stream trace events
+    - DEBUG: stream: Fix stream trace message to print response buffer state
+    - BUG/MAJOR: mux-pt: Always destroy the backend connection on detach
+    - BUG/MINOR: session: fix theoretical risk of memleak in session_accept_fd()
+    - BUG/MEDIUM: httpclient: don't consume data before it was analyzed
+    - CLEANUP: htx: remove unused co_htx_remove_blk()
+    - BUG/MINOR: httpclient: consume partly the blocks when necessary
+    - BUG/MINOR: httpclient: remove the UNUSED block when parsing headers
+    - BUG/MEDIUM: httpclient: must manipulate head, not first
+    - REGTESTS: fix the race conditions in be2hex.vtc
+
 2022/02/25 : 2.5.4
     - BUG/MEDIUM: htx: Be sure to have a buffer to perform a raw copy of a message
     - BUG/MEDIUM: mux-h1: Don't wake h1s if mux is blocked on lack of output buffer
