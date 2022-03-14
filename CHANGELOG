@@ -1,6 +1,34 @@
 ChangeLog :
 ===========
 
+2022/03/14 : 2.4.15
+    - CI: github actions: add the output of $CC -dM -E-
+    - CI: github actions: add OpenTracing builds
+    - CI: github actions: use cache for OpenTracing
+    - CI: github actions: use cache for SSL libs
+    - BUG/MEDIUM: htx: Fix a possible null derefs in htx_xfer_blks()
+    - REGTESTS: fix the race conditions in normalize_uri.vtc
+    - REGTESTS: fix the race conditions in secure_memcmp.vtc
+    - BUG/MINOR: pool: always align pool_heads to 64 bytes
+    - BUG/MEDIUM: pools: fix ha_free() on area in the process of being freed
+    - MINOR: pools: add a new global option "no-memory-trimming"
+    - BUILD: pools: fix backport of no-memory-trimming on non-linux OS
+    - BUG/MINOR: add missing modes in proxy_mode_str()
+    - BUG/MINOR: cli: shows correct mode in "show sess"
+    - BUG/MINOR: hlua: Set conn-stream/channel EOI flags at the end of request
+    - BUG/MINOR: stats: Set conn-stream/channel EOI flags at the end of request
+    - BUG/MINOR: cache: Set conn-stream/channel EOI flags at the end of request
+    - BUG/MINOR: promex: Set conn-stream/channel EOI flags at the end of request
+    - DEBUG: cache: Update underlying buffer when loading HTX message in cache applet
+    - BUG/MEDIUM: mcli: Properly handle errors and timeouts during reponse processing
+    - DEBUG: stream: Add the missing descriptions for stream trace events
+    - DEBUG: stream: Fix stream trace message to print response buffer state
+    - BUG/MAJOR: mux-pt: Always destroy the backend connection on detach
+    - BUG/MINOR: session: fix theoretical risk of memleak in session_accept_fd()
+    - BUG/MINOR: stream: make the call_rate only count the no-progress calls
+    - DOC: Fix usage/examples of deprecated ACLs
+    - BUILD: tree-wide: mark a few numeric constants as explicitly long long
+
 2022/02/25 : 2.4.14
     - MINOR: sock: move the unused socket cleaning code into its own function
     - BUG/MEDIUM: mworker: close unused transferred FDs on load failure
