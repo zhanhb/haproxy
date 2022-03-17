@@ -2315,7 +2315,7 @@ static int h1_process(struct h1c * h1c)
 	if (!h1s_data_pending(h1s) && h1s && h1s->cs && h1s->cs->data_cb->wake &&
 	    (h1s->flags & H1S_F_REOS || h1c->flags & H1C_F_CS_ERROR ||
 	    conn->flags & (CO_FL_ERROR | CO_FL_SOCK_WR_SH))) {
-		if (h1c->flags & H1C_F_CS_ERROR || conn->flags & CO_FL_ERROR)
+		if (h1c->flags & H1C_F_CS_ERROR || ((conn->flags & CO_FL_ERROR) && !b_data(&h1c->ibuf)))
 			h1s->cs->flags |= CS_FL_ERROR;
 		TRACE_POINT(H1_EV_STRM_WAKE, h1c->conn, h1s);
 		h1s->cs->data_cb->wake(h1s->cs);
