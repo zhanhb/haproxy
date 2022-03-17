@@ -592,7 +592,6 @@ static void httpclient_applet_io_handler(struct appctx *appctx)
 	struct stream *s = si_strm(si);
 	struct channel *req = &s->req;
 	struct channel *res = &s->res;
-	struct http_msg *msg = &s->txn->rsp;
 	struct htx_blk *blk = NULL;
 	struct htx *htx;
 	struct htx_sl *sl = NULL;
@@ -681,7 +680,7 @@ static void httpclient_applet_io_handler(struct appctx *appctx)
 
 			case HTTPCLIENT_S_RES_STLINE:
 				/* copy the start line in the hc structure,then remove the htx block */
-				if (!co_data(res) || (msg->msg_state < HTTP_MSG_DATA))
+				if (!co_data(res))
 					goto more;
 				htx = htxbuf(&res->buf);
 				if (!htx)
@@ -720,7 +719,7 @@ static void httpclient_applet_io_handler(struct appctx *appctx)
 				{
 					struct http_hdr hdrs[global.tune.max_http_hdr];
 
-					if (!co_data(res) || (msg->msg_state < HTTP_MSG_DATA))
+					if (!co_data(res))
 						goto more;
 					htx = htxbuf(&res->buf);
 					if (!htx)
@@ -785,7 +784,7 @@ static void httpclient_applet_io_handler(struct appctx *appctx)
 				 * The IO handler removes the htx blocks in the response buffer and
 				 * push them in the hc->res.buf buffer in a raw format.
 				 */
-				if (!co_data(res) || (msg->msg_state < HTTP_MSG_DATA))
+				if (!co_data(res))
 					goto more;
 
 				htx = htxbuf(&res->buf);
