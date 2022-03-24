@@ -1541,9 +1541,7 @@ int url2sa(const char *url, int ulen, struct sockaddr_storage *addr, struct spli
 				out->host_len = ret;
 			}
 
-			/* we need to assign again curr and end from the trash */
-			url = trash.area;
-			curr = trash.area + ret;
+			curr += ret;
 
 			/* Decode port. */
 			if (*curr == ':') {
