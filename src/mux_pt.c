@@ -299,6 +299,10 @@ static size_t mux_pt_snd_buf(struct conn_stream *cs, struct buffer *buf, size_t 
 
 	if (ret > 0)
 		b_del(buf, ret);
+
+	if (cs->conn->flags & CO_FL_ERROR)
+		cs->flags |= CS_FL_ERROR;
+
 	return ret;
 }
 
@@ -337,7 +341,14 @@ static int mux_pt_rcv_pipe(struct conn_stream *cs, struct pipe *pipe, unsigned i
 
 static int mux_pt_snd_pipe(struct conn_stream *cs, struct pipe *pipe)
 {
-	return (cs->conn->xprt->snd_pipe(cs->conn, cs->conn->xprt_ctx, pipe));
+	int ret;
+
+	ret = cs->conn->xprt->snd_pipe(cs->conn, cs->conn->xprt_ctx, pipe);
+
+	if (cs->conn->flags & CO_FL_ERROR)
+		cs->flags |= CS_FL_ERROR;
+
+	return ret;
 }
 #endif
 
