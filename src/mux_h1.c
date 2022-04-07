@@ -1866,6 +1866,8 @@ static size_t h1_process_mux(struct h1c *h1c, struct buffer *buf, size_t count)
 						goto error;
 					}
 					h1m->curr_len -= count;
+					if (!h1m->curr_len)
+						last_data = 1;
 				}
 				if (chn_htx->flags & HTX_FL_EOM) {
 					TRACE_DEVEL("last message block", H1_EV_TX_DATA|H1_EV_TX_BODY, h1c->conn, h1s);
@@ -2173,8 +2175,9 @@ static size_t h1_process_mux(struct h1c *h1c, struct buffer *buf, size_t count)
 					TRACE_STATE("1xx response xferred", H1_EV_TX_DATA|H1_EV_TX_HDRS, h1c->conn, h1s);
 				}
 				else {
-					/* EOM flag is set and it is the last block */
-					if (htx_is_unique_blk(chn_htx, blk) && (chn_htx->flags & HTX_FL_EOM)) {
+					/* EOM flag is set or empty payload (C-L to 0) and it is the last block */
+					if (htx_is_unique_blk(chn_htx, blk) &&
+					    ((chn_htx->flags & HTX_FL_EOM) || ((h1m->flags & H1_MF_CLEN) && !h1m->curr_len))) {
 						if (h1m->flags & H1_MF_CHNK) {
 							if (!chunk_memcat(&tmp, "\r\n0\r\n\r\n", 7))
 								goto full;
@@ -2272,8 +2275,11 @@ static size_t h1_process_mux(struct h1c *h1c, struct buffer *buf, size_t count)
 						    H1_EV_TX_DATA|H1_EV_TX_BODY, h1c->conn, h1s, 0, (size_t[]){v.len});
 
 			  skip_data:
-				if (h1m->state == H1_MSG_DATA && (h1m->flags & H1_MF_CLEN))
+				if (h1m->state == H1_MSG_DATA && (h1m->flags & H1_MF_CLEN)) {
 					h1m->curr_len -= vlen;
+					if (!h1m->curr_len)
+						last_data = 1;
+				}
 				if (last_data)
 					goto done;
 				break;
@@ -2323,7 +2329,7 @@ static size_t h1_process_mux(struct h1c *h1c, struct buffer *buf, size_t count)
 				goto error; /* For now return an error */
 
 			  done:
-				if (!(chn_htx->flags & HTX_FL_EOM)) {
+				if (!(chn_htx->flags & HTX_FL_EOM) && (!(h1m->flags & H1_MF_CLEN) || h1m->curr_len)) {
 					TRACE_STATE("No EOM flags in done state", H1_EV_TX_DATA|H1_EV_H1C_ERR|H1_EV_H1S_ERR, h1c->conn, h1s);
 					goto error; /* For now return an error */
 				}
