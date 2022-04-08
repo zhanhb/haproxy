@@ -159,6 +159,9 @@ static enum act_return http_action_replace_uri(struct act_rule *rule, struct pro
 	if (rule->arg.act.p[0] == (void *)1)
 		uri = iststop(http_get_path(uri), '?');
 
+	if (!istlen(uri))
+		goto leave;
+
 	if (!regex_exec_match2(rule->arg.act.p[1], uri.ptr, uri.len, MAX_MATCH, pmatch, 0))
 		goto leave;
 
