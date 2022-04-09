@@ -54,7 +54,7 @@ jobs:
     - name: Cache SSL libs
       if: ${{ matrix.ssl && matrix.ssl != 'stock' && matrix.ssl != 'BORINGSSL=yes' && matrix.ssl != 'QUICTLS=yes' }}
       id: cache_ssl
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: '~/opt/'
         key: ssl-${{ steps.generate-cache-key.outputs.key }}
