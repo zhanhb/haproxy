@@ -20,8 +20,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v1
-    - name: prepare VTest
+    - uses: actions/checkout@v3
+    - name: Install VTest
       run: |
         git clone https://github.com/VTest/VTest.git ../vtest
         make -C ../vtest FLAGS="-O2 -s -Wall"
