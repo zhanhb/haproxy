@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v3
     - name: build haproxy
       run: |
         make -j3 CC=gcc ERR=1 TARGET=linux-glibc USE_OPENSSL=1

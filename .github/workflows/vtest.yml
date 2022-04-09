@@ -20,7 +20,7 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Generate Build Matrix
         id: set-matrix
         run: python3 .github/matrix.py "${{ github.event_name }}"
@@ -40,7 +40,7 @@ jobs:
       # Force ASAN output into asan.log to make the output more readable.
       ASAN_OPTIONS: log_path=asan.log
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 100
 #
