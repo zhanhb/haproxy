@@ -216,7 +216,7 @@ static void mux_pt_detach(struct conn_stream *cs)
 	struct mux_pt_ctx *ctx = cs->conn->ctx;
 
 	/* Subscribe, to know if we got disconnected */
-	if (!conn_is_back(conn) && conn->owner != NULL &&
+	if (conn->owner != NULL &&
 	    !(conn->flags & (CO_FL_ERROR | CO_FL_SOCK_RD_SH | CO_FL_SOCK_WR_SH))) {
 		ctx->cs = NULL;
 		conn->xprt->subscribe(conn, conn->xprt_ctx, SUB_RETRY_RECV, &ctx->wait_event);
