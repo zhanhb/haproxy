@@ -808,10 +808,16 @@ static inline __maybe_unused int h2c_mux_busy(const struct h2c *h2c, const struc
 	return 1;
 }
 
-/* marks an error on the connection */
+/* marks an error on the connection. Before settings are sent, we must not send
+ * a GOAWAY frame, and the error state will prevent h2c_send_goaway_error()
+ * from verifying this so we set H2_CF_GOAWAY_FAILED to make sure it will not
+ * even try.
+ */
 static inline __maybe_unused void h2c_error(struct h2c *h2c, enum h2_err err)
 {
 	h2c->errcode = err;
+	if (h2c->st0 < H2_CS_SETTINGS1)
+		h2c->flags |= H2_CF_GOAWAY_FAILED;
 	h2c->st0 = H2_CS_ERROR;
 }
 
@@ -1330,7 +1336,8 @@ static int h2c_bck_send_preface(struct h2c *h2c)
  * the message, it subscribes the requester (either <h2s> or <h2c>) to future
  * notifications. It sets H2_CF_GOAWAY_SENT on success, and H2_CF_GOAWAY_FAILED
  * on unrecoverable failure. It will not attempt to send one again in this last
- * case so that it is safe to use h2c_error() to report such errors.
+ * case, nor will it send one if settings were not sent (e.g. still waiting for
+ * a preface) so that it is safe to use h2c_error() to report such errors.
  */
 static int h2c_send_goaway_error(struct h2c *h2c, struct h2s *h2s)
 {
@@ -1338,7 +1345,7 @@ static int h2c_send_goaway_error(struct h2c *h2c, struct h2s *h2s)
 	char str[17];
 	int ret;
 
-	if (h2c->flags & H2_CF_GOAWAY_FAILED)
+	if ((h2c->flags & H2_CF_GOAWAY_FAILED) || h2c->st0 < H2_CS_SETTINGS1)
 		return 1; // claim that it worked
 
 	if (h2c_mux_busy(h2c, h2s)) {
