@@ -1455,8 +1455,15 @@ static size_t h1_process_trailers(struct h1s *h1s, struct h1m *h1m, struct htx *
 	struct h1m tlr_h1m;
 	int ret = 0;
 
-	if (!max || !b_data(buf))
+	if (b_data(buf) == *ofs) {
+		/* Nothing to parse */
+                goto end;
+	}
+	if (!max) {
+		/* No more room */
+		h1s->flags |= H1S_F_RX_CONGESTED;
 		goto end;
+	}
 
 	/* Realing input buffer if necessary */
 	if (b_peek(buf, *ofs) > b_tail(buf))
