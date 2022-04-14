@@ -190,10 +190,10 @@ static inline int task_in_wq(struct task *t)
 /* returns true if the current thread has some work to do */
 static inline int thread_has_tasks(void)
 {
-	return (!!(global_tasks_mask & tid_bit) |
-		!eb_is_empty(&sched->rqueue) |
-	        !!sched->tl_class_mask |
-		!MT_LIST_ISEMPTY(&sched->shared_tasklet_list));
+	return ((int)!!(global_tasks_mask & tid_bit) |
+		(int)!eb_is_empty(&sched->rqueue) |
+	        (int)!!sched->tl_class_mask |
+		(int)!MT_LIST_ISEMPTY(&sched->shared_tasklet_list));
 }
 
 /* puts the task <t> in run queue with reason flags <f>, and returns <t> */
