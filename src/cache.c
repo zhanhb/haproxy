@@ -699,10 +699,11 @@ enum act_return http_action_req_cache_use(struct act_rule *rule, struct proxy *p
 			appctx->ctx.cache.entry = res;
 			return ACT_RET_CONT;
 		} else {
+			s->target = NULL;
 			shctx_lock(shctx_ptr(cache));
 			shctx_row_dec_hot(shctx_ptr(cache), block_ptr(res));
 			shctx_unlock(shctx_ptr(cache));
-			return ACT_RET_YIELD;
+			return ACT_RET_CONT;
 		}
 	}
 	shctx_unlock(shctx_ptr(cache));
