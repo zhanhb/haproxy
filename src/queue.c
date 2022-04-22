@@ -331,7 +331,7 @@ static int pendconn_process_next_strm(struct server *srv, struct proxy *px)
 		px->lbprm.server_take_conn(srv, 1);
 	stream_add_srv_conn(p->strm, srv);
 
-	task_wakeup(p->strm->task, TASK_WOKEN_RES);
+	task_instant_wakeup(p->strm->task, TASK_WOKEN_RES);
 
 	return 1;
 }
@@ -465,7 +465,7 @@ int pendconn_redistribute(struct server *s)
 		__pendconn_unlink_srv(p);
 		p->strm_flags &= ~(SF_DIRECT | SF_ASSIGNED | SF_ADDR_SET);
 
-		task_wakeup(p->strm->task, TASK_WOKEN_RES);
+		task_instant_wakeup(p->strm->task, TASK_WOKEN_RES);
 		xferred++;
 	}
 	if (xferred) {
@@ -507,7 +507,7 @@ int pendconn_grab_from_px(struct server *s)
 		__pendconn_unlink_prx(p);
 		p->target = s;
 
-		task_wakeup(p->strm->task, TASK_WOKEN_RES);
+		task_instant_wakeup(p->strm->task, TASK_WOKEN_RES);
 		xferred++;
 	}
 	HA_RWLOCK_WRUNLOCK(PROXY_LOCK, &s->proxy->lock);
