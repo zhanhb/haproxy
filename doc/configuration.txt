@@ -3,7 +3,6 @@
                           Configuration Manual
                          ----------------------
                               version 2.3
-                             willy tarreau
                               2022/03/14
 
 
