@@ -147,7 +147,6 @@ void free_proxy(struct proxy *p)
 	if (!p)
 		return;
 
-	proxy_unref_defaults(p);
 	free(p->conf.file);
 	free(p->id);
 	free(p->cookie_name);
@@ -282,6 +281,8 @@ void free_proxy(struct proxy *p)
 
 	h = p->req_cap;
 	while (h) {
+		if (p->defpx && h == p->defpx->req_cap)
+			break;
 		h_next = h->next;
 		free(h->name);
 		pool_destroy(h->pool);
@@ -291,6 +292,8 @@ void free_proxy(struct proxy *p)
 
 	h = p->rsp_cap;
 	while (h) {
+		if (p->defpx && h == p->defpx->rsp_cap)
+			break;
 		h_next = h->next;
 		free(h->name);
 		pool_destroy(h->pool);
@@ -342,6 +345,8 @@ void free_proxy(struct proxy *p)
 
 	HA_RWLOCK_DESTROY(&p->lbprm.lock);
 	HA_RWLOCK_DESTROY(&p->lock);
+
+	proxy_unref_defaults(p);
 	ha_free(&p);
 }
 
@@ -1423,6 +1428,7 @@ void proxy_preset_defaults(struct proxy *defproxy)
 void proxy_free_defaults(struct proxy *defproxy)
 {
 	struct acl *acl, *aclb;
+	struct cap_hdr *h,*h_next;
 
 	ha_free(&defproxy->id);
 	ha_free(&defproxy->conf.file);
@@ -1455,6 +1461,24 @@ void proxy_free_defaults(struct proxy *defproxy)
 	free_act_rules(&defproxy->http_req_rules);
 	free_act_rules(&defproxy->http_res_rules);
 	free_act_rules(&defproxy->http_after_res_rules);
+
+	h = defproxy->req_cap;
+	while (h) {
+		h_next = h->next;
+		free(h->name);
+		pool_destroy(h->pool);
+		free(h);
+		h = h_next;
+	}
+
+	h = defproxy->rsp_cap;
+	while (h) {
+		h_next = h->next;
+		free(h->name);
+		pool_destroy(h->pool);
+		free(h);
+		h = h_next;
+	}
 
 	if (defproxy->conf.logformat_string != default_http_log_format &&
 	    defproxy->conf.logformat_string != default_tcp_log_format &&
@@ -1702,6 +1726,12 @@ static int proxy_defproxy_cpy(struct proxy *curproxy, const struct proxy *defpro
 			curproxy->capture_name = strdup(defproxy->capture_name);
 		curproxy->capture_namelen = defproxy->capture_namelen;
 		curproxy->capture_len = defproxy->capture_len;
+
+		curproxy->nb_req_cap = defproxy->nb_req_cap;
+		curproxy->req_cap = defproxy->req_cap;
+
+		curproxy->nb_rsp_cap = defproxy->nb_rsp_cap;
+		curproxy->rsp_cap = defproxy->rsp_cap;
 	}
 
 	if (curproxy->cap & PR_CAP_FE) {
