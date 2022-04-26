@@ -2474,6 +2474,7 @@ static void resolvers_deinit(void)
 			abort_resolution(res);
 		}
 
+		free_proxy(resolvers->px);
 		free(resolvers->id);
 		free((char *)resolvers->conf.file);
 		task_destroy(resolvers->t);
