@@ -2829,11 +2829,12 @@ static int cli_io_handler_show_cafile_detail(struct appctx *appctx)
 	struct stream_interface *si = appctx->owner;
 	struct cafile_entry *cafile_entry = appctx->ctx.cli.p0;
 	struct buffer *out = alloc_trash_chunk();
-	int i;
+	int i = 0;
 	X509 *cert;
 	STACK_OF(X509_OBJECT) *objs;
 	int retval = 0;
-	long ca_index = (long)appctx->ctx.cli.p1;
+	int ca_index = appctx->ctx.cli.i0;
+	int show_all = appctx->ctx.cli.i1;
 
 	if (!out)
 		goto end_no_putchk;
@@ -2855,33 +2856,39 @@ static int cli_io_handler_show_cafile_detail(struct appctx *appctx)
 		goto end;
 
 	objs = X509_STORE_get0_objects(cafile_entry->ca_store);
-	for (i = 0; i < sk_X509_OBJECT_num(objs); i++) {
+	for (i = ca_index; i < sk_X509_OBJECT_num(objs); i++) {
+
 		cert = X509_OBJECT_get0_X509(sk_X509_OBJECT_value(objs, i));
 		if (!cert)
 			continue;
 
-		/* Certificate indexes start at 1 on the CLI output. */
-		if (ca_index && ca_index-1 != i)
-			continue;
-
+		/* file starts at line 1 */
 		chunk_appendf(out, " \nCertificate #%d:\n", i+1);
 		retval = show_cert_detail(cert, NULL, out);
 		if (retval < 0)
 			goto end_no_putchk;
-		else if (retval || ca_index)
+		else if (retval)
+			goto yield;
+
+		if (ci_putchk(si_ic(si), out) == -1) {
+			si_rx_room_blk(si);
+			goto yield;
+		}
+
+		if (!show_all)   /* only need to dump one certificate */
 			goto end;
 	}
 
 end:
-	if (ci_putchk(si_ic(si), out) == -1) {
-		si_rx_room_blk(si);
-		goto yield;
-	}
+	free_trash_chunk(out);
+	return 1; /* end, don't come back */
 
 end_no_putchk:
 	free_trash_chunk(out);
 	return 1;
 yield:
+	/* save the current state */
+	appctx->ctx.cli.i0 = i;
 	free_trash_chunk(out);
 	return 0; /* should come back */
 }
@@ -2891,7 +2898,7 @@ yield:
 static int cli_parse_show_cafile(char **args, char *payload, struct appctx *appctx, void *private)
 {
 	struct cafile_entry *cafile_entry;
-	long ca_index = 0;
+	int ca_index = 0;
 	char *colons;
 	char *err = NULL;
 
@@ -2903,6 +2910,8 @@ static int cli_parse_show_cafile(char **args, char *payload, struct appctx *appc
 	if (HA_SPIN_TRYLOCK(CKCH_LOCK, &ckch_lock))
 		return cli_err(appctx, "Can't show!\nOperations on certificates are currently locked!\n");
 
+	appctx->ctx.cli.i1 = 1; /* show all certificates */
+	appctx->ctx.cli.i0 = 0;
 	/* check if there is a certificate to lookup */
 	if (*args[3]) {
 
@@ -2918,6 +2927,8 @@ static int cli_parse_show_cafile(char **args, char *payload, struct appctx *appc
 				goto error;
 			}
 			*colons = '\0';
+			appctx->ctx.cli.i0 = ca_index - 1; /* we start counting at 0 in the ca_store, but at 1 on the CLI */
+			appctx->ctx.cli.i1 = 0; /* show only one certificate */
 		}
 
 		if (*args[3] == '*') {
@@ -2937,7 +2948,6 @@ static int cli_parse_show_cafile(char **args, char *payload, struct appctx *appc
 		}
 
 		appctx->ctx.cli.p0 = cafile_entry;
-		appctx->ctx.cli.p1 = (void*)ca_index;
 		/* use the IO handler that shows details */
 		appctx->io_handler = cli_io_handler_show_cafile_detail;
 	}
