@@ -1,6 +1,49 @@
 ChangeLog :
 ===========
 
+2022/04/29 : 2.3.20
+    - BUG/MINOR: tools: fix url2sa return value with IPv4
+    - CI: github actions: switch to LibreSSL-3.5.1
+    - BUG/MEDIUM: mux-h1: only turn CO_FL_ERROR to CS_FL_ERROR with empty ibuf
+    - BUG/MEDIUM: trace: avoid race condition when retrieving session from conn->owner
+    - BUG/MINOR: tools: url2sa reads too far when no port nor path
+    - BUG/MEDIUM: mux-fcgi: Properly handle return value of headers/trailers parsing
+    - BUG/MEDIUM: mux-h1: Properly detect full buffer cases during message parsing
+    - BUG/MEDIUM: mux-h1: Properly detect full buffer cases when adding EOM block
+    - BUG/MEDIUM: stream-int: do not rely on the connection error once established
+    - MEDIUM: mux-h2: slightly relax timeout management rules
+    - BUG/MEDIUM: mux-h2: make use of http-request and keep-alive timeouts
+    - DOC: reflect H2 timeout changes
+    - BUG/MINOR: cli/stream: fix "shutdown session" to iterate over all threads
+    - BUG/MAJOR: mux_pt: always report the connection error to the conn_stream
+    - CI: github actions: update OpenSSL to 3.0.2
+    - BUG/MINOR: fcgi-app: Don't add C-L header on response to HEAD requests
+    - BUG/MEDIUM: http-conv: Fix url_enc() to not crush const samples
+    - BUG/MEDIUM: http-act: Don't replace URI if path is not found or invalid
+    - CI: Update to actions/checkout@v3
+    - CI: Update to actions/cache@v3
+    - CI: cirrus: switch to FreeBSD-13.0
+    - BUG/MINOR: mux-h2: do not send GOAWAY if SETTINGS were not sent
+    - BUG/MINOR: cache: do not display expired entries in "show cache"
+    - BUG/MINOR: mux-h2: do not use timeout http-keep-alive on backend side
+    - BUG/MINOR: mux-h2: use timeout http-request as a fallback for http-keep-alive
+    - BUG/MEDIUM: mux-h1: Don't request more room on partial trailers
+    - BUG/MEDIUM: fcgi-app: Use http_msg flags to know if C-L header can be added
+    - BUG/MEDIUM: compression: Don't forget to update htx_sl and http_msg flags
+    - SCRIPTS: announce-release: update the doc's URL
+    - DOC: lua: update a few doc URLs
+    - SCRIPTS: announce-release: add shortened links to pending issues
+    - BUG/MINOR: cache: Disable cache if applet creation fails
+    - DOC: remove my name from the config doc
+    - BUG/MINOR: rules: Fix check_capture() function to use the right rule arguments
+    - REGTESTS: fix the race conditions in be2dec.vtc ad field.vtc
+    - BUG/MINOR: pools: make sure to also destroy shared pools in pool_destroy_all()
+    - CLEANUP: acl: Remove unused variable when releasing an acl expression
+    - BUILD: fd: remove unused variable totlen in fd_write_frag_line()
+    - BUILD: sockpair: do not set unused flag
+    - BUILD: proto_uxst: do not set unused flag
+    - MINOR: version: Set the EOL of the 2.3 branch
+
 2022/03/14 : 2.3.19
     - BUG/MINOR: add missing modes in proxy_mode_str()
     - BUG/MINOR: cli: shows correct mode in "show sess"
