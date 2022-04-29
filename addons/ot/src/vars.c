@@ -403,7 +403,7 @@ int flt_ot_vars_unset(struct stream *s, const char *scope, const char *prefix, u
 
 			FLT_OT_DBG(2, "- '%s' -> '%.*s'", var_name, (int)var->data.u.str.data, var->data.u.str.area);
 
-			size = var_clear(var, 1);
+			size = var_clear(var);
 			flt_ot_smp_init(s, &smp, opt, 0, NULL);
 			var_accounting_diff(vars, smp.sess, smp.strm, -size);
 
