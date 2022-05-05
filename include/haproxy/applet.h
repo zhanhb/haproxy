@@ -63,7 +63,7 @@ static inline struct appctx *appctx_new(struct applet *applet)
 {
 	struct appctx *appctx;
 
-	appctx = pool_alloc(pool_head_appctx);
+	appctx = pool_zalloc(pool_head_appctx);
 	if (likely(appctx != NULL)) {
 		appctx->obj_type = OBJ_TYPE_APPCTX;
 		appctx->applet = applet;
