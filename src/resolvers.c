@@ -2766,12 +2766,13 @@ static int cli_parse_stat_resolvers(char **args, char *payload, struct appctx *a
 /* Dumps counters from all resolvers section and associated name servers. It
  * returns 0 if the output buffer is full and it needs to be called again,
  * otherwise non-zero. It may limit itself to the resolver pointed to by
- * <cli.p0> if it's not null.
+ * <cli.p0> if it's not null, and takes the current resolver section from p1
+ * and the current resolver from p2.
  */
 static int cli_io_handler_dump_resolvers_to_buffer(struct appctx *appctx)
 {
 	struct stream_interface *si = appctx->owner;
-	struct resolvers    *resolvers;
+	struct resolvers    *resolvers = appctx->ctx.cli.p1;
 	struct dns_nameserver   *ns;
 
 	chunk_reset(&trash);
@@ -2783,15 +2784,31 @@ static int cli_io_handler_dump_resolvers_to_buffer(struct appctx *appctx)
 
 	case STAT_ST_LIST:
 		if (LIST_ISEMPTY(&sec_resolvers)) {
-			chunk_appendf(&trash, "No resolvers found\n");
+			if (ci_putstr(si_ic(si), "No resolvers found\n") == -1)
+				goto full;
 		}
 		else {
-			list_for_each_entry(resolvers, &sec_resolvers, list) {
+			if (!resolvers)
+				resolvers = LIST_ELEM(sec_resolvers.n, typeof(resolvers), list);
+
+			list_for_each_entry_from(resolvers, &sec_resolvers, list) {
 				if (appctx->ctx.cli.p0 != NULL && appctx->ctx.cli.p0 != resolvers)
 					continue;
 
-				chunk_appendf(&trash, "Resolvers section %s\n", resolvers->id);
-				list_for_each_entry(ns, &resolvers->nameservers, list) {
+				appctx->ctx.cli.p1 = resolvers;
+				ns = appctx->ctx.cli.p2;
+
+				if (!ns) {
+					chunk_printf(&trash, "Resolvers section %s\n", resolvers->id);
+					if (ci_putchk(si_ic(si), &trash) == -1)
+						goto full;
+
+					ns = LIST_ELEM(resolvers->nameservers.n, typeof(ns), list);
+					appctx->ctx.cli.p2 = ns;
+				}
+
+				list_for_each_entry_from(ns, &resolvers->nameservers, list) {
+					chunk_reset(&trash);
 					chunk_appendf(&trash, " nameserver %s:\n", ns->id);
 					chunk_appendf(&trash, "  sent:        %lld\n", ns->counters->sent);
 					chunk_appendf(&trash, "  snd_error:   %lld\n", ns->counters->snd_error);
@@ -2808,25 +2825,29 @@ static int cli_io_handler_dump_resolvers_to_buffer(struct appctx *appctx)
 					chunk_appendf(&trash, "  too_big:     %lld\n", ns->counters->too_big);
 					chunk_appendf(&trash, "  truncated:   %lld\n", ns->counters->truncated);
 					chunk_appendf(&trash, "  outdated:    %lld\n",  ns->counters->outdated);
+					if (ci_putchk(si_ic(si), &trash) == -1)
+						goto full;
+					appctx->ctx.cli.p2 = ns;
 				}
-				chunk_appendf(&trash, "\n");
+
+				appctx->ctx.cli.p2 = NULL;
+
+				/* was this the only section to dump ? */
+				if (appctx->ctx.cli.p0)
+					break;
 			}
 		}
 
-		/* display response */
-		if (ci_putchk(si_ic(si), &trash) == -1) {
-			/* let's try again later from this session. We add ourselves into
-			 * this session's users so that it can remove us upon termination.
-			 */
-			si_rx_room_blk(si);
-			return 0;
-		}
 		/* fall through */
 
 	default:
 		appctx->st2 = STAT_ST_FIN;
 		return 1;
 	}
+ full:
+	/* the output buffer is full, retry later */
+	si_rx_room_blk(si);
+	return 0;
 }
 
 /* register cli keywords */
