@@ -236,6 +236,14 @@ static enum act_return tcp_exec_action_silent_drop(struct act_rule *rule, struct
 	return ACT_RET_ABRT;
 }
 
+/*
+ * Release the sample expr when releasing a set src/dst action
+ */
+static void release_set_src_dst_action(struct act_rule *rule)
+{
+	release_sample_expr(rule->arg.expr);
+}
+
 /* parse "set-{src,dst}[-port]" action */
 static enum act_parse_ret tcp_parse_set_src_dst(const char **args, int *orig_arg, struct proxy *px,
                                                 struct act_rule *rule, char **err)
@@ -277,6 +285,7 @@ static enum act_parse_ret tcp_parse_set_src_dst(const char **args, int *orig_arg
 		return ACT_RET_PRS_ERR;
 	}
 
+	rule->release_ptr = release_set_src_dst_action;
 	(*orig_arg)++;
 
 	return ACT_RET_PRS_OK;
