@@ -418,7 +418,7 @@ int crtlist_parse_file(char *file, struct bind_conf *bind_conf, struct proxy *cu
 
 		if (*crt_path != '/' && global_ssl.crt_base) {
 			if ((strlen(global_ssl.crt_base) + 1 + strlen(crt_path)) > sizeof(path) ||
-			    snprintf(path, sizeof(path), "%s/%s",  global_ssl.crt_base, crt_path)) {
+			    snprintf(path, sizeof(path), "%s/%s",  global_ssl.crt_base, crt_path) > sizeof(path)) {
 				memprintf(err, "'%s' : path too long on line %d in file '%s'",
 					  crt_path, linenum, file);
 				cfgerr |= ERR_ALERT | ERR_FATAL;
