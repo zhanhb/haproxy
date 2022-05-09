@@ -37,14 +37,28 @@
 #define DPRINTF(x...)
 #endif
 
+static inline __attribute((always_inline)) void ha_crash_now(void)
+{
+#if __GNUC_PREREQ__(5, 0)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
+#pragma GCC diagnostic ignored "-Wnull-dereference"
+#endif
+	*(volatile char *)1 = 0;
+#if __GNUC_PREREQ__(5, 0)
+#pragma GCC diagnostic pop
+#endif
+	my_unreachable();
+}
+
 #ifdef DEBUG_USE_ABORT
 /* abort() is better recognized by code analysis tools */
 #define ABORT_NOW() do { extern void ha_backtrace_to_stderr(); ha_backtrace_to_stderr(); abort(); } while (0)
 #else
 /* More efficient than abort() because it does not mangle the
-  * stack and stops at the exact location we need.
-  */
-#define ABORT_NOW() do { extern void ha_backtrace_to_stderr(); ha_backtrace_to_stderr(); (*(volatile int*)1=0); } while (0)
+ * stack and stops at the exact location we need.
+ */
+#define ABORT_NOW() do { ha_crash_now(); } while (0)
 #endif
 
 /* BUG_ON: complains if <cond> is true when DEBUG_STRICT or DEBUG_STRICT_NOCRASH
