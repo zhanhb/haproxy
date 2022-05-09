@@ -131,7 +131,7 @@ enum srv_initaddr {
 
 #define SRV_STATE_FILE_MAX_FIELDS 20
 #define SRV_STATE_FILE_NB_FIELDS_VERSION_1 20
-#define SRV_STATE_LINE_MAXLEN 512
+#define SRV_STATE_LINE_MAXLEN 2000
 
 /* server flags -- 32 bits */
 #define SRV_F_BACKUP       0x0001        /* this server is a backup server */
