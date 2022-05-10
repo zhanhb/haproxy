@@ -3664,8 +3664,8 @@ __LJMP static int hlua_channel_del_data(lua_State *L)
 		WILL_LJMP(lua_error(L));
 
 	offset = output;
-	if (lua_gettop(L) > 2) {
-		offset = MAY_LJMP(luaL_checkinteger(L, 3));
+	if (lua_gettop(L) > 1) {
+		offset = MAY_LJMP(luaL_checkinteger(L, 2));
 		if (offset < 0)
 			offset = MAX(0, (int)input + offset);
 		offset += output;
@@ -3676,8 +3676,8 @@ __LJMP static int hlua_channel_del_data(lua_State *L)
 	}
 
 	len = output + input - offset;
-	if (lua_gettop(L) == 4) {
-		len = MAY_LJMP(luaL_checkinteger(L, 4));
+	if (lua_gettop(L) == 3) {
+		len = MAY_LJMP(luaL_checkinteger(L, 3));
 		if (!len)
 			goto end;
 		if (len == -1)
@@ -6649,8 +6649,7 @@ __LJMP static int hlua_http_msg_del_data(lua_State *L)
 	int offset, len;
 
 	if (lua_gettop(L) < 1 || lua_gettop(L) > 3)
-		WILL_LJMP(luaL_error(L, "'insert' expects at most 2 arguments"));
-	MAY_LJMP(check_args(L, 2, "insert"));
+		WILL_LJMP(luaL_error(L, "'remove' expects at most 2 arguments"));
 	msg = MAY_LJMP(hlua_checkhttpmsg(L, 1));
 
 	if (msg->msg_state < HTTP_MSG_DATA)
@@ -6661,8 +6660,8 @@ __LJMP static int hlua_http_msg_del_data(lua_State *L)
 		WILL_LJMP(lua_error(L));
 
 	offset = input + output;
-	if (lua_gettop(L) > 2) {
-		offset = MAY_LJMP(luaL_checkinteger(L, 3));
+	if (lua_gettop(L) > 1) {
+		offset = MAY_LJMP(luaL_checkinteger(L, 2));
 		if (offset < 0)
 			offset = MAX(0, (int)input + offset);
 		offset += output;
@@ -6673,8 +6672,8 @@ __LJMP static int hlua_http_msg_del_data(lua_State *L)
 	}
 
 	len = output + input - offset;
-	if (lua_gettop(L) == 4) {
-		len = MAY_LJMP(luaL_checkinteger(L, 4));
+	if (lua_gettop(L) == 3) {
+		len = MAY_LJMP(luaL_checkinteger(L, 3));
 		if (!len)
 			goto end;
 		if (len == -1)
