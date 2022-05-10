@@ -1577,21 +1577,21 @@ static void dns_resolve_recv(struct dgram_conn *dgram)
 	struct dns_requester *req;
 	int keep_answer_items;
 
-	fd = dgram->t.sock.fd;
-
-	/* check if ready for reading */
-	if (!fd_recv_ready(fd))
-		return;
-
 	/* no need to go further if we can't retrieve the nameserver */
-	if ((ns = dgram->owner) == NULL) {
-		_HA_ATOMIC_AND(&fdtab[fd].ev, ~(FD_POLL_HUP|FD_POLL_ERR));
-		fd_stop_recv(fd);
+	if ((ns = dgram->owner) == NULL)
 		return;
-	}
 
 	resolvers = ns->resolvers;
 	HA_SPIN_LOCK(DNS_LOCK, &resolvers->lock);
+	fd = dgram->t.sock.fd;
+
+	/* check if ready for reading */
+	if ((fd == -1) || !fd_recv_ready(fd)) {
+		HA_SPIN_UNLOCK(DNS_LOCK, &resolvers->lock);
+		leave_resolver_code();
+		return;
+	}
+
 
 	/* process all pending input messages */
 	while (fd_recv_ready(fd)) {
@@ -1776,21 +1776,22 @@ static void dns_resolve_send(struct dgram_conn *dgram)
 	struct dns_resolution *res;
 	int fd;
 
-	fd = dgram->t.sock.fd;
-
-	/* check if ready for sending */
-	if (!fd_send_ready(fd))
-		return;
-
-	/* we don't want/need to be waked up any more for sending */
-	fd_stop_send(fd);
-
 	/* no need to go further if we can't retrieve the nameserver */
 	if ((ns = dgram->owner) == NULL)
 		return;
 
 	resolvers = ns->resolvers;
 	HA_SPIN_LOCK(DNS_LOCK, &resolvers->lock);
+	fd = dgram->t.sock.fd;
+
+	/* check if ready for sending */
+	if ((fd == -1) || !fd_send_ready(fd)) {
+		HA_SPIN_UNLOCK(DNS_LOCK, &resolvers->lock);
+		return;
+	}
+
+	/* we don't want/need to be waked up any more for sending */
+	fd_stop_send(fd);
 
 	list_for_each_entry(res, &resolvers->resolutions.curr, list) {
 		int ret, len;
