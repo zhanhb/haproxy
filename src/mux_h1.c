@@ -3163,7 +3163,7 @@ static int cfg_h1_headers_case_adjust_postparser()
 
 	file = fopen(hdrs_map.name, "r");
 	if (!file) {
-		ha_alert("config : h1-outgoing-headers-case-adjust-file '%s': failed to open file.\n",
+		ha_alert("config : h1-headers-case-adjust-file '%s': failed to open file.\n",
 			 hdrs_map.name);
                 err_code |= ERR_ALERT | ERR_FATAL;
 		goto end;
@@ -3212,14 +3212,14 @@ static int cfg_h1_headers_case_adjust_postparser()
 		err = NULL;
 		rc = add_hdr_case_adjust(key_beg, value_beg, &err);
 		if (rc < 0) {
-			ha_alert("config : h1-outgoing-headers-case-adjust-file '%s' : %s at line %d.\n",
+			ha_alert("config : h1-headers-case-adjust-file '%s' : %s at line %d.\n",
 				 hdrs_map.name, err, line);
 			err_code |= ERR_ALERT | ERR_FATAL;
 			free(err);
 			goto end;
 		}
 		if (rc > 0) {
-			ha_warning("config : h1-outgoing-headers-case-adjust-file '%s' : %s at line %d.\n",
+			ha_warning("config : h1-headers-case-adjust-file '%s' : %s at line %d.\n",
 				   hdrs_map.name, err, line);
 			err_code |= ERR_WARN;
 			free(err);
@@ -3234,7 +3234,7 @@ static int cfg_h1_headers_case_adjust_postparser()
 }
 
 
-/* config parser for global "h1-outgoing-header-case-adjust" */
+/* config parser for global "h1-header-case-adjust" */
 static int cfg_parse_h1_header_case_adjust(char **args, int section_type, struct proxy *curpx,
 					   struct proxy *defpx, const char *file, int line,
 					   char **err)
@@ -3248,7 +3248,7 @@ static int cfg_parse_h1_header_case_adjust(char **args, int section_type, struct
 	return add_hdr_case_adjust(args[1], args[2], err);
 }
 
-/* config parser for global "h1-outgoing-headers-case-adjust-file" */
+/* config parser for global "h1-headers-case-adjust-file" */
 static int cfg_parse_h1_headers_case_adjust_file(char **args, int section_type, struct proxy *curpx,
 						 struct proxy *defpx, const char *file, int line,
 						 char **err)
