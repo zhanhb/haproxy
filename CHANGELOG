@@ -1,6 +1,19 @@
 ChangeLog :
 ===========
 
+2022/05/13 : 2.2.24
+    - BUG/MAJOR: dns: multi-thread concurrency issue on UDP socket
+    - BUG/MINOR: mux-h2: mark the stream as open before processing it not after
+    - DOC: config: Update doc for PR/PH session states to warn about rewrite failures
+    - BUG/MINOR: tcp/http: release the expr of set-{src,dst}[-port]
+    - BUG/MEDIUM: cli: make "show cli sockets" really yield
+    - BUG/MINOR: map/cli: protect the backref list during "show map" errors
+    - BUG/MINOR: map/cli: make sure patterns don't vanish under "show map"'s init
+    - DOC: fix typo "ant" for "and" in INSTALL
+    - BUG/MINOR: server: Make SRV_STATE_LINE_MAXLEN value from 512 to 2kB (2000 bytes).
+    - BUG/MEDIUM: wdt: don't trigger the watchdog when p is unitialized
+    - CLEANUP: mux-h1: Fix comments and error messages for global options
+
 2022/05/06 : 2.2.23
     - BUG/MINOR: tools: fix url2sa return value with IPv4
     - CI: github actions: switch to LibreSSL-3.5.1
