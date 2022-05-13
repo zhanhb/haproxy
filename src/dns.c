@@ -1588,7 +1588,6 @@ static void dns_resolve_recv(struct dgram_conn *dgram)
 	/* check if ready for reading */
 	if ((fd == -1) || !fd_recv_ready(fd)) {
 		HA_SPIN_UNLOCK(DNS_LOCK, &resolvers->lock);
-		leave_resolver_code();
 		return;
 	}
 
