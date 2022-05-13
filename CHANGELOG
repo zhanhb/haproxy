@@ -1,6 +1,51 @@
 ChangeLog :
 ===========
 
+2022/05/13 : 2.5.7
+    - BUILD: compiler: properly distinguish weak and global symbols
+    - MINOR: connection: Add way to disable active connection closing during soft-stop
+    - BUG/MEDIUM: http-ana: Fix memleak in redirect rules with ignore-empty option
+    - BUG/MINOR: resolvers: Fix memory leak in resolvers_deinit()
+    - BUG/MINOR: pools: make sure to also destroy shared pools in pool_destroy_all()
+    - MINOR: ssl: add a new global option "tune.ssl.hard-maxrecord"
+    - BUG/MEDIUM: httpclient: Fix loop consuming HTX blocks from the response channel
+    - CI: github actions: update LibreSSL to 3.5.2
+    - SCRIPTS: announce-release: add URL of dev packages
+    - BUG/MEDIUM: mux-fcgi: Be sure to never set EOM flag on an empty HTX message
+    - BUG/MEDIUM: mux-h1: Be able to handle trailers when C-L header was specified
+    - BUG/MAJOR: dns: multi-thread concurrency issue on UDP socket
+    - BUG/MINOR: mux-h2: mark the stream as open before processing it not after
+    - MINOR: mux-h2: report a trace event when failing to create a new stream
+    - DOC: config: Update doc for PR/PH session states to warn about rewrite failures
+    - BUG/MINOR: tcp/http: release the expr of set-{src,dst}[-port]
+    - BUG/MINOR: startup: usage() when no -cc arguments
+    - BUG/MEDIUM: resolvers: make "show resolvers" properly yield
+    - BUG/MEDIUM: cli: make "show cli sockets" really yield
+    - BUG/MINOR: proxy/cli: don't enumerate internal proxies on "show backend"
+    - BUG/MINOR: map/cli: protect the backref list during "show map" errors
+    - BUG/MINOR: map/cli: make sure patterns don't vanish under "show map"'s init
+    - BUG/MEDIUM: ssl/cli: fix yielding in show_cafile_detail
+    - BUG/MINOR: ssl/cli: fix "show ssl ca-file/crl-file" not to mix cli+ssl contexts
+    - BUG/MINOR: ssl/cli: fix "show ssl ca-file <name>" not to mix cli+ssl contexts
+    - BUG/MINOR: ssl/cli: fix "show ssl crl-file" not to mix cli+ssl contexts
+    - BUG/MINOR: ssl/cli: fix "show ssl cert" not to mix cli+ssl contexts
+    - DOC: fix typo "ant" for "and" in INSTALL
+    - CI: dynamically determine actual version of h2spec
+    - BUG/MINOR: ssl: Fix typos in crl-file related CLI commands
+    - BUILD: ssl: work around bogus warning in gcc 12's -Wformat-truncation
+    - BUILD: debug: work around gcc-12 excessive -Warray-bounds warnings
+    - BUILD: listener: shut report of possible null-deref in listener_accept()
+    - BUG/MEDIUM: ssl: fix the gcc-12 broken fix :-(
+    - DOC: install: update gcc version requirements
+    - BUG/MINOR: server: Make SRV_STATE_LINE_MAXLEN value from 512 to 2kB (2000 bytes).
+    - BUG/MEDIUM: lua: fix argument handling in data removal functions
+    - DOC/MINOR: fix typos in the lua-api document
+    - BUG/MINOR: conn_stream: do not confirm a connection from the frontend path
+    - CLEANUP: applet: make appctx_new() initialize the whole appctx
+    - BUG/MEDIUM: wdt: don't trigger the watchdog when p is unitialized
+    - MINOR: mux-h1: Add global option accpet payload for any HTTP/1.0 requests
+    - CLEANUP: mux-h1: Fix comments and error messages for global options
+
 2022/04/26 : 2.5.6
     - BUG/MINOR: tools: fix url2sa return value with IPv4
     - BUG/MINOR: httpclient/lua: stuck when closing without data
