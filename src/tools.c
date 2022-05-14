@@ -4810,6 +4810,8 @@ const char *get_exec_path()
 			break;
 		}
 	}
+#elif defined(__sun)
+	ret = getexecname();
 #endif
 	return ret;
 }
