@@ -957,6 +957,10 @@ static struct task *process_chk_conn(struct task *t, void *context, unsigned sho
 			check_notify_success(check);
 		}
 	}
+
+        if (MT_LIST_ADDED(&check->buf_wait.list))
+                MT_LIST_DEL(&check->buf_wait.list);
+
 	task_set_affinity(t, MAX_THREADS_MASK);
 	check_release_buf(check, &check->bi);
 	check_release_buf(check, &check->bo);
