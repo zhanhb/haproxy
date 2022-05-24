@@ -2520,7 +2520,6 @@ static void dns_deinit(void)
 	struct dns_requester  *req, *reqback;
 	struct dns_srvrq      *srvrq, *srvrqback;
 
-	enter_resolver_code();
 	list_for_each_entry_safe(resolvers, resolversback, &dns_resolvers, list) {
 		list_for_each_entry_safe(ns, nsback, &resolvers->nameservers, list) {
 			free(ns->id);
@@ -2537,7 +2536,7 @@ static void dns_deinit(void)
 				LIST_DEL_INIT(&req->list);
 				pool_free(dns_requester_pool, req);
 			}
-			abort_resolution(res);
+			dns_free_resolution(res);
 		}
 
 		list_for_each_entry_safe(res, resback, &resolvers->resolutions.wait, list) {
@@ -2545,7 +2544,7 @@ static void dns_deinit(void)
 				LIST_DEL_INIT(&req->list);
 				pool_free(dns_requester_pool, req);
 			}
-			abort_resolution(res);
+			dns_free_resolution(res);
 		}
 
 		free(resolvers->id);
@@ -2561,8 +2560,6 @@ static void dns_deinit(void)
 		LIST_DEL_INIT(&srvrq->list);
 		free(srvrq);
 	}
-
-	leave_resolver_code();
 }
 
 /* Finalizes the DNS configuration by allocating required resources and checking
