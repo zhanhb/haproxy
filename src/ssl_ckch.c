@@ -59,7 +59,6 @@ static struct {
 	char *path;
 } crlfile_transaction;
 
-
 /********************  cert_key_and_chain functions *************************
  * These are the functions that fills a cert_key_and_chain structure. For the
  * functions filling a SSL_CTX from a cert_key_and_chain, see ssl_sock.c
@@ -2542,36 +2541,6 @@ error:
 	return cli_dynerr(appctx, err);
 }
 
-enum {
-	CREATE_NEW_INST_OK = 0,
-	CREATE_NEW_INST_YIELD = -1,
-	CREATE_NEW_INST_ERR = -2
-};
-
-static inline int __create_new_instance(struct appctx *appctx, struct ckch_inst *ckchi, int *count,
-					struct buffer *trash, char **err)
-{
-	struct ckch_inst *new_inst;
-
-	/* it takes a lot of CPU to creates SSL_CTXs, so we yield every 10 CKCH instances */
-	if (*count >= 10) {
-		/* save the next ckchi to compute */
-		appctx->ctx.ssl.next_ckchi = ckchi;
-		return CREATE_NEW_INST_YIELD;
-	}
-
-	/* Rebuild a new ckch instance that uses the same ckch_store
-	 * than a reference ckchi instance but will use a new CA file. */
-	if (ckch_inst_rebuild(ckchi->ckch_store, ckchi, &new_inst, err))
-		return CREATE_NEW_INST_ERR;
-
-	/* display one dot per new instance */
-	chunk_appendf(trash, ".");
-	++(*count);
-
-	return CREATE_NEW_INST_OK;
-}
-
 /*
  * This function tries to create new ckch instances and their SNIs using a newly
  * set certificate authority (CA file) or a newly set Certificate Revocation
@@ -2581,16 +2550,11 @@ static int cli_io_handler_commit_cafile_crlfile(struct appctx *appctx)
 {
 	struct stream_interface *si = appctx->owner;
 	int y = 0;
-	char *err = NULL;
 	struct cafile_entry *old_cafile_entry = NULL, *new_cafile_entry = NULL;
 	struct ckch_inst_link *ckchi_link;
-	struct buffer *trash = alloc_trash_chunk();
-
-	if (trash == NULL)
-		goto error;
 
 	if (unlikely(si_ic(si)->flags & (CF_WRITE_ERROR|CF_SHUTW)))
-		goto error;
+		goto end;
 
 	while (1) {
 		switch (appctx->st2) {
@@ -2598,16 +2562,13 @@ static int cli_io_handler_commit_cafile_crlfile(struct appctx *appctx)
 				/* This state just print the update message */
 				switch (appctx->ctx.ssl.cafile_type) {
 				case CAFILE_CERT:
-					chunk_printf(trash, "Committing %s", cafile_transaction.path);
+					chunk_printf(&trash, "Committing %s", cafile_transaction.path);
 					break;
 				case CAFILE_CRL:
-					chunk_printf(trash, "Committing %s", crlfile_transaction.path);
+					chunk_printf(&trash, "Committing %s", crlfile_transaction.path);
 					break;
-				default:
-					goto error;
 				}
-				if (ci_putchk(si_ic(si), trash) == -1) {
-					si_rx_room_blk(si);
+				if (ci_putchk(si_ic(si), &trash) == -1) {
 					goto yield;
 				}
 				appctx->st2 = SETCERT_ST_GEN;
@@ -2630,8 +2591,6 @@ static int cli_io_handler_commit_cafile_crlfile(struct appctx *appctx)
 					new_cafile_entry = appctx->ctx.ssl.new_crlfile_entry;
 					break;
 				}
-				if (!new_cafile_entry)
-					continue;
 
 				/* get the next ckchi to regenerate */
 				ckchi_link = appctx->ctx.ssl.next_ckchi_link;
@@ -2640,19 +2599,37 @@ static int cli_io_handler_commit_cafile_crlfile(struct appctx *appctx)
 					ckchi_link = LIST_ELEM(old_cafile_entry->ckch_inst_link.n, typeof(ckchi_link), list);
 					/* Add the newly created cafile_entry to the tree so that
 					 * any new ckch instance created from now can use it. */
-					if (ssl_store_add_uncommitted_cafile_entry(new_cafile_entry))
+					if (ssl_store_add_uncommitted_cafile_entry(new_cafile_entry)) {
+						appctx->st2 = SETCERT_ST_ERROR;
 						goto error;
+					}
 				}
 
 				list_for_each_entry_from(ckchi_link, &old_cafile_entry->ckch_inst_link, list) {
-					switch (__create_new_instance(appctx, ckchi_link->ckch_inst, &y, trash, &err)) {
-					case CREATE_NEW_INST_YIELD:
-						appctx->ctx.ssl.next_ckchi_link = ckchi_link;
+					struct ckch_inst *new_inst;
+
+					/* save the next ckchi to compute */
+					appctx->ctx.ssl.next_ckchi_link = ckchi_link;
+
+					/* it takes a lot of CPU to creates SSL_CTXs, so we yield every 10 CKCH instances */
+					if (y >= 10) {
+						si_rx_endp_more(si); /* let's come back later */
 						goto yield;
-					case CREATE_NEW_INST_ERR:
-						goto error;
-					default: break;
 					}
+
+					/* display one dot per new instance */
+					if (ci_putstr(si_ic(si), ".") == -1)
+						goto yield;
+
+					/* Rebuild a new ckch instance that uses the same ckch_store
+					 * than a reference ckchi instance but will use a new CA file. */
+					appctx->ctx.ssl.err = NULL;
+					if (ckch_inst_rebuild(ckchi_link->ckch_inst->ckch_store, ckchi_link->ckch_inst, &new_inst, &appctx->ctx.ssl.err)) {
+						appctx->st2 = SETCERT_ST_ERROR;
+						goto error;
+					}
+
+					y++;
 				}
 
 				appctx->st2 = SETCERT_ST_INSERT;
@@ -2669,8 +2646,6 @@ static int cli_io_handler_commit_cafile_crlfile(struct appctx *appctx)
 					new_cafile_entry = appctx->ctx.ssl.new_crlfile_entry;
 					break;
 				}
-				if (!new_cafile_entry)
-					continue;
 
 				/* insert the new ckch_insts in the crtlist_entry */
 				list_for_each_entry(ckchi_link, &new_cafile_entry->ckch_inst_link, list) {
@@ -2694,6 +2669,19 @@ static int cli_io_handler_commit_cafile_crlfile(struct appctx *appctx)
 				ebmb_delete(&old_cafile_entry->node);
 				ssl_store_delete_cafile_entry(old_cafile_entry);
 
+				switch (appctx->ctx.ssl.cafile_type) {
+				case CAFILE_CERT:
+					appctx->ctx.ssl.old_cafile_entry = appctx->ctx.ssl.new_cafile_entry = NULL;
+					break;
+				case CAFILE_CRL:
+					appctx->ctx.ssl.old_crlfile_entry = appctx->ctx.ssl.new_crlfile_entry = NULL;
+					break;
+				}
+				appctx->st2 = SETCERT_ST_SUCCESS;
+				/* fallthrough */
+			case SETCERT_ST_SUCCESS:
+				if (ci_putstr(si_ic(si), "\nSuccess!\n") == -1)
+					goto yield;
 				appctx->st2 = SETCERT_ST_FIN;
 				/* fallthrough */
 			case SETCERT_ST_FIN:
@@ -2711,36 +2699,22 @@ static int cli_io_handler_commit_cafile_crlfile(struct appctx *appctx)
 					break;
 				}
 				goto end;
+
+			case SETCERT_ST_ERROR:
+			  error:
+				chunk_printf(&trash, "\n%sFailed!\n", appctx->ctx.ssl.err);
+				if (ci_putchk(si_ic(si), &trash) == -1)
+					goto yield;
+				appctx->st2 = SETCERT_ST_FIN;
+				break;
 		}
 	}
 end:
-
-	chunk_appendf(trash, "\n");
-	chunk_appendf(trash, "Success!\n");
-	if (ci_putchk(si_ic(si), trash) == -1)
-		si_rx_room_blk(si);
-	free_trash_chunk(trash);
 	/* success: call the release function and don't come back */
 	return 1;
 yield:
-	/* store the state */
-	if (ci_putchk(si_ic(si), trash) == -1)
-		si_rx_room_blk(si);
-	free_trash_chunk(trash);
-	si_rx_endp_more(si); /* let's come back later */
+	si_rx_room_blk(si);
 	return 0; /* should come back */
-
-error:
-	/* spin unlock and free are done in the release function */
-	if (trash) {
-		chunk_appendf(trash, "\n%sFailed!\n", err);
-		if (ci_putchk(si_ic(si), trash) == -1)
-			si_rx_room_blk(si);
-		free_trash_chunk(trash);
-	}
-	free(err);
-	/* error: call the release function and don't come back */
-	return 1;
 }
 
 
@@ -2792,14 +2766,15 @@ error:
  */
 static void cli_release_commit_cafile(struct appctx *appctx)
 {
-	if (appctx->st2 != SETCERT_ST_FIN) {
-		struct cafile_entry *new_cafile_entry = appctx->ctx.ssl.new_cafile_entry;
+	struct cafile_entry *new_cafile_entry = appctx->ctx.ssl.new_cafile_entry;
 
-		/* Remove the uncommitted cafile_entry from the tree. */
+	/* Remove the uncommitted cafile_entry from the tree. */
+	if (new_cafile_entry) {
 		ebmb_delete(&new_cafile_entry->node);
 		ssl_store_delete_cafile_entry(new_cafile_entry);
 	}
 	HA_SPIN_UNLOCK(CKCH_LOCK, &ckch_lock);
+	ha_free(&appctx->ctx.ssl.err);
 }
 
 
@@ -3276,14 +3251,15 @@ error:
 /* release function of the `commit ssl crl-file' command, free things and unlock the spinlock */
 static void cli_release_commit_crlfile(struct appctx *appctx)
 {
-	if (appctx->st2 != SETCERT_ST_FIN) {
-		struct cafile_entry *new_crlfile_entry = appctx->ctx.ssl.new_crlfile_entry;
+	struct cafile_entry *new_crlfile_entry = appctx->ctx.ssl.new_crlfile_entry;
 
-		/* Remove the uncommitted cafile_entry from the tree. */
+	/* Remove the uncommitted cafile_entry from the tree. */
+	if (new_crlfile_entry) {
 		ebmb_delete(&new_crlfile_entry->node);
 		ssl_store_delete_cafile_entry(new_crlfile_entry);
 	}
 	HA_SPIN_UNLOCK(CKCH_LOCK, &ckch_lock);
+	ha_free(&appctx->ctx.ssl.err);
 }
 
 /* parsing function of 'del ssl crl-file' */
