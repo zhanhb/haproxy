@@ -567,13 +567,12 @@ unsigned long parse_cpu_set(const char **args, struct hap_cpuset *cpu_set,
 #endif
 
 /* Allocate and initialize the frontend of a "peers" section found in
- * file <file> at line <linenum> with <id> as ID.
+ * file <file> at line <linenum> for section <peers>.
  * Return 0 if succeeded, -1 if not.
  * Note that this function may be called from "default-server"
  * or "peer" lines.
  */
-static int init_peers_frontend(const char *file, int linenum,
-                               const char *id, struct peers *peers)
+static int init_peers_frontend(const char *file, int linenum, struct peers *peers)
 {
 	struct proxy *p;
 
@@ -595,8 +594,9 @@ static int init_peers_frontend(const char *file, int linenum,
 	peers->peers_fe = p;
 
  out:
-	if (id && !p->id)
-		p->id = strdup(id);
+	if (!p->id && peers->id)
+		p->id = strdup(peers->id);
+
 	free(p->conf.file);
 	p->conf.args.file = p->conf.file = strdup(file);
 	if (linenum != -1)
@@ -697,7 +697,7 @@ int cfg_parse_peers(const char *file, int linenum, char **args, int kwm)
 
 		cur_arg = 1;
 
-		if (init_peers_frontend(file, linenum, NULL, curpeers) != 0) {
+		if (init_peers_frontend(file, linenum, curpeers) != 0) {
 			err_code |= ERR_ALERT | ERR_ABORT;
 			goto out;
 		}
@@ -791,7 +791,7 @@ int cfg_parse_peers(const char *file, int linenum, char **args, int kwm)
 		}
 	}
 	else if (strcmp(args[0], "default-server") == 0) {
-		if (init_peers_frontend(file, -1, NULL, curpeers) != 0) {
+		if (init_peers_frontend(file, -1, curpeers) != 0) {
 			err_code |= ERR_ALERT | ERR_ABORT;
 			goto out;
 		}
@@ -799,7 +799,7 @@ int cfg_parse_peers(const char *file, int linenum, char **args, int kwm)
 		                         SRV_PARSE_DEFAULT_SERVER|SRV_PARSE_IN_PEER_SECTION|SRV_PARSE_INITIAL_RESOLVE);
 	}
 	else if (strcmp(args[0], "log") == 0) {
-		if (init_peers_frontend(file, linenum, NULL, curpeers) != 0) {
+		if (init_peers_frontend(file, linenum, curpeers) != 0) {
 			err_code |= ERR_ALERT | ERR_ABORT;
 			goto out;
 		}
@@ -896,7 +896,6 @@ int cfg_parse_peers(const char *file, int linenum, char **args, int kwm)
 		/* Line number and peer ID are updated only if this peer is the local one. */
 		if (init_peers_frontend(file,
 		                        newpeer->local ? linenum: -1,
-		                        newpeer->local ? newpeer->id : NULL,
 		                        curpeers) != 0) {
 			err_code |= ERR_ALERT | ERR_ABORT;
 			goto out;
@@ -978,7 +977,7 @@ int cfg_parse_peers(const char *file, int linenum, char **args, int kwm)
 		size_t prefix_len;
 
 		/* Line number and peer ID are updated only if this peer is the local one. */
-		if (init_peers_frontend(file, -1, NULL, curpeers) != 0) {
+		if (init_peers_frontend(file, -1, curpeers) != 0) {
 			err_code |= ERR_ALERT | ERR_ABORT;
 			goto out;
 		}
