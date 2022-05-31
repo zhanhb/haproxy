@@ -1477,6 +1477,7 @@ error:
 			si_rx_room_blk(si);
 		free_trash_chunk(trash);
 	}
+	free(err);
 	/* error: call the release function and don't come back */
 	return 1;
 }
