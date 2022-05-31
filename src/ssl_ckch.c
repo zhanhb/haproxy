@@ -1721,17 +1721,14 @@ error:
 /* release function of the  `set ssl cert' command, free things and unlock the spinlock */
 static void cli_release_commit_cert(struct appctx *appctx)
 {
-	struct ckch_store *new_ckchs;
+	struct ckch_store *new_ckchs = appctx->ctx.ssl.new_ckchs;
 
 	HA_SPIN_UNLOCK(CKCH_LOCK, &ckch_lock);
 
-	if (appctx->st2 != SETCERT_ST_FIN) {
-		/* free every new sni_ctx and the new store, which are not in the trees so no spinlock there */
-		new_ckchs = appctx->ctx.ssl.new_ckchs;
-
-		/* if the allocation failed, we need to free everything from the temporary list */
+	/* free every new sni_ctx and the new store, which are not in the trees so no spinlock there */
+	if (new_ckchs)
 		ckch_store_free(new_ckchs);
-	}
+	ha_free(&appctx->ctx.ssl.err);
 }
 
 
@@ -1848,27 +1845,21 @@ static int cli_io_handler_commit_cert(struct appctx *appctx)
 {
 	struct stream_interface *si = appctx->owner;
 	int y = 0;
-	char *err = NULL;
 	struct ckch_store *old_ckchs, *new_ckchs = NULL;
 	struct ckch_inst *ckchi, *ckchis;
-	struct buffer *trash = alloc_trash_chunk();
 	struct crtlist_entry *entry;
 
-	if (trash == NULL)
-		goto error;
 
 	if (unlikely(si_ic(si)->flags & (CF_WRITE_ERROR|CF_SHUTW)))
-		goto error;
+		goto end;
 
 	while (1) {
 		switch (appctx->st2) {
 			case SETCERT_ST_INIT:
 				/* This state just print the update message */
-				chunk_printf(trash, "Committing %s", ckchs_transaction.path);
-				if (ci_putchk(si_ic(si), trash) == -1) {
-					si_rx_room_blk(si);
+				chunk_printf(&trash, "Committing %s", ckchs_transaction.path);
+				if (ci_putchk(si_ic(si), &trash) == -1)
 					goto yield;
-				}
 				appctx->st2 = SETCERT_ST_GEN;
 				/* fallthrough */
 			case SETCERT_ST_GEN:
@@ -1883,9 +1874,6 @@ static int cli_io_handler_commit_cert(struct appctx *appctx)
 				old_ckchs = appctx->ctx.ssl.old_ckchs;
 				new_ckchs = appctx->ctx.ssl.new_ckchs;
 
-				if (!new_ckchs)
-					continue;
-
 				/* get the next ckchi to regenerate */
 				ckchi = appctx->ctx.ssl.next_ckchi;
 				/* we didn't start yet, set it to the first elem */
@@ -1896,18 +1884,25 @@ static int cli_io_handler_commit_cert(struct appctx *appctx)
 				list_for_each_entry_from(ckchi, &old_ckchs->ckch_inst, by_ckchs) {
 					struct ckch_inst *new_inst;
 
+					/* save the next ckchi to compute in case of yield */
+					appctx->ctx.ssl.next_ckchi = ckchi;
+
 					/* it takes a lot of CPU to creates SSL_CTXs, so we yield every 10 CKCH instances */
 					if (y >= 10) {
-						/* save the next ckchi to compute */
-						appctx->ctx.ssl.next_ckchi = ckchi;
+						si_rx_endp_more(si);
 						goto yield;
 					}
 
-					if (ckch_inst_rebuild(new_ckchs, ckchi, &new_inst, &err))
-						goto error;
-
 					/* display one dot per new instance */
-					chunk_appendf(trash, ".");
+					if (ci_putstr(si_ic(si), ".") == -1)
+						goto yield;
+
+					appctx->ctx.ssl.err = NULL;
+					if (ckch_inst_rebuild(new_ckchs, ckchi, &new_inst, &appctx->ctx.ssl.err)) {
+						appctx->st2 = SETCERT_ST_ERROR;
+						goto error;
+					}
+
 					/* link the new ckch_inst to the duplicate */
 					LIST_APPEND(&new_ckchs->ckch_inst, &new_inst->by_ckchs);
 					y++;
@@ -1919,9 +1914,6 @@ static int cli_io_handler_commit_cert(struct appctx *appctx)
 
 				old_ckchs = appctx->ctx.ssl.old_ckchs;
 				new_ckchs = appctx->ctx.ssl.new_ckchs;
-
-				if (!new_ckchs)
-					continue;
 
 				/* get the list of crtlist_entry in the old store, and update the pointers to the store */
 				LIST_SPLICE(&new_ckchs->crtlist_entry, &old_ckchs->crtlist_entry);
@@ -1951,6 +1943,12 @@ static int cli_io_handler_commit_cert(struct appctx *appctx)
 				/* Replace the old ckchs by the new one */
 				ckch_store_free(old_ckchs);
 				ebst_insert(&ckchs_tree, &new_ckchs->node);
+				appctx->ctx.ssl.old_ckchs =  appctx->ctx.ssl.new_ckchs = NULL;
+				appctx->st2 = SETCERT_ST_SUCCESS;
+				/* fallthrough */
+			case SETCERT_ST_SUCCESS:
+				if (ci_putstr(si_ic(si), "\nSuccess!\n") == -1)
+					goto yield;
 				appctx->st2 = SETCERT_ST_FIN;
 				/* fallthrough */
 			case SETCERT_ST_FIN:
@@ -1959,36 +1957,23 @@ static int cli_io_handler_commit_cert(struct appctx *appctx)
 				ckchs_transaction.old_ckchs = NULL;
 				ckchs_transaction.path = NULL;
 				goto end;
+
+			case SETCERT_ST_ERROR:
+			  error:
+				chunk_printf(&trash, "\n%sFailed!\n", appctx->ctx.ssl.err);
+				if (ci_putchk(si_ic(si), &trash) == -1)
+					goto yield;
+				appctx->st2 = SETCERT_ST_FIN;
+				break;
 		}
 	}
 end:
-
-	chunk_appendf(trash, "\n");
-	chunk_appendf(trash, "Success!\n");
-	if (ci_putchk(si_ic(si), trash) == -1)
-		si_rx_room_blk(si);
-	free_trash_chunk(trash);
 	/* success: call the release function and don't come back */
 	return 1;
-yield:
-	/* store the state */
-	if (ci_putchk(si_ic(si), trash) == -1)
-		si_rx_room_blk(si);
-	free_trash_chunk(trash);
-	si_rx_endp_more(si); /* let's come back later */
-	return 0; /* should come back */
 
-error:
-	/* spin unlock and free are done in the release  function */
-	if (trash) {
-		chunk_appendf(trash, "\n%sFailed!\n", err);
-		if (ci_putchk(si_ic(si), trash) == -1)
-			si_rx_room_blk(si);
-		free_trash_chunk(trash);
-	}
-	free(err);
-	/* error: call the release function and don't come back */
-	return 1;
+yield:
+	si_rx_room_blk(si);
+	return 0; /* should come back */
 }
 
 /*

@@ -173,6 +173,7 @@ struct appctx {
 			int flags;           /* non-zero if "dict" dump requested */
 		} cfgpeers;
 		struct {
+			char *err;
 			struct ckch_store *old_ckchs;
 			struct ckch_store *new_ckchs;
 			struct ckch_inst *next_ckchi;
