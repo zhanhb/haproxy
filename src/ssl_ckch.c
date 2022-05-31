@@ -43,7 +43,6 @@ static struct {
 } ckchs_transaction;
 
 
-
 /********************  cert_key_and_chain functions *************************
  * These are the functions that fills a cert_key_and_chain structure. For the
  * functions filling a SSL_CTX from a cert_key_and_chain, see ssl_sock.c
@@ -1443,10 +1442,9 @@ static int cli_io_handler_commit_cert(struct appctx *appctx)
 				/* fallthrough */
 			case SETCERT_ST_FIN:
 				/* we achieved the transaction, we can set everything to NULL */
-				free(ckchs_transaction.path);
-				ckchs_transaction.path = NULL;
 				ckchs_transaction.new_ckchs = NULL;
 				ckchs_transaction.old_ckchs = NULL;
+				ckchs_transaction.path = NULL;
 				goto end;
 		}
 	}
@@ -1714,16 +1712,6 @@ static int cli_parse_set_cert(char **args, char *payload, struct appctx *appctx,
 		goto end;
 	}
 
-	if (!appctx->ctx.ssl.path) {
-	/* this is a new transaction, set the path of the transaction */
-		appctx->ctx.ssl.path = strdup(appctx->ctx.ssl.old_ckchs->path);
-		if (!appctx->ctx.ssl.path) {
-			memprintf(&err, "%sCan't allocate memory\n", err ? err : "");
-			errcode |= ERR_ALERT | ERR_FATAL;
-			goto end;
-		}
-	}
-
 	old_ckchs = appctx->ctx.ssl.old_ckchs;
 
 	/* duplicate the ckch store */
@@ -1754,7 +1742,7 @@ static int cli_parse_set_cert(char **args, char *payload, struct appctx *appctx,
 	/* if there wasn't a transaction, update the old ckchs */
 	if (!ckchs_transaction.old_ckchs) {
 		ckchs_transaction.old_ckchs = appctx->ctx.ssl.old_ckchs;
-		ckchs_transaction.path = appctx->ctx.ssl.path;
+		ckchs_transaction.path = appctx->ctx.ssl.old_ckchs->path;
 		err = memprintf(&err, "Transaction created for certificate %s!\n", ckchs_transaction.path);
 	} else {
 		err = memprintf(&err, "Transaction updated for certificate %s!\n", ckchs_transaction.path);
@@ -1778,9 +1766,6 @@ end:
 		appctx->ctx.ssl.new_ckchs = NULL;
 
 		appctx->ctx.ssl.old_ckchs = NULL;
-
-		free(appctx->ctx.ssl.path);
-		appctx->ctx.ssl.path = NULL;
 
 		HA_SPIN_UNLOCK(CKCH_LOCK, &ckch_lock);
 		return cli_dynerr(appctx, memprintf(&err, "%sCan't update %s!\n", err ? err : "", args[3]));
@@ -1822,7 +1807,6 @@ static int cli_parse_abort_cert(char **args, char *payload, struct appctx *appct
 	ckch_store_free(ckchs_transaction.new_ckchs);
 	ckchs_transaction.new_ckchs = NULL;
 	ckchs_transaction.old_ckchs = NULL;
-	free(ckchs_transaction.path);
 	ckchs_transaction.path = NULL;
 
 	HA_SPIN_UNLOCK(CKCH_LOCK, &ckch_lock);
