@@ -170,6 +170,7 @@ struct appctx {
 			struct peer *peer;   /* "peer" being currently dumped. */
 		} cfgpeers;
 		struct {
+			char *err;
 			struct ckch_store *old_ckchs;
 			struct ckch_store *new_ckchs;
 			struct ckch_inst *next_ckchi;
