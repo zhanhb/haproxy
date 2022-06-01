@@ -206,9 +206,8 @@ static int hc_cli_io_handler(struct appctx *appctx)
 
 	/* we must close only if F_END is the last flag */
 	if (appctx->ctx.cli.i0 ==  HC_CLI_F_RES_END) {
-		si_shutw(si);
-		si_shutr(si);
 		appctx->ctx.cli.i0 &= ~HC_CLI_F_RES_END;
+		goto end;
 	}
 
 more:
@@ -216,6 +215,8 @@ more:
 	if (!appctx->ctx.cli.i0)
 		si_rx_endp_done(si);
 	return 0;
+end:
+	return 1;
 
 too_many_hdrs:
 	return cli_err(appctx, "Too many headers.\n");
