@@ -895,8 +895,9 @@ static void cli_release_add_crtlist(struct appctx *appctx)
 {
 	struct crtlist_entry *entry = appctx->ctx.cli.p1;
 
-	if (appctx->st2 != SETCERT_ST_FIN) {
+	if (entry) {
 		struct ckch_inst *inst, *inst_s;
+
 		/* upon error free the ckch_inst and everything inside */
 		ebpt_delete(&entry->node);
 		LIST_DEL(&entry->by_crtlist);
@@ -910,8 +911,9 @@ static void cli_release_add_crtlist(struct appctx *appctx)
 		free(entry->ssl_conf);
 		free(entry);
 	}
-
 	HA_SPIN_UNLOCK(CKCH_LOCK, &ckch_lock);
+	free(appctx->ctx.cli.err);
+	appctx->ctx.cli.err = NULL;
 }
 
 
@@ -928,30 +930,23 @@ static int cli_io_handler_add_crtlist(struct appctx *appctx)
 	struct crtlist *crtlist = appctx->ctx.cli.p0;
 	struct crtlist_entry *entry = appctx->ctx.cli.p1;
 	struct ckch_store *store = entry->node.key;
-	struct buffer *trash = alloc_trash_chunk();
 	struct ckch_inst *new_inst;
-	char *err = NULL;
 	int i = 0;
 	int errcode = 0;
-
-	if (trash == NULL)
-		goto error;
 
 	/* for each bind_conf which use the crt-list, a new ckch_inst must be
 	 * created.
 	 */
 	if (unlikely(si_ic(si)->flags & (CF_WRITE_ERROR|CF_SHUTW)))
-		goto error;
+		goto end;
 
 	while (1) {
 		switch (appctx->st2) {
 			case SETCERT_ST_INIT:
 				/* This state just print the update message */
-				chunk_printf(trash, "Inserting certificate '%s' in crt-list '%s'", store->path, crtlist->node.key);
-				if (ci_putchk(si_ic(si), trash) == -1) {
-					si_rx_room_blk(si);
+				chunk_printf(&trash, "Inserting certificate '%s' in crt-list '%s'", store->path, crtlist->node.key);
+				if (ci_putchk(si_ic(si), &trash) == -1)
 					goto yield;
-				}
 				appctx->st2 = SETCERT_ST_GEN;
 				/* fallthrough */
 			case SETCERT_ST_GEN:
@@ -962,28 +957,39 @@ static int cli_io_handler_add_crtlist(struct appctx *appctx)
 					struct bind_conf *bind_conf = bind_conf_node->bind_conf;
 					struct sni_ctx *sni;
 
+					appctx->ctx.cli.p2 = bind_conf_node;
+
 					/* yield every 10 generations */
 					if (i > 10) {
-						appctx->ctx.cli.p2 = bind_conf_node;
+						si_rx_endp_more(si); /* let's come back later */
 						goto yield;
 					}
 
+					/* display one dot for each new instance */
+					if (ci_putstr(si_ic(si), ".") == -1)
+						goto yield;
+
 					/* we don't support multi-cert bundles, only simple ones */
-					errcode |= ckch_inst_new_load_store(store->path, store, bind_conf, entry->ssl_conf, entry->filters, entry->fcount, &new_inst, &err);
-					if (errcode & ERR_CODE)
+					appctx->ctx.cli.err = NULL;
+					errcode |= ckch_inst_new_load_store(store->path, store, bind_conf, entry->ssl_conf, entry->filters, entry->fcount, &new_inst, &appctx->ctx.cli.err);
+					if (errcode & ERR_CODE) {
+						appctx->st2 = SETCERT_ST_ERROR;
 						goto error;
+					}
 
 					/* we need to initialize the SSL_CTX generated */
 					/* this iterate on the newly generated SNIs in the new instance to prepare their SSL_CTX */
 					list_for_each_entry(sni, &new_inst->sni_ctx, by_ckch_inst) {
 						if (!sni->order) { /* we initialized only the first SSL_CTX because it's the same in the other sni_ctx's */
-							errcode |= ssl_sock_prepare_ctx(bind_conf, new_inst->ssl_conf, sni->ctx, &err);
-							if (errcode & ERR_CODE)
+							appctx->ctx.cli.err = NULL;
+							errcode |= ssl_sock_prepare_ctx(bind_conf, new_inst->ssl_conf, sni->ctx, &appctx->ctx.cli.err);
+							if (errcode & ERR_CODE) {
+								appctx->st2 = SETCERT_ST_ERROR;
 								goto error;
+							}
 						}
 					}
-					/* display one dot for each new instance */
-					chunk_appendf(trash, ".");
+
 					i++;
 					LIST_ADDQ(&store->ckch_inst, &new_inst->by_ckchs);
 					LIST_ADDQ(&entry->ckch_inst, &new_inst->by_crtlist_entry);
@@ -999,39 +1005,38 @@ static int cli_io_handler_add_crtlist(struct appctx *appctx)
 					HA_RWLOCK_WRUNLOCK(SNI_LOCK, &new_inst->bind_conf->sni_lock);
 				}
 				entry->linenum = ++crtlist->linecount;
+				appctx->ctx.cli.p1 = NULL;
+				appctx->st2 = SETCERT_ST_SUCCESS;
+				/* fallthrough */
+			case SETCERT_ST_SUCCESS:
+				chunk_reset(&trash);
+				chunk_appendf(&trash, "\n");
+				if (appctx->ctx.cli.err)
+					chunk_appendf(&trash, "%s", appctx->ctx.cli.err);
+				chunk_appendf(&trash, "Success!\n");
+				if (ci_putchk(si_ic(si), &trash) == -1)
+					goto yield;
 				appctx->st2 = SETCERT_ST_FIN;
+				goto end;
+
+			case SETCERT_ST_ERROR:
+			  error:
+				chunk_printf(&trash, "\n%sFailed!\n", appctx->ctx.cli.err);
+				if (ci_putchk(si_ic(si), &trash) == -1)
+					goto yield;
+				goto end;
+
+			default:
 				goto end;
 		}
 	}
 
 end:
-	chunk_appendf(trash, "\n");
-	if (errcode & ERR_WARN)
-		chunk_appendf(trash, "%s", err);
-	chunk_appendf(trash, "Success!\n");
-	if (ci_putchk(si_ic(si), trash) == -1)
-		si_rx_room_blk(si);
-	free_trash_chunk(trash);
 	/* success: call the release function and don't come back */
 	return 1;
 yield:
-	/* store the state */
-	if (ci_putchk(si_ic(si), trash) == -1)
-		si_rx_room_blk(si);
-	free_trash_chunk(trash);
-	si_rx_endp_more(si); /* let's come back later */
+	si_rx_room_blk(si);
 	return 0; /* should come back */
-
-error:
-	/* spin unlock and free are done in the release function */
-	if (trash) {
-		chunk_appendf(trash, "\n%sFailed!\n", err);
-		if (ci_putchk(si_ic(si), trash) == -1)
-			si_rx_room_blk(si);
-		free_trash_chunk(trash);
-	}
-	/* error: call the release function and don't come back */
-	return 1;
 }
 
 
