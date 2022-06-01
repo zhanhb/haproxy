@@ -167,33 +167,29 @@ err:
 static int hc_cli_io_handler(struct appctx *appctx)
 {
 	struct stream_interface *si = appctx->owner;
-	struct buffer *trash = alloc_trash_chunk();
 	struct httpclient *hc = appctx->ctx.cli.p0;
 	struct http_hdr *hdrs, *hdr;
 
-	if (!trash)
-		goto out;
 	if (appctx->ctx.cli.i0 & HC_CLI_F_RES_STLINE) {
-		chunk_appendf(trash, "%.*s %d %.*s\n", (unsigned int)istlen(hc->res.vsn), istptr(hc->res.vsn),
+		chunk_printf(&trash, "%.*s %d %.*s\n", (unsigned int)istlen(hc->res.vsn), istptr(hc->res.vsn),
 			      hc->res.status, (unsigned int)istlen(hc->res.reason), istptr(hc->res.reason));
-		if (ci_putchk(si_ic(si), trash) == -1)
-			si_rx_room_blk(si);
+		if (ci_putchk(si_ic(si), &trash) == -1)
+			goto more;
 		appctx->ctx.cli.i0 &= ~HC_CLI_F_RES_STLINE;
-		goto out;
 	}
 
 	if (appctx->ctx.cli.i0 & HC_CLI_F_RES_HDR) {
+		chunk_reset(&trash);
 		hdrs = hc->res.hdrs;
 		for (hdr = hdrs; isttest(hdr->v); hdr++) {
-			if (!h1_format_htx_hdr(hdr->n, hdr->v, trash))
-				goto out;
+			if (!h1_format_htx_hdr(hdr->n, hdr->v, &trash))
+				goto too_many_hdrs;
 		}
-		if (!chunk_memcat(trash, "\r\n", 2))
-			goto out;
-		if (ci_putchk(si_ic(si), trash) == -1)
-			si_rx_room_blk(si);
+		if (!chunk_memcat(&trash, "\r\n", 2))
+			goto too_many_hdrs;
+		if (ci_putchk(si_ic(si), &trash) == -1)
+			goto more;
 		appctx->ctx.cli.i0 &= ~HC_CLI_F_RES_HDR;
-		goto out;
 	}
 
 	if (appctx->ctx.cli.i0 & HC_CLI_F_RES_BODY) {
@@ -202,10 +198,10 @@ static int hc_cli_io_handler(struct appctx *appctx)
 		ret = httpclient_res_xfer(hc, &si_ic(si)->buf);
 		channel_add_input(si_ic(si), ret); /* forward what we put in the buffer channel */
 
-		if (!httpclient_data(hc)) {/* remove the flag if the buffer was emptied */
-			appctx->ctx.cli.i0 &= ~HC_CLI_F_RES_BODY;
-		}
-		goto out;
+		/* remove the flag if the buffer was emptied */
+		if (httpclient_data(hc))
+			goto more;
+		appctx->ctx.cli.i0 &= ~HC_CLI_F_RES_BODY;
 	}
 
 	/* we must close only if F_END is the last flag */
@@ -213,16 +209,16 @@ static int hc_cli_io_handler(struct appctx *appctx)
 		si_shutw(si);
 		si_shutr(si);
 		appctx->ctx.cli.i0 &= ~HC_CLI_F_RES_END;
-		goto out;
 	}
 
-out:
-	/* we didn't clear every flags, we should come back to finish things */
-	if (appctx->ctx.cli.i0)
-		si_rx_room_blk(si);
-
-	free_trash_chunk(trash);
+more:
+	si_rx_room_blk(si);
+	if (!appctx->ctx.cli.i0)
+		si_rx_endp_done(si);
 	return 0;
+
+too_many_hdrs:
+	return cli_err(appctx, "Too many headers.\n");
 }
 
 static void hc_cli_release(struct appctx *appctx)
