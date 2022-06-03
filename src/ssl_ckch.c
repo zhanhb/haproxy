@@ -3233,7 +3233,7 @@ static int cli_parse_commit_crlfile(char **args, char *payload, struct appctx *a
 	}
 	/* init the appctx structure */
 	appctx->st2 = SETCERT_ST_INIT;
-	appctx->ctx.ssl.next_ckchi = NULL;
+	appctx->ctx.ssl.next_ckchi_link = NULL;
 	appctx->ctx.ssl.old_crlfile_entry = crlfile_transaction.old_crlfile_entry;
 	appctx->ctx.ssl.new_crlfile_entry = crlfile_transaction.new_crlfile_entry;
 	appctx->ctx.ssl.cafile_type = CAFILE_CRL;
