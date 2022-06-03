@@ -139,7 +139,7 @@ struct qcs *qcs_new(struct qcc *qcc, uint64_t id, enum qcs_type type)
 
 	qcs->id = qcs->by_id.key = id;
 	if (qcc->app_ops->attach) {
-		if (qcc->app_ops->attach(qcs))
+		if (qcc->app_ops->attach(qcs, qcc->ctx))
 			goto err;
 	}
 
@@ -443,7 +443,7 @@ static int qcc_decode_qcs(struct qcc *qcc, struct qcs *qcs)
 	if (qcs->flags & QC_SF_FIN_RECV && !ncb_is_fragmented(&qcs->rx.ncbuf))
 		fin = 1;
 
-	ret = qcc->app_ops->decode_qcs(qcs, fin, qcc->ctx);
+	ret = qcc->app_ops->decode_qcs(qcs, fin);
 	if (ret < 0) {
 		TRACE_DEVEL("leaving on decoding error", QMUX_EV_QCS_RECV, qcc->conn, qcs);
 		return 1;
