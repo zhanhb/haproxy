@@ -983,25 +983,26 @@ static int cli_io_handler_show_cert(struct appctx *appctx)
 	if (trash == NULL)
 		return 1;
 
-	if (!appctx->ctx.ssl.old_ckchs) {
-		if (ckchs_transaction.old_ckchs) {
-			ckchs = ckchs_transaction.old_ckchs;
-			chunk_appendf(trash, "# transaction\n");
-			if (!ckchs->multi) {
-				chunk_appendf(trash, "*%s\n", ckchs->path);
+	if (!appctx->ctx.ssl.old_ckchs && ckchs_transaction.old_ckchs) {
+		ckchs = ckchs_transaction.old_ckchs;
+		chunk_appendf(trash, "# transaction\n");
+		if (!ckchs->multi) {
+			chunk_appendf(trash, "*%s\n", ckchs->path);
 #if HA_OPENSSL_VERSION_NUMBER >= 0x1000200fL
-			} else {
-				int n;
+		} else {
+			int n;
 
-				chunk_appendf(trash, "*%s:", ckchs->path);
-				for (n = 0; n < SSL_SOCK_NUM_KEYTYPES; n++) {
-					if (ckchs->ckch[n].cert)
-						chunk_appendf(trash, " %s.%s\n", ckchs->path, SSL_SOCK_KEYTYPE_NAMES[n]);
-				}
-				chunk_appendf(trash, "\n");
-#endif
+			chunk_appendf(trash, "*%s:", ckchs->path);
+			for (n = 0; n < SSL_SOCK_NUM_KEYTYPES; n++) {
+				if (ckchs->ckch[n].cert)
+					chunk_appendf(trash, " %s.%s\n", ckchs->path, SSL_SOCK_KEYTYPE_NAMES[n]);
 			}
+			chunk_appendf(trash, "\n");
+#endif
 		}
+		if (ci_putchk(si_ic(si), trash) == -1)
+			goto yield;
+		appctx->ctx.ssl.old_ckchs = ckchs_transaction.old_ckchs;
 	}
 
 	if (!appctx->ctx.cli.p0) {
