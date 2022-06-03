@@ -978,12 +978,13 @@ static int cli_io_handler_show_cert(struct appctx *appctx)
 	if (trash == NULL)
 		return 1;
 
-	if (!appctx->ctx.ssl.old_ckchs) {
-		if (ckchs_transaction.old_ckchs) {
-			ckchs = ckchs_transaction.old_ckchs;
-			chunk_appendf(trash, "# transaction\n");
-			chunk_appendf(trash, "*%s\n", ckchs->path);
-		}
+	if (!appctx->ctx.ssl.old_ckchs && ckchs_transaction.old_ckchs) {
+		ckchs = ckchs_transaction.old_ckchs;
+		chunk_appendf(trash, "# transaction\n");
+		chunk_appendf(trash, "*%s\n", ckchs->path);
+		if (ci_putchk(si_ic(si), trash) == -1)
+			goto yield;
+		appctx->ctx.ssl.old_ckchs = ckchs_transaction.old_ckchs;
 	}
 
 	if (!appctx->ctx.cli.p0) {
