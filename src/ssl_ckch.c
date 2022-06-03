@@ -2955,7 +2955,7 @@ static int cli_io_handler_show_cafile(struct appctx *appctx)
 	struct buffer *trash = alloc_trash_chunk();
 	struct ebmb_node *node;
 	struct stream_interface *si = appctx->owner;
-	struct cafile_entry *cafile_entry;
+	struct cafile_entry *cafile_entry = NULL;
 
 	if (trash == NULL)
 		return 1;
