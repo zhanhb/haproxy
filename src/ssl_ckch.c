@@ -3600,11 +3600,12 @@ static int cli_io_handler_show_crlfile(struct appctx *appctx)
 	if (trash == NULL)
 		return 1;
 
-	if (!appctx->ctx.ssl.old_crlfile_entry) {
-		if (crlfile_transaction.old_crlfile_entry) {
-			chunk_appendf(trash, "# transaction\n");
-			chunk_appendf(trash, "*%s\n", crlfile_transaction.old_crlfile_entry->path);
-		}
+	if (!appctx->ctx.ssl.old_crlfile_entry && crlfile_transaction.old_crlfile_entry) {
+		chunk_appendf(trash, "# transaction\n");
+		chunk_appendf(trash, "*%s\n", crlfile_transaction.old_crlfile_entry->path);
+		if (ci_putchk(si_ic(si), trash) == -1)
+			goto yield;
+		appctx->ctx.ssl.old_crlfile_entry =  crlfile_transaction.old_crlfile_entry;
 	}
 
 	/* First time in this io_handler. */
