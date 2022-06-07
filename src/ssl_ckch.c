@@ -257,24 +257,26 @@ int ssl_sock_load_files_into_ckch(const char *path, struct cert_key_and_chain *c
 		goto end;
 	}
 
-	/* try to load an external private key if it wasn't in the PEM */
-	if ((ckch->key == NULL) && !(global_ssl.extra_files & SSL_GF_KEY)) {
-		memprintf(err, "%sNo Private Key found in '%s'.\n", err && *err ? *err : "", path);
-		goto end;
-	}
-
-	snprintf(fp, MAXPATHLEN+1, "%s.key", path);
-	if (stat(fp, &st) == 0) {
-		if (ssl_sock_load_key_into_ckch(fp, NULL, ckch, err)) {
-			memprintf(err, "%s '%s' is present but cannot be read or parsed'.\n",
-				  err && *err ? *err : "", fp);
+	if (ckch->key == NULL) {
+		/* try to load an external private key if it wasn't in the PEM */
+		if (!(global_ssl.extra_files & SSL_GF_KEY)) {
+			memprintf(err, "%sNo Private Key found in '%s'.\n", err && *err ? *err : "", path);
 			goto end;
 		}
-	}
 
-	if (ckch->key == NULL) {
-		memprintf(err, "%sNo Private Key found in '%s' or '%s.key'.\n", err && *err ? *err : "", path, path);
-		goto end;
+		snprintf(fp, MAXPATHLEN+1, "%s.key", path);
+		if (stat(fp, &st) == 0) {
+			if (ssl_sock_load_key_into_ckch(fp, NULL, ckch, err)) {
+				memprintf(err, "%s '%s' is present but cannot be read or parsed'.\n",
+					  err && *err ? *err : "", fp);
+				goto end;
+			}
+		}
+
+		if (ckch->key == NULL) {
+			memprintf(err, "%sNo Private Key found in '%s' or '%s.key'.\n", err && *err ? *err : "", path, path);
+			goto end;
+		}
 	}
 
 	if (!X509_check_private_key(ckch->cert, ckch->key)) {
