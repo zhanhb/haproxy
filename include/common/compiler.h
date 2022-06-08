@@ -93,7 +93,7 @@
 #if __GNUC__ >= 5 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 5)
 #define my_unreachable() __builtin_unreachable()
 #else
-#define my_unreachable()
+#define my_unreachable() do { } while (1)
 #endif
 
 /* This macro may be used to block constant propagation that lets the compiler
