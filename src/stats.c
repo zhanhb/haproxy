@@ -2719,7 +2719,7 @@ static void stats_dump_json_header()
  */
 static void stats_dump_json_end()
 {
-	chunk_strcat(&trash, "]");
+	chunk_strcat(&trash, "]\n");
 }
 
 /* This function dumps statistics onto the stream interface's read buffer in
@@ -3765,6 +3765,7 @@ static void stats_dump_json_schema(struct buffer *out)
 		chunk_appendf(out,
 			      "{\"errorStr\":\"output buffer too short\"}");
 	}
+	chunk_appendf(out, "\n");
 }
 
 /* This function dumps the schema onto the stream interface's read buffer.
