@@ -2643,6 +2643,13 @@ static int dns_finalize_config(void)
 	for (px = proxies_list; px; px = px->next) {
 		struct server *srv;
 
+		if (px->state == PR_STSTOPPED) {
+			/* must not run and will not work anyway since
+			 * nothing in the proxy is initialized.
+			 */
+			continue;
+		}
+
 		for (srv = px->srv; srv; srv = srv->next) {
 			struct dns_resolvers *resolvers;
 
