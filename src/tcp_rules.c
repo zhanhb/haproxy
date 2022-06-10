@@ -117,8 +117,12 @@ int tcp_inspect_request(struct stream *s, struct channel *req, int an_bit)
 
 	if ((req->flags & (CF_EOI|CF_SHUTR|CF_READ_ERROR)) || channel_full(req, global.tune.maxrewrite) ||
 	    si_rx_blocked_room(chn_prod(req)) ||
-	    !s->be->tcp_req.inspect_delay || tick_is_expired(s->rules_exp, now_ms))
+	    !s->be->tcp_req.inspect_delay || tick_is_expired(s->rules_exp, now_ms)) {
 		partial = SMP_OPT_FINAL;
+		/* Action may yield while the inspect_delay is not expired and there is no read error */
+		if ((req->flags & CF_READ_ERROR) || !s->be->tcp_req.inspect_delay || tick_is_expired(s->rules_exp, now_ms))
+			act_opts |= ACT_OPT_FINAL;
+	}
 	else
 		partial = 0;
 
@@ -152,12 +156,8 @@ int tcp_inspect_request(struct stream *s, struct channel *req, int an_bit)
 		if (ret) {
 			act_opts |= ACT_OPT_FIRST;
 resume_execution:
-
 			/* Always call the action function if defined */
 			if (rule->action_ptr) {
-				if (partial & SMP_OPT_FINAL)
-					act_opts |= ACT_OPT_FINAL;
-
 				switch (rule->action_ptr(rule, s->be, s->sess, s, act_opts)) {
 					case ACT_RET_CONT:
 						break;
@@ -166,7 +166,7 @@ resume_execution:
 						goto end;
 					case ACT_RET_YIELD:
 						s->current_rule = rule;
-						if (partial & SMP_OPT_FINAL) {
+						if (act_opts & ACT_OPT_FINAL) {
 							send_log(s->be, LOG_WARNING,
 								 "Internal error: yield not allowed if the inspect-delay expired "
 								 "for the tcp-request content actions.");
@@ -286,8 +286,12 @@ int tcp_inspect_response(struct stream *s, struct channel *rep, int an_bit)
 	 */
 	if ((rep->flags & (CF_EOI|CF_SHUTR|CF_READ_ERROR)) || channel_full(rep, global.tune.maxrewrite) ||
 	    si_rx_blocked_room(chn_prod(rep)) ||
-	    !s->be->tcp_rep.inspect_delay || tick_is_expired(s->rules_exp, now_ms))
+	    !s->be->tcp_rep.inspect_delay || tick_is_expired(s->rules_exp, now_ms)) {
 		partial = SMP_OPT_FINAL;
+		/* Action may yield while the inspect_delay is not expired and there is no read error */
+		if ((rep->flags & CF_READ_ERROR) || !s->be->tcp_rep.inspect_delay || tick_is_expired(s->rules_exp, now_ms))
+			act_opts |= ACT_OPT_FINAL;
+	}
 	else
 		partial = 0;
 
@@ -323,9 +327,6 @@ int tcp_inspect_response(struct stream *s, struct channel *rep, int an_bit)
 resume_execution:
 			/* Always call the action function if defined */
 			if (rule->action_ptr) {
-				if (partial & SMP_OPT_FINAL)
-					act_opts |= ACT_OPT_FINAL;
-
 				switch (rule->action_ptr(rule, s->be, s->sess, s, act_opts)) {
 					case ACT_RET_CONT:
 						break;
@@ -334,7 +335,7 @@ resume_execution:
 						goto end;
 					case ACT_RET_YIELD:
 						s->current_rule = rule;
-						if (partial & SMP_OPT_FINAL) {
+						if (act_opts & ACT_OPT_FINAL) {
 							send_log(s->be, LOG_WARNING,
 								 "Internal error: yield not allowed if the inspect-delay expired "
 								 "for the tcp-response content actions.");
