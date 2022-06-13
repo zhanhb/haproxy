@@ -343,14 +343,13 @@ static int dns_send_query(struct dns_resolution *resolution)
 			resolvers->nb_nameservers++;
 		}
 
-		if (len < 0)
+		if (len == -1)
 			goto snd_error;
 
 		ret = send(fd, trash.area, len, 0);
 		if (ret == len) {
 			ns->counters.sent++;
 			resolution->nb_queries++;
-			continue;
 		}
 		else if (ret == -1) {
 			if (errno == EAGAIN) {
@@ -366,11 +365,15 @@ static int dns_send_query(struct dns_resolution *resolution)
 			 */
 			fd_delete(fd);
 			ns->dgram->t.sock.fd = -1;
+			ns->counters.snd_error++;
+			resolvers->nb_nameservers--;
 		}
-
-	snd_error:
-		ns->counters.snd_error++;
-		resolution->nb_queries++;
+		else {
+		  snd_error:
+			ns->counters.snd_error++;
+			resolution->nb_queries++;
+			resolution->nb_responses++;
+		}
 	}
 
 	/* Push the resolution at the end of the active list */
@@ -2352,10 +2355,15 @@ static void dns_resolve_send(struct dgram_conn *dgram)
 	list_for_each_entry(res, &resolvers->resolutions.curr, list) {
 		int ret, len;
 
+		/* All queries were already sent to active nameservers for the
+		 * current resolution
+		 */
 		if (res->nb_queries == resolvers->nb_nameservers)
 			continue;
 
-		/* if fd was detected broken by previous send */
+		/* if fd was detected broken by previous send, report a send
+		 * error for this resolution.
+		 */
 		if (fd == -1)
 			goto snd_error;
 
@@ -2367,32 +2375,33 @@ static void dns_resolve_send(struct dgram_conn *dgram)
 			goto snd_error;
 
 		ret = send(fd, trash.area, len, 0);
-		if (ret != len) {
-			if (ret == -1) {
-			       if (errno == EAGAIN) {
-					/* retry once the socket is ready */
-					fd_cant_send(fd);
-					continue;
-				}
-
-				/* purge the fd and set sock.fd to -1
-				 * to create a new one during next
-				 * send_query attempt to the same
-				 * nameserver
-				 */
-				fd_delete(fd);
-				fd = dgram->t.sock.fd = -1;
-			}
-			goto snd_error;
+		if (ret == len) {
+			ns->counters.sent++;
+			res->nb_queries++;
 		}
+		else  if (ret == -1) {
+			if (errno == EAGAIN) {
+				/* retry once the socket is ready */
+				fd_cant_send(fd);
+				continue;
+			}
 
-		ns->counters.sent++;
-		res->nb_queries++;
-		continue;
-
-	  snd_error:
-		ns->counters.snd_error++;
-		res->nb_queries++;
+			/* purge the fd and set sock.fd to -1
+			 * to create a new one during next
+			 * send_query attempt to the same
+			 * nameserver
+			 */
+			fd_delete(fd);
+			fd = dgram->t.sock.fd = -1;
+			ns->counters.snd_error++;
+			resolvers->nb_nameservers--;
+		}
+		else {
+		  snd_error:
+			ns->counters.snd_error++;
+			res->nb_queries++;
+			res->nb_responses++;
+		}
 	}
 	HA_SPIN_UNLOCK(DNS_LOCK, &resolvers->lock);
 }
