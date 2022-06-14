@@ -349,8 +349,10 @@ static int h3_headers_to_htx(struct qcs *qcs, struct ncbuf *buf, uint64_t len,
 
 	/* TODO support buffer wrapping */
 	BUG_ON(ncb_head(buf) + len >= ncb_wrap(buf));
-	if (qpack_decode_fs((const unsigned char *)ncb_head(buf), len, tmp, list) < 0)
+	if (qpack_decode_fs((const unsigned char *)ncb_head(buf), len, tmp,
+	                    list, sizeof(list) / sizeof(list[0])) < 0) {
 		return -1;
+	}
 
 	qc_get_buf(qcs, &htx_buf);
 	BUG_ON(!b_size(&htx_buf));
@@ -799,6 +801,8 @@ static int h3_resp_headers_send(struct qcs *qcs, struct htx *htx)
 			status = sl->info.res.status;
 		}
 		else if (type == HTX_BLK_HDR) {
+			if (unlikely(hdr >= sizeof(list) / sizeof(list[0]) - 1))
+				goto fail;
 			list[hdr].n = htx_get_blk_name(htx, blk);
 			list[hdr].v = htx_get_blk_value(htx, blk);
 			hdr++;
