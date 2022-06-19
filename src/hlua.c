@@ -693,11 +693,6 @@ __LJMP const char *hlua_traceback(lua_State *L, const char* sep)
 	struct buffer *msg = get_trash_chunk();
 
 	while (lua_getstack(L, level++, &ar)) {
-
-		/* Add separator */
-		if (b_data(msg))
-			chunk_appendf(msg, "%s", sep);
-
 		/* Fill fields:
 		 * 'S': fills in the fields source, short_src, linedefined, lastlinedefined, and what;
 		 * 'l': fills in the field currentline;
@@ -705,6 +700,14 @@ __LJMP const char *hlua_traceback(lua_State *L, const char* sep)
 		 * 't': fills in the field istailcall;
 		 */
 		lua_getinfo(L, "Slnt", &ar);
+
+		/* skip these empty entries, usually they come from deep C functions */
+		if (ar.currentline < 0 && *ar.what == 'C' && !*ar.namewhat && !ar.name)
+			continue;
+
+		/* Add separator */
+		if (b_data(msg))
+			chunk_appendf(msg, "%s", sep);
 
 		/* Append code localisation */
 		if (ar.currentline > 0)
