@@ -5147,6 +5147,7 @@ void http_init_txn(struct stream *s)
 	struct http_txn *txn = s->txn;
 	struct conn_stream *cs = objt_cs(s->si[0].end);
 
+	txn->meth = HTTP_METH_OTHER;
 	txn->flags = ((cs && cs->flags & CS_FL_NOT_FIRST)
 		      ? (TX_NOT_FIRST|TX_WAIT_NEXT_RQ)
 		      : 0);
