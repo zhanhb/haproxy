@@ -460,6 +460,7 @@ static int smp_fetch_meth(const struct arg *args, struct sample *smp, const char
 	struct channel *chn = SMP_REQ_CHN(smp);
 	int meth;
 	struct http_txn *txn;
+	struct htx *htx;
 
 	if (smp->px->options2 & PR_O2_USE_HTX) {
 		/* HTX version */
@@ -467,16 +468,17 @@ static int smp_fetch_meth(const struct arg *args, struct sample *smp, const char
 		if (!txn)
 			return 0;
 
+		if (txn->meth == HTTP_METH_OTHER) {
+			htx = smp_prefetch_htx(smp, chn, 1);
+			if (!htx)
+				return 0;
+		}
+
 		meth = txn->meth;
 		smp->data.type = SMP_T_METH;
 		smp->data.u.meth.meth = meth;
 		if (meth == HTTP_METH_OTHER) {
-			struct htx *htx;
 			struct htx_sl *sl;
-
-			htx = smp_prefetch_htx(smp, chn, 1);
-			if (!htx)
-				return 0;
 
 			if ((smp->opt & SMP_OPT_DIR) == SMP_OPT_DIR_RES) {
 				/* ensure the indexes are not affected */
