@@ -5526,7 +5526,8 @@ static void qc_lstnr_pkt_rcv(unsigned char *buf, const unsigned char *end,
 		/* Do not consume buf if space not at the end. */
 		if (b_tail(&qc->rx.buf) + b_cspace < b_wrap(&qc->rx.buf)) {
 			TRACE_PROTO("Packet dropped", QUIC_EV_CONN_LPKT, qc);
-			goto drop;
+			HA_ATOMIC_INC(&prx_counters->dropped_pkt_bufoverrun);
+			goto drop_no_conn;
 		}
 
 		/* Let us consume the remaining contiguous space. */
@@ -5537,8 +5538,8 @@ static void qc_lstnr_pkt_rcv(unsigned char *buf, const unsigned char *end,
 		b_add(&qc->rx.buf, b_cspace);
 		if (b_contig_space(&qc->rx.buf) < pkt->len) {
 			TRACE_PROTO("Too big packet", QUIC_EV_CONN_LPKT, qc, pkt, &pkt->len);
-			qc_list_all_rx_pkts(qc);
-			goto drop;
+			HA_ATOMIC_INC(&prx_counters->dropped_pkt_bufoverrun);
+			goto drop_no_conn;
 		}
 	}
 
