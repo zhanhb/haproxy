@@ -223,7 +223,10 @@ int qpack_decode_fs(const unsigned char *raw, uint64_t len, struct buffer *tmp,
 		qpack_debug_printf(stderr, "efl_type=0x%02x\n", efl_type);
 
 		if (efl_type == QPACK_LFL_WPBNM) {
-			/* Literal field line with post-base name reference */
+			/* Literal field line with post-base name reference
+			 * TODO adjust this when dynamic table support is implemented.
+			 */
+#if 0
 			uint64_t index __maybe_unused, length;
 			unsigned int n __maybe_unused, h __maybe_unused;
 
@@ -256,9 +259,23 @@ int qpack_decode_fs(const unsigned char *raw, uint64_t len, struct buffer *tmp,
 			/* XXX Value string XXX */
 			raw += length;
 			len -= length;
+#endif
+
+			/* RFC9204 2.2.3 Invalid References
+			 *
+			 * If the decoder encounters a reference in a field line representation
+			 * to a dynamic table entry that has already been evicted or that has an
+			 * absolute index greater than or equal to the declared Required Insert
+			 * Count (Section 4.5.1), it MUST treat this as a connection error of
+			 * type QPACK_DECOMPRESSION_FAILED.
+			 */
+			return -QPACK_DECOMPRESSION_FAILED;
 		}
 		else if (efl_type == QPACK_IFL_WPBI) {
-			/* Indexed field line with post-base index */
+			/* Indexed field line with post-base index
+			 * TODO adjust this when dynamic table support is implemented.
+			 */
+#if 0
 			uint64_t index __maybe_unused;
 
 			qpack_debug_printf(stderr, "indexed field line with post-base index:");
@@ -270,6 +287,17 @@ int qpack_decode_fs(const unsigned char *raw, uint64_t len, struct buffer *tmp,
 			}
 
 			qpack_debug_printf(stderr, " index=%llu", (unsigned long long)index);
+#endif
+
+			/* RFC9204 2.2.3 Invalid References
+			 *
+			 * If the decoder encounters a reference in a field line representation
+			 * to a dynamic table entry that has already been evicted or that has an
+			 * absolute index greater than or equal to the declared Required Insert
+			 * Count (Section 4.5.1), it MUST treat this as a connection error of
+			 * type QPACK_DECOMPRESSION_FAILED.
+			 */
+			return -QPACK_DECOMPRESSION_FAILED;
 		}
 		else if (efl_type & QPACK_IFL_BIT) {
 			/* Indexed field line */
@@ -287,6 +315,19 @@ int qpack_decode_fs(const unsigned char *raw, uint64_t len, struct buffer *tmp,
 
 			if (t)
 				list[hdr_idx++] = qpack_sht[index];
+			else {
+				/* RFC9204 2.2.3 Invalid References
+				 *
+				 * If the decoder encounters a reference in a field line representation
+				 * to a dynamic table entry that has already been evicted or that has an
+				 * absolute index greater than or equal to the declared Required Insert
+				 * Count (Section 4.5.1), it MUST treat this as a connection error of
+				 * type QPACK_DECOMPRESSION_FAILED.
+				 *
+				 * TODO adjust this when dynamic table support is implemented.
+				 */
+				return -QPACK_DECOMPRESSION_FAILED;
+			}
 
 			qpack_debug_printf(stderr,  " t=%d index=%llu", !!t, (unsigned long long)index);
 		}
@@ -307,6 +348,19 @@ int qpack_decode_fs(const unsigned char *raw, uint64_t len, struct buffer *tmp,
 
 			if (t)
 				list[hdr_idx] = qpack_sht[index];
+			else {
+				/* RFC9204 2.2.3 Invalid References
+				 *
+				 * If the decoder encounters a reference in a field line representation
+				 * to a dynamic table entry that has already been evicted or that has an
+				 * absolute index greater than or equal to the declared Required Insert
+				 * Count (Section 4.5.1), it MUST treat this as a connection error of
+				 * type QPACK_DECOMPRESSION_FAILED.
+				 *
+				 * TODO adjust this when dynamic table support is implemented.
+				 */
+				return -QPACK_DECOMPRESSION_FAILED;
+			}
 
 			qpack_debug_printf(stderr, " n=%d t=%d index=%llu", !!n, !!t, (unsigned long long)index);
 			h = *raw & 0x80;
