@@ -445,6 +445,12 @@ static inline void fd_insert(int fd, void *owner, void (*iocb)(int fd), unsigned
 {
 	extern void sock_conn_iocb(int);
 
+	/* This must never happen and would definitely indicate a bug, in
+	 * addition to overwriting some unexpected memory areas.
+	 */
+	BUG_ON(fdtab[fd].owner != NULL);
+	BUG_ON(fdtab[fd].state != 0);
+
 	fdtab[fd].owner = owner;
 	fdtab[fd].iocb = iocb;
 	fdtab[fd].state = 0;
