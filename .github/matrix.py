@@ -55,15 +55,12 @@ def clean_compression(compression):
 
 
 def get_asan_flags(cc):
-    if cc == "clang":
-        return [
-            "USE_OBSOLETE_LINKER=1",
-            'DEBUG_CFLAGS="-g -fsanitize=address"',
-            'LDFLAGS="-fsanitize=address"',
-            'CPU_CFLAGS.generic="-O1"',
-        ]
-
-    raise ValueError("ASAN is only supported for clang")
+    return [
+        "USE_OBSOLETE_LINKER=1",
+        'DEBUG_CFLAGS="-g -fsanitize=address"',
+        'LDFLAGS="-fsanitize=address"',
+        'CPU_CFLAGS.generic="-O1"',
+    ]
 
 
 matrix = []
@@ -153,33 +150,33 @@ for CC in ["gcc", "clang"]:
 # ASAN
 
 os = "ubuntu-latest"
-CC = "clang"
 TARGET = "linux-glibc"
-matrix.append(
-    {
-        "name": "{}, {}, ASAN, all features".format(clean_os(os), CC),
-        "os": os,
-        "TARGET": TARGET,
-        "CC": CC,
-        "FLAGS": get_asan_flags(CC)
-        + [
-            "USE_ZLIB=1",
-            "USE_PCRE=1",
-            "USE_PCRE_JIT=1",
-            "USE_LUA=1",
-            "USE_OPENSSL=1",
-            "USE_SYSTEMD=1",
-            "USE_WURFL=1",
-            "WURFL_INC=contrib/wurfl",
-            "WURFL_LIB=contrib/wurfl",
-            "USE_DEVICEATLAS=1",
-            "DEVICEATLAS_SRC=contrib/deviceatlas",
-            "EXTRA_OBJS=contrib/prometheus-exporter/service-prometheus.o",
-            "USE_51DEGREES=1",
-            "51DEGREES_SRC=contrib/51d/src/pattern",
-        ],
-    }
-)
+for CC in ["gcc","clang"]:
+    matrix.append(
+	{
+            "name": "{}, {}, ASAN, all features".format(clean_os(os), CC),
+            "os": os,
+            "TARGET": TARGET,
+            "CC": CC,
+            "FLAGS": get_asan_flags(CC)
+            + [
+		"USE_ZLIB=1",
+		"USE_PCRE=1",
+		"USE_PCRE_JIT=1",
+		"USE_LUA=1",
+		"USE_OPENSSL=1",
+		"USE_SYSTEMD=1",
+		"USE_WURFL=1",
+		"WURFL_INC=contrib/wurfl",
+		"WURFL_LIB=contrib/wurfl",
+		"USE_DEVICEATLAS=1",
+		"DEVICEATLAS_SRC=contrib/deviceatlas",
+		"EXTRA_OBJS=contrib/prometheus-exporter/service-prometheus.o",
+		"USE_51DEGREES=1",
+		"51DEGREES_SRC=contrib/51d/src/pattern",
+            ],
+	}
+    )
 
 # macOS
 
