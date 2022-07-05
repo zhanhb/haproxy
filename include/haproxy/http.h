@@ -37,6 +37,7 @@ enum http_meth_t find_http_meth(const char *str, const int len);
 int http_get_status_idx(unsigned int status);
 const char *http_get_reason(unsigned int status);
 struct ist http_get_host_port(const struct ist host);
+int http_is_default_port(const struct ist schm, const struct ist port);
 int http_validate_scheme(const struct ist schm);
 struct ist http_get_scheme(const struct ist uri);
 struct ist http_get_authority(const struct ist uri, int no_userinfo);
