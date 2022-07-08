@@ -2605,6 +2605,10 @@ static size_t h1_snd_buf(struct conn_stream *cs, struct buffer *buf, size_t coun
 
 		if (!(h1c->flags & (H1C_F_OUT_FULL|H1C_F_OUT_ALLOC)))
 			ret = h1_process_output(h1c, buf, count);
+
+		if ((h1c->conn->flags & (CO_FL_ERROR|CO_FL_SOCK_WR_SH)))
+			break;
+
 		if (!ret)
 			break;
 		total += ret;
@@ -2613,7 +2617,7 @@ static size_t h1_snd_buf(struct conn_stream *cs, struct buffer *buf, size_t coun
 			break;
 	}
 
-	if (h1c->flags & H1C_F_CS_ERROR)
+	if (h1c->flags & H1C_F_CS_ERROR || ((h1c->conn->flags & CO_FL_ERROR) && !b_data(&h1c->ibuf)))
 		cs->flags |= CS_FL_ERROR;
 
 	h1_refresh_timeout(h1c);
