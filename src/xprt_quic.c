@@ -4307,6 +4307,7 @@ static struct quic_conn *qc_new_conn(unsigned int version, int ipv4,
 	struct listener *l = NULL;
 	const unsigned char *salt = initial_salt_v1;
 	size_t salt_len = sizeof initial_salt_v1;
+	struct quic_cc_algo *cc_algo = NULL;
 
 	TRACE_ENTER(QUIC_EV_CONN_INIT);
 	qc = pool_zalloc(pool_head_quic_conn);
@@ -4328,6 +4329,7 @@ static struct quic_conn *qc_new_conn(unsigned int version, int ipv4,
 
 		l = owner;
 		prx = l->bind_conf->frontend;
+		cc_algo = l->bind_conf->quic_cc_algo;
 
 		qc->prx_counters = EXTRA_COUNTERS_GET(prx->extra_counters_fe,
 		                                      &quic_stats_module);
@@ -4406,7 +4408,7 @@ static struct quic_conn *qc_new_conn(unsigned int version, int ipv4,
 
 	/* XXX TO DO: Only one path at this time. */
 	qc->path = &qc->paths[0];
-	quic_path_init(qc->path, ipv4, default_quic_cc_algo, qc);
+	quic_path_init(qc->path, ipv4, cc_algo ? cc_algo : default_quic_cc_algo, qc);
 
 	/* required to use MTLIST_IN_LIST */
 	MT_LIST_INIT(&qc->accept_list);
