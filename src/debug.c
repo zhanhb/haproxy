@@ -51,6 +51,7 @@
  * when USE_THREAD_DUMP is set.
  */
 volatile unsigned long threads_to_dump = 0;
+unsigned int panic_started = 0;
 unsigned int debug_commands_issued = 0;
 
 /* dumps a backtrace of the current thread that is appended to buffer <buf>.
@@ -331,6 +332,14 @@ static int debug_parse_cli_show_libs(char **args, char *payload, struct appctx *
 /* dumps a state of all threads into the trash and on fd #2, then aborts. */
 void ha_panic()
 {
+	if (HA_ATOMIC_FETCH_ADD(&panic_started, 1) != 0) {
+		/* a panic dump is already in progress, let's not disturb it,
+		 * we'll be called via signal DEBUGSIG. By returning we may be
+		 * able to leave a current signal handler (e.g. WDT) so that
+		 * this will ensure more reliable signal delivery.
+		 */
+		return;
+	}
 	chunk_reset(&trash);
 	chunk_appendf(&trash, "Thread %u is about to kill the process.\n", tid + 1);
 	ha_thread_dump_all_to_trash();
