@@ -1,5 +1,5 @@
 varnishtest "http-restrict-req-hdr-names option tests"
-feature cmd "$HAPROXY_PROGRAM -cc 'version_atleast(2.0-dev0)'"
+#REQUIRE_VERSION=2.0
 
 # This config tests "http-restrict-req-hdr-names" option
 
@@ -38,9 +38,9 @@ server s5 {
 haproxy h1 -conf {
     defaults
         mode http
-        timeout connect "${HAPROXY_TEST_TIMEOUT-5s}"
-        timeout client  "${HAPROXY_TEST_TIMEOUT-5s}"
-        timeout server  "${HAPROXY_TEST_TIMEOUT-5s}"
+        timeout connect 1s
+        timeout client  1s
+        timeout server  1s
 
     frontend fe1
         bind "fd@${fe1}"
@@ -74,9 +74,9 @@ haproxy h1 -conf {
 
     defaults
         mode http
-        timeout connect "${HAPROXY_TEST_TIMEOUT-5s}"
-        timeout client  "${HAPROXY_TEST_TIMEOUT-5s}"
-        timeout server  "${HAPROXY_TEST_TIMEOUT-5s}"
+        timeout connect 1s
+        timeout client  1s
+        timeout server  1s
         option http-restrict-req-hdr-names preserve
 
     frontend fe2
