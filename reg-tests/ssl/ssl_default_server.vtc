@@ -11,8 +11,8 @@
 #
 
 varnishtest "Test the 'set ssl cert' feature of the CLI"
-feature cmd "$HAPROXY_PROGRAM -cc 'version_atleast(2.5-dev0)'"
-feature cmd "$HAPROXY_PROGRAM -cc 'feature(OPENSSL)'"
+#REQUIRE_VERSION=2.4
+#REQUIRE_OPTIONS=OPENSSL
 feature ignore_unknown_macro
 
 server s1 -repeat 7 {
