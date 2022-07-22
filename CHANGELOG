@@ -1,6 +1,68 @@
 ChangeLog :
 ===========
 
+2022/07/22 : 2.6.2
+    - MEDIUM: mux-h2: try to coalesce outgoing WINDOW_UPDATE frames
+    - BUG/MINOR: ssl: Do not look for key in extra files if already in pem
+    - BUG/MINOR: http-ana: Set method to HTTP_METH_OTHER when an HTTP txn is created
+    - BUG/MINOR: http-fetch: Use integer value when possible in "method" sample fetch
+    - MINOR: fd: add a new FD_DISOWN flag to prevent from closing a deleted FD
+    - BUG/MEDIUM: ssl/fd: unexpected fd close using async engine
+    - BUILD: Makefile: Add Lua 5.4 autodetect
+    - CI: re-enable gcc asan builds
+    - MINOR: fd: Add BUG_ON checks on fd_insert()
+    - BUG/MINOR: peers/config: always fill the bind_conf's argument
+    - BUG/MINOR: http-check: Preserve headers if not redefined by an implicit rule
+    - BUG/MINOR: http-act: Properly generate 103 responses when several rules are used
+    - BUG/MINOR: peers: fix possible NULL dereferences at config parsing
+    - BUG/MINOR: http-htx: Fix scheme based normalization for URIs wih userinfo
+    - MINOR: http: Add function to get port part of a host
+    - MINOR: http: Add function to detect default port
+    - BUG/MEDIUM: h1: Improve authority validation for CONNCET request
+    - MINOR: http-htx: Use new HTTP functions for the scheme based normalization
+    - BUG/MEDIUM: http-fetch: Don't fetch the method if there is no stream
+    - REGTEESTS: filters: Fix CONNECT request in random-forwarding script
+    - BUG/MINOR: mux-h1: Be sure to commit htx changes in the demux buffer
+    - BUG/MEDIUM: http-ana: Don't wait to have an empty buf to switch in TUNNEL state
+    - BUG/MEDIUM: mux-h1: Handle connection error after a synchronous send
+    - MEDIUM: mworker: set the iocb of the socketpair without using fd_insert()
+    - BUG/MINOR: quic: Missing acknowledgments for trailing packets
+    - BUG/MINOR: quic: Wrong reuse of fulfilled dgram RX buffer
+    - BUG/MAJOR: quic: Big RX dgrams leak when fulfilling a buffer
+    - BUG/MAJOR: quic: Big RX dgrams leak with POST requests
+    - BUILD: quic+h3: 32-bit compilation errors fixes
+    - BUG/MINOR: quic: Dropped packets not counted (with RX buffers full)
+    - MINOR: quic: Add new stats counter to diagnose RX buffer overrun
+    - MINOR: quic: Duplicated QUIC_RX_BUFSZ definition
+    - MINOR: task: Add tasklet_wakeup_after()
+    - MINOR: quic: Improvements for the datagrams receipt
+    - MINOR: quic: Increase the QUIC connections RX buffer size (upto 64Kb)
+    - MINOR: ncbuf: implement ncb_is_fragmented()
+    - BUG/MINOR: mux-quic: do not signal FIN if gap in buffer
+    - MINOR: h3: add h3c pointer into h3s instance
+    - MINOR: h3: handle errors on HEADERS parsing/QPACK decoding
+    - MINOR: qpack: properly handle invalid dynamic table references
+    - CLEANUP: h2: Typo fix in h2_unsubcribe() traces
+    - BUG/MEDIUM: mux-quic: fix server chunked encoding response
+    - BUG/MINOR: quic: fix closing state on NO_ERROR code sent
+    - BUG/MEDIUM: cli/threads: make "show threads" more robust on applets
+    - BUG/MINOR: debug: enter ha_panic() only once
+    - BUG/MEDIUM: tools: avoid calling dlsym() in static builds
+    - BUILD: makefile: Fix install(1) handling for OpenBSD/NetBSD/Solaris/AIX
+    - BUG/MEDIUM: tools: avoid calling dlsym() in static builds (try 2)
+    - MINOR: resolvers: resolvers_destroy() deinit and free a resolver
+    - BUG/MINOR: resolvers: shut off the warning for the default resolvers
+    - BUG/MINOR: ssl: allow duplicate certificates in ca-file directories
+    - BUG/MINOR: tools: fix statistical_prng_range()'s output range
+    - BUG/MINOR: quic: do not send CONNECTION_CLOSE_APP in initial/handshake
+    - BUG/MINOR: mworker/cli: relative pid prefix not validated anymore
+    - BUG/MAJOR: mux_quic: fix invalid PROTOCOL_VIOLATION on POST data overlap
+    - BUG/MEDIUM: mworker: proc_self incorrectly set crashes upon reload
+    - BUILD: add detection for unsupported compiler models
+    - BUG/MEDIUM: stconn: Only reset connect expiration when processing backend side
+    - BUILD: quic: fix anonymous union for gcc-4.4
+    - BUG/MINOR: backend: Fallback on RR algo if balance on source is impossible
+
 2022/06/21 : 2.6.1
     - BUG/MINOR: ssl_ckch: Free error msg if commit changes on a cert entry fails
     - BUG/MINOR: ssl_ckch: Free error msg if commit changes on a CA/CRL entry fails
