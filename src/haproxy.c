@@ -857,13 +857,6 @@ static void mworker_loop()
 	mworker_catch_sigchld(NULL); /* ensure we clean the children in case
 				     some SIGCHLD were lost */
 
-	global.nbthread = 1;
-
-#ifdef USE_THREAD
-	tid_bit = 1;
-	all_threads_mask = 1;
-#endif
-
 	jobs++; /* this is the "master" job, we want to take care of the
 		signals even if there is no listener so the poll loop don't
 		leave */
@@ -2037,6 +2030,19 @@ static void init(int argc, char **argv)
 
 		LIST_APPEND(&proc_list, &tmproc->list);
 	}
+
+	if (global.mode & MODE_MWORKER_WAIT) {
+		/* in exec mode, there's always exactly one thread. Failure to
+		 * set these ones now will result in nbthread being detected
+		 * automatically.
+		 */
+		global.nbthread = 1;
+#ifdef USE_THREAD
+		tid_bit = 1;
+		all_threads_mask = 1;
+#endif
+	}
+
 	if (global.mode & (MODE_MWORKER|MODE_MWORKER_WAIT)) {
 		struct wordlist *it, *c;
 
