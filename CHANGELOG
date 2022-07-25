@@ -1,6 +1,108 @@
 ChangeLog :
 ===========
 
+2022/07/25 : 2.5.8
+    - CI: determine actual LibreSSL version dynamically
+    - MEDIUM: http-ana: Add a proxy option to restrict chars in request header names
+    - BUILD: fix build warning on solaris based systems with __maybe_unused.
+    - MINOR: tools: add get_exec_path implementation for solaris based systems.
+    - BUG/MINOR: ssl: Fix crash when no private key is found in pem
+    - REGTESTS: abortonclose: Fix some race conditions
+    - BUG/MEDIUM: config: Reset outline buffer size on realloc error in readcfgfile()
+    - BUG/MINOR: check: Reinit the buffer wait list at the end of a check
+    - BUG/MINOR: cfgparse: abort earlier in case of allocation error
+    - BUG/MINOR: peers: fix error reporting of "bind" lines
+    - BUILD/MINOR: cpuset fix build for FreeBSD 13.1
+    - CI: determine actual OpenSSL version dynamically
+    - BUG/MEDIUM: tools: Fix `inet_ntop` usage in sa2str
+    - BUG/MEDIUM: http: Properly reject non-HTTP/1.x protocols
+    - BUG/MEDIUM: resolvers: Don't defer resolutions release in deinit function
+    - BUG/MEDIUM: peers: fix segfault using multiple bind on peers sections
+    - BUG/MEDIUM: peers: prevent unitialized multiple listeners on peers section
+    - BUG/MEDIUM: sample: Fix adjusting size in word converter
+    - REGTESTS: Do not use REQUIRE_VERSION for HAProxy 2.5+ (2)
+    - SCRIPTS: add make-releases-json to recreate a releases.json file in download dirs
+    - SCRIPTS: make publish-release try to launch make-releases-json
+    - BUG/MINOR: peers: set the proxy's name to the peers section name
+    - BUG/MINOR: peers: detect and warn on init_addr/resolvers/check/agent-check
+    - DOC: peers: indicate that some server settings are not usable
+    - DOC: peers: clarify when entry expiration date is renewed.
+    - DOC: peers: fix port number and addresses on new peers section format
+    - DOC: gpc/gpt: add commments of gpc/gpt array definitions on stick tables.
+    - DOC: intro: adjust the numbering of paragrams to keep the output ordered
+    - BUG/MINOR: ssl_ckch: Free error msg if commit changes on a cert entry fails
+    - BUG/MINOR: ssl_ckch: Free error msg if commit changes on a CA/CRL entry fails
+    - BUG/MEDIUM: ssl_ckch: Don't delete a cert entry if it is being modified
+    - BUG/MEDIUM: ssl_ckch: Don't delete CA/CRL entry if it is being modified
+    - BUG/MINOR: ssl_ckch: Don't duplicate path when replacing a cert entry
+    - BUG/MINOR: ssl_ckch: Don't duplicate path when replacing a CA/CRL entry
+    - BUG/MEDIUM: ssl_ckch: Rework 'commit ssl cert' to handle full buffer cases
+    - BUG/MEDIUM: ssl_ckch: Rework 'commit ssl ca-file' to handle full buffer cases
+    - BUG/MEDIUM: ssl/crt-list: Rework 'add ssl crt-list' to handle full buffer cases
+    - BUG/MEDIUM: httpclient: Don't remove HTX header blocks before duplicating them
+    - BUG/MEDIUM: httpclient: Rework CLI I/O handler to handle full buffer cases
+    - MEDIUM: http-ana: Always report rewrite failures as PRXCOND in logs
+    - MEDIUM: httpclient: Don't close CLI applet at the end of a response
+    - REGTESTS: abortonclose: Add a barrier to not mix up log messages
+    - REGTESTS: http_request_buffer: Increase client timeout to wait "slow" clients
+    - BUG/MINOR: ssl_ckch: Dump CRL transaction only once if show command yield
+    - BUG/MINOR: ssl_ckch: Dump CA transaction only once if show command yield
+    - BUG/MINOR: ssl_ckch: Dump cert transaction only once if show command yield
+    - BUG/MINOR: ssl_ckch: Init right field when parsing "commit ssl crl-file" cmd
+    - BUG/MINOR: ssl_ckch: Fix possible uninitialized value in show_cert I/O handler
+    - BUG/MINOR: ssl_ckch: Fix possible uninitialized value in show_cafile I/O handler
+    - BUG/MINOR: ssl_ckch: Fix possible uninitialized value in show_crlfile I/O handler
+    - REGTESTS: http_abortonclose: Extend supported versions
+    - REGTESTS: restrict_req_hdr_names: Extend supported versions
+    - BUILD: compiler: implement unreachable for older compilers too
+    - BUG/MEDIUM: mailers: Set the object type for check attached to an email alert
+    - BUG/MINOR: trace: Test server existence for health-checks to get proxy
+    - BUG/MINOR: checks: Properly handle email alerts in trace messages
+    - REGTESTS: healthcheckmail: Update the test to be functionnal again
+    - REGTESTS: healthcheckmail: Relax health-check failure condition
+    - BUG/MINOR: cli/stats: add missing trailing LF after JSON outputs
+    - BUG/MINOR: server: do not enable DNS resolution on disabled proxies
+    - BUG/MINOR: cli/stats: add missing trailing LF after "show info json"
+    - BUG/MINOR: tcp-rules: Make action call final on read error and delay expiration
+    - BUG/MINOR: task: fix thread assignment in tasklet_kill()
+    - BUG/MEDIUM: ssl/cli: crash when crt inserted into a crt-list
+    - BUG/MEDIUM: mworker: use default maxconn in wait mode
+    - REGTESTS: ssl: add the same cert for client/server
+    - MEDIUM: mux-h2: try to coalesce outgoing WINDOW_UPDATE frames
+    - BUG/MINOR: ssl: Do not look for key in extra files if already in pem
+    - BUG/MINOR: http-ana: Set method to HTTP_METH_OTHER when an HTTP txn is created
+    - BUG/MINOR: http-fetch: Use integer value when possible in "method" sample fetch
+    - MINOR: fd: add a new FD_DISOWN flag to prevent from closing a deleted FD
+    - BUG/MEDIUM: ssl/fd: unexpected fd close using async engine
+    - BUILD: Makefile: Add Lua 5.4 autodetect
+    - CI: re-enable gcc asan builds
+    - MINOR: fd: Add BUG_ON checks on fd_insert()
+    - BUG/MINOR: peers/config: always fill the bind_conf's argument
+    - BUG/MINOR: http-check: Preserve headers if not redefined by an implicit rule
+    - BUG/MINOR: http-act: Properly generate 103 responses when several rules are used
+    - BUG/MINOR: peers: fix possible NULL dereferences at config parsing
+    - BUG/MINOR: http-htx: Fix scheme based normalization for URIs wih userinfo
+    - MINOR: http: Add function to get port part of a host
+    - MINOR: http: Add function to detect default port
+    - BUG/MEDIUM: h1: Improve authority validation for CONNCET request
+    - MINOR: http-htx: Use new HTTP functions for the scheme based normalization
+    - BUG/MEDIUM: http-fetch: Don't fetch the method if there is no stream
+    - REGTEESTS: filters: Fix CONNECT request in random-forwarding script
+    - BUG/MINOR: mux-h1: Be sure to commit htx changes in the demux buffer
+    - BUG/MEDIUM: http-ana: Don't wait to have an empty buf to switch in TUNNEL state
+    - BUG/MEDIUM: mux-h1: Handle connection error after a synchronous send
+    - MEDIUM: mworker: set the iocb of the socketpair without using fd_insert()
+    - BUG/MEDIUM: tools: avoid calling dlsym() in static builds
+    - BUILD: makefile: Fix install(1) handling for OpenBSD/NetBSD/Solaris/AIX
+    - BUG/MEDIUM: tools: avoid calling dlsym() in static builds (try 2)
+    - BUG/MINOR: tools: fix statistical_prng_range()'s output range
+    - BUG/MINOR: mworker/cli: relative pid prefix not validated anymore
+    - BUG/MEDIUM: mworker: proc_self incorrectly set crashes upon reload
+    - BUILD: add detection for unsupported compiler models
+    - BUG/MINOR: backend: Fallback on RR algo if balance on source is impossible
+    - BUG/MINOR: sockpair: wrong return value for fd_send_uxst()
+    - Revert "BUG/MINOR: peers: set the proxy's name to the peers section name"
+
 2022/05/13 : 2.5.7
     - BUILD: compiler: properly distinguish weak and global symbols
     - MINOR: connection: Add way to disable active connection closing during soft-stop
