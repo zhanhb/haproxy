@@ -1289,6 +1289,7 @@ static struct task *qc_io_cb(struct task *t, void *ctx, unsigned int status)
 	if (qc_release_detached_streams(qcc)) {
 		if (qcc_is_dead(qcc)) {
 			qc_release(qcc);
+			goto end;
 		}
 		else if (qcc->task) {
 			if (qcc_may_expire(qcc))
@@ -1301,6 +1302,7 @@ static struct task *qc_io_cb(struct task *t, void *ctx, unsigned int status)
 
 	qc_recv(qcc);
 
+ end:
 	TRACE_LEAVE(QMUX_EV_QCC_WAKE);
 
 	return NULL;
