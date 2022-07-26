@@ -4093,6 +4093,18 @@ out_uri_auth_compat:
 
 					l = &curpeers->peers_fe->conf.bind;
 					bind_conf = LIST_ELEM(l->n, typeof(bind_conf), by_fe);
+
+					if (curpeers->local->srv) {
+						if (curpeers->local->srv->use_ssl == 1 && !(bind_conf->options & BC_O_USE_SSL)) {
+							ha_warning("Peers section '%s': local peer have a non-SSL listener and a SSL server configured at line %s:%d.\n",
+								   curpeers->peers_fe->id, curpeers->local->conf.file, curpeers->local->conf.line);
+						}
+						else if (curpeers->local->srv->use_ssl != 1 && (bind_conf->options & BC_O_USE_SSL)) {
+							ha_warning("Peers section '%s': local peer have a SSL listener and a non-SSL server configured at line %s:%d.\n",
+								   curpeers->peers_fe->id, curpeers->local->conf.file, curpeers->local->conf.line);
+						}
+					}
+
 					if (bind_conf->xprt->prepare_bind_conf &&
 						bind_conf->xprt->prepare_bind_conf(bind_conf) < 0)
 						cfgerr++;
