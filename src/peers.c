@@ -98,6 +98,7 @@
 
 #define PEER_RESYNC_TIMEOUT         5000 /* 5 seconds */
 #define PEER_RECONNECT_TIMEOUT      5000 /* 5 seconds */
+#define PEER_LOCAL_RECONNECT_TIMEOUT 500 /* 500ms */
 #define PEER_HEARTBEAT_TIMEOUT      3000 /* 3 seconds */
 
 /* flags for "show peers" */
@@ -2878,7 +2879,7 @@ static struct appctx *peer_session_create(struct peers *peers, struct peer *peer
 	struct stream *s;
 
 	peer->new_conn++;
-	peer->reconnect = tick_add(now_ms, MS_TO_TICKS(PEER_RECONNECT_TIMEOUT));
+	peer->reconnect = tick_add(now_ms, (stopping ? MS_TO_TICKS(PEER_LOCAL_RECONNECT_TIMEOUT) : MS_TO_TICKS(PEER_RECONNECT_TIMEOUT)));
 	peer->heartbeat = TICK_ETERNITY;
 	peer->statuscode = PEER_SESS_SC_CONNECTCODE;
 	peer->last_hdshk = now_ms;
