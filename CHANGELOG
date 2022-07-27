@@ -1,6 +1,11 @@
 ChangeLog :
 ===========
 
+2022/07/27 : 2.3.21
+    - BUG/MAJOR: dns: multi-thread concurrency issue on UDP socket
+    - BUG/MINOR: mux-h2: mark the stream as open before processing it not after
+    - BUG/MEDIUM: wdt: don't trigger the watchdog when p is unitialized
+
 2022/04/29 : 2.3.20
     - BUG/MINOR: tools: fix url2sa return value with IPv4
     - CI: github actions: switch to LibreSSL-3.5.1
