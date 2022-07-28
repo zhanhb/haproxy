@@ -1,6 +1,65 @@
 ChangeLog :
 ===========
 
+2022/07/28 : 2.2.25
+    - CI: determine actual LibreSSL version dynamically
+    - MEDIUM: http-ana: Add a proxy option to restrict chars in request header names
+    - BUILD: fix build warning on solaris based systems with __maybe_unused.
+    - REGTESTS: abortonclose: Fix some race conditions
+    - BUG/MEDIUM: config: Reset outline buffer size on realloc error in readcfgfile()
+    - BUG/MINOR: check: Reinit the buffer wait list at the end of a check
+    - BUG/MINOR: cfgparse: abort earlier in case of allocation error
+    - BUG/MINOR: peers: fix error reporting of "bind" lines
+    - CI: determine actual OpenSSL version dynamically
+    - BUG/MEDIUM: http: Properly reject non-HTTP/1.x protocols
+    - BUG/MEDIUM: resolvers: Don't defer resolutions release in deinit function
+    - BUG/MEDIUM: peers: fix segfault using multiple bind on peers sections
+    - BUG/MEDIUM: peers: prevent unitialized multiple listeners on peers section
+    - BUG/MEDIUM: sample: Fix adjusting size in word converter
+    - REGTESTS: Do not use REQUIRE_VERSION for HAProxy 2.5+ (2)
+    - SCRIPTS: add make-releases-json to recreate a releases.json file in download dirs
+    - SCRIPTS: make publish-release try to launch make-releases-json
+    - DOC: peers: indicate that some server settings are not usable
+    - DOC: peers: clarify when entry expiration date is renewed.
+    - DOC: peers: fix port number and addresses on new peers section format
+    - BUG/MINOR: ssl: Fix crash when no private key is found in pem
+    - BUG/MINOR: conn_stream: do not confirm a connection from the frontend path
+    - BUG/MEDIUM: dns: Keep the right count of active nameservers for a resolver
+    - BUG/MINOR: ssl_ckch: Free error msg if commit changes on a cert entry fails
+    - BUG/MEDIUM: ssl_ckch: Don't delete a cert entry if it is being modified
+    - BUG/MINOR: ssl_ckch: Don't duplicate path when replacing a cert entry
+    - BUG/MEDIUM: ssl_ckch: Rework 'commit ssl cert' to handle full buffer cases
+    - BUG/MEDIUM: ssl/crt-list: Rework 'add ssl crt-list' to handle full buffer cases
+    - MEDIUM: http-ana: Always report rewrite failures as PRXCOND in logs
+    - REGTESTS: abortonclose: Add a barrier to not mix up log messages
+    - REGTESTS: http_request_buffer: Increase client timeout to wait "slow" clients
+    - BUG/MINOR: ssl_ckch: Dump cert transaction only once if show command yield
+    - BUG/MINOR: ssl_ckch: Fix possible uninitialized value in show_cert I/O handler
+    - REGTESTS: restrict_req_hdr_names: Extend supported versions
+    - BUILD: compiler: implement unreachable for older compilers too
+    - BUG/MEDIUM: mailers: Set the object type for check attached to an email alert
+    - REGTESTS: healthcheckmail: Update the test to be functionnal again
+    - REGTESTS: healthcheckmail: Relax health-check failure condition
+    - BUG/MINOR: cli/stats: add missing trailing LF after JSON outputs
+    - BUG/MINOR: server: do not enable DNS resolution on disabled proxies
+    - BUG/MINOR: cli/stats: add missing trailing LF after "show info json"
+    - BUG/MINOR: tcp-rules: Make action call final on read error and delay expiration
+    - BUG/MEDIUM: ssl/cli: crash when crt inserted into a crt-list
+    - MEDIUM: mux-h2: try to coalesce outgoing WINDOW_UPDATE frames
+    - BUG/MINOR: ssl: Do not look for key in extra files if already in pem
+    - BUG/MINOR: http-ana: Set method to HTTP_METH_OTHER when an HTTP txn is created
+    - BUG/MINOR: http-fetch: Use integer value when possible in "method" sample fetch
+    - CI: re-enable gcc asan builds
+    - BUG/MINOR: peers/config: always fill the bind_conf's argument
+    - BUG/MINOR: http-check: Preserve headers if not redefined by an implicit rule
+    - BUG/MINOR: http-act: Properly generate 103 responses when several rules are used
+    - BUG/MINOR: peers: fix possible NULL dereferences at config parsing
+    - BUG/MEDIUM: http-ana: Don't wait to have an empty buf to switch in TUNNEL state
+    - BUG/MEDIUM: mux-h1: Handle connection error after a synchronous send
+    - REGTESTS: Fix some scripts to be compatible with 2.4 and prior
+    - BUG/MINOR: backend: Fallback on RR algo if balance on source is impossible
+    - BUG/MINOR: sockpair: wrong return value for fd_send_uxst()
+
 2022/05/13 : 2.2.24
     - BUG/MAJOR: dns: multi-thread concurrency issue on UDP socket
     - BUG/MINOR: mux-h2: mark the stream as open before processing it not after
