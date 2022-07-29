@@ -295,7 +295,7 @@ void quic_sock_fd_iocb(int fd)
 
 	max_dgrams = global.tune.maxpollevents;
  start:
-	/* Try to reuse an existing dgram. Note that there is alway at
+	/* Try to reuse an existing dgram. Note that there is always at
 	 * least one datagram to pick, except the first time we enter
 	 * this function for this <rxbuf> buffer.
 	 */

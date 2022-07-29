@@ -405,7 +405,7 @@ the FD, and all those with a bit in it ought to do it.
   - thread_mask (in bind_conf->rx_settings) should become an array of
     MAX_TGROUP longs.
   - when parsing "thread 123" or "thread 2/37", the proper bit is set,
-    assuming the array is either a contigous bitfield or a tgroup array.
+    assuming the array is either a contiguous bitfield or a tgroup array.
     An option RX_O_THR_PER_GRP or RX_O_THR_PER_PROC is set depending on
     how the thread num was parsed, so that we reject mixes.
   - end of parsing: entries translated to the cleanest form (to be determined)

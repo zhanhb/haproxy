@@ -915,7 +915,7 @@ static int qcs_build_stream_frm(struct qcs *qcs, struct buffer *out, char fin,
 	return -1;
 }
 
-/* Check after transfering data from qcs.tx.buf if FIN must be set on the next
+/* Check after transferring data from qcs.tx.buf if FIN must be set on the next
  * STREAM frame for <qcs>.
  *
  * Returns true if FIN must be set else false.
@@ -1091,7 +1091,7 @@ static int _qc_send_qcs(struct qcs *qcs, struct list *frms)
 	/* out buffer cannot be emptied if qcs offsets differ. */
 	BUG_ON(!b_data(out) && qcs->tx.sent_offset != qcs->tx.offset);
 
-	/* FIN is set if all incoming data were transfered. */
+	/* FIN is set if all incoming data were transferred. */
 	fin = qcs_stream_fin(qcs);
 
 	/* Build a new STREAM frame with <out> buffer. */
