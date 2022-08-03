@@ -1512,7 +1512,7 @@ static int proxy_defproxy_cpy(struct proxy *curproxy, const struct proxy *defpro
 	char *tmpmsg = NULL;
 
 	/* set default values from the specified default proxy */
-	memcpy(&curproxy->defsrv, &defproxy->defsrv, sizeof(curproxy->defsrv));
+	srv_settings_cpy(&curproxy->defsrv, &defproxy->defsrv, 0);
 
 	curproxy->disabled = defproxy->disabled;
 	curproxy->options = defproxy->options;
