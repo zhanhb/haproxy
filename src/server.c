@@ -1582,8 +1582,7 @@ static void display_parser_err(const char *file, int linenum, char **args, int c
 			 file, linenum, args[0], args[1], args[cur_arg]);
 }
 
-static void srv_conn_src_sport_range_cpy(struct server *srv,
-                                            struct server *src)
+static void srv_conn_src_sport_range_cpy(struct server *srv, const struct server *src)
 {
 	int range_sz;
 
@@ -1604,7 +1603,7 @@ static void srv_conn_src_sport_range_cpy(struct server *srv,
 /*
  * Copy <src> server connection source settings to <srv> server everything needed.
  */
-static void srv_conn_src_cpy(struct server *srv, struct server *src)
+static void srv_conn_src_cpy(struct server *srv, const struct server *src)
 {
 	srv->conn_src.opts = src->conn_src.opts;
 	srv->conn_src.source_addr = src->conn_src.source_addr;
@@ -1630,7 +1629,7 @@ static void srv_conn_src_cpy(struct server *srv, struct server *src)
  * everything needed.
  */
 #if defined(USE_OPENSSL)
-static void srv_ssl_settings_cpy(struct server *srv, struct server *src)
+static void srv_ssl_settings_cpy(struct server *srv, const struct server *src)
 {
 	if (src->ssl_ctx.ca_file != NULL)
 		srv->ssl_ctx.ca_file = strdup(src->ssl_ctx.ca_file);
@@ -1732,7 +1731,7 @@ static int srv_prepare_for_resolution(struct server *srv, const char *hostname)
  * <srv_tmpl> distinguishes these two cases (must be 1 if <srv> is a template,
  * 0 if not).
  */
-static void srv_settings_cpy(struct server *srv, struct server *src, int srv_tmpl)
+static void srv_settings_cpy(struct server *srv, const struct server *src, int srv_tmpl)
 {
 	/* Connection source settings copy */
 	srv_conn_src_cpy(srv, src);
