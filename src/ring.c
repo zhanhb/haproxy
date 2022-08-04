@@ -273,6 +273,7 @@ int cli_io_handler_show_ring(struct appctx *appctx)
 	struct ring *ring = appctx->ctx.cli.p0;
 	struct buffer *buf = &ring->buf;
 	size_t ofs = appctx->ctx.cli.o0;
+	size_t last_ofs;
 	uint64_t msg_len;
 	size_t len, cnt;
 	int ret;
@@ -346,6 +347,7 @@ int cli_io_handler_show_ring(struct appctx *appctx)
 
 	HA_ATOMIC_ADD(b_peek(buf, ofs), 1);
 	ofs += ring->ofs;
+	last_ofs = ring->ofs;
 	appctx->ctx.cli.o0 = ofs;
 	HA_RWLOCK_RDUNLOCK(LOGSRV_LOCK, &ring->lock);
 
@@ -357,8 +359,16 @@ int cli_io_handler_show_ring(struct appctx *appctx)
 			/* let's be woken up once new data arrive */
 			HA_RWLOCK_WRLOCK(LOGSRV_LOCK, &ring->lock);
 			LIST_ADDQ(&ring->waiters, &appctx->wait_entry);
+			ofs = ring->ofs;
 			HA_RWLOCK_WRUNLOCK(LOGSRV_LOCK, &ring->lock);
-			si_rx_endp_done(si);
+			if (ofs != last_ofs) {
+				/* more data was added into the ring between the
+				 * unlock and the lock, and the writer might not
+				 * have seen us. We need to reschedule a read.
+				 */
+				si_rx_endp_more(si);
+			} else
+				si_rx_endp_done(si);
 			ret = 0;
 		}
 		/* always drain all the request */
