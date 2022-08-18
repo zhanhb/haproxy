@@ -56,6 +56,7 @@ static struct pool_head *pool_head_h2s;
 #define H2_CF_DEM_SFULL         0x00000080  // demux blocked on stream request buffer full
 #define H2_CF_DEM_TOOMANY       0x00000100  // demux blocked waiting for some conn_streams to leave
 #define H2_CF_DEM_BLOCK_ANY     0x000001F0  // aggregate of the demux flags above except DALLOC/DFULL
+#define H2_CF_DEM_IN_PROGRESS   0x00000400  // demux in progress (dsi,dfl,dft are valid)
 
 /* other flags */
 #define H2_CF_GOAWAY_SENT       0x00001000  // a GOAWAY frame was successfully sent
@@ -1896,6 +1897,7 @@ static void h2_process_demux(struct h2c *h2c)
 			h2c->dft = hdr.ft;
 			h2c->dff = hdr.ff;
 			h2c->dpl = 0;
+			h2c->flags |= H2_CF_DEM_IN_PROGRESS;
 			h2c->st0 = H2_CS_FRAME_P;
 			h2_skip_frame_hdr(h2c->dbuf);
 		}
@@ -2121,8 +2123,10 @@ static void h2_process_demux(struct h2c *h2c)
 			ret = MIN(h2c->dbuf->i, h2c->dfl);
 			bi_del(h2c->dbuf, ret);
 			h2c->dfl -= ret;
-			if (!h2c->dfl)
+			if (!h2c->dfl) {
+				h2c->flags &= ~H2_CF_DEM_IN_PROGRESS;
 				h2c->st0 = H2_CS_FRAME_H;
+			}
 		}
 	}
 
