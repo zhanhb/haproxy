@@ -60,6 +60,7 @@ static const struct h2s *h2_idle_stream;
                                             // (SHORT_READ is also excluded)
 
 #define H2_CF_DEM_SHORT_READ    0x00000200  // demux blocked on incomplete frame
+#define H2_CF_DEM_IN_PROGRESS   0x00000400  // demux in progress (dsi,dfl,dft are valid)
 
 /* other flags */
 #define H2_CF_GOAWAY_SENT       0x00001000  // a GOAWAY frame was successfully sent
@@ -309,7 +310,6 @@ static int h2_frt_transfer_data(struct h2s *h2s);
 static struct task *h2_deferred_shut(struct task *t, void *ctx, unsigned short state);
 static struct h2s *h2c_bck_stream_new(struct h2c *h2c, struct conn_stream *cs, struct session *sess);
 static void h2s_alert(struct h2s *h2s);
-
 
 /* Detect a pending read0 for a H2 connection. It happens if a read0 was
  * already reported on a previous xprt->rcvbuf() AND a frame parser failed
@@ -2546,6 +2546,7 @@ static void h2_process_demux(struct h2c *h2c)
 			h2c->dft = hdr.ft;
 			h2c->dff = hdr.ff;
 			h2c->dpl = padlen;
+			h2c->flags |= H2_CF_DEM_IN_PROGRESS;
 			h2c->st0 = H2_CS_FRAME_P;
 
 			/* check for minimum basic frame format validity */
@@ -2821,8 +2822,10 @@ static void h2_process_demux(struct h2c *h2c)
 			ret = MIN(b_data(&h2c->dbuf), h2c->dfl);
 			b_del(&h2c->dbuf, ret);
 			h2c->dfl -= ret;
-			if (!h2c->dfl)
+			if (!h2c->dfl) {
+				h2c->flags &= ~H2_CF_DEM_IN_PROGRESS;
 				h2c->st0 = H2_CS_FRAME_H;
+			}
 		}
 	}
 
