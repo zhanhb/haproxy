@@ -2633,6 +2633,7 @@ int check_config_validity()
 {
 	int cfgerr = 0;
 	struct proxy *curproxy = NULL;
+	struct proxy *init_proxies_list = NULL;
 	struct stktable *t;
 	struct server *newsrv = NULL;
 	int err_code = 0;
@@ -2710,7 +2711,11 @@ int check_config_validity()
 		proxies_list = next;
 	}
 
-	for (curproxy = proxies_list; curproxy; curproxy = curproxy->next) {
+	/* starting to initialize the main proxies list */
+	init_proxies_list = proxies_list;
+
+init_proxies_list_stage1:
+	for (curproxy = init_proxies_list; curproxy; curproxy = curproxy->next) {
 		struct switching_rule *rule;
 		struct server_rule *srule;
 		struct sticking_rule *mrule;
@@ -2840,11 +2845,16 @@ int check_config_validity()
 		case PR_MODE_CLI:
 			cfgerr += proxy_cfg_ensure_no_http(curproxy);
 			break;
+
 		case PR_MODE_SYSLOG:
+			/* this mode is initialized as the classic tcp proxy */
+			cfgerr += proxy_cfg_ensure_no_http(curproxy);
+			break;
+
 		case PR_MODE_PEERS:
 		case PR_MODES:
 			/* should not happen, bug gcc warn missing switch statement */
-			ha_alert("config : %s '%s' cannot use peers or syslog mode for this proxy. NOTE: PLEASE REPORT THIS TO DEVELOPERS AS YOU'RE NOT SUPPOSED TO BE ABLE TO CREATE A CONFIGURATION TRIGGERING THIS!\n",
+			ha_alert("config: %s '%s' cannot initialize this proxy mode (peers) in this way. NOTE: PLEASE REPORT THIS TO DEVELOPERS AS YOU'RE NOT SUPPOSED TO BE ABLE TO CREATE A CONFIGURATION TRIGGERING THIS!\n",
 				 proxy_type_str(curproxy), curproxy->id);
 			cfgerr++;
 			break;
@@ -3969,6 +3979,15 @@ out_uri_auth_compat:
 		}
 	}
 
+	/*
+	 * We have just initialized the main proxies list
+	 * we must also configure the log-forward proxies list
+	 */
+	if (init_proxies_list == proxies_list) {
+		init_proxies_list = cfg_log_forward;
+		goto init_proxies_list_stage1;
+	}
+
 	/***********************************************************/
 	/* At this point, target names have already been resolved. */
 	/***********************************************************/
@@ -4090,7 +4109,11 @@ out_uri_auth_compat:
 
 	/* perform the final checks before creating tasks */
 
-	for (curproxy = proxies_list; curproxy; curproxy = curproxy->next) {
+	/* starting to initialize the main proxies list */
+	init_proxies_list = proxies_list;
+
+init_proxies_list_stage2:
+	for (curproxy = init_proxies_list; curproxy; curproxy = curproxy->next) {
 		struct listener *listener;
 		unsigned int next_id;
 
@@ -4209,6 +4232,15 @@ out_uri_auth_compat:
 				 curproxy->id);
 			cfgerr++;
 		}
+	}
+
+	/*
+	 * We have just initialized the main proxies list
+	 * we must also configure the log-forward proxies list
+	 */
+	if (init_proxies_list == proxies_list) {
+		init_proxies_list = cfg_log_forward;
+		goto init_proxies_list_stage2;
 	}
 
 	/*
