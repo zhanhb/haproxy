@@ -1152,6 +1152,7 @@ static int httpclient_precheck()
 		goto err;
 	}
 
+	srv_settings_cpy(httpclient_srv_raw, &httpclient_proxy->defsrv, 0);
 	httpclient_srv_raw->iweight = 0;
 	httpclient_srv_raw->uweight = 0;
 	httpclient_srv_raw->xprt = xprt_get(XPRT_RAW);
@@ -1171,6 +1172,7 @@ static int httpclient_precheck()
 		err_code |= ERR_ALERT | ERR_FATAL;
 		goto err;
 	}
+	srv_settings_cpy(httpclient_srv_ssl, &httpclient_proxy->defsrv, 0);
 	httpclient_srv_ssl->iweight = 0;
 	httpclient_srv_ssl->uweight = 0;
 	httpclient_srv_ssl->xprt = xprt_get(XPRT_SSL);
