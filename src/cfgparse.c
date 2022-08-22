@@ -3905,7 +3905,9 @@ out_uri_auth_compat:
 	 */
 	if (init_proxies_list == proxies_list) {
 		init_proxies_list = cfg_log_forward;
-		goto init_proxies_list_stage1;
+		/* check if list is not null to avoid infinite loop */
+		if (init_proxies_list)
+			goto init_proxies_list_stage1;
 	}
 
 	/***********************************************************/
@@ -4057,7 +4059,9 @@ init_proxies_list_stage2:
 	 */
 	if (init_proxies_list == proxies_list) {
 		init_proxies_list = cfg_log_forward;
-		goto init_proxies_list_stage2;
+		/* check if list is not null to avoid infinite loop */
+		if (init_proxies_list)
+			goto init_proxies_list_stage2;
 	}
 
 	if (diag_no_cluster_secret)
