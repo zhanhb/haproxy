@@ -1,6 +1,10 @@
 ChangeLog :
 ===========
 
+2022/08/22 : 2.6.4
+    - BUG/MINOR: ssl/cli: error when the ca-file is empty
+    - BUG/MAJOR: mworker: fix infinite loop on master with no proxies.
+
 2022/08/19 : 2.6.3
     - BUG/MINOR: sockpair: wrong return value for fd_send_uxst()
     - Revert "BUG/MINOR: peers: set the proxy's name to the peers section name"
