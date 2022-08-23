@@ -390,7 +390,7 @@ struct quic_dgram {
 #define QUIC_FL_RX_PACKET_ACK_ELICITING (1UL << 0)
 
 struct quic_rx_packet {
-	struct mt_list list;
+	struct list list;
 	struct list qc_rx_pkt_list;
 	struct quic_conn *qc;
 	unsigned char type;
@@ -520,7 +520,7 @@ struct quic_enc_level {
 		/* <pkts> root must be protected from concurrent accesses */
 		__decl_thread(HA_RWLOCK_T pkts_rwlock);
 		/* Liste of QUIC packets with protected header. */
-		struct mt_list pqpkts;
+		struct list pqpkts;
 		/* Crypto frames */
 		struct {
 			uint64_t offset;
