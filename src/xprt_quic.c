@@ -6199,9 +6199,7 @@ static int qc_do_build_pkt(unsigned char *pos, const unsigned char *end,
 	if (!LIST_ISEMPTY(&frm_list)) {
 		struct quic_frame *tmp_cf;
 		list_for_each_entry_safe(cf, tmp_cf, &frm_list, list) {
-			unsigned char *spos = pos;
-
-			if (!qc_build_frm(&spos, end, cf, pkt, qc)) {
+			if (!qc_build_frm(&pos, end, cf, pkt, qc)) {
 				ssize_t room = end - pos;
 				TRACE_PROTO("Not enough room", QUIC_EV_CONN_HPKT,
 				            qc, NULL, NULL, &room);
@@ -6215,7 +6213,6 @@ static int qc_do_build_pkt(unsigned char *pos, const unsigned char *end,
 				break;
 			}
 
-			pos = spos;
 			quic_tx_packet_refinc(pkt);
 			cf->pkt = pkt;
 		}
