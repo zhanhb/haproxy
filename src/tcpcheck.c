@@ -1139,10 +1139,8 @@ enum tcpcheck_eval_ret tcpcheck_eval_connect(struct check *check, struct tcpchec
 	if (proto && proto->connect) {
 		int flags = 0;
 
-		if (check->tcpcheck_rules->flags & TCPCHK_RULES_PROTO_CHK)
-			flags |= CONNECT_HAS_DATA;
-		if (!next || next->action != TCPCHK_ACT_EXPECT)
-			flags |= CONNECT_DELACK_ALWAYS;
+		if (connect->options & TCPCHK_OPT_HAS_DATA)
+			flags = (CONNECT_HAS_DATA|CONNECT_DELACK_ALWAYS);
 		status = proto->connect(conn, flags);
 	}
 
@@ -3644,6 +3642,8 @@ static int check_proxy_tcpcheck(struct proxy *px)
 	 * comment is assigned to the following rule(s).
 	 */
 	list_for_each_entry_safe(chk, back, px->tcpcheck_rules.list, list) {
+		struct tcpcheck_rule *next;
+
 		if (chk->action != prev_action && prev_action != TCPCHK_ACT_COMMENT) {
 			free(comment);
 			comment = NULL;
@@ -3660,6 +3660,9 @@ static int check_proxy_tcpcheck(struct proxy *px)
 		case TCPCHK_ACT_CONNECT:
 			if (!chk->comment && comment)
 				chk->comment = strdup(comment);
+			next = get_next_tcpcheck_rule(&px->tcpcheck_rules, chk);
+			if (next && next->action == TCPCHK_ACT_SEND)
+				chk->connect.options |= TCPCHK_OPT_HAS_DATA;
 			/* fall through */
 		case TCPCHK_ACT_ACTION_KW:
 			free(comment);
