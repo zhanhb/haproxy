@@ -5236,7 +5236,7 @@ static void qc_lstnr_pkt_rcv(unsigned char *buf, const unsigned char *end,
                              struct quic_dgram *dgram, struct list **tasklist_head)
 {
 	unsigned char *beg, *payload;
-	struct quic_conn *qc, *qc_to_purge = NULL;
+	struct quic_conn *qc;
 	struct listener *l;
 	struct proxy *prx;
 	struct quic_counters *prx_counters;
@@ -5403,7 +5403,6 @@ static void qc_lstnr_pkt_rcv(unsigned char *buf, const unsigned char *end,
 		qc = retrieve_qc_conn_from_cid(pkt, l, &dgram->saddr);
 		if (!qc) {
 			int ipv4;
-			struct ebmb_node *n = NULL;
 
 			if (pkt->type != QUIC_PACKET_TYPE_INITIAL) {
 				TRACE_PROTO("Non Initial packet", QUIC_EV_CONN_LPKT);
@@ -5442,31 +5441,11 @@ static void qc_lstnr_pkt_rcv(unsigned char *buf, const unsigned char *end,
 
 			HA_ATOMIC_INC(&prx_counters->half_open_conn);
 			/* Insert the DCID the QUIC client has chosen (only for listeners) */
-			n = ebmb_insert(&quic_dghdlrs[tid].odcids, &qc->odcid_node,
-			                qc->odcid.len + qc->odcid.addrlen);
-
-			/* If the insertion failed, it means that another
-			 * thread has already allocated a QUIC connection for
-			 * the same CID. Liberate our allocated connection.
-			 */
-			if (unlikely(n != &qc->odcid_node)) {
-				qc_to_purge = qc;
-
-				qc = ebmb_entry(n, struct quic_conn, odcid_node);
-				pkt->qc = qc;
-			}
-
-			if (likely(!qc_to_purge)) {
-				/* Enqueue this packet. */
-				pkt->qc = qc;
-			}
-			else {
-				quic_conn_release(qc_to_purge);
-			}
+			ebmb_insert(&quic_dghdlrs[tid].odcids, &qc->odcid_node,
+			            qc->odcid.len + qc->odcid.addrlen);
 		}
-		else {
-			pkt->qc = qc;
-		}
+
+		pkt->qc = qc;
 	}
 	else {
 		if (end - buf < QUIC_HAP_CID_LEN) {
