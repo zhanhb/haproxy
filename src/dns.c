@@ -2573,7 +2573,7 @@ static void dns_deinit(void)
 
 /* Finalizes the DNS configuration by allocating required resources and checking
  * live parameters.
- * Returns 0 on success, ERR_* flags otherwise.
+ * Returns 0 on success, 1 on error.
  */
 static int dns_finalize_config(void)
 {
@@ -2698,11 +2698,11 @@ static int dns_finalize_config(void)
 		goto err;
 
 	leave_resolver_code();
-	return err_code;
+	return 0;
   err:
 	leave_resolver_code();
 	dns_deinit();
-	return err_code;
+	return 1;
 
 }
 
