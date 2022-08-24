@@ -1990,7 +1990,7 @@ static void dns_deinit(void)
 
 /* Finalizes the DNS configuration by allocating required resources and checking
  * live parameters.
- * Returns 0 on success, ERR_* flags otherwise.
+ * Returns 0 on success, 1 on error.
  */
 static int dns_finalize_config(void)
 {
@@ -2100,10 +2100,10 @@ static int dns_finalize_config(void)
 	if (err_code & (ERR_ALERT|ERR_ABORT))
 		goto err;
 
-	return err_code;
+	return 0;
   err:
 	dns_deinit();
-	return err_code;
+	return 1;
 
 }
 
