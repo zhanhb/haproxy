@@ -1283,7 +1283,7 @@ spoe_release_appctx(struct appctx *appctx)
 		task_free(spoe_appctx->task);
 	}
 
-	/* Notify all waiting streams */
+	/* Report an error to all streams in the appctx waiting queue */
 	list_for_each_entry_safe(ctx, back, &spoe_appctx->waiting_queue, list) {
 		LIST_DEL(&ctx->list);
 		LIST_INIT(&ctx->list);
@@ -1293,8 +1293,8 @@ spoe_release_appctx(struct appctx *appctx)
 		task_wakeup(ctx->strm->task, TASK_WOKEN_MSG);
 	}
 
-	/* If the applet was processing a fragmented frame, notify the
-	 * corresponding stream. */
+	/* If the applet was processing a fragmented frame, report an error to
+	 * the corresponding stream. */
 	if (spoe_appctx->frag_ctx.ctx) {
 		ctx = spoe_appctx->frag_ctx.ctx;
 		ctx->frag_ctx.spoe_appctx = NULL;
@@ -1303,14 +1303,17 @@ spoe_release_appctx(struct appctx *appctx)
 		task_wakeup(ctx->strm->task, TASK_WOKEN_MSG);
 	}
 
-	if (!LIST_ISEMPTY(&agent->rt[tid].waiting_queue)) {
+	if (!LIST_ISEMPTY(&agent->rt[tid].applets)) {
+		/* If there are still some running applets, remove reference on
+		 * the current one from streams in the async waiting queue. In
+		 * async mode, the ACK may be received from another appctx.
+		 */
 		list_for_each_entry_safe(ctx, back, &agent->rt[tid].waiting_queue, list) {
 			if (ctx->frag_ctx.spoe_appctx == spoe_appctx)
 				ctx->frag_ctx.spoe_appctx = NULL;
 		}
 		goto end;
 	}
-
 	/* If this was the last running applet, notify all waiting streams */
 	list_for_each_entry_safe(ctx, back, &agent->rt[tid].sending_queue, list) {
 		LIST_DEL(&ctx->list);
