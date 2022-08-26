@@ -3147,12 +3147,14 @@ static struct task *process_peer_sync(struct task * task, void *context, unsigne
 				peers->resync_timeout = tick_add(now_ms, MS_TO_TICKS(PEER_RESYNC_TIMEOUT));
 
 			/* If there's no active peer connection */
-			if (!tick_is_expired(peers->resync_timeout, now_ms) &&
+			if ((peers->flags & PEERS_RESYNC_STATEMASK) == PEERS_RESYNC_FINISHED &&
+			    !tick_is_expired(peers->resync_timeout, now_ms) &&
 			    (ps->statuscode == 0 ||
 			     ps->statuscode == PEER_SESS_SC_SUCCESSCODE ||
 			     ps->statuscode == PEER_SESS_SC_CONNECTEDCODE ||
 			     ps->statuscode == PEER_SESS_SC_TRYAGAIN)) {
-				/* The resync timeout is not expired and
+				/* The resync is finished for the local peer and
+				 *   the resync timeout is not expired and
 				 *   connection never tried
 				 *   or previous peer connection was successfully established
 				 *   or previous tcp connect succeeded but init state incomplete
