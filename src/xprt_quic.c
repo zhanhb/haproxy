@@ -6180,14 +6180,12 @@ static int qc_do_build_pkt(unsigned char *pos, const unsigned char *end,
 				ssize_t room = end - pos;
 				TRACE_PROTO("Not enough room", QUIC_EV_CONN_HPKT,
 				            qc, NULL, NULL, &room);
-				/* TODO: this should not have happened if qc_build_frms()
-				 * had correctly computed and sized the frames to be
-				 * added to this packet. Note that <cf> was added
-				 * from <frm_list> to <frms> list by qc_build_frms().
+				/* Note that <cf> was added from <frms> to <frm_list> list by
+				 * qc_build_frms().
 				 */
 				LIST_DELETE(&cf->list);
 				LIST_INSERT(frms, &cf->list);
-				break;
+				continue;
 			}
 
 			quic_tx_packet_refinc(pkt);
