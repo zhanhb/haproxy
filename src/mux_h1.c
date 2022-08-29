@@ -2941,7 +2941,8 @@ static int h1_process(struct h1c * h1c)
 				h1s->flags |= H1S_F_REOS;
 				TRACE_STATE("read0 on connection", H1_EV_H1C_RECV, conn, h1s);
 			}
-			if ((h1c->flags & H1C_F_ST_ERROR) || ((conn->flags & CO_FL_ERROR) && !b_data(&h1c->ibuf)))
+			if ((h1c->flags & H1C_F_ST_ERROR) || ((conn->flags & CO_FL_ERROR) &&
+			      ((h1s->cs->flags & (CS_FL_EOI|CS_FL_EOS)) || !b_data(&h1c->ibuf))))
 				h1s->cs->flags |= CS_FL_ERROR;
 			TRACE_POINT(H1_EV_STRM_WAKE, h1c->conn, h1s);
 			h1_alert(h1s);
@@ -3635,7 +3636,8 @@ static size_t h1_snd_buf(struct conn_stream *cs, struct buffer *buf, size_t coun
 			break;
 	}
 
-	if (h1c->flags & H1C_F_ST_ERROR || ((h1c->conn->flags & CO_FL_ERROR) && !b_data(&h1c->ibuf))) {
+	if ((h1c->flags & H1C_F_ST_ERROR) || ((h1c->conn->flags & CO_FL_ERROR) &&
+	      ((cs->flags & (CS_FL_EOI|CS_FL_EOS)) || !b_data(&h1c->ibuf)))) {
 		cs->flags |= CS_FL_ERROR;
 		TRACE_ERROR("reporting error to the app-layer stream", H1_EV_STRM_SEND|H1_EV_H1S_ERR|H1_EV_STRM_ERR, h1c->conn, h1s);
 	}
