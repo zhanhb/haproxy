@@ -929,7 +929,6 @@ void ckch_inst_free(struct ckch_inst *inst)
 	list_for_each_entry_safe(link_ref, link_ref_s, &inst->cafile_link_refs, list) {
 		LIST_DELETE(&link_ref->link->list);
 		LIST_DELETE(&link_ref->list);
-		free(link_ref->link);
 		free(link_ref);
 	}
 
@@ -2556,7 +2555,7 @@ static int cli_io_handler_commit_cafile_crlfile(struct appctx *appctx)
 	struct stream_interface *si = appctx->owner;
 	int y = 0;
 	struct cafile_entry *old_cafile_entry = NULL, *new_cafile_entry = NULL;
-	struct ckch_inst_link *ckchi_link, *ckchi_link_back;
+	struct ckch_inst_link *ckchi_link;
 
 	if (unlikely(si_ic(si)->flags & (CF_WRITE_ERROR|CF_SHUTW)))
 		goto end;
@@ -2665,7 +2664,7 @@ static int cli_io_handler_commit_cafile_crlfile(struct appctx *appctx)
 				}
 
 				/* delete the old sni_ctx, the old ckch_insts and the ckch_store */
-				list_for_each_entry_safe(ckchi_link, ckchi_link_back, &old_cafile_entry->ckch_inst_link, list) {
+				list_for_each_entry(ckchi_link, &old_cafile_entry->ckch_inst_link, list) {
 					__ckch_inst_free_locked(ckchi_link->ckch_inst);
 				}
 
