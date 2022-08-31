@@ -1117,15 +1117,12 @@ int qc_parse_frm(struct quic_frame *frm, struct quic_rx_packet *pkt,
 
 /* Encode <frm> QUIC frame into <buf> buffer.
  * Returns 1 if succeeded (enough room in <buf> to encode the frame), 0 if not.
- * The buffer is updated to point to one byte past the end of the built frame
- * only if succeeded.
  */
 int qc_build_frm(unsigned char **buf, const unsigned char *end,
                  struct quic_frame *frm, struct quic_tx_packet *pkt,
                  struct quic_conn *qc)
 {
 	const struct quic_frame_builder *builder;
-	unsigned char *pos = *buf;
 
 	builder = &quic_frame_builders[frm->type];
 	if (!(builder->mask & (1U << pkt->type))) {
@@ -1134,20 +1131,19 @@ int qc_build_frm(unsigned char **buf, const unsigned char *end,
 		BUG_ON(!(builder->mask & (1U << pkt->type)));
 	}
 
-	if (end <= pos) {
+	if (end <= *buf) {
 		TRACE_DEVEL("not enough room", QUIC_EV_CONN_BFRM, qc, frm);
 		return 0;
 	}
 
 	TRACE_PROTO("frame", QUIC_EV_CONN_BFRM, qc, frm);
-	*pos++ = frm->type;
-	if (!quic_frame_builders[frm->type].func(&pos, end, frm, qc)) {
+	*(*buf)++ = frm->type;
+	if (!quic_frame_builders[frm->type].func(buf, end, frm, qc)) {
 		TRACE_DEVEL("frame building error", QUIC_EV_CONN_BFRM, qc, frm);
 		return 0;
 	}
 
 	pkt->flags |= builder->flags;
-	*buf = pos;
 
 	return 1;
 }
