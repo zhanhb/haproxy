@@ -257,7 +257,7 @@ void __task_wakeup(struct task *t)
 	}
 
 	if (task_profiling_mask & tid_bit)
-		t->call_date = now_mono_time();
+		t->wake_date = now_mono_time();
 
 	eb32sc_insert(root, &t->rq, t->thread_mask);
 
@@ -604,9 +604,9 @@ unsigned int run_tasks_from_lists(unsigned int budgets[])
 				profile_entry = sched_activity_entry(sched_activity, t->process);
 				before = now_mono_time();
 
-				if (((struct tasklet *)t)->call_date) {
-					HA_ATOMIC_ADD(&profile_entry->lat_time, (uint32_t)(before - ((struct tasklet *)t)->call_date));
-					((struct tasklet *)t)->call_date = 0;
+				if (((struct tasklet *)t)->wake_date) {
+					HA_ATOMIC_ADD(&profile_entry->lat_time, (uint32_t)(before - ((struct tasklet *)t)->wake_date));
+					((struct tasklet *)t)->wake_date = 0;
 				}
 			}
 
@@ -658,12 +658,12 @@ unsigned int run_tasks_from_lists(unsigned int budgets[])
 		/* OK then this is a regular task */
 
 		_HA_ATOMIC_DEC(&ha_thread_ctx[tid].tasks_in_list);
-		if (unlikely(t->call_date)) {
+		if (unlikely(t->wake_date)) {
 			uint64_t now_ns = now_mono_time();
-			uint64_t lat = now_ns - t->call_date;
+			uint64_t lat = now_ns - t->wake_date;
 
 			t->lat_time += lat;
-			t->call_date = now_ns;
+			t->wake_date = now_ns;
 			profile_entry = sched_activity_entry(sched_activity, t->process);
 			HA_ATOMIC_ADD(&profile_entry->lat_time, lat);
 			HA_ATOMIC_INC(&profile_entry->calls);
@@ -696,11 +696,11 @@ unsigned int run_tasks_from_lists(unsigned int budgets[])
 		 * immediately, else we defer it into wait queue
 		 */
 		if (t != NULL) {
-			if (unlikely(t->call_date)) {
-				uint64_t cpu = now_mono_time() - t->call_date;
+			if (unlikely(t->wake_date)) {
+				uint64_t cpu = now_mono_time() - t->wake_date;
 
 				t->cpu_time += cpu;
-				t->call_date = 0;
+				t->wake_date = 0;
 				HA_ATOMIC_ADD(&profile_entry->cpu_time, cpu);
 			}
 
