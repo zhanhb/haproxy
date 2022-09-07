@@ -97,6 +97,10 @@ struct thread_ctx {
 	struct mt_list shared_tasklet_list; /* Tasklet to be run, woken up by other threads */
 	unsigned int rq_total;              /* total size of the run queue, prio_tree + tasklets */
 	int tasks_in_list;                  /* Number of tasks in the per-thread tasklets list */
+
+	uint32_t sched_wake_date;           /* current task/tasklet's wake date or 0 */
+	uint32_t sched_call_date;           /* current task/tasklet's call date (valid if sched_wake_date > 0) */
+
 	uint64_t prev_cpu_time;             /* previous per thread CPU time */
 	uint64_t prev_mono_time;            /* previous system wide monotonic time  */
 	uint idle_pct;                      /* idle to total ratio over last sample (percent) */

@@ -114,7 +114,7 @@ struct task {
 	short nice;                     /* task prio from -1024 to +1024 */
 	/* 16-bit hole here */
 	unsigned long thread_mask;	/* mask of thread IDs authorized to process the task */
-	uint64_t wake_date;		/* date of the last task wakeup */
+	uint32_t wake_date;		/* date of the last task wakeup */
 	uint64_t lat_time;		/* total latency time experienced */
 	uint64_t cpu_time;              /* total CPU time consumed */
 };
