@@ -1310,6 +1310,7 @@ int hlua_proxy_pause(lua_State *L)
 	struct proxy *px;
 
 	px = hlua_check_proxy(L, 1);
+	/* safe to call without PROXY_LOCK - pause_proxy takes it */
 	pause_proxy(px);
 	return 0;
 }
@@ -1319,6 +1320,7 @@ int hlua_proxy_resume(lua_State *L)
 	struct proxy *px;
 
 	px = hlua_check_proxy(L, 1);
+	/* safe to call without PROXY_LOCK - resume_proxy takes it */
 	resume_proxy(px);
 	return 0;
 }
@@ -1328,6 +1330,7 @@ int hlua_proxy_stop(lua_State *L)
 	struct proxy *px;
 
 	px = hlua_check_proxy(L, 1);
+	/* safe to call without PROXY_LOCK - stop_proxy takes it */
 	stop_proxy(px);
 	return 0;
 }
