@@ -1209,14 +1209,18 @@ void soft_stop(void)
  * listener returns an error, then the proxy state is set to PR_STERROR
  * because we don't know how to resume from this. The function returns 0
  * if it fails, or non-zero on success.
+ * The function takes the proxy's lock so it's safe to
+ * call from multiple places.
  */
 int pause_proxy(struct proxy *p)
 {
 	struct listener *l;
 
+	HA_SPIN_LOCK(PROXY_LOCK, &p->lock);
+
 	if (!(p->cap & PR_CAP_FE) || p->state == PR_STERROR ||
 	    p->state == PR_STSTOPPED || p->state == PR_STPAUSED)
-		return 1;
+		goto end;
 
 	ha_warning("Pausing %s %s.\n", proxy_cap_str(p->cap), p->id);
 	send_log(p, LOG_WARNING, "Pausing %s %s.\n", proxy_cap_str(p->cap), p->id);
@@ -1229,10 +1233,13 @@ int pause_proxy(struct proxy *p)
 	if (p->state == PR_STERROR) {
 		ha_warning("%s %s failed to enter pause mode.\n", proxy_cap_str(p->cap), p->id);
 		send_log(p, LOG_WARNING, "%s %s failed to enter pause mode.\n", proxy_cap_str(p->cap), p->id);
+		HA_SPIN_UNLOCK(PROXY_LOCK, &p->lock);
 		return 0;
 	}
 
 	p->state = PR_STPAUSED;
+end:
+	HA_SPIN_UNLOCK(PROXY_LOCK, &p->lock);
 	return 1;
 }
 
@@ -1279,7 +1286,8 @@ void zombify_proxy(struct proxy *p)
  * to be called when going down in order to release the ports so that another
  * process may bind to them. It must also be called on disabled proxies at the
  * end of start-up. If all listeners are closed, the proxy is set to the
- * PR_STSTOPPED state. The function takes the proxy's lock so it's safe to
+ * PR_STSTOPPED state.
+ * The function takes the proxy's lock so it's safe to
  * call from multiple places.
  */
 void stop_proxy(struct proxy *p)
@@ -1314,14 +1322,18 @@ void stop_proxy(struct proxy *p)
  * listeners and tries to enable them all. If any of them fails, the proxy is
  * put back to the paused state. It returns 1 upon success, or zero if an error
  * is encountered.
+ * The function takes the proxy's lock so it's safe to
+ * call from multiple places.
  */
 int resume_proxy(struct proxy *p)
 {
 	struct listener *l;
 	int fail;
 
+	HA_SPIN_LOCK(PROXY_LOCK, &p->lock);
+
 	if (p->state != PR_STPAUSED)
-		return 1;
+		goto end;
 
 	ha_warning("Enabling %s %s.\n", proxy_cap_str(p->cap), p->id);
 	send_log(p, LOG_WARNING, "Enabling %s %s.\n", proxy_cap_str(p->cap), p->id);
@@ -1353,9 +1365,13 @@ int resume_proxy(struct proxy *p)
 
 	p->state = PR_STREADY;
 	if (fail) {
+		HA_SPIN_UNLOCK(PROXY_LOCK, &p->lock);
+		/* pause_proxy will take PROXY_LOCK */
 		pause_proxy(p);
 		return 0;
 	}
+end:
+	HA_SPIN_UNLOCK(PROXY_LOCK, &p->lock);
 	return 1;
 }
 
@@ -2199,9 +2215,8 @@ static int cli_parse_disable_frontend(char **args, char *payload, struct appctx 
 		return 1;
 	}
 
-	HA_SPIN_LOCK(PROXY_LOCK, &px->lock);
+	/* pause_proxy will take PROXY_LOCK */
 	ret = pause_proxy(px);
-	HA_SPIN_UNLOCK(PROXY_LOCK, &px->lock);
 
 	if (!ret) {
 		appctx->ctx.cli.severity = LOG_ERR;
@@ -2242,9 +2257,8 @@ static int cli_parse_enable_frontend(char **args, char *payload, struct appctx *
 		return 1;
 	}
 
-	HA_SPIN_LOCK(PROXY_LOCK, &px->lock);
+	/* resume_proxy will take PROXY_LOCK */
 	ret = resume_proxy(px);
-	HA_SPIN_UNLOCK(PROXY_LOCK, &px->lock);
 
 	if (!ret) {
 		appctx->ctx.cli.severity = LOG_ERR;
