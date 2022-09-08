@@ -21,6 +21,7 @@
 #include <haproxy/api.h>
 #include <haproxy/fd.h>
 #include <haproxy/global.h>
+#include <haproxy/signal.h>
 #include <haproxy/ticks.h>
 #include <haproxy/time.h>
 
@@ -198,8 +199,10 @@ static void _do_poll(struct poller *p, int exp, int wake)
 		}
 	}
 
-	/* now let's wait for events */
-	wait_time = wake ? 0 : compute_poll_timeout(exp);
+	/* Now let's wait for polled events.
+	 * Check if the signal queue is not empty in case we received a signal
+	 * before entering the loop, so we don't wait MAX_DELAY_MS for nothing */
+	wait_time = (wake | signal_queue_len) ? 0 : compute_poll_timeout(exp);
 	tv_entering_poll();
 	activity_count_runtime();
 	status = poll(poll_events, nbfd, wait_time);
