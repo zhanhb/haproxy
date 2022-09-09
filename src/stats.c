@@ -1693,9 +1693,18 @@ int stats_fill_fe_stats(struct proxy *px, struct field *stats, int len,
 			case ST_F_DSES:
 				metric = mkf_u64(FN_COUNTER, px->fe_counters.denied_sess);
 				break;
-			case ST_F_STATUS:
-				metric = mkf_str(FO_STATUS, px->disabled ? "STOP" : "OPEN");
+			case ST_F_STATUS: {
+				const char *state;
+
+				if (px->disabled)
+					state = "STOP";
+				else if (!px->li_ready)
+					state = "PAUSED";
+				else
+					state = "OPEN";
+				metric = mkf_str(FO_STATUS, state);
 				break;
+			}
 			case ST_F_PID:
 				metric = mkf_u32(FO_KEY, relative_pid);
 				break;
