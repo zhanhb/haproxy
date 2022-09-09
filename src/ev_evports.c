@@ -141,10 +141,8 @@ REGPRM3 static void _do_poll(struct poller *p, int exp, int wake)
 
 	thread_harmless_now();
 
-	/* Now let's wait for polled events.
-	 * Check if the signal queue is not empty in case we received a signal
-	 * before entering the loop, so we don't wait MAX_DELAY_MS for nothing */
-	wait_time = (wake | signal_queue_len) ? 0 : compute_poll_timeout(exp);
+	/* Now let's wait for polled events. */
+	wait_time = wake ? 0 : compute_poll_timeout(exp);
 	tv_entering_poll();
 	activity_count_runtime();
 
@@ -183,7 +181,7 @@ REGPRM3 static void _do_poll(struct poller *p, int exp, int wake)
 			break;
 		if (timeout || !wait_time)
 			break;
-		if (signal_queue_len || wake)
+		if (wake)
 			break;
 		if (tick_isset(exp) && tick_is_expired(exp, now_ms))
 			break;

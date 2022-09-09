@@ -2778,7 +2778,7 @@ static void run_poll_loop()
 		if (killed > 1)
 			break;
 
-		/* expire immediately if events are pending */
+		/* expire immediately if events or signals are pending */
 		wake = 1;
 		if (fd_cache_mask & tid_bit)
 			activity[tid].wake_cache++;
@@ -2791,6 +2791,10 @@ static void run_poll_loop()
 			__ha_barrier_atomic_store();
 			if (global_tasks_mask & tid_bit) {
 				activity[tid].wake_tasks++;
+				_HA_ATOMIC_AND(&sleeping_thread_mask, ~tid_bit);
+			} else if (signal_queue_len) {
+				/* this check is required to avoid
+				 * a race with wakeup on signals using wake_threads() */
 				_HA_ATOMIC_AND(&sleeping_thread_mask, ~tid_bit);
 			} else
 				wake = 0;
