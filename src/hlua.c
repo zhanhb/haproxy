@@ -853,6 +853,7 @@ __LJMP int hlua_lua2arg_check(lua_State *L, int first, struct arg *argp,
 	return 0;
 
   error:
+	argp[idx].type = ARGT_STOP;
 	for (i = 0; i < idx; i++) {
 		if (argp[i].type == ARGT_STR)
 			chunk_destroy(&argp[i].data.str);
