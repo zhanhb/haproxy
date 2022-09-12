@@ -317,7 +317,7 @@ void stop_listener(struct listener *l, int lpx, int lpr)
 		return;
 	}
 
-	if (!lpx)
+	if (!lpx && px)
 		HA_RWLOCK_WRLOCK(PROXY_LOCK, &px->lock);
 
 	if (!lpr)
@@ -331,7 +331,8 @@ void stop_listener(struct listener *l, int lpx, int lpr)
 		if (l->state >= LI_ASSIGNED)
 			__delete_listener(l);
 
-		proxy_cond_disable(px);
+		if (px)
+			proxy_cond_disable(px);
 	}
 
 	HA_RWLOCK_WRUNLOCK(LISTENER_LOCK, &l->lock);
@@ -339,7 +340,7 @@ void stop_listener(struct listener *l, int lpx, int lpr)
 	if (!lpr)
 		HA_SPIN_UNLOCK(PROTO_LOCK, &proto_lock);
 
-	if (!lpx)
+	if (!lpx && px)
 		HA_RWLOCK_WRUNLOCK(PROXY_LOCK, &px->lock);
 }
 
@@ -432,7 +433,7 @@ int pause_listener(struct listener *l, int lpx)
 	struct proxy *px = l->bind_conf->frontend;
 	int ret = 1;
 
-	if (!lpx)
+	if (!lpx && px)
 		HA_RWLOCK_WRLOCK(PROXY_LOCK, &px->lock);
 
 	HA_RWLOCK_WRLOCK(LISTENER_LOCK, &l->lock);
@@ -456,7 +457,7 @@ int pause_listener(struct listener *l, int lpx)
   end:
 	HA_RWLOCK_WRUNLOCK(LISTENER_LOCK, &l->lock);
 
-	if (!lpx)
+	if (!lpx && px)
 		HA_RWLOCK_WRUNLOCK(PROXY_LOCK, &px->lock);
 
 	return ret;
@@ -481,7 +482,7 @@ int resume_listener(struct listener *l, int lpx)
 	int was_paused = px && px->li_paused;
 	int ret = 1;
 
-	if (!lpx)
+	if (!lpx && px)
 		HA_RWLOCK_WRLOCK(PROXY_LOCK, &px->lock);
 
 	HA_RWLOCK_WRLOCK(LISTENER_LOCK, &l->lock);
@@ -521,7 +522,7 @@ int resume_listener(struct listener *l, int lpx)
   end:
 	HA_RWLOCK_WRUNLOCK(LISTENER_LOCK, &l->lock);
 
-	if (!lpx)
+	if (!lpx && px)
 		HA_RWLOCK_WRUNLOCK(PROXY_LOCK, &px->lock);
 
 	return ret;
@@ -1216,7 +1217,7 @@ void listener_release(struct listener *l)
 	/* Dequeues all of the listeners waiting for a resource */
 	dequeue_all_listeners();
 
-	if (!MT_LIST_ISEMPTY(&fe->listener_queue) &&
+	if (fe && !MT_LIST_ISEMPTY(&fe->listener_queue) &&
 	    (!fe->fe_sps_lim || freq_ctr_remain(&fe->fe_sess_per_sec, fe->fe_sps_lim, 0) > 0))
 		dequeue_proxy_listeners(fe);
 }
