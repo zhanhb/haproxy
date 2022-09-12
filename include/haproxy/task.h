@@ -487,7 +487,7 @@ static inline struct list *_tasklet_wakeup_after(struct list *head, struct taskl
 	tl->debug.caller_file[tl->debug.caller_idx] = file;
 	tl->debug.caller_line[tl->debug.caller_idx] = line;
 #endif
-	if (th_ctx->flags & TH_FL_TASK_PROFILING)
+	if (task_profiling_mask & tid_bit)
 		tl->wake_date = now_mono_time();
 	return __tasklet_wakeup_after(head, tl);
 }
