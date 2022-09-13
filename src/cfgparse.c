@@ -67,6 +67,7 @@
 #include <haproxy/lb_map.h>
 #include <haproxy/listener.h>
 #include <haproxy/log.h>
+#include <haproxy/sink.h>
 #include <haproxy/mailers.h>
 #include <haproxy/namespace.h>
 #include <haproxy/obj_type-t.h>
@@ -3808,6 +3809,13 @@ out_uri_auth_compat:
 	 */
 	if (init_proxies_list == proxies_list) {
 		init_proxies_list = cfg_log_forward;
+		/* check if list is not null to avoid infinite loop */
+		if (init_proxies_list)
+			goto init_proxies_list_stage1;
+	}
+
+	if (init_proxies_list == cfg_log_forward) {
+		init_proxies_list = sink_proxies_list;
 		/* check if list is not null to avoid infinite loop */
 		if (init_proxies_list)
 			goto init_proxies_list_stage1;
