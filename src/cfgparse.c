@@ -58,6 +58,7 @@
 #include <haproxy/lb_map.h>
 #include <haproxy/listener.h>
 #include <haproxy/log.h>
+#include <haproxy/sink.h>
 #include <haproxy/mailers.h>
 #include <haproxy/namespace.h>
 #include <haproxy/obj_type-t.h>
@@ -2209,6 +2210,7 @@ int check_config_validity()
 {
 	int cfgerr = 0;
 	struct proxy *curproxy = NULL;
+	struct proxy *init_proxies_list = NULL;
 	struct stktable *t;
 	struct server *newsrv = NULL;
 	int err_code = 0;
@@ -2277,6 +2279,10 @@ int check_config_validity()
 		proxies_list = next;
 	}
 
+	/* starting to initialize the main proxies list */
+	init_proxies_list = proxies_list;
+
+init_proxies_list_stage1:
 	for (curproxy = proxies_list; curproxy; curproxy = curproxy->next) {
 		struct switching_rule *rule;
 		struct server_rule *srule;
@@ -3592,6 +3598,13 @@ out_uri_auth_compat:
 				continue;
 			}
 		}
+	}
+
+	if (init_proxies_list == proxies_list) {
+		init_proxies_list = sink_proxies_list;
+		/* check if list is not null to avoid infinite loop */
+		if (init_proxies_list)
+			goto init_proxies_list_stage1;
 	}
 
 	/***********************************************************/

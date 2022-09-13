@@ -28,6 +28,8 @@
 
 extern struct list sink_list;
 
+extern struct proxy *sink_proxies_list;
+
 struct sink *sink_find(const char *name);
 struct sink *sink_new_fd(const char *name, const char *desc, enum sink_fmt fmt, int fd);
 ssize_t __sink_write(struct sink *sink, const struct ist msg[], size_t nmsg,
