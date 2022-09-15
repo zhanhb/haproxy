@@ -2606,14 +2606,15 @@ static size_t h1_snd_buf(struct conn_stream *cs, struct buffer *buf, size_t coun
 		if (!(h1c->flags & (H1C_F_OUT_FULL|H1C_F_OUT_ALLOC)))
 			ret = h1_process_output(h1c, buf, count);
 
-		if ((h1c->conn->flags & (CO_FL_ERROR|CO_FL_SOCK_WR_SH)))
-			break;
-
 		if (!ret)
 			break;
 		total += ret;
 		count -= ret;
+
 		if ((h1c->wait_event.events & SUB_RETRY_SEND) || !h1_send(h1c))
+			break;
+
+		if ((h1c->conn->flags & (CO_FL_ERROR|CO_FL_SOCK_WR_SH)))
 			break;
 	}
 
