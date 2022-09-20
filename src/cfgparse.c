@@ -2105,6 +2105,7 @@ next_line:
 
 				/* if not enough space in thisline */
 				if (newlinesize  > linesize) {
+					uintptr_t thisline_addr = (uintptr_t)thisline; /* Save thisline address to make GCC happy ! */
 					char *newline;
 
 					newline = realloc(thisline, newlinesize * sizeof(*thisline));
@@ -2114,20 +2115,20 @@ next_line:
 						goto next_line; /* slip current line */
 					}
 					/* recompute pointers if realloc returns a new pointer */
-					if (newline != thisline) {
+					if (newline != (char *)thisline_addr) {
 						int i;
 						int diff;
 
 						for (i = 0; i <= arg; i++) {
-							diff = args[i] - thisline;
+							diff = args[i] - (char *)thisline_addr;
 							args[i] = newline + diff;
 						}
 
-						diff = var_end - thisline;
+						diff = var_end - (char *)thisline_addr;
 						var_end = newline + diff;
-						diff = end - thisline;
+						diff = end - (char *)thisline_addr;
 						end = newline + diff;
-						diff = line - thisline;
+						diff = line - (char *)thisline_addr;
 						line = newline + diff;
 						thisline = newline;
 					}
