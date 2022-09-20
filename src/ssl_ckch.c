@@ -802,10 +802,8 @@ struct ckch_store *ckchs_dup(const struct ckch_store *src)
 		int n;
 
 		for (n = 0; n < SSL_SOCK_NUM_KEYTYPES; n++) {
-			if (&src->ckch[n]) {
-				if (!ssl_sock_copy_cert_key_and_chain(&src->ckch[n], &dst->ckch[n]))
-					goto error;
-			}
+			if (!ssl_sock_copy_cert_key_and_chain(&src->ckch[n], &dst->ckch[n]))
+				goto error;
 		}
 	} else
 #endif
