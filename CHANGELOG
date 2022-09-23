@@ -1,6 +1,73 @@
 ChangeLog :
 ===========
 
+2022/09/23 : 2.5.9
+    - DEBUG: fd: split the fd check
+    - BUG/MEDIUM: queue/threads: limit the number of entries dequeued at once
+    - MINOR: ebtree: add ebmb_lookup_shorter() to pursue lookups
+    - BUG/MEDIUM: pattern: only visit equivalent nodes when skipping versions
+    - MINOR: peers: Use a dedicated reconnect timeout when stopping the local peer
+    - BUG/MEDIUM: peers: limit reconnect attempts of the old process on reload
+    - BUG/MINOR: peers: Use right channel flag to consider the peer as connected
+    - BUG/MEDIUM: dns: Properly initialize new DNS session
+    - MINOR: server: Constify source server to copy its settings
+    - REORG: server: Export srv_settings_cpy() function
+    - BUG/MEDIUM: proxy: Perform a custom copy for default server settings
+    - BUG/MINOR: ring/cli: fix a race condition between the writer and the reader
+    - BUG/MINOR: sink: fix a race condition between the writer and the reader
+    - BUILD: cfgparse: always defined _GNU_SOURCE for sched.h and crypt.h
+    - BUG/MEDIUM: poller: use fd_delete() to release the poller pipes
+    - BUG/MEDIUM: task: relax one thread consistency check in task_unlink_wq()
+    - BUILD: debug: silence warning on gcc-5
+    - BUG/MEDIUM: ring: fix too lax 'size' parser
+    - BUILD: http: silence an uninitialized warning affecting gcc-5
+    - BUG/MEDIUM: http-ana: fix crash or wrong header deletion by http-restrict-req-hdr-names
+    - BUG/MEDIUM: mux-h2: do not fiddle with ->dsi to indicate demux is idle
+    - BUG/MAJOR: log-forward: Fix log-forward proxies not fully initialized
+    - BUG/MINOR: ssl/cli: error when the ca-file is empty
+    - BUG/MAJOR: mworker: fix infinite loop on master with no proxies.
+    - BUG/MINOR: resolvers: return the correct value in resolvers_finalize_config()
+    - BUG/MINOR: tcpcheck: Disable QUICKACK only if data should be sent after connect
+    - REGTESTS: Fix prometheus script to perform HTTP health-checks
+    - DOC: configuration: do-resolve doesn't work with a port in the string
+    - BUG/MEDIUM: spoe: Properly update streams waiting for a ACK in async mode
+    - BUG/MEDIUM: peers: Add connect and server timeut to peers proxy
+    - BUG/MEDIUM: peers: Don't use resync timer when local resync is in progress
+    - BUG/MEDIUM: peers: Don't start resync on reload if local peer is not up-to-date
+    - BUG/MINOR: hlua: Rely on CF_EOI to detect end of message in HTTP applets
+    - BUG/MINOR: tcpcheck: Disable QUICKACK for default tcp-check (with no rule)
+    - BUG/MINOR: ssl: leak of ckch_inst_link in ckch_inst_free()
+    - BUG/MEDIUM: ssl: Fix a UAF when old ckch instances are released
+    - BUG/MINOR: ssl: revert two wrong fixes with ckhi_link
+    - BUG/MEDIUM: mux-h1: do not refrain from signaling errors after end of input
+    - BUG/MINOR: ssl: leak of ckch_inst_link in ckch_inst_free() v2
+    - REGTESTS: http_request_buffer: Add a barrier to not mix up log messages
+    - BUG/MEDIUM: mux-h1: always use RST to kill idle connections in pools
+    - BUG/MINOR: mux-h2: fix the "show fd" dest buffer for the subscriber
+    - BUG/MINOR: mux-h1: fix the "show fd" dest buffer for the subscriber
+    - BUG/MINOR: mux-fcgi: fix the "show fd" dest buffer for the subscriber
+    - BUG/MINOR: regex: Properly handle PCRE2 lib compiled without JIT support
+    - BUILD: makefile: enable crypt(3) for NetBSD
+    - BUG/MINOR: h1: Support headers case adjustment for TCP proxies
+    - BUG/MINOR: task: always reset a new tasklet's call date
+    - BUG/MINOR: signals/poller: set the poller timeout to 0 when there are signals
+    - BUG/MINOR: signals/poller: ensure wakeup from signals
+    - CI: cirrus-ci: bump FreeBSD image to 13-1
+    - BUG/MEDIUM: proxy: ensure pause_proxy() and resume_proxy() own PROXY_LOCK
+    - MINOR: listener: small API change
+    - MINOR: proxy/listener: support for additional PAUSED state
+    - BUG/MINOR: stats: fixing stat shows disabled frontend status as 'OPEN'
+    - REGTESTS: healthcheckmail: Relax matching on the healthcheck log message
+    - REGTESTS: log: test the log-forward feature
+    - BUG/MEDIUM: sink: bad init sequence on tcp sink from a ring.
+    - REGTESTS: ssl/log: test the log-forward with SSL
+    - DOC: fix TOC in starter guide for subsection 3.3.8. Statistics
+    - BUG/MEDIUM: server: segv when adding server with hostname from CLI
+    - BUG/MEDIUM: captures: free() an error capture out of the proxy lock
+    - BUILD: fd: fix a build warning on the DWCAS
+    - SCRIPTS: announce-release: update some URLs to https
+    - BUG/MINOR: log: improper behavior when escaping log data
+
 2022/07/25 : 2.5.8
     - CI: determine actual LibreSSL version dynamically
     - MEDIUM: http-ana: Add a proxy option to restrict chars in request header names
