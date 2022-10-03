@@ -2326,7 +2326,6 @@ void back_handle_st_cer(struct stream *s)
 
 		/* only wait when we're retrying on the same server */
 		if ((si->state == SI_ST_ASS ||
-		     (s->be->lbprm.algo & BE_LB_KIND) != BE_LB_KIND_RR ||
 		     (s->be->srv_act <= 1)) && !reused) {
 			si->state = SI_ST_TAR;
 			si->exp = tick_add(now_ms, MS_TO_TICKS(delay));
