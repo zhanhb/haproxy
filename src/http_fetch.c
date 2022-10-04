@@ -460,7 +460,7 @@ static int smp_fetch_meth(const struct arg *args, struct sample *smp, const char
 	struct channel *chn = SMP_REQ_CHN(smp);
 	int meth;
 	struct http_txn *txn;
-	struct htx *htx;
+	struct htx *htx = NULL;
 
 	if (smp->px->options2 & PR_O2_USE_HTX) {
 		/* HTX version */
