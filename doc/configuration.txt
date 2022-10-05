@@ -12424,7 +12424,7 @@ tcp-request content <action> [{if | unless} <condition>]
   evaluated.
 
   Example:
-    tcp-request content use-service lua.deny { src -f /etc/haproxy/blacklist.lst }
+    tcp-request content use-service lua.deny if { src -f /etc/haproxy/blacklist.lst }
 
   Example:
 
