@@ -1724,14 +1724,15 @@ static int process_store_rules(struct stream *s, struct channel *rep, int an_bit
 		HA_RWLOCK_WRLOCK(STK_SESS_LOCK, &ts->lock);
 		ptr = __stktable_data_ptr(s->store[i].table, ts, STKTABLE_DT_SERVER_ID);
 		stktable_data_cast(ptr, server_id) = __objt_server(s->target)->puid;
-		HA_RWLOCK_WRUNLOCK(STK_SESS_LOCK, &ts->lock);
 
-		HA_RWLOCK_WRLOCK(STK_SESS_LOCK, &ts->lock);
-		de = dict_insert(&server_name_dict, __objt_server(s->target)->id);
-		if (de) {
-			ptr = __stktable_data_ptr(s->store[i].table, ts, STKTABLE_DT_SERVER_NAME);
-			stktable_data_cast(ptr, server_name) = de;
+		if (__objt_server(s->target)->id) {
+			de = dict_insert(&server_name_dict, __objt_server(s->target)->id);
+			if (de) {
+				ptr = __stktable_data_ptr(s->store[i].table, ts, STKTABLE_DT_SERVER_NAME);
+				stktable_data_cast(ptr, server_name) = de;
+			}
 		}
+
 		HA_RWLOCK_WRUNLOCK(STK_SESS_LOCK, &ts->lock);
 
 		stktable_touch_local(s->store[i].table, ts, 1);
