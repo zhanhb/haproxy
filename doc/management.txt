@@ -2919,6 +2919,10 @@ show ssl crt-list [-n] [<filename>]
     ecdsa.pem:3 [verify none allow-0rtt ssl-min-ver TLSv1.0 ssl-max-ver TLSv1.3] localhost !www.test1.com
     ecdsa.pem:4 [verify none allow-0rtt ssl-min-ver TLSv1.0 ssl-max-ver TLSv1.3]
 
+show startup-logs
+  Dump all messages emitted during the startup of the current haproxy process,
+  each startup-logs buffer is unique to its haproxy worker.
+
 show table
   Dump general information on all known stick-tables. Their name is returned
   (the name of the proxy which holds them), their type (currently zero, always
