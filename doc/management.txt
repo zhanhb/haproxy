@@ -2458,6 +2458,10 @@ show stat [{<iid>|<proxy>} <type> <sid>] [typed|json]
   $ echo "show stat json" | socat /var/run/haproxy.sock stdio | \
     python -m json.tool
 
+show startup-logs
+  Dump all messages emitted during the startup of the current haproxy process,
+  each startup-logs buffer is unique to its haproxy worker.
+
 show table
   Dump general information on all known stick-tables. Their name is returned
   (the name of the proxy which holds them), their type (currently zero, always
