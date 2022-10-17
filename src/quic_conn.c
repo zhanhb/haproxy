@@ -6055,7 +6055,7 @@ static int quic_rx_pkt_parse(struct quic_rx_packet *pkt,
 	const unsigned char *beg = buf;
 	struct proxy *prx;
 	struct quic_counters *prx_counters;
-	int drop_no_conn = 0, long_header = 0;
+	int long_header = 0;
 	uint32_t version;
 	const struct quic_version *qv = NULL;
 
@@ -6082,7 +6082,7 @@ static int quic_rx_pkt_parse(struct quic_rx_packet *pkt,
 			 * the remaining space.
 			 */
 			pkt->len = end - buf;
-			goto drop_no_conn;
+			goto drop_silent;
 		}
 
 		TRACE_PROTO("Packet dropped", QUIC_EV_CONN_LPKT);
@@ -6104,12 +6104,8 @@ static int quic_rx_pkt_parse(struct quic_rx_packet *pkt,
 			goto drop;
 		}
 
-		if (pkt->type == QUIC_PACKET_TYPE_0RTT && !l->bind_conf->ssl_conf.early_data) {
-			TRACE_PROTO("0-RTT packet not supported", QUIC_EV_CONN_LPKT);
-			drop_no_conn = 1;
-		}
-		else if (pkt->type == QUIC_PACKET_TYPE_INITIAL &&
-		         dgram->len < QUIC_INITIAL_PACKET_MINLEN) {
+		if (pkt->type == QUIC_PACKET_TYPE_INITIAL &&
+		    dgram->len < QUIC_INITIAL_PACKET_MINLEN) {
 			TRACE_PROTO("Too short datagram with an Initial packet", QUIC_EV_CONN_LPKT);
 			HA_ATOMIC_INC(&prx_counters->too_short_initial_dgram);
 			goto drop;
@@ -6137,11 +6133,11 @@ static int quic_rx_pkt_parse(struct quic_rx_packet *pkt,
 			 /* unsupported version, send Negotiation packet */
 			if (send_version_negotiation(l->rx.fd, &dgram->saddr, pkt)) {
 				TRACE_ERROR("VN packet not sent", QUIC_EV_CONN_LPKT);
-				goto err;
+				goto drop_silent;
 			}
 
 			TRACE_PROTO("VN packet sent", QUIC_EV_CONN_LPKT);
-			goto err;
+			goto drop_silent;
 		}
 		pkt->version = qv;
 
@@ -6168,11 +6164,11 @@ static int quic_rx_pkt_parse(struct quic_rx_packet *pkt,
 					if (send_retry(l->rx.fd, &dgram->saddr, pkt, qv)) {
 						TRACE_PROTO("Error during Retry generation",
 						            QUIC_EV_CONN_LPKT, NULL, NULL, NULL, qv);
-						goto err;
+						goto drop_silent;
 					}
 
 					HA_ATOMIC_INC(&prx_counters->retry_sent);
-					goto err;
+					goto drop_silent;
 				}
 			}
 			else if (!global.cluster_secret && token_len) {
@@ -6208,8 +6204,15 @@ static int quic_rx_pkt_parse(struct quic_rx_packet *pkt,
 		 */
 		pkt->pn_offset = buf - beg;
 		pkt->len = pkt->pn_offset + len;
-		if (drop_no_conn)
-			goto drop_no_conn;
+
+		/* Interrupt parsing after packet length retrieval : this
+		 * ensures that only the packet is dropped but not the whole
+		 * datagram.
+		 */
+		if (pkt->type == QUIC_PACKET_TYPE_0RTT && !l->bind_conf->ssl_conf.early_data) {
+			TRACE_PROTO("0-RTT packet not supported", QUIC_EV_CONN_LPKT);
+			goto drop;
+		}
 	}
 	else {
 		TRACE_PROTO("short header packet received", QUIC_EV_CONN_LPKT);
@@ -6241,17 +6244,9 @@ static int quic_rx_pkt_parse(struct quic_rx_packet *pkt,
 	TRACE_LEAVE(QUIC_EV_CONN_LPKT, NULL, pkt, NULL, qv);
 	return 0;
 
- drop_no_conn:
-	if (drop_no_conn)
-		HA_ATOMIC_INC(&prx_counters->dropped_pkt);
-	TRACE_LEAVE(QUIC_EV_CONN_LPKT, NULL, pkt);
-
-	return -1;
-
  drop:
 	HA_ATOMIC_INC(&prx_counters->dropped_pkt);
-
- err:
+ drop_silent:
 	if (!pkt->len)
 		pkt->len = end - beg;
 	TRACE_LEAVE(QUIC_EV_CONN_LPKT, NULL, pkt, NULL, qv);
@@ -6335,7 +6330,7 @@ static void qc_rx_pkt_handle(struct quic_conn *qc, struct quic_rx_packet *pkt,
 			TRACE_PROTO("Packet dropped",
 			            QUIC_EV_CONN_LPKT, qc, NULL, NULL, qv);
 			HA_ATOMIC_INC(&qc->prx_counters->dropped_pkt_bufoverrun);
-			goto drop_no_conn;
+			goto drop_silent;
 		}
 
 		/* Let us consume the remaining contiguous space. */
@@ -6348,7 +6343,7 @@ static void qc_rx_pkt_handle(struct quic_conn *qc, struct quic_rx_packet *pkt,
 			TRACE_PROTO("Too big packet",
 			            QUIC_EV_CONN_LPKT, qc, pkt, &pkt->len, qv);
 			HA_ATOMIC_INC(&qc->prx_counters->dropped_pkt_bufoverrun);
-			goto drop_no_conn;
+			goto drop_silent;
 		}
 	}
 
@@ -6364,7 +6359,7 @@ static void qc_rx_pkt_handle(struct quic_conn *qc, struct quic_rx_packet *pkt,
 	*tasklist_head = tasklet_wakeup_after(*tasklist_head,
 	                                      qc->wait_event.tasklet);
 
- drop_no_conn:
+ drop_silent:
 	TRACE_LEAVE(QUIC_EV_CONN_LPKT, qc ? qc : NULL, pkt, NULL, qv);
 	return;
 
