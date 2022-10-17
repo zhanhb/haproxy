@@ -6031,6 +6031,7 @@ static void qc_lstnr_pkt_rcv(unsigned char *buf, const unsigned char *end,
 			TRACE_PROTO("VN packet sent", QUIC_EV_CONN_LPKT);
 			goto err;
 		}
+		pkt->version = qv;
 
 		/* For Initial packets, and for servers (QUIC clients connections),
 		 * there is no Initial connection IDs storage.
@@ -7166,11 +7167,15 @@ struct task *quic_lstnr_dghdlr(struct task *t, void *ctx, unsigned int state)
 		do {
 			struct quic_rx_packet *pkt;
 
+			/* TODO replace zalloc -> alloc. */
 			pkt = pool_zalloc(pool_head_quic_rx_packet);
 			if (!pkt) {
 				TRACE_ERROR("RX packet allocation failed", QUIC_EV_CONN_LPKT);
+				/* TODO count lost datagram. */
 				goto leave;
 			}
+
+			pkt->version = NULL;
 
 			LIST_INIT(&pkt->qc_rx_pkt_list);
 			pkt->time_received = now_ms;
