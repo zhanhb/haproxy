@@ -5936,8 +5936,9 @@ static inline int quic_padding_check(const unsigned char *buf,
  * bytes in the datagram to entirely consume this latter.
  */
 static void qc_lstnr_pkt_rcv(unsigned char *buf, const unsigned char *end,
-                             struct quic_rx_packet *pkt, int first_pkt,
-                             struct quic_dgram *dgram, struct list **tasklist_head)
+                             struct quic_rx_packet *pkt,
+                             struct quic_dgram *dgram,
+                             struct list **tasklist_head)
 {
 	unsigned char *beg;
 	struct quic_conn *qc;
@@ -5969,7 +5970,8 @@ static void qc_lstnr_pkt_rcv(unsigned char *buf, const unsigned char *end,
 
 	/* Fixed bit */
 	if (!(*buf & QUIC_PACKET_FIXED_BIT)) {
-		if (!first_pkt && quic_padding_check(buf, end)) {
+		if (!(pkt->flags & QUIC_FL_RX_PACKET_DGRAM_FIRST) &&
+		    quic_padding_check(buf, end)) {
 			/* Some browsers may pad the remaining datagram space with null bytes.
 			 * That is what we called add padding out of QUIC packets. Such
 			 * datagrams must be considered as valid. But we can only consume
@@ -6014,7 +6016,7 @@ static void qc_lstnr_pkt_rcv(unsigned char *buf, const unsigned char *end,
 		/* When multiple QUIC packets are coalesced on the same UDP datagram,
 		 * they must have the same DCID.
 		 */
-		if (!first_pkt &&
+		if (!(pkt->flags & QUIC_FL_RX_PACKET_DGRAM_FIRST) &&
 		    (pkt->dcid.len != dgram->dcid_len ||
 		     memcmp(dgram->dcid, pkt->dcid.data, pkt->dcid.len))) {
 			TRACE_PROTO("Packet dropped", QUIC_EV_CONN_LPKT, qc);
@@ -6195,7 +6197,7 @@ static void qc_lstnr_pkt_rcv(unsigned char *buf, const unsigned char *end,
 		/* When multiple QUIC packets are coalesced on the same UDP datagram,
 		 * they must have the same DCID.
 		 */
-		if (!first_pkt &&
+		if (!(pkt->flags & QUIC_FL_RX_PACKET_DGRAM_FIRST) &&
 		    (pkt->dcid.len != dgram->dcid_len ||
 		     memcmp(dgram->dcid, pkt->dcid.data, pkt->dcid.len))) {
 			TRACE_PROTO("Packet dropped", QUIC_EV_CONN_LPKT, qc);
@@ -6239,7 +6241,8 @@ static void qc_lstnr_pkt_rcv(unsigned char *buf, const unsigned char *end,
 	 * This check must be done after the final update to pkt.len to
 	 * properly drop the packet on failure.
 	 */
-	if (first_pkt && !quic_peer_validated_addr(qc) &&
+	if (pkt->flags & QUIC_FL_RX_PACKET_DGRAM_FIRST &&
+	    !quic_peer_validated_addr(qc) &&
 	    qc->flags & QUIC_FL_CONN_ANTI_AMPLIFICATION_REACHED) {
 		TRACE_PROTO("PTO timer must be armed after anti-amplication was reached",
 					QUIC_EV_CONN_LPKT, qc, NULL, NULL, qv);
@@ -7166,7 +7169,6 @@ struct task *quic_lstnr_dghdlr(struct task *t, void *ctx, unsigned int state)
 	const unsigned char *end;
 	struct quic_dghdlr *dghdlr = ctx;
 	struct quic_dgram *dgram;
-	int first_pkt = 1;
 	struct list *tasklist_head = NULL;
 	int max_dgrams = global.tune.maxpollevents;
 
@@ -7189,11 +7191,14 @@ struct task *quic_lstnr_dghdlr(struct task *t, void *ctx, unsigned int state)
 			pkt->version = NULL;
 			pkt->pn_offset = 0;
 
+			/* Set flag if pkt is the first one in dgram. */
+			if (pos == dgram->buf)
+				pkt->flags |= QUIC_FL_RX_PACKET_DGRAM_FIRST;
+
 			LIST_INIT(&pkt->qc_rx_pkt_list);
 			pkt->time_received = now_ms;
 			quic_rx_packet_refinc(pkt);
-			qc_lstnr_pkt_rcv(pos, end, pkt, first_pkt, dgram, &tasklist_head);
-			first_pkt = 0;
+			qc_lstnr_pkt_rcv(pos, end, pkt, dgram, &tasklist_head);
 			pos += pkt->len;
 			quic_rx_packet_refdec(pkt);
 
