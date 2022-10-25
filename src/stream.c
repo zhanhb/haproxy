@@ -1457,7 +1457,7 @@ static int process_store_rules(struct stream *s, struct channel *rep, int an_bit
 
 		HA_RWLOCK_WRLOCK(STK_SESS_LOCK, &ts->lock);
 		ptr = __stktable_data_ptr(t, ts, STKTABLE_DT_SERVER_ID);
-		stktable_data_cast(ptr, std_t_sint) = __objt_server(s->target)->puid;
+		stktable_data_cast(ptr, server_id) = __objt_server(s->target)->puid;
 
 		if (key) {
 			de = dict_insert(&server_key_dict, key);
