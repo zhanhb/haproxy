@@ -1708,7 +1708,7 @@ static int process_store_rules(struct stream *s, struct channel *rep, int an_bit
 		void *ptr;
 		struct dict_entry *de;
 
-		if (objt_server(s->target) && objt_server(s->target)->flags & SRV_F_NON_STICK) {
+		if (!objt_server(s->target) || (__objt_server(s->target)->flags & SRV_F_NON_STICK)) {
 			stksess_free(s->store[i].table, s->store[i].ts);
 			s->store[i].ts = NULL;
 			continue;
