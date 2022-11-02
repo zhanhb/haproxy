@@ -134,7 +134,7 @@ for CC in ["gcc", "clang"]:
 #        "BORINGSSL=yes",
     ]:
         flags = ["USE_OPENSSL=1"]
-        if ssl == "BORINGSSL=yes" or ssl == "QUICTLS=yes":
+        if ssl == "BORINGSSL=yes" or ssl == "QUICTLS=yes" or "LIBRESSL" in ssl:
             flags.append("USE_QUIC=1")
         if "OPENSSL_VERSION=3.0." in ssl or ssl == "QUICTLS=yes":
             flags.append('DEBUG_CFLAGS="-g -Wno-deprecated-declarations"')
