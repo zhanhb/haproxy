@@ -1477,7 +1477,7 @@ out:
 		OCSP_CERTID_free(cid);
 
 	if (ocsp)
-		free(ocsp);
+		ssl_sock_free_ocsp(ocsp);
 
 	if (warn)
 		free(warn);
