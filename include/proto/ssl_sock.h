@@ -102,6 +102,31 @@ void ssl_async_fd_free(int fd);
 
 #define sh_ssl_sess_tree_lookup(k)     (struct sh_ssl_sess_hdr *)ebmb_lookup(sh_ssl_sess_tree, \
                                                                     (k), SSL_MAX_SSL_SESSION_ID_LENGTH);
+
+static inline int cert_ignerr_bitfield_get(const unsigned long long *bitfield, int bit_index)
+{
+	int byte_index = bit_index >> 6;
+	int val = 0;
+
+	if (byte_index < IGNERR_BF_SIZE)
+		val = bitfield[byte_index] & (1 << (bit_index & 0x3F));
+
+	return val != 0;
+}
+
+static inline void cert_ignerr_bitfield_set(unsigned long long *bitfield, int bit_index)
+{
+	int byte_index = bit_index >> 6;
+
+	if (byte_index < IGNERR_BF_SIZE)
+		bitfield[byte_index] |= (1 << (bit_index & 0x3F));
+}
+
+static inline void cert_ignerr_bitfield_set_all(unsigned long long *bitfield)
+{
+	memset(bitfield, -1, IGNERR_BF_SIZE*sizeof(*bitfield));
+}
+
 #endif /* USE_OPENSSL */
 #endif /* _PROTO_SSL_SOCK_H */
 

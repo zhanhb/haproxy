@@ -105,16 +105,20 @@
 #define SSL_SOCK_SEND_UNLIMITED     0x00000004
 #define SSL_SOCK_RECV_HEARTBEAT     0x00000008
 
-/* bits 0xFFFF0000 are reserved to store verify errors */
+/* bits 0xFFFFFF00 are reserved to store verify errors.
+ * The CA en CRT error codes will be stored on 7 bits each
+ * (since the max verify error code does not exceed 127)
+ * and the CA error depth will be stored on 4 bits.
+ */
 
 /* Verify errors macros */
-#define SSL_SOCK_CA_ERROR_TO_ST(e) (((e > 63) ? 63 : e) << (16))
-#define SSL_SOCK_CAEDEPTH_TO_ST(d) (((d > 15) ? 15 : d) << (6+16))
-#define SSL_SOCK_CRTERROR_TO_ST(e) (((e > 63) ? 63 : e) << (4+6+16))
+#define SSL_SOCK_CA_ERROR_TO_ST(e) (((e > 127) ? 127 : e) << (8))
+#define SSL_SOCK_CAEDEPTH_TO_ST(d) (((d > 15) ? 15 : d) << (7+8))
+#define SSL_SOCK_CRTERROR_TO_ST(e) (((e > 127) ? 127 : e) << (4+7+8))
 
-#define SSL_SOCK_ST_TO_CA_ERROR(s) ((s >> (16)) & 63)
-#define SSL_SOCK_ST_TO_CAEDEPTH(s) ((s >> (6+16)) & 15)
-#define SSL_SOCK_ST_TO_CRTERROR(s) ((s >> (4+6+16)) & 63)
+#define SSL_SOCK_ST_TO_CA_ERROR(s) ((s >> (8)) & 127)
+#define SSL_SOCK_ST_TO_CAEDEPTH(s) ((s >> (7+8)) & 15)
+#define SSL_SOCK_ST_TO_CRTERROR(s) ((s >> (4+7+8)) & 127)
 
 /* ssl_methods flags for ssl options */
 #define MC_SSL_O_ALL            0x0000
@@ -1606,7 +1610,8 @@ int ssl_sock_bind_verifycbk(int ok, X509_STORE_CTX *x_store)
 			ctx->xprt_st |= SSL_SOCK_CAEDEPTH_TO_ST(depth);
 		}
 
-		if (err < 64 && __objt_listener(conn->target)->bind_conf->ca_ignerr & (1ULL << err)) {
+		if (err <= SSL_MAX_VFY_ERROR_CODE &&
+		    cert_ignerr_bitfield_get(__objt_listener(conn->target)->bind_conf->ca_ignerr_bitfield, err)) {
 			ssl_sock_dump_errors(conn);
 			ERR_clear_error();
 			return 1;
@@ -1620,7 +1625,8 @@ int ssl_sock_bind_verifycbk(int ok, X509_STORE_CTX *x_store)
 		ctx->xprt_st |= SSL_SOCK_CRTERROR_TO_ST(err);
 
 	/* check if certificate error needs to be ignored */
-	if (err < 64 && __objt_listener(conn->target)->bind_conf->crt_ignerr & (1ULL << err)) {
+	if (err <= SSL_MAX_VFY_ERROR_CODE &&
+	    cert_ignerr_bitfield_get(__objt_listener(conn->target)->bind_conf->crt_ignerr_bitfield, err)) {
 		ssl_sock_dump_errors(conn);
 		ERR_clear_error();
 		return 1;
@@ -8099,7 +8105,7 @@ static int bind_parse_ignore_err(char **args, int cur_arg, struct proxy *px, str
 {
 	int code;
 	char *p = args[cur_arg + 1];
-	unsigned long long *ignerr = &conf->crt_ignerr;
+	unsigned long long *ignerr = conf->crt_ignerr_bitfield;
 
 	if (!*p) {
 		if (err)
@@ -8108,22 +8114,22 @@ static int bind_parse_ignore_err(char **args, int cur_arg, struct proxy *px, str
 	}
 
 	if (strcmp(args[cur_arg], "ca-ignore-err") == 0)
-		ignerr = &conf->ca_ignerr;
+		ignerr = conf->ca_ignerr_bitfield;
 
 	if (strcmp(p, "all") == 0) {
-		*ignerr = ~0ULL;
+		cert_ignerr_bitfield_set_all(ignerr);
 		return 0;
 	}
 
 	while (p) {
 		code = atoi(p);
-		if ((code <= 0) || (code > 63)) {
+		if ((code <= 0) || (code > SSL_MAX_VFY_ERROR_CODE)) {
 			if (err)
-				memprintf(err, "'%s' : ID '%d' out of range (1..63) in error IDs list '%s'",
-				          args[cur_arg], code, args[cur_arg + 1]);
+				memprintf(err, "'%s' : ID '%d' out of range (1..%d) in error IDs list '%s'",
+					  args[cur_arg], code, SSL_MAX_VFY_ERROR_CODE, args[cur_arg + 1]);
 			return ERR_ALERT | ERR_FATAL;
 		}
-		*ignerr |= 1ULL << code;
+		cert_ignerr_bitfield_set(ignerr, code);
 		p = strchr(p, ',');
 		if (p)
 			p++;
