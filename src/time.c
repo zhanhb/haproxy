@@ -298,6 +298,7 @@ void tv_init_thread_date()
 	now.tv_usec = (uint)old_now;
 	samp_time = idle_time = 0;
 	ti->idle_pct = 100;
+	ti->prev_cpu_time  = now_cpu_time();
 	tv_update_date(0, 1);
 }
 
