@@ -554,11 +554,12 @@ struct stksess *stktable_set_entry(struct stktable *table, struct stksess *nts)
 	return ts;
 }
 /*
- * Trash expired sticky sessions from table <t>. The next expiration date is
- * returned.
+ * Task processing function to trash expired sticky sessions. A pointer to the
+ * task itself is returned since it never dies.
  */
-static int stktable_trash_expired(struct stktable *t)
+struct task *process_table_expire(struct task *task, void *context, unsigned int state)
 {
+	struct stktable *t = context;
 	struct stksess *ts;
 	struct eb32_node *eb;
 	int looped = 0;
@@ -618,19 +619,8 @@ static int stktable_trash_expired(struct stktable *t)
 	/* We have found no task to expire in any tree */
 	t->exp_next = TICK_ETERNITY;
 out_unlock:
+	task->expire = t->exp_next;
 	HA_SPIN_UNLOCK(STK_TABLE_LOCK, &t->lock);
-	return t->exp_next;
-}
-
-/*
- * Task processing function to trash expired sticky sessions. A pointer to the
- * task itself is returned since it never dies.
- */
-struct task *process_table_expire(struct task *task, void *context, unsigned int state)
-{
-	struct stktable *t = context;
-
-	task->expire = stktable_trash_expired(t);
 	return task;
 }
 
