@@ -45,6 +45,7 @@ static struct bind_kw_list bind_keywords = {
 /* list of the temporarily limited listeners because of lack of resource */
 static struct mt_list global_listener_queue = MT_LIST_HEAD_INIT(global_listener_queue);
 static struct task *global_listener_queue_task;
+static HA_RWLOCK_T global_listener_rwlock;
 
 /* listener status for stats */
 const char* li_status_st[LI_STATE_COUNT] = {
@@ -1131,7 +1132,9 @@ void listener_accept(struct listener *l)
 	 * later than <expire> ahead. The listener turns to LI_LIMITED.
 	 */
 	limit_listener(l, &global_listener_queue);
+	HA_RWLOCK_RDLOCK(LISTENER_LOCK, &global_listener_rwlock);
 	task_schedule(global_listener_queue_task, expire);
+	HA_RWLOCK_RDUNLOCK(LISTENER_LOCK, &global_listener_rwlock);
 	goto end;
 
  limit_proxy:
@@ -1181,6 +1184,7 @@ static int listener_queue_init()
 	/* very simple initialization, users will queue the task if needed */
 	global_listener_queue_task->context = NULL; /* not even a context! */
 	global_listener_queue_task->process = manage_global_listener_queue;
+	HA_RWLOCK_INIT(&global_listener_rwlock);
 
 	return 0;
 }
@@ -1218,7 +1222,9 @@ struct task *manage_global_listener_queue(struct task *t, void *context, unsigne
 	dequeue_all_listeners();
 
  out:
+	HA_RWLOCK_WRLOCK(LISTENER_LOCK, &global_listener_rwlock);
 	t->expire = TICK_ETERNITY;
+	HA_RWLOCK_WRUNLOCK(LISTENER_LOCK, &global_listener_rwlock);
 	task_queue(t);
 	return t;
 }
