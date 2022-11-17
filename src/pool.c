@@ -489,7 +489,7 @@ void pool_destroy_all()
 void dump_pools_to_trash()
 {
 	struct pool_head *entry;
-	unsigned long allocated, used;
+	unsigned long long allocated, used;
 	int nbpools;
 
 	allocated = used = nbpools = 0;
@@ -498,21 +498,21 @@ void dump_pools_to_trash()
 #ifndef CONFIG_HAP_LOCKLESS_POOLS
 		HA_SPIN_LOCK(POOL_LOCK, &entry->lock);
 #endif
-		chunk_appendf(&trash, "  - Pool %s (%u bytes) : %u allocated (%u bytes), %u used, needed_avg %u, %u failures, %u users, @%p=%02d%s\n",
+		chunk_appendf(&trash, "  - Pool %s (%u bytes) : %u allocated (%llu bytes), %u used, needed_avg %u, %u failures, %u users, @%p=%02d%s\n",
 			 entry->name, entry->size, entry->allocated,
-		         entry->size * entry->allocated, entry->used,
+			 (unsigned long long)entry->size * entry->allocated, entry->used,
 		         swrate_avg(entry->needed_avg, POOL_AVG_SAMPLES), entry->failed,
 			 entry->users, entry, (int)pool_get_index(entry),
 			 (entry->flags & MEM_F_SHARED) ? " [SHARED]" : "");
 
-		allocated += entry->allocated * entry->size;
-		used += entry->used * entry->size;
+		allocated += entry->allocated * (unsigned long long)entry->size;
+		used += entry->used * (unsigned long long)entry->size;
 		nbpools++;
 #ifndef CONFIG_HAP_LOCKLESS_POOLS
 		HA_SPIN_UNLOCK(POOL_LOCK, &entry->lock);
 #endif
 	}
-	chunk_appendf(&trash, "Total: %d pools, %lu bytes allocated, %lu used.\n",
+	chunk_appendf(&trash, "Total: %d pools, %llu bytes allocated, %llu used.\n",
 		 nbpools, allocated, used);
 }
 
