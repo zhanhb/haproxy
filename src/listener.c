@@ -575,7 +575,9 @@ void listener_accept(int fd)
 					 */
 					next_actconn = 0;
 					limit_listener(l, &global_listener_queue);
+					HA_RWLOCK_RDLOCK(LISTENER_LOCK, &global_listener_rwlock);
 					task_schedule(global_listener_queue_task, tick_add(now_ms, 1000)); /* try again in 1 second */
+					HA_RWLOCK_RDUNLOCK(LISTENER_LOCK, &global_listener_rwlock);
 					goto end;
 				}
 				next_actconn = count + 1;
@@ -664,7 +666,9 @@ void listener_accept(int fd)
 				 p->id);
 			close(cfd);
 			limit_listener(l, &global_listener_queue);
+			HA_RWLOCK_RDLOCK(LISTENER_LOCK, &global_listener_rwlock);
 			task_schedule(global_listener_queue_task, tick_add(now_ms, 1000)); /* try again in 1 second */
+			HA_RWLOCK_RDUNLOCK(LISTENER_LOCK, &global_listener_rwlock);
 			goto end;
 		}
 
@@ -716,7 +720,9 @@ void listener_accept(int fd)
  wait_expire:
 	/* switch the listener to LI_LIMITED and wait until up to <expire> in the global queue */
 	limit_listener(l, &global_listener_queue);
+	HA_RWLOCK_RDLOCK(LISTENER_LOCK, &global_listener_rwlock);
 	task_schedule(global_listener_queue_task, tick_first(expire, global_listener_queue_task->expire));
+	HA_RWLOCK_RDUNLOCK(LISTENER_LOCK, &global_listener_rwlock);
  end:
 	if (next_conn)
 		HA_ATOMIC_SUB(&l->nbconn, 1);
