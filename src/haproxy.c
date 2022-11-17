@@ -242,6 +242,7 @@ struct mworker_proc *proc_self = NULL;
 /* list of the temporarily limited listeners because of lack of resource */
 struct list global_listener_queue = LIST_HEAD_INIT(global_listener_queue);
 struct task *global_listener_queue_task;
+HA_RWLOCK_T global_listener_rwlock;
 static struct task *manage_global_listener_queue(struct task *t, void *context, unsigned short state);
 
 static void *run_thread_poll_loop(void *data);
@@ -2071,6 +2072,7 @@ static void init(int argc, char **argv)
 	/* very simple initialization, users will queue the task if needed */
 	global_listener_queue_task->context = NULL; /* not even a context! */
 	global_listener_queue_task->process = manage_global_listener_queue;
+	HA_RWLOCK_INIT(&global_listener_rwlock);
 
 	/* now we know the buffer size, we can initialize the channels and buffers */
 	init_buffer();
@@ -2950,7 +2952,9 @@ static struct task *manage_global_listener_queue(struct task *t, void *context, 
 	dequeue_all_listeners(&global_listener_queue);
 
  out:
+	HA_RWLOCK_WRLOCK(LISTENER_LOCK, &global_listener_rwlock);
 	t->expire = next;
+	HA_RWLOCK_WRUNLOCK(LISTENER_LOCK, &global_listener_rwlock);
 	task_queue(t);
 	return t;
 }
