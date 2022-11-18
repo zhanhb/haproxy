@@ -1566,12 +1566,9 @@ static int peer_treat_updatemsg(struct appctx *appctx, struct peer *p, int updt,
 
 	HA_RWLOCK_WRUNLOCK(STK_SESS_LOCK, &ts->lock);
 	stktable_touch_remote(st->table, ts, 1);
-	return 1;
 
  ignore_msg:
-	/* skip consumed message */
-	co_skip(si_oc(si), totl);
-	return 0;
+	return 1;
 
  malformed_unlock:
 	/* malformed message */
@@ -1729,11 +1726,9 @@ static inline int peer_treat_definemsg(struct appctx *appctx, struct peer *p,
 
 	p->remote_table->remote_data = table_data;
 	p->remote_table->remote_id = table_id;
-	return 1;
 
  ignore_msg:
-	co_skip(si_oc(si), totl);
-	return 0;
+	return 1;
 
  malformed_exit:
 	/* malformed message */
