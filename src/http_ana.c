@@ -5166,8 +5166,10 @@ void http_init_txn(struct stream *s)
 
 	txn->auth.method = HTTP_AUTH_UNKNOWN;
 
-	vars_init(&s->vars_txn,    SCOPE_TXN);
-	vars_init(&s->vars_reqres, SCOPE_REQ);
+	/* here we don't want to re-initialize s->vars_txn and s->vars_reqres
+	 * variable lists, because they were already initialized upon stream
+	 * creation in stream_new(), and thus may already contain some variables
+	 */
 }
 
 /* to be used at the end of a transaction */
