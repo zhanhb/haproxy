@@ -8307,8 +8307,10 @@ void http_init_txn(struct stream *s)
 	if (txn->hdr_idx.v)
 		hdr_idx_init(&txn->hdr_idx);
 
-	vars_init(&s->vars_txn,    SCOPE_TXN);
-	vars_init(&s->vars_reqres, SCOPE_REQ);
+	/* here we don't want to re-initialize s->vars_txn and s->vars_reqres
+	 * variable lists, because they were already initialized upon stream
+	 * creation in stream_new(), and thus may already contain some variables
+	 */
 }
 
 /* to be used at the end of a transaction */
@@ -8336,6 +8338,9 @@ void http_reset_txn(struct stream *s)
 {
 	http_end_txn(s);
 	http_init_txn(s);
+
+	vars_init(&s->vars_txn,    SCOPE_TXN);
+	vars_init(&s->vars_reqres, SCOPE_REQ);
 
 	/* reinitialise the current rule list pointer to NULL. We are sure that
 	 * any rulelist match the NULL pointer.
