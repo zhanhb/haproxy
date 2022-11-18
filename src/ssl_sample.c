@@ -1198,6 +1198,9 @@ static int smp_fetch_ssl_x_keylog(const struct arg *args, struct sample *smp, co
 	char *src = NULL;
 	const char *sfx;
 
+	if (global_ssl.keylog <= 0)
+		return 0;
+
 	conn = (kw[4] != 'b') ? objt_conn(smp->sess->origin) :
 	       smp->strm ? cs_conn(objt_cs(smp->strm->si[1].end)) : NULL;
 

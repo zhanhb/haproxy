@@ -4467,7 +4467,9 @@ int ssl_sock_prepare_ctx(struct bind_conf *bind_conf, struct ssl_bind_conf *ssl_
 	SSL_CTX_set_msg_callback(ctx, ssl_sock_msgcbk);
 #endif
 #ifdef HAVE_SSL_KEYLOG
-	SSL_CTX_set_keylog_callback(ctx, SSL_CTX_keylog);
+	/* only activate the keylog callback if it was required to prevent performance loss */
+	if (global_ssl.keylog > 0)
+		SSL_CTX_set_keylog_callback(ctx, SSL_CTX_keylog);
 #endif
 
 #if defined(OPENSSL_NPN_NEGOTIATED) && !defined(OPENSSL_NO_NEXTPROTONEG)
