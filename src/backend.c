@@ -1408,15 +1408,20 @@ int connect_server(struct stream *s)
 	}
 
 	if (srv_conn && srv && was_unused) {
-		_HA_ATOMIC_ADD(&srv->curr_used_conns, 1);
+		unsigned int curr, prev;
+
+		curr = _HA_ATOMIC_ADD(&srv->curr_used_conns, 1);
+
 		/* It's ok not to do that atomically, we don't need an
 		 * exact max.
 		 */
-		if (srv->max_used_conns < srv->curr_used_conns)
-			srv->max_used_conns = srv->curr_used_conns;
+		prev = _HA_ATOMIC_LOAD(&srv->max_used_conns);
+		if (prev < curr)
+			_HA_ATOMIC_STORE(&srv->max_used_conns, curr);
 
-		if (srv->est_need_conns < srv->curr_used_conns)
-			srv->est_need_conns = srv->curr_used_conns;
+		prev = _HA_ATOMIC_LOAD(&srv->est_need_conns);
+		if (prev < curr)
+			_HA_ATOMIC_STORE(&srv->est_need_conns, curr);
 	}
 	if (!srv_conn || !sockaddr_alloc(&srv_conn->dst)) {
 		if (srv_conn)
