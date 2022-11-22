@@ -56,7 +56,7 @@ static struct work_list *local_listener_queue;
 static struct mt_list global_listener_queue = MT_LIST_HEAD_INIT(global_listener_queue);
 static struct task *global_listener_queue_task;
 static struct task *manage_global_listener_queue(struct task *t, void *context, unsigned short state);
-static HA_RWLOCK_T global_listener_rwlock;
+__decl_thread(static HA_RWLOCK_T global_listener_rwlock);
 
 
 #if defined(USE_THREAD)
