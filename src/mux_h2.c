@@ -6771,6 +6771,13 @@ static int h2_show_fd(struct buffer *msg, struct connection *conn)
 		      (unsigned int)b_data(tmbuf), b_orig(tmbuf),
 		      (unsigned int)b_head_ofs(tmbuf), (unsigned int)b_size(tmbuf));
 
+	chunk_appendf(msg, " .task=%p", h2c->task);
+	if (h2c->task) {
+		chunk_appendf(msg, " .exp=%s",
+			      h2c->task->expire ? tick_is_expired(h2c->task->expire, now_ms) ? "<PAST>" :
+			      human_time(TICKS_TO_MS(h2c->task->expire - now_ms), TICKS_TO_MS(1000)) : "<NEVER>");
+	}
+
 	if (h2s) {
 		chunk_appendf(msg, " last_h2s=%p .id=%d .st=%s .flg=0x%04x .rxbuf=%u@%p+%u/%u .sc=%p",
 			      h2s, h2s->id, h2s_st_to_str(h2s->st), h2s->flags,
