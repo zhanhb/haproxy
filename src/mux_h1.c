@@ -3918,6 +3918,13 @@ static int h1_show_fd(struct buffer *msg, struct connection *conn)
 		       (unsigned int)b_data(&h1c->obuf), b_orig(&h1c->obuf),
 		      (unsigned int)b_head_ofs(&h1c->obuf), (unsigned int)b_size(&h1c->obuf));
 
+	chunk_appendf(msg, " .task=%p", h1c->task);
+	if (h1c->task) {
+		chunk_appendf(msg, " .exp=%s",
+			      h1c->task->expire ? tick_is_expired(h1c->task->expire, now_ms) ? "<PAST>" :
+			      human_time(TICKS_TO_MS(h1c->task->expire - now_ms), TICKS_TO_MS(1000)) : "<NEVER>");
+	}
+
 	if (h1s) {
 		char *method;
 
