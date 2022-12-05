@@ -1,6 +1,88 @@
 ChangeLog :
 ===========
 
+2022/12/05 : 2.5.10
+    - REGTESTS: 4be_1srv_smtpchk_httpchk_layer47errors: Return valid SMTP replies
+    - BUG/MEDIUM: resolvers: Remove aborted resolutions from query_ids tree
+    - BUG/MINOR: hlua: fixing hlua_http_msg_del_data behavior
+    - BUG/MINOR: hlua: fixing hlua_http_msg_insert_data behavior
+    - BUG/MINOR: hlua: _hlua_http_msg_delete incorrect behavior when offset is used
+    - BUG/MAJOR: conn-idle: fix hash indexing issues on idle conns
+    - BUG/MINOR: checks: update pgsql regex on auth packet
+    - DOC: config: Fix pgsql-check documentation to make user param mandatory
+    - BUG/MEDIUM: lua: Don't crash in hlua_lua2arg_check on failure
+    - BUG/MEDIUM: lua: handle stick table implicit arguments right.
+    - BUILD: h1: silence an initiialized warning with gcc-4.7 and -Os
+    - BUG/MINOR: http-fetch: Update method after a prefetch in smp_fetch_meth()
+    - BUILD: http_fetch: silence an uninitiialized warning with gcc-4/5/6 at -Os
+    - BUG/MINOR: hlua: hlua_channel_insert_data() behavior conflicts with documentation
+    - BUG/MINOR: mux-h1: Account consumed output data on synchronous connection error
+    - MINOR: smtpchk: Update expect rule to fully match replies to EHLO commands
+    - BUG/MINOR: smtpchk: SMTP Service check should gracefully close SMTP transaction
+    - BUG/MINOR: backend: only enforce turn-around state when not redispatching
+    - BUG/MINOR: config: don't count trailing spaces as empty arg (v2)
+    - BUG/MEDIUM: config: count line arguments without dereferencing the output
+    - DOC: configuration: missing 'if' in tcp-request content example
+    - BUG/MAJOR: stick-tables: do not try to index a server name for applets
+    - BUG/MINOR: server: make sure "show servers state" hides private bits
+    - MINOR: httpclient/lua: Don't set req_payload callback if body is empty
+    - CI: Replace the deprecated `::set-output` command by writing to $GITHUB_OUTPUT in matrix.py
+    - CI: Replace the deprecated `::set-output` command by writing to $GITHUB_OUTPUT in workflow definition
+    - BUG/MINOR: log: Preserve message facility when the log target is a ring buffer
+    - BUG/MINOR: ring: Properly parse connect timeout
+    - BUG/MEDIUM: httpclient/lua: crash when the lua task timeout before the httpclient
+    - BUG/MEDIUM: httpclient: check if the httpclient was released in the IO handler
+    - REGTESTS: httpclient/lua: test the lua task timeout with the httpclient
+    - CI: github: dump the backtrace of coredumps in the alpine container
+    - BUILD: Makefile: add "USE_SHM_OPEN" on the linux-musl target
+    - BUG/MEDIUM: compression: handle rewrite errors when updating response headers
+    - BUG/MINOR: sink: Only use backend capability for the sink proxies
+    - BUG/MINOR: sink: Set default connect/server timeout for implicit ring buffers
+    - CI: SSL: use proper version generating when "latest" semantic is used
+    - CI: SSL: temporarily stick to LibreSSL=3.5.3
+    - DOC: management: add forgotten "show startup-logs"
+    - DOC: lua: add a note about compression w/ httpclient
+    - BUG/MAJOR: stick-table: don't process store-response rules for applets
+    - BUG/MEDIUM: stick-table: fix a race condition when updating the expiration task
+    - BUG/MINOR: log: fixing bug in tcp syslog_io_handler Octet-Counting
+    - CI: add monthly gcc cross compile jobs
+    - BUG/MINOR: ssl: Memory leak of AUTHORITY_KEYID struct when loading issuer
+    - BUG/MINOR: ssl: ocsp structure not freed properly in case of error
+    - CI: switch to the "latest" LibreSSL
+    - CI: enable QUIC for LibreSSL builds
+    - CI: emit the compiler's version in the build reports
+    - BUG/MEDIUM: wdt/clock: properly handle early task hangs
+    - BUG/MINOR: http-htx: Fix error handling during parsing http replies
+    - BUG/MINOR: resolvers: Don't wait periodic resolution on healthcheck failure
+    - BUG/MINOR: resolvers: Set port before IP address when processing SRV records
+    - BUG/MINOR: mux-fcgi: Be sure to send empty STDING record in case of zero-copy
+    - BUG/MEDIUM: mux-fcgi: Avoid value length overflow when it doesn't fit at once
+    - BUG/MINOR: mux-h1: Do not send a last null chunk on body-less answers
+    - REG-TESTS: cache: Remove T-E header for 304-Not-Modified responses
+    - DOC: config: fix alphabetical ordering of global section
+    - BUG/MEDIUM: ring: fix creation of server in uninitialized ring
+    - BUG/MINOR: pool/cli: use ullong to report total pool usage in bytes
+    - BUG/MEDIUM: listener: Fix race condition when updating the global mngmt task
+    - BUG/MINOR: http_ana/txn: don't re-initialize txn and req var lists
+    - BUG/MINOR: ssl: don't initialize the keylog callback when not required
+    - BUG/MEDIUM: peers: messages about unkown tables not correctly ignored
+    - BUILD: peers: Remove unused variables
+    - BUG/MINOR: server/idle: at least use atomic stores when updating max_used_conns
+    - BUILD: listener: fix build warning on global_listener_rwlock without threads
+    - BUG/MINOR: cfgparse-listen: fix ebpt_next_dup pointer dereference on proxy "from" inheritance
+    - BUG/MINOR: log: fix parse_log_message rfc5424 size check
+    - BUG/MINOR: http-htx: Don't consider an URI as normalized after a set-uri action
+    - BUILD: http-htx: Silent build error about a possible NULL start-line
+    - BUG/MINOR: mux-h1: Fix handling of 408-Request-Time-Out
+    - Revert "BUG/MINOR: http-htx: Don't consider an URI as normalized after a set-uri action"
+    - DOC: config: provide some configuration hints for "http-reuse"
+    - DOC: config: clarify the fact that SNI should not be used in HTTP scenarios
+    - DOC: config: mention that a single monitor-uri rule is supported
+    - DOC: config: explain how default matching method for ACL works
+    - DOC: config: clarify the fact that "retries" is not just for connections
+    - DOC: config: clarify the -m dir and -m dom pattern matching methods
+    - SCRIPTS: announce-release: add a link to the data plane API
+
 2022/09/23 : 2.5.9
     - DEBUG: fd: split the fd check
     - BUG/MEDIUM: queue/threads: limit the number of entries dequeued at once
