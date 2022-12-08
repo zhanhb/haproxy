@@ -1251,7 +1251,7 @@ static void hlua_httpclient_destroy_all(struct hlua *hlua)
 		if (hlua_hc->hc)
 			httpclient_stop_and_destroy(hlua_hc->hc);
 		hlua_hc->hc = NULL;
-		LIST_DELETE(&hlua_hc->by_hlua);
+		LIST_DEL_INIT(&hlua_hc->by_hlua);
 	}
 }
 
@@ -7007,10 +7007,8 @@ __LJMP static int hlua_httpclient_gc(lua_State *L)
 	if (hlua_hc->hc)
 		httpclient_stop_and_destroy(hlua_hc->hc);
 
-	LIST_DELETE(&hlua_hc->by_hlua);
-
 	hlua_hc->hc = NULL;
-
+	LIST_DEL_INIT(&hlua_hc->by_hlua);
 
 	return 0;
 }
