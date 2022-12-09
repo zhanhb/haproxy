@@ -1,6 +1,88 @@
 ChangeLog :
 ===========
 
+2022/12/09 : 2.2.26
+    - MINOR: peers: Use a dedicated reconnect timeout when stopping the local peer
+    - BUG/MEDIUM: peers: limit reconnect attempts of the old process on reload
+    - BUG/MINOR: peers: Use right channel flag to consider the peer as connected
+    - MINOR: server: Constify source server to copy its settings
+    - REORG: server: Export srv_settings_cpy() function
+    - BUG/MEDIUM: proxy: Perform a custom copy for default server settings
+    - BUG/MINOR: ring/cli: fix a race condition between the writer and the reader
+    - BUG/MINOR: sink: fix a race condition between the writer and the reader
+    - BUILD: http: silence an uninitialized warning affecting gcc-5
+    - BUG/MEDIUM: http-ana: fix crash or wrong header deletion by http-restrict-req-hdr-names
+    - BUG/MEDIUM: mux-h2: do not fiddle with ->dsi to indicate demux is idle
+    - BUG/MINOR: resolvers: return the correct value in resolvers_finalize_config()
+    - BUG/MINOR: tcpcheck: Disable QUICKACK only if data should be sent after connect
+    - DOC: configuration: do-resolve doesn't work with a port in the string
+    - BUG/MEDIUM: spoe: Properly update streams waiting for a ACK in async mode
+    - BUG/MEDIUM: peers: Add connect and server timeut to peers proxy
+    - BUG/MEDIUM: peers: Don't use resync timer when local resync is in progress
+    - BUG/MEDIUM: peers: Don't start resync on reload if local peer is not up-to-date
+    - BUG/MINOR: tcpcheck: Disable QUICKACK for default tcp-check (with no rule)
+    - REGTESTS: http_request_buffer: Add a barrier to not mix up log messages
+    - BUG/MINOR: h1: Support headers case adjustment for TCP proxies
+    - BUG/MINOR: signals/poller: set the poller timeout to 0 when there are signals
+    - BUG/MINOR: signals/poller: ensure wakeup from signals
+    - CI: cirrus-ci: bump FreeBSD image to 13-1
+    - BUG/MEDIUM: proxy: ensure pause_proxy() and resume_proxy() own PROXY_LOCK
+    - REGTESTS: healthcheckmail: Relax matching on the healthcheck log message
+    - BUG/MEDIUM: captures: free() an error capture out of the proxy lock
+    - BUILD: fd: fix a build warning on the DWCAS
+    - SCRIPTS: announce-release: update some URLs to https
+    - BUG/MINOR: log: improper behavior when escaping log data
+    - BUG/MEDIUM: sink: bad init sequence on tcp sink from a ring.
+    - BUILD: ssl-ckch: Fix GCC warning about a if statement always true
+    - REGTESTS: 4be_1srv_smtpchk_httpchk_layer47errors: Return valid SMTP replies
+    - BUG/MEDIUM: resolvers: Remove aborted resolutions from query_ids tree
+    - BUG/MINOR: checks: update pgsql regex on auth packet
+    - DOC: config: Fix pgsql-check documentation to make user param mandatory
+    - BUG/MEDIUM: lua: Don't crash in hlua_lua2arg_check on failure
+    - BUG/MEDIUM: lua: handle stick table implicit arguments right.
+    - BUG/MINOR: http-fetch: Update method after a prefetch in smp_fetch_meth()
+    - BUILD: http_fetch: silence an uninitiialized warning with gcc-4/5/6 at -Os
+    - BUG/MINOR: mux-h1: Account consumed output data on synchronous connection error
+    - MINOR: smtpchk: Update expect rule to fully match replies to EHLO commands
+    - BUG/MINOR: smtpchk: SMTP Service check should gracefully close SMTP transaction
+    - DOC: configuration: missing 'if' in tcp-request content example
+    - BUG/MAJOR: stick-tables: do not try to index a server name for applets
+    - BUG/MINOR: server: make sure "show servers state" hides private bits
+    - CI: Replace the deprecated `::set-output` command by writing to $GITHUB_OUTPUT in matrix.py
+    - CI: Replace the deprecated `::set-output` command by writing to $GITHUB_OUTPUT in workflow definition
+    - BUG/MEDIUM: compression: handle rewrite errors when updating response headers
+    - CI: SSL: use proper version generating when "latest" semantic is used
+    - CI: SSL: temporarily stick to LibreSSL=3.5.3
+    - DOC: management: add forgotten "show startup-logs"
+    - BUG/MAJOR: stick-table: don't process store-response rules for applets
+    - BUG/MEDIUM: stick-table: fix a race condition when updating the expiration task
+    - CI: add monthly gcc cross compile jobs
+    - BUG/MINOR: ssl: Memory leak of AUTHORITY_KEYID struct when loading issuer
+    - BUG/MINOR: ssl: ocsp structure not freed properly in case of error
+    - CI: switch to the "latest" LibreSSL
+    - CI: emit the compiler's version in the build reports
+    - BUG/MINOR: http-htx: Fix error handling during parsing http replies
+    - BUG/MINOR: resolvers: Set port before IP address when processing SRV records
+    - DOC: config: fix alphabetical ordering of global section
+    - BUG/MEDIUM: ring: fix creation of server in uninitialized ring
+    - BUG/MINOR: pool/cli: use ullong to report total pool usage in bytes
+    - BUG/MEDIUM: listener: Fix race condition when updating the global mngmt task
+    - BUG/MINOR: http_ana/txn: don't re-initialize txn and req var lists
+    - BUG/MINOR: ssl: don't initialize the keylog callback when not required
+    - BUG/MEDIUM: peers: messages about unkown tables not correctly ignored
+    - BUILD: peers: Remove unused variables
+    - BUG/MINOR: server/idle: at least use atomic stores when updating max_used_conns
+    - BUILD: listener: fix build warning on global_listener_rwlock without threads
+    - DOC: config: provide some configuration hints for "http-reuse"
+    - DOC: config: clarify the fact that SNI should not be used in HTTP scenarios
+    - DOC: config: mention that a single monitor-uri rule is supported
+    - DOC: config: explain how default matching method for ACL works
+    - DOC: config: clarify the fact that "retries" is not just for connections
+    - DOC: config: clarify the -m dir and -m dom pattern matching methods
+    - SCRIPTS: announce-release: add a link to the data plane API
+    - Revert "CI: switch to the "latest" LibreSSL"
+    - Revert "CI: determine actual OpenSSL version dynamically"
+
 2022/07/28 : 2.2.25
     - CI: determine actual LibreSSL version dynamically
     - MEDIUM: http-ana: Add a proxy option to restrict chars in request header names
