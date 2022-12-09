@@ -68,7 +68,7 @@ matrix = []
 
 # Ubuntu
 
-os = "ubuntu-latest"
+os = "ubuntu-20.04"
 TARGET = "linux-glibc"
 for CC in ["gcc", "clang"]:
     matrix.append(
@@ -150,7 +150,7 @@ for CC in ["gcc", "clang"]:
 
 # ASAN
 
-os = "ubuntu-latest"
+os = "ubuntu-20.04"
 TARGET = "linux-glibc"
 for CC in ["gcc","clang"]:
     matrix.append(
