@@ -3018,13 +3018,13 @@ static int ssl_sock_put_ckch_into_ctx(const char *path, const struct cert_key_an
 	}
 
 	if (ckch->chain) {
-		find_chain = ckch->chain;
+		find_chain = X509_chain_up_ref(ckch->chain);
 	} else {
 		/* Find Certificate Chain in global */
 		struct issuer_chain *issuer;
 		issuer = ssl_get0_issuer_chain(ckch->cert);
 		if (issuer)
-			find_chain = issuer->chain;
+			find_chain = X509_chain_up_ref(issuer->chain);
 	}
 
 	if (!find_chain) {
@@ -3044,14 +3044,11 @@ static int ssl_sock_put_ckch_into_ctx(const char *path, const struct cert_key_an
 #else
 	{ /* legacy compat (< openssl 1.0.2) */
 		X509 *ca;
-		STACK_OF(X509) *chain;
-		chain = X509_chain_up_ref(find_chain);
-		while ((ca = sk_X509_shift(chain)))
+		while ((ca = sk_X509_shift(find_chain)))
 			if (!SSL_CTX_add_extra_chain_cert(ctx, ca)) {
 				memprintf(err, "%sunable to load chain certificate into SSL Context '%s'.\n",
 					  err && *err ? *err : "", path);
 				X509_free(ca);
-				sk_X509_pop_free(chain, X509_free);
 				errcode |= ERR_ALERT | ERR_FATAL;
 				goto end;
 			}
@@ -3109,6 +3106,7 @@ static int ssl_sock_put_ckch_into_ctx(const char *path, const struct cert_key_an
 #endif
 
  end:
+	sk_X509_pop_free(find_chain, X509_free);
 	return errcode;
 }
 
