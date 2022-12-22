@@ -516,7 +516,7 @@ BUILD_OPTIONS  := $(foreach opt,$(use_opts),$(call ignore_implicit,$(opt)))
 # Make a list of all known features with +/- prepended depending on their
 # activation status. Must be a macro so that dynamically enabled ones are
 # evaluated with their current status.
-BUILD_FEATURES  = $(foreach opt,$(patsubst USE_%,%,$(use_opts)),$(if $(USE_$(opt)),+$(opt),-$(opt)))
+BUILD_FEATURES  = $(foreach opt,$(patsubst USE_%,%,$(sort $(use_opts))),$(if $(USE_$(opt)),+$(opt),-$(opt)))
 
 # All USE_* options have their equivalent macro defined in the code (some might
 # possibly be unused though)
