@@ -3938,6 +3938,10 @@ next_frame:
 		*flags |= H2_SF_HEADERS_RCVD;
 
 	if ((h2c->dff & H2_F_HEADERS_END_STREAM)) {
+		if (msgf & H2_MSGF_RSP_1XX) {
+			/* RFC9113#8.1 : HEADERS frame with the ES flag set that carries an informational status code is malformed */
+			goto fail;
+		}
 		/* Mark the end of message, either using EOM in HTX or with the
 		 * trailing CRLF after the end of trailers. Note that DATA_CHNK
 		 * is not set during headers with END_STREAM. For HTX trailers,
