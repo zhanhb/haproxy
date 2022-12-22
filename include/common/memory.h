@@ -131,8 +131,8 @@ void create_pool_callback(struct pool_head **ptr, char *name, unsigned int size)
 void dump_pools_to_trash();
 void dump_pools(void);
 int pool_total_failures();
-unsigned long pool_total_allocated();
-unsigned long pool_total_used();
+unsigned long long pool_total_allocated();
+unsigned long long pool_total_used();
 
 /*
  * This function frees whatever can be freed in pool <pool>.
