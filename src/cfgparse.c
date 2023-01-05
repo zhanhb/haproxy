@@ -2283,7 +2283,7 @@ int check_config_validity()
 	init_proxies_list = proxies_list;
 
 init_proxies_list_stage1:
-	for (curproxy = proxies_list; curproxy; curproxy = curproxy->next) {
+	for (curproxy = init_proxies_list; curproxy; curproxy = curproxy->next) {
 		struct switching_rule *rule;
 		struct server_rule *srule;
 		struct sticking_rule *mrule;
