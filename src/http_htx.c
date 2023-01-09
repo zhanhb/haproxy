@@ -921,7 +921,7 @@ int http_str_to_htx(struct buffer *buf, struct ist raw, char **errmsg)
 	ret = h1_headers_to_hdr_list(raw.ptr, raw.ptr + raw.len,
 				     hdrs, sizeof(hdrs)/sizeof(hdrs[0]), &h1m, &h1sl);
 	if (ret <= 0) {
-		memprintf(errmsg, "unabled to parse headers (error offset: %d)", h1m.err_pos);
+		memprintf(errmsg, "unable to parse headers (error offset: %d)", h1m.err_pos);
 		goto error;
 	}
 
