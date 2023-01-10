@@ -2896,6 +2896,7 @@ int http_res_set_status(unsigned int status, struct ist reason, struct stream *s
 		return -1;
 	if (!http_replace_res_reason(htx, reason))
 		return -1;
+	s->txn->status = status;
 	return 0;
 }
 
