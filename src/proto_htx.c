@@ -2808,6 +2808,7 @@ void htx_res_set_status(unsigned int status, const char *reason, struct stream *
 
 	if (http_replace_res_status(htx, ist2(trash.area, trash.data)))
 		http_replace_res_reason(htx, ist2(reason, strlen(reason)));
+	s->txn->status = status;
 }
 
 /* Executes the http-request rules <rules> for stream <s>, proxy <px> and
