@@ -1575,6 +1575,7 @@ static void promex_appctx_handle_io(struct appctx *appctx)
 	res->flags |= CF_READ_NULL;
 	si_shutr(si);
 	si_shutw(si);
+	goto out;
 }
 
 struct applet promex_applet = {
