@@ -2760,6 +2760,7 @@ static struct h2s *h2c_frt_handle_headers(struct h2c *h2c, struct h2s *h2s)
 			/* unrecoverable error ? */
 			if (h2c->st0 >= H2_CS_ERROR) {
 				TRACE_USER("Unrecoverable error decoding H2 trailers", H2_EV_RX_FRAME|H2_EV_RX_HDR|H2_EV_STRM_NEW|H2_EV_STRM_END, h2c->conn, 0, &rxbuf);
+				sess_log(h2c->conn->owner);
 				goto out;
 			}
 
@@ -2774,6 +2775,7 @@ static struct h2s *h2c_frt_handle_headers(struct h2c *h2c, struct h2s *h2s)
 				/* Failed to decode this frame (e.g. too large request)
 				 * but the HPACK decompressor is still synchronized.
 				 */
+				sess_log(h2c->conn->owner);
 				h2s_error(h2s, H2_ERR_INTERNAL_ERROR);
 				TRACE_USER("Stream error decoding H2 trailers", H2_EV_RX_FRAME|H2_EV_RX_HDR|H2_EV_STRM_NEW|H2_EV_STRM_END, h2c->conn, 0, &rxbuf);
 				h2c->st0 = H2_CS_FRAME_E;
@@ -2785,6 +2787,7 @@ static struct h2s *h2c_frt_handle_headers(struct h2c *h2c, struct h2s *h2s)
 		 * the data and send another RST.
 		 */
 		error = h2c_decode_headers(h2c, &rxbuf, &flags, &body_len, NULL);
+		sess_log(h2c->conn->owner);
 		h2s = (struct h2s*)h2_error_stream;
 		goto send_rst;
 	}
@@ -2804,6 +2807,7 @@ static struct h2s *h2c_frt_handle_headers(struct h2c *h2c, struct h2s *h2s)
 	/* unrecoverable error ? */
 	if (h2c->st0 >= H2_CS_ERROR) {
 		TRACE_USER("Unrecoverable error decoding H2 request", H2_EV_RX_FRAME|H2_EV_RX_HDR|H2_EV_STRM_NEW|H2_EV_STRM_END, h2c->conn, 0, &rxbuf);
+		sess_log(h2c->conn->owner);
 		goto out;
 	}
 
@@ -2818,6 +2822,7 @@ static struct h2s *h2c_frt_handle_headers(struct h2c *h2c, struct h2s *h2s)
 		/* Failed to decode this stream (e.g. too large request)
 		 * but the HPACK decompressor is still synchronized.
 		 */
+		sess_log(h2c->conn->owner);
 		h2s = (struct h2s*)h2_error_stream;
 		goto send_rst;
 	}
