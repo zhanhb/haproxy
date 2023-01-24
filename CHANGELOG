@@ -1,6 +1,73 @@
 ChangeLog :
 ===========
 
+2023/01/24 : 2.5.11
+    - BUG/MINOR: http-htx: Don't consider an URI as normalized after a set-uri action
+    - BUG/MEDIIM: stconn: Flush output data before forwarding close to write side
+    - Revert "CI: switch to the "latest" LibreSSL"
+    - Revert "CI: enable QUIC for LibreSSL builds"
+    - Revert "CI: determine actual OpenSSL version dynamically"
+    - CI: github: change "ubuntu-latest" to "ubuntu-20.04"
+    - BUILD: peers: peers-t.h depends on stick-table-t.h
+    - BUG/MEDIUM: ssl: Verify error codes can exceed 63
+    - BUG/MINOR: ssl: Fix potential overflow
+    - MINOR: mworker: display an alert upon a wait-mode exit
+    - BUG/MEDIUM: mworker: fix segv in early failure of mworker mode with peers
+    - BUG/MEDIUM: httpclient/lua: double LIST_DELETE on end of lua task
+    - BUG/MINOR: promex: create haproxy_backend_agg_server_status
+    - MINOR: promex: introduce haproxy_backend_agg_check_status
+    - DOC: promex: Add missing backend metrics
+    - BUG/MAJOR: fcgi: Fix uninitialized reserved bytes
+    - REGTESTS: fix the race conditions in iff.vtc
+    - REGTESTS: startup: check maxconn computation
+    - BUG/MINOR: startup: don't use internal proxies to compute the maxconn
+    - CI: github: set ulimit -n to a greater value
+    - REGTESTS: startup: activate automatic_maxconn.vtc
+    - BUG/MEDIUM: resolvers: Use tick_first() to update the resolvers task timeout
+    - REGTESTS: startup: change the expected maxconn to 11000
+    - REGTESTS: startup: add alternatives values in automatic_maxconn.vtc
+    - LICENSE: wurfl: clarify the dummy library license.
+    - BUG/MINOR: ssl: Fix memory leak of find_chain in ssl_sock_load_cert_chain
+    - REGTESTS: startup: disable automatic_maxconn.vtc
+    - BUG/MEDIUM: mux-h2: Refuse interim responses with end-stream flag set
+    - BUG/MINOR: pool/stats: Use ullong to report total pool usage in bytes in stats
+    - BUILD: makefile: build the features list dynamically
+    - BUILD: makefile: sort the features list
+    - BUG/MINOR: stick-table: report the correct action name in error message
+    - BUG/MINOR: http-fetch: Only fill txn status during prefetch if not already set
+    - BUG/MAJOR: buf: Fix copy of wrapping output data when a buffer is realigned
+    - DOC: config: fix alphabetical ordering of http-after-response rules
+    - DOC: config: remove duplicated "http-response sc-set-gpt0" directive
+    - REGTEST: fix the race conditions in json_query.vtc
+    - REGTEST: fix the race conditions in digest.vtc
+    - REGTEST: fix the race conditions in hmac.vtc
+    - BUG/MINOR: http: Memory leak of http redirect rules' format string
+    - CLEANUP: htx: fix a typo in an error message of http_str_to_htx
+    - DOC: management: add details on "Used" status
+    - BUG/MINOR: h1-htx: Remove flags about protocol upgrade on non-101 responses
+    - BUG/MINOR: hlua: Fix Channel.line and Channel.data behavior regarding the doc
+    - BUG/MINOR: resolvers: Wait the resolution execution for a do_resolv action
+    - BUG/MINOR: promex: Don't forget to consume the request on error
+    - BUG/MINOR: http-ana: Report SF_FINST_R flag on error waiting the request body
+    - BUG/MINOR: http-fetch: Don't block HTTP sample fetch eval in HTTP_MSG_ERROR state
+    - BUG/MINOR: http-ana: make set-status also update txn->status
+    - BUG/MINOR: listeners: fix suspend/resume of inherited FDs
+    - DOC: config: fix wrong section number for "protocol prefixes"
+    - DOC: config: fix aliases for protocol prefixes "udp4@" and "udp6@"
+    - BUG/MINOR: mux-fcgi: Correctly set pathinfo
+    - DOC: config: fix "Address formats" chapter syntax
+    - BUG/MEDIUM: jwt: Properly process ecdsa signatures (concatenated R and S params)
+    - BUG/MINOR: ssl: Fix compilation with OpenSSL 1.0.2 (missing ECDSA_SIG_set0)
+    - BUG/MINOR: listener: close tiny race between resume_listener() and stopping
+    - BUG/MINOR: mux-h2: add missing traces on failed headers decoding
+    - BUILD: hpack: include global.h for the trash that is needed in debug mode
+    - BUG/MINOR: jwt: Wrong return value checked
+    - MINOR: h1: Consider empty port as invalid in authority for CONNECT
+    - MINOR: http: Considere empty ports as valid default ports
+    - BUG/MINOR: h1: Replace authority validation to conform RFC3986
+    - REG-TESTS: http: Add more tests about authority/host matching
+    - BUG/MINOR: http-htx: Normalized absolute URIs with an empty port
+
 2022/12/05 : 2.5.10
     - REGTESTS: 4be_1srv_smtpchk_httpchk_layer47errors: Return valid SMTP replies
     - BUG/MEDIUM: resolvers: Remove aborted resolutions from query_ids tree
