@@ -97,9 +97,7 @@ int __trace_enabled(enum trace_level level, uint64_t mask, struct trace_source *
 	const struct stream *strm = NULL;
 	const struct connection *conn = NULL;
 	const struct check *check = NULL;
-#ifdef USE_QUIC
 	const struct quic_conn *qc = NULL;
-#endif
 	const void *lockon_ptr = NULL;
 
 	if (likely(src->state == TRACE_STATE_STOPPED))
@@ -122,10 +120,8 @@ int __trace_enabled(enum trace_level level, uint64_t mask, struct trace_source *
 	if (src->arg_def & TRC_ARGS_CHK)
 		check = trace_pick_arg(src->arg_def & TRC_ARGS_CHK, a1, a2, a3, a4);
 
-#ifdef USE_QUIC
 	if (src->arg_def & TRC_ARGS_QCON)
 		qc = trace_pick_arg(src->arg_def & TRC_ARGS_QCON, a1, a2, a3, a4);
-#endif
 
 #ifdef USE_QUIC
 	if (qc && !conn)
@@ -190,9 +186,7 @@ int __trace_enabled(enum trace_level level, uint64_t mask, struct trace_source *
 		case TRACE_LOCKON_STREAM:     lockon_ptr = strm; break;
 		case TRACE_LOCKON_CHECK:      lockon_ptr = check; break;
 		case TRACE_LOCKON_THREAD:     lockon_ptr = ti;   break;
-#ifdef USE_QUIC
 		case TRACE_LOCKON_QCON:       lockon_ptr = qc;   break;
-#endif
 		case TRACE_LOCKON_ARG1:       lockon_ptr = a1;   break;
 		case TRACE_LOCKON_ARG2:       lockon_ptr = a2;   break;
 		case TRACE_LOCKON_ARG3:       lockon_ptr = a3;   break;
