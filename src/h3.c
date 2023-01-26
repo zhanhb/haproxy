@@ -147,8 +147,8 @@ struct h3s {
 
 	enum h3s_t type;
 	enum h3s_st_req st_req; /* only used for request streams */
-	int demux_frame_len;
-	int demux_frame_type;
+	uint64_t demux_frame_len;
+	uint64_t demux_frame_type;
 
 	unsigned long long body_len; /* known request body length from content-length header if present */
 	unsigned long long data_len; /* total length of all parsed DATA */
