@@ -1405,6 +1405,7 @@ static void sink_deinit()
 				ring_free(sink->ctx.ring);
 		}
 		LIST_DELETE(&sink->sink_list);
+		task_destroy(sink->forward_task);
 		free(sink->name);
 		free(sink->desc);
 		free(sink);
