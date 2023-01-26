@@ -1116,8 +1116,9 @@ static void sink_deinit()
 
 	list_for_each_entry_safe(sink, sb, &sink_list, sink_list) {
 		if (sink->type == SINK_TYPE_BUFFER)
-			ring_free(sink->ctx.ring);
+
 		LIST_DEL(&sink->sink_list);
+		task_destroy(sink->forward_task);
 		free(sink->name);
 		free(sink->desc);
 		free(sink);
