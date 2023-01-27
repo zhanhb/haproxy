@@ -1,6 +1,39 @@
 ChangeLog :
 ===========
 
+2023/01/27 : 2.2.27
+    - BUG/MEDIIM: stconn: Flush output data before forwarding close to write side
+    - CI: github: change "ubuntu-latest" to "ubuntu-20.04"
+    - BUILD: peers: peers-t.h depends on stick-table-t.h
+    - BUG/MINOR: cfgparse: Use the right proxy list during validity check of sinks
+    - BUG/MEDIUM: ssl: Verify error codes can exceed 63
+    - BUG/MINOR: ssl: Fix potential overflow
+    - BUG/MEDIUM: mworker: fix segv in early failure of mworker mode with peers
+    - BUG/MAJOR: fcgi: Fix uninitialized reserved bytes
+    - REGTESTS: startup: check maxconn computation
+    - BUG/MEDIUM: resolvers: Use tick_first() to update the resolvers task timeout
+    - LICENSE: wurfl: clarify the dummy library license.
+    - BUG/MEDIUM: mux-h2: Refuse interim responses with end-stream flag set
+    - BUG/MINOR: pool/stats: Use ullong to report total pool usage in bytes in stats
+    - BUILD: makefile: build the features list dynamically
+    - BUILD: makefile: sort the features list
+    - BUG/MINOR: http-fetch: Only fill txn status during prefetch if not already set
+    - BUG/MAJOR: buf: Fix copy of wrapping output data when a buffer is realigned
+    - REGTEST: fix the race conditions in digest.vtc
+    - REGTEST: fix the race conditions in hmac.vtc
+    - BUG/MINOR: http: Memory leak of http redirect rules' format string
+    - CLEANUP: htx: fix a typo in an error message of http_str_to_htx
+    - BUG/MINOR: resolvers: Wait the resolution execution for a do_resolv action
+    - BUG/MINOR: promex: Don't forget to consume the request on error
+    - BUG/MINOR: http-ana: Report SF_FINST_R flag on error waiting the request body
+    - BUG/MINOR: http-fetch: Don't block HTTP sample fetch eval in HTTP_MSG_ERROR state
+    - BUG/MINOR: http-ana: make set-status also update txn->status
+    - BUG/MINOR: mux-fcgi: Correctly set pathinfo
+    - BUG/MINOR: mux-h2: add missing traces on failed headers decoding
+    - BUILD: hpack: include global.h for the trash that is needed in debug mode
+    - BUG/MINOR: ssl: Fix memory leak of find_chain in ssl_sock_load_cert_chain
+    - BUG/MINOR: sink: free the forwarding task on exit
+
 2022/12/09 : 2.2.26
     - MINOR: peers: Use a dedicated reconnect timeout when stopping the local peer
     - BUG/MEDIUM: peers: limit reconnect attempts of the old process on reload
