@@ -13,6 +13,7 @@
 #include <haproxy/qmux_http.h>
 #include <haproxy/qmux_trace.h>
 #include <haproxy/quic_conn.h>
+#include <haproxy/quic_frame.h>
 #include <haproxy/quic_stream.h>
 #include <haproxy/quic_tp-t.h>
 #include <haproxy/ssl_sock-t.h>
@@ -706,13 +707,11 @@ static void qcs_consume(struct qcs *qcs, uint64_t bytes)
 
 	if (qcs->rx.msd - qcs->rx.offset < qcs->rx.msd_init / 2) {
 		TRACE_DATA("increase stream credit via MAX_STREAM_DATA", QMUX_EV_QCS_RECV, qcc->conn, qcs);
-		frm = pool_zalloc(pool_head_quic_frame);
+		frm = qc_frm_alloc(QUIC_FT_MAX_STREAM_DATA);
 		BUG_ON(!frm); /* TODO handle this properly */
 
 		qcs->rx.msd = qcs->rx.offset + qcs->rx.msd_init;
 
-		LIST_INIT(&frm->reflist);
-		frm->type = QUIC_FT_MAX_STREAM_DATA;
 		frm->max_stream_data.id = qcs->id;
 		frm->max_stream_data.max_stream_data = qcs->rx.msd;
 
@@ -724,13 +723,11 @@ static void qcs_consume(struct qcs *qcs, uint64_t bytes)
 	qcc->lfctl.offsets_consume += bytes;
 	if (qcc->lfctl.md - qcc->lfctl.offsets_consume < qcc->lfctl.md_init / 2) {
 		TRACE_DATA("increase conn credit via MAX_DATA", QMUX_EV_QCS_RECV, qcc->conn, qcs);
-		frm = pool_zalloc(pool_head_quic_frame);
+		frm = qc_frm_alloc(QUIC_FT_MAX_DATA);
 		BUG_ON(!frm); /* TODO handle this properly */
 
 		qcc->lfctl.md = qcc->lfctl.offsets_consume + qcc->lfctl.md_init;
 
-		LIST_INIT(&frm->reflist);
-		frm->type = QUIC_FT_MAX_DATA;
 		frm->max_data.max_data = qcc->lfctl.md;
 
 		LIST_APPEND(&qcs->qcc->lfctl.frms, &frm->list);
@@ -1285,11 +1282,9 @@ static int qcc_release_remote_stream(struct qcc *qcc, uint64_t id)
 		++qcc->lfctl.cl_bidi_r;
 		if (qcc->lfctl.cl_bidi_r > qcc->lfctl.ms_bidi_init / 2) {
 			TRACE_DATA("increase max stream limit with MAX_STREAMS_BIDI", QMUX_EV_QCC_SEND, qcc->conn);
-			frm = pool_zalloc(pool_head_quic_frame);
+			frm = qc_frm_alloc(QUIC_FT_MAX_STREAMS_BIDI);
 			BUG_ON(!frm); /* TODO handle this properly */
 
-			LIST_INIT(&frm->reflist);
-			frm->type = QUIC_FT_MAX_STREAMS_BIDI;
 			frm->max_streams_bidi.max_streams = qcc->lfctl.ms_bidi +
 			                                    qcc->lfctl.cl_bidi_r;
 			LIST_APPEND(&qcc->lfctl.frms, &frm->list);
@@ -1426,14 +1421,12 @@ static int qcs_build_stream_frm(struct qcs *qcs, struct buffer *out, char fin,
 	BUG_ON(qcc->tx.sent_offsets + total > qcc->rfctl.md);
 
 	TRACE_PROTO("sending STREAM frame", QMUX_EV_QCS_SEND, qcc->conn, qcs);
-	frm = pool_zalloc(pool_head_quic_frame);
+	frm = qc_frm_alloc(QUIC_FT_STREAM_8);
 	if (!frm) {
 		TRACE_ERROR("frame alloc failure", QMUX_EV_QCS_SEND, qcc->conn, qcs);
 		goto err;
 	}
 
-	LIST_INIT(&frm->reflist);
-	frm->type = QUIC_FT_STREAM_8;
 	frm->stream.stream = qcs->stream;
 	frm->stream.id = qcs->id;
 	frm->stream.buf = out;
@@ -1601,14 +1594,12 @@ static int qcs_send_reset(struct qcs *qcs)
 
 	TRACE_ENTER(QMUX_EV_QCS_SEND, qcs->qcc->conn, qcs);
 
-	frm = pool_zalloc(pool_head_quic_frame);
+	frm = qc_frm_alloc(QUIC_FT_RESET_STREAM);
 	if (!frm) {
 		TRACE_LEAVE(QMUX_EV_QCS_SEND, qcs->qcc->conn, qcs);
 		return 1;
 	}
 
-	LIST_INIT(&frm->reflist);
-	frm->type = QUIC_FT_RESET_STREAM;
 	frm->reset_stream.id = qcs->id;
 	frm->reset_stream.app_error_code = qcs->err;
 	frm->reset_stream.final_size = qcs->tx.sent_offset;
@@ -1659,14 +1650,12 @@ static int qcs_send_stop_sending(struct qcs *qcs)
 		goto done;
 	}
 
-	frm = pool_zalloc(pool_head_quic_frame);
+	frm = qc_frm_alloc(QUIC_FT_STOP_SENDING);
 	if (!frm) {
 		TRACE_LEAVE(QMUX_EV_QCS_SEND, qcs->qcc->conn, qcs);
 		return 1;
 	}
 
-	LIST_INIT(&frm->reflist);
-	frm->type = QUIC_FT_STOP_SENDING;
 	frm->stop_sending.id = qcs->id;
 	frm->stop_sending.app_error_code = qcs->err;
 
