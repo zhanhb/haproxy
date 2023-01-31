@@ -2476,7 +2476,7 @@ static void qc_prep_fast_retrans(struct quic_conn *qc,
 		pkt = eb64_entry(node, struct quic_tx_packet, pn_node);
 		node = eb64_next(node);
 		/* Skip the empty and coalesced packets */
-		if (!LIST_ISEMPTY(&pkt->frms) && !(pkt->flags & QUIC_FL_TX_PACKET_COALESCED))
+		if (!LIST_ISEMPTY(&pkt->frms))
 			break;
 	}
 
