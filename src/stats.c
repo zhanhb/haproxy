@@ -296,8 +296,10 @@ static inline enum stats_domain_px_cap stats_px_get_cap(uint32_t domain)
 
 static void stats_dump_json_schema(struct buffer *out);
 
-int stats_putchk(struct channel *chn, struct htx *htx, struct buffer *chk)
+int stats_putchk(struct channel *chn, struct htx *htx)
 {
+	struct buffer *chk = &trash_chunk;
+
 	if (htx) {
 		if (chk->data >= channel_htx_recv_max(chn, htx))
 			return 0;
@@ -3110,7 +3112,7 @@ more:
 	case STAT_PX_ST_TH:
 		if (ctx->flags & STAT_FMT_HTML) {
 			stats_dump_html_px_hdr(sc, px);
-			if (!stats_putchk(rep, htx, &trash_chunk))
+			if (!stats_putchk(rep, htx))
 				goto full;
 		}
 
@@ -3120,7 +3122,7 @@ more:
 	case STAT_PX_ST_FE:
 		/* print the frontend */
 		if (stats_dump_fe_stats(sc, px)) {
-			if (!stats_putchk(rep, htx, &trash_chunk))
+			if (!stats_putchk(rep, htx))
 				goto full;
 			if (ctx->field)
 				goto more;
@@ -3157,7 +3159,7 @@ more:
 
 			/* print the frontend */
 			if (stats_dump_li_stats(sc, px, l)) {
-				if (!stats_putchk(rep, htx, &trash_chunk))
+				if (!stats_putchk(rep, htx))
 					goto full;
 				if (ctx->field)
 					goto more;
@@ -3222,7 +3224,7 @@ more:
 			}
 
 			if (stats_dump_sv_stats(sc, px, sv)) {
-				if (!stats_putchk(rep, htx, &trash_chunk))
+				if (!stats_putchk(rep, htx))
 					goto full;
 			}
 		} /* for sv */
@@ -3233,7 +3235,7 @@ more:
 	case STAT_PX_ST_BE:
 		/* print the backend */
 		if (stats_dump_be_stats(sc, px)) {
-			if (!stats_putchk(rep, htx, &trash_chunk))
+			if (!stats_putchk(rep, htx))
 				goto full;
 			if (ctx->field)
 				goto more;
@@ -3246,7 +3248,7 @@ more:
 	case STAT_PX_ST_END:
 		if (ctx->flags & STAT_FMT_HTML) {
 			stats_dump_html_px_end(sc, px);
-			if (!stats_putchk(rep, htx, &trash_chunk))
+			if (!stats_putchk(rep, htx))
 				goto full;
 		}
 
@@ -3797,7 +3799,7 @@ static int stats_dump_stat_to_buffer(struct stconn *sc, struct htx *htx,
 		else if (!(ctx->flags & STAT_FMT_TYPED))
 			stats_dump_csv_header(ctx->domain);
 
-		if (!stats_putchk(rep, htx, &trash_chunk))
+		if (!stats_putchk(rep, htx))
 			goto full;
 
 		if (ctx->flags & STAT_JSON_SCHM) {
@@ -3810,7 +3812,7 @@ static int stats_dump_stat_to_buffer(struct stconn *sc, struct htx *htx,
 	case STAT_STATE_INFO:
 		if (ctx->flags & STAT_FMT_HTML) {
 			stats_dump_html_info(sc, uri);
-			if (!stats_putchk(rep, htx, &trash_chunk))
+			if (!stats_putchk(rep, htx))
 				goto full;
 		}
 
@@ -3849,7 +3851,7 @@ static int stats_dump_stat_to_buffer(struct stconn *sc, struct htx *htx,
 				stats_dump_html_end();
 			else
 				stats_dump_json_end();
-			if (!stats_putchk(rep, htx, &trash_chunk))
+			if (!stats_putchk(rep, htx))
 				goto full;
 		}
 
