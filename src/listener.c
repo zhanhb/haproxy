@@ -503,10 +503,6 @@ int resume_listener(struct listener *l, int lpx, int lli)
 	if (l->state == LI_READY)
 		goto end;
 
-	/* the listener might have been stopped in parallel */
-	if (l->state < LI_PAUSED)
-		goto end;
-
 	if (l->rx.proto->resume)
 		ret = l->rx.proto->resume(l);
 
@@ -564,7 +560,7 @@ int relax_listener(struct listener *l, int lpx, int lli)
 }
 
 /* Marks a ready listener as full so that the stream code tries to re-enable
- * it upon next close() using resume_listener().
+ * it upon next close() using relax_listener().
  */
 static void listener_full(struct listener *l)
 {
@@ -602,7 +598,7 @@ void dequeue_all_listeners()
 		/* This cannot fail because the listeners are by definition in
 		 * the LI_LIMITED state.
 		 */
-		resume_listener(listener, 0, 0);
+		relax_listener(listener, 0, 0);
 	}
 }
 
@@ -615,7 +611,7 @@ void dequeue_proxy_listeners(struct proxy *px)
 		/* This cannot fail because the listeners are by definition in
 		 * the LI_LIMITED state.
 		 */
-		resume_listener(listener, 0, 0);
+		relax_listener(listener, 0, 0);
 	}
 }
 
@@ -1188,7 +1184,7 @@ void listener_accept(struct listener *l)
 	      (!tick_isset(global_listener_queue_task->expire) ||
 	       tick_is_expired(global_listener_queue_task->expire, now_ms))))) {
 		/* at least one thread has to this when quitting */
-		resume_listener(l, 0, 0);
+		relax_listener(l, 0, 0);
 
 		/* Dequeues all of the listeners waiting for a resource */
 		dequeue_all_listeners();
@@ -1247,7 +1243,7 @@ void listener_release(struct listener *l)
 	_HA_ATOMIC_DEC(&l->thr_conn[tid]);
 
 	if (l->state == LI_FULL || l->state == LI_LIMITED)
-		resume_listener(l, 0, 0);
+		relax_listener(l, 0, 0);
 
 	/* Dequeues all of the listeners waiting for a resource */
 	dequeue_all_listeners();
