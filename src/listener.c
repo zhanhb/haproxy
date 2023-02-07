@@ -526,7 +526,6 @@ int suspend_listener(struct listener *l, int lpx, int lli)
 int resume_listener(struct listener *l, int lpx, int lli)
 {
 	struct proxy *px = l->bind_conf->frontend;
-	int was_paused = px && px->li_paused;
 	int ret = 1;
 
 	if (!lpx && px)
@@ -568,7 +567,7 @@ int resume_listener(struct listener *l, int lpx, int lli)
 		px->li_suspended--;
 	l->flags &= ~LI_F_SUSPENDED;
 
-	if (was_paused && !px->li_paused) {
+	if (px && !px->li_suspended) {
 		ha_warning("Resumed %s %s.\n", proxy_cap_str(px->cap), px->id);
 		send_log(px, LOG_WARNING, "Resumed %s %s.\n", proxy_cap_str(px->cap), px->id);
 	}
