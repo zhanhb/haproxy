@@ -86,8 +86,10 @@ int protocol_bind_all(int verbose)
 				else if (lerr & ERR_WARN)
 					ha_warning("Starting %s %s: %s\n",
 						   proxy_type_str(px), px->id, errmsg);
-				ha_free(&errmsg);
 			}
+			if (lerr != ERR_NONE)
+				ha_free(&errmsg);
+
 			if (lerr & ERR_ABORT)
 				break;
 
