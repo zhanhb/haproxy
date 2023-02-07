@@ -81,7 +81,7 @@ struct cache_st {
 
 struct cache_entry {
 	unsigned int latest_validation;     /* latest validation date */
-	unsigned int expire;      /* expiration date */
+	unsigned int expire;      /* expiration date (wall clock time) */
 	unsigned int age;         /* Origin server "Age" header value */
 	unsigned int eoh;         /* Origin server end of headers offset. */ // field used in legacy mode only
 
@@ -114,7 +114,7 @@ struct cache_entry *entry_exist(struct cache *cache, char *hash)
 	if (memcmp(entry->hash, hash, sizeof(entry->hash)))
 		return NULL;
 
-	if (entry->expire > now.tv_sec) {
+	if (entry->expire > date.tv_sec) {
 		return entry;
 	} else {
 		eb32_delete(node);
@@ -864,8 +864,8 @@ enum act_return http_action_store_cache(struct act_rule *rule, struct proxy *px,
 		shctx_unlock(shctx);
 
 		/* store latest value and expiration time */
-		object->latest_validation = now.tv_sec;
-		object->expire = now.tv_sec + http_calc_maxage(s, cconf->c.cache);
+		object->latest_validation = date.tv_sec;
+		object->expire = date.tv_sec + http_calc_maxage(s, cconf->c.cache);
 		return ACT_RET_CONT;
 	}
 
@@ -1059,7 +1059,7 @@ static int htx_cache_add_age_hdr(struct appctx *appctx, struct htx *htx)
 	char *end;
 
 	chunk_reset(&trash);
-	age = MAX(0, (int)(now.tv_sec - cache_ptr->latest_validation)) + cache_ptr->age;
+	age = MAX(0, (int)(date.tv_sec - cache_ptr->latest_validation)) + cache_ptr->age;
 	if (unlikely(age > CACHE_ENTRY_MAX_AGE))
 		age = CACHE_ENTRY_MAX_AGE;
 	end = ultoa_o(age, b_head(&trash), b_size(&trash));
@@ -1877,11 +1877,11 @@ static int cli_io_handler_show_cache(struct appctx *appctx)
 			entry = container_of(node, struct cache_entry, eb);
 			next_key = node->key + 1;
 
-			if (entry->expire > now.tv_sec) {
+			if (entry->expire > date.tv_sec) {
 				chunk_printf(&trash, "%p hash:%u size:%u (%u blocks), refcount:%u, expire:%d\n",
 					     entry, (*(unsigned int *)entry->hash),
 					     block_ptr(entry)->len, block_ptr(entry)->block_count,
-					     block_ptr(entry)->refcount, entry->expire - (int)now.tv_sec);
+					     block_ptr(entry)->refcount, entry->expire - (int)date.tv_sec);
 			} else {
 				/* time to remove that one */
 				eb32_delete(&entry->eb);
