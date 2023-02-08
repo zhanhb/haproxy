@@ -154,6 +154,30 @@ void si_retnclose(struct stream_interface *si,
 	channel_shutr_now(oc);
 }
 
+/* Conditionnaly forward the close to the wirte side. It return 1 if it can be
+ * forwarded. It is the caller responsibility to forward the close to the write
+ * side. Otherwise, 0 is returned. In this case, CF_SHUTW_NOW flag may be set on
+ * the channel if we are only waiting for the outgoing data to be flushed.
+ */
+static inline int si_cond_forward_shutw(struct stream_interface *si)
+{
+	/* The close must not be forwarded */
+	if (!(si_ic(si)->flags & CF_SHUTR) || !(si->flags & SI_FL_NOHALF))
+		return 0;
+
+	if (!channel_is_empty(si_ic(si))) {
+		/* the close to the write side cannot be forwarded now because
+		 * we should flush outgoing data first. But instruct the output
+		 * channel it should be done ASAP.
+		 */
+		channel_shutw_now(si_oc(si));
+		return 0;
+	}
+
+	/* the close can be immediately forwarded to the write side */
+	return 1;
+}
+
 /*
  * This function performs a shutdown-read on a detached stream interface in a
  * connected or init state (it does nothing for other states). It either shuts
@@ -178,7 +202,7 @@ static void stream_int_shutr(struct stream_interface *si)
 		si->state = SI_ST_DIS;
 		si->exp = TICK_ETERNITY;
 	}
-	else if (si->flags & SI_FL_NOHALF && channel_is_empty(ic)) {
+	else if (si_cond_forward_shutw(si)) {
 		/* we want to immediately forward this close to the write side */
 		return stream_int_shutw(si);
 	}
@@ -1010,7 +1034,7 @@ static void stream_int_shutr_conn(struct stream_interface *si)
 		si->state = SI_ST_DIS;
 		si->exp = TICK_ETERNITY;
 	}
-	else if (si->flags & SI_FL_NOHALF && channel_is_empty(ic)) {
+	else if (si_cond_forward_shutw(si)) {
 		/* we want to immediately forward this close to the write side */
 		return stream_int_shutw_conn(si);
 	}
@@ -1584,7 +1608,7 @@ static void stream_int_read0(struct stream_interface *si)
 	if (oc->flags & CF_SHUTW)
 		goto do_close;
 
-	if (si->flags & SI_FL_NOHALF && channel_is_empty(ic)) {
+	if (si_cond_forward_shutw(si)) {
 		/* we want to immediately forward this close to the write side */
 		/* force flag on ssl to keep stream in cache */
 		cs_shutw(cs, CS_SHW_SILENT);
@@ -1672,7 +1696,7 @@ static void stream_int_shutr_applet(struct stream_interface *si)
 		si->state = SI_ST_DIS;
 		si->exp = TICK_ETERNITY;
 	}
-	else if (si->flags & SI_FL_NOHALF && channel_is_empty(ic)) {
+	else if (si_cond_forward_shutw(si)) {
 		/* we want to immediately forward this close to the write side */
 		return stream_int_shutw_applet(si);
 	}
