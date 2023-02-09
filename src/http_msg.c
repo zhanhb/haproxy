@@ -1006,8 +1006,14 @@ void http_msg_analyzer(struct http_msg *msg, struct hdr_idx *idx)
 		if (likely(HTTP_IS_TOKEN(*ptr)))
 			EAT_AND_JUMP_OR_RETURN(ptr, end, http_msg_hdr_name, http_msg_ood, state, HTTP_MSG_HDR_NAME);
 
-		if (likely(*ptr == ':'))
+		if (likely(*ptr == ':')) {
+			if (ptr == input + msg->sol) {
+				/* empty header names are not permitted */
+				state = HTTP_MSG_HDR_NAME;
+				goto http_msg_invalid;
+			}
 			EAT_AND_JUMP_OR_RETURN(ptr, end, http_msg_hdr_l1_sp, http_msg_ood, state, HTTP_MSG_HDR_L1_SP);
+		}
 
 		if (likely(msg->err_pos < -1) || *ptr == '\n') {
 			state = HTTP_MSG_HDR_NAME;
