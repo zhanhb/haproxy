@@ -458,7 +458,7 @@ int qc_snd_buf(struct quic_conn *qc, const struct buffer *buf, size_t sz,
 		             (struct sockaddr *)&qc->peer_addr, get_addr_len(&qc->peer_addr));
 	} while (ret < 0 && errno == EINTR);
 
-	if (ret < 0 || ret != sz) {
+	if (ret < 0) {
 		struct proxy *prx = qc->li->bind_conf->frontend;
 		struct quic_counters *prx_counters =
 		  EXTRA_COUNTERS_GET(prx->extra_counters_fe,
@@ -479,6 +479,9 @@ int qc_snd_buf(struct quic_conn *qc, const struct buffer *buf, size_t sz,
 
 		return 1;
 	}
+
+	if (ret != sz)
+		return 1;
 
 	/* we count the total bytes sent, and the send rate for 32-byte blocks.
 	 * The reason for the latter is that freq_ctr are limited to 4GB and
