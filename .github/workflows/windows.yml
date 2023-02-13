@@ -55,6 +55,7 @@ jobs:
           ERR=1 \
           TARGET=${{ matrix.TARGET }} \
           CC=${{ matrix.CC }} \
+          DEBUG_CFLAGS="-g -Wno-deprecated-declarations" \
           ${{ join(matrix.FLAGS, ' ') }}
     - name: Show HAProxy version
       id: show-version
