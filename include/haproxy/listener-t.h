@@ -206,6 +206,7 @@ struct bind_conf {
 };
 
 #define LI_F_FINALIZED           0x00000002  /* listener made it to the READY||LIMITED||FULL state at least once, may be suspended/resumed safely */
+#define LI_F_SUSPENDED           0x00000004  /* listener has been suspended using suspend_listener(), it is either is LI_PAUSED or LI_ASSIGNED state */
 
 /* The listener will be directly referenced by the fdtab[] which holds its
  * socket. The listener provides the protocol-specific accept() function to
