@@ -1,6 +1,19 @@
 ChangeLog :
 ===========
 
+2023/02/14 : 2.4.22
+    - BUG/MINOR: fcgi-app: prevent 'use-fcgi-app' in default section
+    - BUG/MEDIUM: ssl: wrong eviction from the session cache tree
+    - BUG/MINOR: ssl/crt-list: warn when a line is malformated
+    - BUG/MEDIUM: stick-table: do not leave entries in end of window during purge
+    - BUG/MEDIUM: cache: use the correct time reference when comparing dates
+    - DOC: config: fix option spop-check proxy compatibility
+    - DOC: config: 'http-send-name-header' option may be used in default section
+    - DOC: proxy-protocol: fix wrong byte in provided example
+    - BUG/MEDIUM: stconn: Schedule a shutw on shutr if data must be sent first
+    - CI: github: don't warn on deprecated openssl functions on windows
+    - BUG/CRITICAL: http: properly reject empty http header field names
+
 2023/01/27 : 2.4.21
     - BUG/MINOR: http-htx: Don't consider an URI as normalized after a set-uri action
     - BUG/MEDIIM: stconn: Flush output data before forwarding close to write side
