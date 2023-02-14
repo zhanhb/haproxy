@@ -1,6 +1,84 @@
 ChangeLog :
 ===========
 
+2023/02/14 : 2.7.3
+    - BUG/MINOR: jwt: Wrong return value checked
+    - BUG/MINOR: quic: Do not request h3 clients to close its unidirection streams
+    - MEDIUM: quic-sock: fix udp source address for send on listener socket
+    - BUG/MINOR: sink: make sure to always properly unmap a file-backed ring
+    - DEV: haring: add a new option "-r" to automatically repair broken files
+    - MINOR: connection: add a BUG_ON() to detect destroying connection in idle list
+    - MINOR: mux-quic/h3: send SETTINGS as soon as transport is ready
+    - BUG/MINOR: h3: fix GOAWAY emission
+    - BUG/MEDIUM: mux-quic: fix crash on H3 SETTINGS emission
+    - BUG/MEDIUM: hpack: fix incorrect huffman decoding of some control chars
+    - BUG/MINOR: log: release global log servers on exit
+    - BUG/MINOR: ring: release the backing store name on exit
+    - BUG/MINOR: sink: free the forwarding task on exit
+    - DEV: hpack: fix `trash` build regression
+    - MINOR: trace: add a TRACE_ENABLED() macro to determine if a trace is active
+    - MINOR: trace: add a trace_no_cb() dummy callback for when to use no callback
+    - MINOR: trace: add the long awaited TRACE_PRINTF()
+    - BUG/MINOR: fcgi-app: prevent 'use-fcgi-app' in default section
+    - BUG/MEDIUM: h3: do not crash if no buf space for trailers
+    - OPTIM: h3: skip buf realign if no trailer to encode
+    - MINOR: mux-quic/h3: define stream close callback
+    - BUG/MEDIUM: h3: handle STOP_SENDING on control stream
+    - BUG/MINOR: h3: reject RESET_STREAM received for control stream
+    - MINOR: h3: add missing traces on closure
+    - BUG/MEDIUM: ssl: wrong eviction from the session cache tree
+    - BUG/MINOR: h3: fix crash due to h3 traces
+    - BUG/MINOR: stats: use proper buffer size for http dump
+    - BUG/MINOR: stats: fix source buffer size for http dump
+    - BUG/MEDIUM: stats: fix resolvers dump
+    - BUG/MINOR: stats: fix ctx->field update in stats_dump_proxy_to_buffer()
+    - BUG/MINOR: stats: fix show stats field ctx for servers
+    - BUG/MINOR: stats: fix STAT_STARTED behavior with full htx
+    - MINOR: stats: add by HTTP version cumulated number of sessions and requests
+    - BUG/MINOR: stats: Prevent HTTP "other sessions" counter underflows
+    - MINOR: quic: remove fin from quic_stream frame type
+    - MINOR: quic: ensure offset is properly set for STREAM frames
+    - MINOR: quic: define new functions for frame alloc
+    - MINOR: quic: refactor frame deallocation
+    - MEDIUM: quic: implement a retransmit limit per frame
+    - MINOR: quic: add config for retransmit limit
+    - CLEANUP: quic: no need for atomics on packet refcnt
+    - BUG/MINOR: quic: Possible stream truncations under heavy loss
+    - BUG/MINOR: quic: Too big PTO during handshakes
+    - MINOR: quic: Add a trace about variable states in qc_prep_fast_retrans()
+    - BUG/MINOR: quic: Do not ignore coalesced packets in qc_prep_fast_retrans()
+    - MINOR: quic: When probing Handshake packet number space, also probe the Initial one
+    - BUG/MAJOR: quic: Possible crash when processing 1-RTT during 0-RTT session
+    - MEDIUM: quic: Remove qc_conn_finalize() from the ClientHello TLS callbacks
+    - BUG/MINOR: quic: Unchecked source connection ID
+    - BUG/MEDIUM: quic: do not split STREAM frames if no space
+    - MINOR: quic: Update version_information transport parameter to draft-14
+    - BUG/MINOR: ssl/crt-list: warn when a line is malformated
+    - BUG/MEDIUM: stick-table: do not leave entries in end of window during purge
+    - BUG/MINOR: clock: do not mix wall-clock and monotonic time in uptime calculation
+    - BUG/MEDIUM: cache: use the correct time reference when comparing dates
+    - DOC: config: fix option spop-check proxy compatibility
+    - DOC: config: 'http-send-name-header' option may be used in default section
+    - BUG/MINOR: h3: fix crash due to h3 traces
+    - MINOR: cfgparse/server: move (min/max)conn postparsing logic into dedicated function
+    - BUG/MINOR: server/add: ensure minconn/maxconn consistency when adding server
+    - BUG/MEDIUM: stconn: Schedule a shutw on shutr if data must be sent first
+    - BUG/MEDIUM: quic: fix crash when "option nolinger" is set in the frontend
+    - MINOR: quic: implement a basic "show quic" CLI handler
+    - MINOR: quic: display CIDs and state in "show quic"
+    - MINOR: quic: display socket info on "show quic"
+    - MINOR: quic: display infos about various encryption level on "show quic"
+    - MINOR: quic: display Tx stream info on "show quic"
+    - MINOR: quic: filter closing conn on "show quic"
+    - BUG/MINOR: quic: fix filtering of closing connections on "show quic"
+    - BUG/MINOR: quic: fix type bug on "show quic" for 32-bits arch
+    - BUG/MINOR: mworker: fix uptime for master process
+    - BUG/MINOR: clock/stats: also use start_time not start_date in HTML info
+    - BUG/MEDIUM: quic: Buffer overflow when looking through QUIC CLI keyword list
+    - DOC: proxy-protocol: fix wrong byte in provided example
+    - BUG/MINOR: quic: Wrong datagram dispatch because of qc_check_dcid()
+    - BUG/CRITICAL: http: properly reject empty http header field names
+
 2023/01/20 : 2.7.2
     - OPTIM: pool: split the read_mostly from read_write parts in pool_head
     - REGTESTS: ssl: enable the ssl_reuse.vtc test for WolfSSL
