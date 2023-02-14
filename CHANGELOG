@@ -1,6 +1,18 @@
 ChangeLog :
 ===========
 
+2023/02/14 : 2.2.29
+    - BUG/MEDIUM: ssl: wrong eviction from the session cache tree
+    - BUG/MINOR: ssl/crt-list: warn when a line is malformated
+    - BUG/MEDIUM: stick-table: do not leave entries in end of window during purge
+    - BUG/MEDIUM: cache: use the correct time reference when comparing dates
+    - DOC: config: fix option spop-check proxy compatibility
+    - DOC: config: 'http-send-name-header' option may be used in default section
+    - DOC: proxy-protocol: fix wrong byte in provided example
+    - BUG/MEDIUM: stconn: Schedule a shutw on shutr if data must be sent first
+    - CI: github: don't warn on deprecated openssl functions on windows
+    - BUG/CRITICAL: http: properly reject empty http header field names
+
 2023/01/31 : 2.2.28
     - BUG/MEDIUM: sink: Fix release of sinks during the deinit
 
