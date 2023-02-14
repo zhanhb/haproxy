@@ -1,6 +1,43 @@
 ChangeLog :
 ===========
 
+2023/02/14 : 2.6.9
+    - BUG/MINOR: sink: make sure to always properly unmap a file-backed ring
+    - DEV: haring: add a new option "-r" to automatically repair broken files
+    - BUG/MINOR: log: release global log servers on exit
+    - BUG/MINOR: sink: free the forwarding task on exit
+    - DEV: hpack: fix `trash` build regression
+    - BUG/MINOR: fcgi-app: prevent 'use-fcgi-app' in default section
+    - MINOR: mux-quic/h3: define stream close callback
+    - BUG/MEDIUM: h3: handle STOP_SENDING on control stream
+    - BUG/MEDIUM: ssl: wrong eviction from the session cache tree
+    - BUG/MINOR: h3: fix crash due to h3 traces
+    - BUG/MINOR: stats: use proper buffer size for http dump
+    - BUG/MINOR: stats: fix source buffer size for http dump
+    - BUG/MEDIUM: stats: fix resolvers dump
+    - BUG/MINOR: stats: fix ctx->field update in stats_dump_proxy_to_buffer()
+    - BUG/MINOR: stats: fix show stats field ctx for servers
+    - BUG/MINOR: stats: fix STAT_STARTED behavior with full htx
+    - BUG/MINOR: quic: Possible stream truncations under heavy loss
+    - BUG/MINOR: quic: Too big PTO during handshakes
+    - BUG/MINOR: quic: Do not ignore coalesced packets in qc_prep_fast_retrans()
+    - MINOR: quic: When probing Handshake packet number space, also probe the Initial one
+    - BUG/MAJOR: quic: Possible crash when processing 1-RTT during 0-RTT session
+    - MEDIUM: quic: Remove qc_conn_finalize() from the ClientHello TLS callbacks
+    - BUG/MINOR: quic: Unchecked source connection ID
+    - BUG/MEDIUM: quic: do not split STREAM frames if no space
+    - BUG/MINOR: ssl/crt-list: warn when a line is malformated
+    - BUG/MEDIUM: stick-table: do not leave entries in end of window during purge
+    - BUG/MEDIUM: cache: use the correct time reference when comparing dates
+    - DOC: config: fix option spop-check proxy compatibility
+    - DOC: config: 'http-send-name-header' option may be used in default section
+    - MINOR: cfgparse/server: move (min/max)conn postparsing logic into dedicated function
+    - BUG/MINOR: server/add: ensure minconn/maxconn consistency when adding server
+    - BUG/MEDIUM: stconn: Schedule a shutw on shutr if data must be sent first
+    - BUG/MEDIUM: quic: fix crash when "option nolinger" is set in the frontend
+    - DOC: proxy-protocol: fix wrong byte in provided example
+    - BUG/CRITICAL: http: properly reject empty http header field names
+
 2023/01/24 : 2.6.8
     - BUG/MINOR: http-htx: Don't consider an URI as normalized after a set-uri action
     - BUG/MEDIIM: stconn: Flush output data before forwarding close to write side
