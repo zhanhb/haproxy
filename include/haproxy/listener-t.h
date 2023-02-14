@@ -199,6 +199,8 @@ struct bind_conf {
 	struct rx_settings settings; /* all the settings needed for the listening socket */
 };
 
+#define LI_F_FINALIZED           0x00000002  /* listener made it to the READY||LIMITED||FULL state at least once, may be suspended/resumed safely */
+
 /* The listener will be directly referenced by the fdtab[] which holds its
  * socket. The listener provides the protocol-specific accept() function to
  * the fdtab.
@@ -209,6 +211,8 @@ struct listener {
 	short int nice;                 /* nice value to assign to the instantiated tasks */
 	int luid;			/* listener universally unique ID, used for SNMP */
 	int options;			/* socket options : LI_O_* */
+	uint16_t flags;                 /* listener flags: LI_F_* */
+	/* 2-bytes hole here */
 	__decl_thread(HA_RWLOCK_T lock);
 
 	struct fe_counters *counters;	/* statistics counters */
