@@ -6407,7 +6407,7 @@ static void qc_rx_pkt_handle(struct quic_conn *qc, struct quic_rx_packet *pkt,
 	const struct quic_version *qv = pkt->version;
 	struct quic_enc_level *qel = NULL;
 	size_t b_cspace;
-	int io_cb_wakeup = 1;
+	int io_cb_wakeup = 0;
 
 	if (pkt->flags & QUIC_FL_RX_PACKET_DGRAM_FIRST &&
 	    !quic_peer_validated_addr(qc) &&
@@ -6472,7 +6472,6 @@ static void qc_rx_pkt_handle(struct quic_conn *qc, struct quic_rx_packet *pkt,
 
  drop:
 	HA_ATOMIC_INC(&qc->prx_counters->dropped_pkt);
- err:
 	/* Wakeup the I/O handler callback if the PTO timer must be armed.
 	 * This cannot be done by this thread.
 	 */
