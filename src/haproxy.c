@@ -3563,7 +3563,7 @@ int main(int argc, char **argv)
 					list_for_each_entry(child, &proc_list, list) {
 						if (child->relative_pid == relative_pid &&
 						    child->reloads == 0 && child->options & PROC_O_TYPE_WORKER) {
-							child->timestamp = now.tv_sec;
+							child->timestamp = date.tv_sec;
 							child->pid = ret;
 							child->version = strdup(haproxy_version);
 							break;
