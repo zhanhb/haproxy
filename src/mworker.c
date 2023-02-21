@@ -406,6 +406,9 @@ static int mworker_pipe_register_per_thread()
 	if (tid != 0)
 		return 1;
 
+	if (proc_self->ipc_fd[1] < 0) /* proc_self was incomplete and we can't find the socketpair */
+		return 1;
+
 	fcntl(proc_self->ipc_fd[1], F_SETFL, O_NONBLOCK);
 	/* In multi-tread, we need only one thread to process
 	 * events on the pipe with master
