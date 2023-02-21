@@ -1523,6 +1523,7 @@ static void init(int argc, char **argv)
 	int ideal_maxconn;
 	char *check_condition = NULL;
 
+	setenv("HAPROXY_STARTUP_VERSION", HAPROXY_VERSION, 0);
 	global.mode = MODE_STARTING;
 	old_argv = copy_argv(argc, argv);
 	if (!old_argv) {
