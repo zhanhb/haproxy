@@ -4096,6 +4096,7 @@ static int h2_process(struct h2c *h2c)
 		if (conn->flags & CO_FL_LIST_MASK) {
 			HA_SPIN_LOCK(IDLE_CONNS_LOCK, &idle_conns[tid].idle_conns_lock);
 			conn_delete_from_tree(&conn->hash_node->node);
+			conn->flags &= ~CO_FL_LIST_MASK;
 			HA_SPIN_UNLOCK(IDLE_CONNS_LOCK, &idle_conns[tid].idle_conns_lock);
 		}
 	}
@@ -4104,6 +4105,7 @@ static int h2_process(struct h2c *h2c)
 		if (conn->flags & CO_FL_LIST_MASK) {
 			HA_SPIN_LOCK(IDLE_CONNS_LOCK, &idle_conns[tid].idle_conns_lock);
 			conn_delete_from_tree(&conn->hash_node->node);
+			conn->flags &= ~CO_FL_LIST_MASK;
 			HA_SPIN_UNLOCK(IDLE_CONNS_LOCK, &idle_conns[tid].idle_conns_lock);
 		}
 	}
@@ -4184,8 +4186,10 @@ struct task *h2_timeout_task(struct task *t, void *context, unsigned int state)
 		/* We're about to destroy the connection, so make sure nobody attempts
 		 * to steal it from us.
 		 */
-		if (h2c->conn->flags & CO_FL_LIST_MASK)
+		if (h2c->conn->flags & CO_FL_LIST_MASK) {
 			conn_delete_from_tree(&h2c->conn->hash_node->node);
+			h2c->conn->flags &= ~CO_FL_LIST_MASK;
+		}
 
 		HA_SPIN_UNLOCK(IDLE_CONNS_LOCK, &idle_conns[tid].idle_conns_lock);
 	}
@@ -4238,6 +4242,7 @@ do_leave:
 	if (h2c->conn->flags & CO_FL_LIST_MASK) {
 		HA_SPIN_LOCK(IDLE_CONNS_LOCK, &idle_conns[tid].idle_conns_lock);
 		conn_delete_from_tree(&h2c->conn->hash_node->node);
+		h2c->conn->flags &= ~CO_FL_LIST_MASK;
 		HA_SPIN_UNLOCK(IDLE_CONNS_LOCK, &idle_conns[tid].idle_conns_lock);
 	}
 

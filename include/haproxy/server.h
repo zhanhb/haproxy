@@ -299,6 +299,7 @@ static inline void srv_release_conn(struct server *srv, struct connection *conn)
 	/* Remove the connection from any tree (safe, idle or available) */
 	HA_SPIN_LOCK(IDLE_CONNS_LOCK, &idle_conns[tid].idle_conns_lock);
 	conn_delete_from_tree(&conn->hash_node->node);
+	conn->flags &= ~CO_FL_LIST_MASK;
 	HA_SPIN_UNLOCK(IDLE_CONNS_LOCK, &idle_conns[tid].idle_conns_lock);
 }
 
