@@ -251,7 +251,7 @@ struct listener {
 	char *name;			/* listener's name */
 
 	/* cache line boundary */
-	unsigned int thr_conn[MAX_THREADS]; /* number of connections per thread */
+	unsigned int thr_conn[MAX_THREADS_PER_GROUP]; /* number of connections per thread for the group */
 
 	/* cache line boundary */
 
