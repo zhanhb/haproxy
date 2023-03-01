@@ -1129,7 +1129,7 @@ int hlua_ctx_init(struct hlua *lua, int state_id, struct task *task, int already
 
 /* Used to destroy the Lua coroutine when the attached stream or task
  * is destroyed. The destroy also the memory context. The struct "lua"
- * is not freed.
+ * will be freed.
  */
 void hlua_ctx_destroy(struct hlua *lua)
 {
