@@ -1390,6 +1390,13 @@ int http_wait_for_response(struct stream *s, struct channel *rep, int an_bit)
 			if (objt_cs(s->si[1].end))
 				conn = __objt_cs(s->si[1].end)->conn;
 
+			if ((si_b->flags & SI_FL_L7_RETRY) &&
+			    (s->be->retry_type & PR_RE_DISCONNECTED) &&
+			    (!conn || conn->err_code != CO_ER_SSL_EARLY_FAILED)) {
+				if (co_data(rep) || do_l7_retry(s, si_b) == 0)
+					return 0;
+			}
+
 			/* Perform a L7 retry because server refuses the early data. */
 			if ((si_b->flags & SI_FL_L7_RETRY) &&
 			    (s->be->retry_type & PR_RE_EARLY_ERROR) &&
