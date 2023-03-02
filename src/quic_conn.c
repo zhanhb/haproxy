@@ -2558,11 +2558,15 @@ static void qc_prep_fast_retrans(struct quic_conn *qc,
 	node = eb64_first(pkts);
  start:
 	while (node) {
-		pkt = eb64_entry(node, struct quic_tx_packet, pn_node);
+		struct quic_tx_packet *p;
+
+		p = eb64_entry(node, struct quic_tx_packet, pn_node);
 		node = eb64_next(node);
 		/* Skip the empty and coalesced packets */
-		if (!LIST_ISEMPTY(&pkt->frms))
+		if (!LIST_ISEMPTY(&p->frms)) {
+			pkt = p;
 			break;
+		}
 	}
 
 	if (!pkt)
@@ -2613,9 +2617,14 @@ static void qc_prep_hdshk_fast_retrans(struct quic_conn *qc,
 	node = eb64_first(pkts);
 	/* Skip the empty packet (they have already been retransmitted) */
 	while (node) {
-		pkt = eb64_entry(node, struct quic_tx_packet, pn_node);
-		if (!LIST_ISEMPTY(&pkt->frms) && !(pkt->flags & QUIC_FL_TX_PACKET_COALESCED))
+		struct quic_tx_packet *p;
+
+		p = eb64_entry(node, struct quic_tx_packet, pn_node);
+		if (!LIST_ISEMPTY(&p->frms) && !(p->flags & QUIC_FL_TX_PACKET_COALESCED)) {
+			pkt = p;
 			break;
+		}
+
 		node = eb64_next(node);
 	}
 
