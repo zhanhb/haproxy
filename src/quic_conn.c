@@ -2474,6 +2474,11 @@ static void qc_dup_pkt_frms(struct quic_conn *qc,
 	list_for_each_entry_safe(frm, frmbak, pkt_frm_list, list) {
 		struct quic_frame *dup_frm, *origin;
 
+		if (frm->flags & QUIC_FL_TX_FRAME_ACKED) {
+			TRACE_DEVEL("already acknowledged frame", QUIC_EV_CONN_PRSAFRM, qc, frm);
+			continue;
+		}
+
 		switch (frm->type) {
 		case QUIC_FT_STREAM_8 ... QUIC_FT_STREAM_F:
 		{
@@ -2540,6 +2545,20 @@ static void qc_dup_pkt_frms(struct quic_conn *qc,
 	TRACE_LEAVE(QUIC_EV_CONN_PRSAFRM, qc);
 }
 
+/* Boolean function which return 1 if <pkt> TX packet is only made of
+ * already acknowledged frame.
+ */
+static inline int qc_pkt_with_only_acked_frms(struct quic_tx_packet *pkt)
+{
+	struct quic_frame *frm;
+
+	list_for_each_entry(frm, &pkt->frms, list)
+		if (!(frm->flags & QUIC_FL_TX_FRAME_ACKED))
+			return 0;
+
+	return 1;
+}
+
 /* Prepare a fast retransmission from <qel> encryption level */
 static void qc_prep_fast_retrans(struct quic_conn *qc,
                                  struct quic_enc_level *qel,
@@ -2563,7 +2582,7 @@ static void qc_prep_fast_retrans(struct quic_conn *qc,
 		p = eb64_entry(node, struct quic_tx_packet, pn_node);
 		node = eb64_next(node);
 		/* Skip the empty and coalesced packets */
-		if (!LIST_ISEMPTY(&p->frms)) {
+		if (!LIST_ISEMPTY(&p->frms) && !qc_pkt_with_only_acked_frms(p)) {
 			pkt = p;
 			break;
 		}
@@ -2620,7 +2639,8 @@ static void qc_prep_hdshk_fast_retrans(struct quic_conn *qc,
 		struct quic_tx_packet *p;
 
 		p = eb64_entry(node, struct quic_tx_packet, pn_node);
-		if (!LIST_ISEMPTY(&p->frms) && !(p->flags & QUIC_FL_TX_PACKET_COALESCED)) {
+		if (!LIST_ISEMPTY(&p->frms) && !(p->flags & QUIC_FL_TX_PACKET_COALESCED) &&
+		    !qc_pkt_with_only_acked_frms(p)) {
 			pkt = p;
 			break;
 		}
