@@ -2965,7 +2965,6 @@ static int qc_parse_pkt_frms(struct quic_conn *qc, struct quic_rx_packet *pkt,
 			if (qc->mux_state != QC_MUX_READY) {
 				if ((stream->id >> QCS_ID_TYPE_SHIFT) < nb_streams) {
 					TRACE_DATA("Already closed stream", QUIC_EV_CONN_PRSHPKT, qc);
-					break;
 				}
 				else {
 					TRACE_DEVEL("No mux for new stream", QUIC_EV_CONN_PRSHPKT, qc);
@@ -2981,6 +2980,8 @@ static int qc_parse_pkt_frms(struct quic_conn *qc, struct quic_rx_packet *pkt,
 						goto leave;
 					}
 				}
+
+				break;
 			}
 
 			if (!qc_handle_strm_frm(pkt, stream, qc)) {
