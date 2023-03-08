@@ -115,7 +115,7 @@
 #include <haproxy/namespace.h>
 #include <haproxy/net_helper.h>
 #include <haproxy/openssl-compat.h>
-#include <haproxy/quic_conn-t.h>
+#include <haproxy/quic_conn.h>
 #include <haproxy/quic_tp-t.h>
 #include <haproxy/pattern.h>
 #include <haproxy/peers.h>
@@ -2952,9 +2952,12 @@ void run_poll_loop()
 			int i;
 
 			if (stopping) {
-				/* stop muxes before acknowledging stopping */
+				/* stop muxes/quic-conns before acknowledging stopping */
 				if (!(tg_ctx->stopping_threads & ti->ltid_bit)) {
 					task_wakeup(mux_stopping_data[tid].task, TASK_WOKEN_OTHER);
+#ifdef USE_QUIC
+					quic_handle_stopping();
+#endif
 					wake = 1;
 				}
 
