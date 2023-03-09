@@ -2470,6 +2470,12 @@ int check_config_validity()
 #endif
 			global.nbthread = numa_cores ? numa_cores :
 			                               thread_cpus_enabled_at_boot;
+
+			if (global.nbthread > MAX_THREADS) {
+				ha_diag_warning("nbthread not set, found %d CPUs, limiting to %d threads. Please set nbthreads in the global section to silence this warning.\n",
+					   global.nbthread, MAX_THREADS);
+				global.nbthread = MAX_THREADS;
+			}
 		}
 		all_threads_mask = nbits(global.nbthread);
 #endif
