@@ -1406,6 +1406,7 @@ static void sink_deinit()
 		}
 		LIST_DELETE(&sink->sink_list);
 		task_destroy(sink->forward_task);
+		free_proxy(sink->forward_px);
 		free(sink->name);
 		free(sink->desc);
 		free(sink);
