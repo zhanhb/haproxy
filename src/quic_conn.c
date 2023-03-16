@@ -1855,6 +1855,7 @@ static inline void qc_requeue_nacked_pkt_tx_frms(struct quic_conn *qc,
 			}
 			else if (strm_frm->offset.key < stream_desc->ack_offset) {
 				strm_frm->offset.key = stream_desc->ack_offset;
+				strm_frm->len -= stream_desc->ack_offset - strm_frm->offset.key;
 				TRACE_DEVEL("updated partially acked frame",
 				            QUIC_EV_CONN_PRSAFRM, qc, frm);
 			}
@@ -2501,6 +2502,7 @@ static void qc_dup_pkt_frms(struct quic_conn *qc,
 			}
 			else if (strm_frm->offset.key < stream_desc->ack_offset) {
 				strm_frm->offset.key = stream_desc->ack_offset;
+				strm_frm->len -= stream_desc->ack_offset - strm_frm->offset.key;
 				TRACE_DEVEL("updated partially acked frame",
 				            QUIC_EV_CONN_PRSAFRM, qc, frm);
 			}
@@ -6808,6 +6810,7 @@ static inline int qc_build_frms(struct list *outlist, struct list *inlist,
 				}
 				else if (strm->offset.key < stream_desc->ack_offset) {
 					strm->offset.key = stream_desc->ack_offset;
+					strm->len -= stream_desc->ack_offset - strm->offset.key;
 					TRACE_DEVEL("updated partially acked frame",
 					            QUIC_EV_CONN_PRSAFRM, qc, cf);
 				}
