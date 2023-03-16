@@ -218,6 +218,16 @@ static inline void conn_xprt_shutw_hard(struct connection *c)
 		c->xprt->shutw(c, c->xprt_ctx, 0);
 }
 
+/* Used to know if a connection is in an idle list. It returns connection flag
+ * corresponding to the idle list if the connection is idle (CO_FL_SAFE_LIST or
+ * CO_FL_IDLE_LIST) or 0 otherwise. Note that if the connection is scheduled to
+ * be removed, 0 is returned, regardless the connection flags.
+ */
+static inline unsigned int conn_get_idle_flag(const struct connection *conn)
+{
+	return (!MT_LIST_INLIST(&conn->toremove_list) ? conn->flags & CO_FL_LIST_MASK : 0);
+}
+
 /* This is used at the end of the socket IOCB to possibly create the mux if it
  * was not done yet, or wake it up if flags changed compared to old_flags or if
  * need_wake insists on this. It returns <0 if the connection was destroyed and
@@ -266,7 +276,7 @@ static inline int conn_notify_mux(struct connection *conn, int old_flags, int fo
 	     ((conn->flags ^ old_flags) & CO_FL_NOTIFY_DONE) ||
 	     ((old_flags & CO_FL_WAIT_XPRT) && !(conn->flags & CO_FL_WAIT_XPRT))) &&
 	    conn->mux && conn->mux->wake) {
-		uint conn_in_list = conn->flags & CO_FL_LIST_MASK;
+		uint conn_in_list = conn_get_idle_flag(conn);
 		struct server *srv = objt_server(conn->target);
 
 		if (conn_in_list) {
