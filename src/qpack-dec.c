@@ -260,7 +260,7 @@ int qpack_decode_fs(const unsigned char *raw, size_t len, struct buffer *tmp,
 				goto out;
 			}
 
-			if (t)
+			if (t && index < QPACK_SHT_SIZE)
 				list[hdr_idx++] = qpack_sht[index];
 
 			qpack_debug_printf(stderr,  " t=%d index=%llu", !!t, (unsigned long long)index);
@@ -280,7 +280,7 @@ int qpack_decode_fs(const unsigned char *raw, size_t len, struct buffer *tmp,
 				goto out;
 			}
 
-			if (t)
+			if (t && index < QPACK_SHT_SIZE)
 				list[hdr_idx] = qpack_sht[index];
 
 			qpack_debug_printf(stderr, " n=%d t=%d index=%llu", !!n, !!t, (unsigned long long)index);
