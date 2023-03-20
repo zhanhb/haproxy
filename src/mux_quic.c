@@ -1781,19 +1781,21 @@ static void qc_release(struct qcc *qcc)
 
 	TRACE_ENTER(QMUX_EV_QCC_END, conn);
 
-	if (qcc->app_ops && qcc->app_ops->shutdown) {
-		/* Application protocol with dedicated connection closing
-		 * procedure.
-		 */
-		qcc->app_ops->shutdown(qcc->ctx);
+	if (!(qcc->flags & QC_CF_CC_EMIT)) {
+		if (qcc->app_ops && qcc->app_ops->shutdown) {
+			/* Application protocol with dedicated connection closing
+			 * procedure.
+			 */
+			qcc->app_ops->shutdown(qcc->ctx);
 
-		/* useful if application protocol should emit some closing
-		 * frames. For example HTTP/3 GOAWAY frame.
-		 */
-		qc_send(qcc);
-	}
-	else {
-		qcc_emit_cc_app(qcc, QC_ERR_NO_ERROR, 0);
+			/* useful if application protocol should emit some closing
+			 * frames. For example HTTP/3 GOAWAY frame.
+			 */
+			qc_send(qcc);
+		}
+		else {
+			qcc_emit_cc_app(qcc, QC_ERR_NO_ERROR, 0);
+		}
 	}
 
 	if (qcc->task) {
