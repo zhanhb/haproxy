@@ -46,6 +46,7 @@ struct appctx *appctx_new(struct applet *applet, struct sedesc *sedesc, unsigned
 	appctx->obj_type = OBJ_TYPE_APPCTX;
 	appctx->applet = applet;
 	appctx->sess = NULL;
+	appctx->sedesc = NULL;
 	if (!sedesc) {
 		sedesc = sedesc_new();
 		if (!sedesc)
@@ -53,11 +54,12 @@ struct appctx *appctx_new(struct applet *applet, struct sedesc *sedesc, unsigned
 		sedesc->se = appctx;
 		se_fl_set(sedesc, SE_FL_T_APPLET | SE_FL_ORPHAN);
 	}
-	appctx->sedesc = sedesc;
 
 	appctx->t = task_new(thread_mask);
 	if (unlikely(!appctx->t))
 		goto fail_task;
+
+	appctx->sedesc = sedesc;
 	appctx->t->process = task_run_applet;
 	appctx->t->context = appctx;
 
