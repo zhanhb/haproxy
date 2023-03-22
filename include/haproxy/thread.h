@@ -124,6 +124,10 @@ static inline void thread_harmless_end()
 {
 }
 
+static inline void thread_harmless_end_sig()
+{
+}
+
 static inline void thread_isolate()
 {
 }
