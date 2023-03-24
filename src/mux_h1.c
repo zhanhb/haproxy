@@ -935,8 +935,10 @@ static void h1_release(struct h1c *h1c)
 			h1c->task = NULL;
 		}
 
-		if (h1c->wait_event.tasklet)
+		if (h1c->wait_event.tasklet) {
 			tasklet_free(h1c->wait_event.tasklet);
+			h1c->wait_event.tasklet = NULL;
+		}
 
 		h1s_destroy(h1c->h1s);
 		if (conn) {
@@ -3340,6 +3342,10 @@ static void h1_shutw_conn(struct connection *conn)
 	TRACE_ENTER(H1_EV_H1C_END, conn);
 	conn_xprt_shutw(conn);
 	conn_sock_shutw(conn, (h1c && !(h1c->flags & H1C_F_ST_SILENT_SHUT)));
+
+	if (h1c->wait_event.tasklet && !h1c->wait_event.events)
+		tasklet_wakeup(h1c->wait_event.tasklet);
+
 	TRACE_LEAVE(H1_EV_H1C_END, conn);
 }
 
