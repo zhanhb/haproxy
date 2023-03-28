@@ -1,6 +1,27 @@
 ChangeLog :
 ===========
 
+2023/03/28 : 2.6.12
+    - BUG/MAJOR: poller: drop FD's tgid when masks don't match
+    - OPTIM: mux-h1: limit first read size to avoid wrapping
+    - BUG/MEDIUM: stream: do not try to free a failed stream-conn
+    - BUG/MEDIUM: mux-h2: do not try to free an unallocated h2s->sd
+    - BUG/MEDIUM: mux-h2: erase h2c->wait_event.tasklet on error path
+    - BUG/MEDIUM: stconn: don't set the type before allocation succeeds
+    - BUG/MINOR: stconn: fix sedesc memory leak on stream allocation failure
+    - BUG/MEDIUM: mux-h1: properly destroy a partially allocated h1s
+    - BUG/MEDIUM: applet: only set appctx->sedesc on successful allocation
+    - BUG/MINOR: quic: wake up MUX on probing only for 01RTT
+    - BUG/MINOR: trace: fix hardcoded level for TRACE_PRINTF
+    - BUG/MEDIUM: mux-quic: release data from conn flow-control on qcs reset
+    - BUG/MINOR: h3: properly handle incomplete remote uni stream type
+    - BUG/MINOR: mux-quic: prevent CC status to be erased by shutdown
+    - BUG/MEDIUM: stats: Consume the request except when parsing the POST payload
+    - DOC: config: set-var() dconv rendering issues
+    - BUG/MEDIUM: mux-h1: Wakeup H1C on shutw if there is no I/O subscription
+    - BUG/MINOR: applet/new: fix sedesc freeing logic
+    - BUG/MINOR: quic: Missing STREAM frame type updated
+
 2023/03/17 : 2.6.11
     - BUG/MEDIUM: proxy: properly stop backends on soft-stop
     - BUG/MEDIUM: resolvers: Properly stop server resolutions on soft-stop
