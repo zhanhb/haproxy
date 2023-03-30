@@ -667,30 +667,35 @@ read:
 			struct dns_query *query;
 
 			if (!ds->rx_msg.len) {
-				/* next message len is not fully available into the channel */
-				if (co_data(si_oc(si)) < 2)
-					break;
-
 				/* retrieve message len */
-				co_getblk(si_oc(si), (char *)&msg_len, 2, 0);
+				ret = co_getblk(si_oc(si), (char *)&msg_len, 2, 0);
+				if (ret <= 0) {
+					if (ret == -1)
+						goto close;
+					si_cant_get(si);
+					break;
+				}
 
 				/* mark as consumed */
 				co_skip(si_oc(si), 2);
 
 				/* store message len */
 				ds->rx_msg.len = ntohs(msg_len);
-			}
-
-			if (!co_data(si_oc(si))) {
-				/* we need more data but nothing is available */
-				break;
+				if (!ds->rx_msg.len)
+					continue;
 			}
 
 			if (co_data(si_oc(si)) + ds->rx_msg.offset < ds->rx_msg.len) {
 				/* message only partially available */
 
 				/* read available data */
-				co_getblk(si_oc(si), ds->rx_msg.area + ds->rx_msg.offset, co_data(si_oc(si)), 0);
+				ret = co_getblk(si_oc(si), ds->rx_msg.area + ds->rx_msg.offset, co_data(si_oc(si)), 0);
+				if (ret <= 0) {
+					if (ret == -1)
+						goto close;
+					si_cant_get(si);
+					break;
+				}
 
 				/* update message offset */
 				ds->rx_msg.offset += co_data(si_oc(si));
@@ -699,13 +704,20 @@ read:
 				co_skip(si_oc(si), co_data(si_oc(si)));
 
 				/* we need to wait for more data */
+				si_cant_get(si);
 				break;
 			}
 
 			/* enough data is available into the channel to read the message until the end */
 
 			/* read from the channel until the end of the message */
-			co_getblk(si_oc(si), ds->rx_msg.area + ds->rx_msg.offset, ds->rx_msg.len - ds->rx_msg.offset, 0);
+			ret = co_getblk(si_oc(si), ds->rx_msg.area + ds->rx_msg.offset, ds->rx_msg.len - ds->rx_msg.offset, 0);
+			if (ret <= 0) {
+				if (ret == -1)
+					goto close;
+				si_cant_get(si);
+				break;
+			}
 
 			/* consume all data until the end of the message from the channel */
 			co_skip(si_oc(si), ds->rx_msg.len - ds->rx_msg.offset);
