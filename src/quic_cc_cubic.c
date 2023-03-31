@@ -219,8 +219,6 @@ static void quic_cc_cubic_ss_cb(struct quic_cc *cc, struct quic_cc_event *ev)
 
 	case QUIC_CC_EVT_LOSS:
 		quic_enter_recovery(cc);
-		/* Exit to congestion avoidance. */
-		cc->algo->state = QUIC_CC_ST_CA;
 		break;
 
 	case QUIC_CC_EVT_ECN_CE:
