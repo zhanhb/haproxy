@@ -37,6 +37,7 @@ static void quic_cc_cubic_reset(struct quic_cc *cc)
 {
 	struct cubic *c = quic_cc_priv(cc);
 
+	TRACE_ENTER(QUIC_EV_CONN_CC, cc->qc);
 	cc->algo->state = QUIC_CC_ST_SS;
 
 	c->ssthresh = QUIC_CC_INFINITE_SSTHESH;
@@ -48,6 +49,7 @@ static void quic_cc_cubic_reset(struct quic_cc *cc)
 	c->last_w_max = 0;
 	c->tcp_wnd = 0;
 	c->recovery_start_time = 0;
+	TRACE_LEAVE(QUIC_EV_CONN_CC, cc->qc);
 }
 
 static int quic_cc_cubic_init(struct quic_cc *cc)
@@ -99,6 +101,7 @@ static inline void quic_cubic_update(struct quic_cc *cc, uint32_t acked)
 	uint32_t t, target, inc, inc_diff;
 	uint64_t delta, diff;
 
+	TRACE_ENTER(QUIC_EV_CONN_CC, cc->qc);
 	if (!c->epoch_start) {
 		c->epoch_start = now_ms;
 		if (c->last_w_max <= path->cwnd) {
@@ -132,7 +135,7 @@ static inline void quic_cubic_update(struct quic_cc *cc, uint32_t acked)
 		 * control algorithm reset.
 		 */
 		quic_cc_cubic_reset(cc);
-		return;
+		goto leave;
 	}
 
 	delta = path->mtu * ((CUBIC_C * diff * diff * diff) >> (10 + 3 * TIME_SCALE_FACTOR_SHIFT));
@@ -164,11 +167,15 @@ static inline void quic_cubic_update(struct quic_cc *cc, uint32_t acked)
 	}
 
 	path->cwnd += inc;
+ leave:
+	TRACE_LEAVE(QUIC_EV_CONN_CC, cc->qc);
 }
 
 static void quic_cc_cubic_slow_start(struct quic_cc *cc)
 {
+	TRACE_ENTER(QUIC_EV_CONN_CC, cc->qc);
 	quic_cc_cubic_reset(cc);
+	TRACE_LEAVE(QUIC_EV_CONN_CC, cc->qc);
 }
 
 static void quic_enter_recovery(struct quic_cc *cc)
@@ -177,6 +184,7 @@ static void quic_enter_recovery(struct quic_cc *cc)
 	struct cubic *c = quic_cc_priv(cc);
 	/* Current cwnd as number of packets */
 
+	TRACE_ENTER(QUIC_EV_CONN_CC, cc->qc);
 	c->epoch_start = 0;
 	c->recovery_start_time = now_ms;
 	/* Fast convergence */
@@ -190,6 +198,7 @@ static void quic_enter_recovery(struct quic_cc *cc)
 	path->cwnd = (CUBIC_BETA * path->cwnd) >> CUBIC_BETA_SCALE_SHIFT;
 	c->ssthresh =  QUIC_MAX(path->cwnd, path->min_cwnd);
 	cc->algo->state = QUIC_CC_ST_RP;
+	TRACE_LEAVE(QUIC_EV_CONN_CC, cc->qc, NULL, cc);
 }
 
 /* Congestion slow-start callback. */
@@ -249,6 +258,7 @@ static void quic_cc_cubic_rp_cb(struct quic_cc *cc, struct quic_cc_event *ev)
 	struct cubic *c = quic_cc_priv(cc);
 
 	TRACE_ENTER(QUIC_EV_CONN_CC, cc->qc, ev);
+	TRACE_PROTO("CC cubic", QUIC_EV_CONN_CC, cc->qc, ev, cc);
 
 	BUG_ON(!tick_isset(c->recovery_start_time));
 
