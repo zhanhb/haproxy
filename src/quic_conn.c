@@ -676,6 +676,12 @@ static void quic_trace(enum trace_level level, uint64_t mask, const struct trace
 				chunk_appendf(&trace_buf, " next_level=%c", quic_enc_level_char(*next_level));
 
 		}
+
+		if (mask & QUIC_EV_CONN_IDLE_TIMER) {
+			if (tick_isset(qc->idle_timer_task->expire))
+				chunk_appendf(&trace_buf, " expire=%ums",
+				              TICKS_TO_MS(tick_remain(now_ms, qc->idle_timer_task->expire)));
+		}
 	}
 	if (mask & QUIC_EV_CONN_LPKT) {
 		const struct quic_rx_packet *pkt = a2;
@@ -727,6 +733,7 @@ static inline int quic_peer_validated_addr(struct quic_conn *qc)
 void qc_kill_conn(struct quic_conn *qc)
 {
 	TRACE_ENTER(QUIC_EV_CONN_KILL, qc);
+	TRACE_PROTO("killing the connection", QUIC_EV_CONN_KILL, qc);
 	qc->flags |= QUIC_FL_CONN_TO_KILL;
 	task_wakeup(qc->idle_timer_task, TASK_WOKEN_OTHER);
 	TRACE_LEAVE(QUIC_EV_CONN_KILL, qc);
@@ -5236,6 +5243,7 @@ static void qc_idle_timer_do_rearm(struct quic_conn *qc)
 	expire = QUIC_MAX(3 * quic_pto(qc), qc->max_idle_timeout);
 	qc->idle_timer_task->expire = tick_add(now_ms, MS_TO_TICKS(expire));
 	task_queue(qc->idle_timer_task);
+	TRACE_PROTO("idle timer armed", QUIC_EV_CONN_IDLE_TIMER, qc);
 }
 
 /* Rearm the idle timer for <qc> QUIC connection depending on <read> boolean
@@ -5265,6 +5273,7 @@ struct task *qc_idle_timer_task(struct task *t, void *ctx, unsigned int state)
 
 	TRACE_ENTER(QUIC_EV_CONN_IDLE_TIMER, qc);
 
+	TRACE_PROTO("idle timer task running", QUIC_EV_CONN_IDLE_TIMER, qc);
 	/* Notify the MUX before settings QUIC_FL_CONN_EXP_TIMER or the MUX
 	 * might free the quic-conn too early via quic_close().
 	 */
