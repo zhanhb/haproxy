@@ -206,6 +206,7 @@ void qc_packet_loss_lookup(struct quic_pktns *pktns, struct quic_conn *qc,
 			(int64_t)largest_acked_pn >= pkt->pn_node.key + pktthresh) {
 			eb64_delete(&pkt->pn_node);
 			LIST_APPEND(lost_pkts, &pkt->list);
+			ql->nb_lost_pkt++;
 			HA_ATOMIC_INC(&qc->prx_counters->lost_pkt);
 		}
 		else {
