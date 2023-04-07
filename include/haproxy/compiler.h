@@ -45,9 +45,10 @@
  * second one.
  */
 #define comma_for_one1 ,
-#define ____equals_1(x, y, ...) (y)
-#define ___equals_1(x, ...) ____equals_1(x, 0)
-#define __equals_1(x) ___equals_1(comma_for_one ## x 1)
+#define _____equals_1(x, y, ...) (y)
+#define ____equals_1(x, ...) _____equals_1(x, 0)
+#define ___equals_1(x)       ____equals_1(comma_for_one ## x 1)
+#define __equals_1(x)        ___equals_1(x)
 
 #if !defined(__GNUC__)
 /* Some versions of glibc irresponsibly redefine __attribute__() to empty for
