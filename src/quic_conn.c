@@ -5427,9 +5427,7 @@ static inline int qc_try_rm_hp(struct quic_conn *qc,
 	enum quic_tls_enc_level tel;
 	struct quic_enc_level *qel;
 	/* Only for traces. */
-	struct quic_rx_packet *qpkt_trace;
 
-	qpkt_trace = NULL;
 	TRACE_ENTER(QUIC_EV_CONN_TRMHP, qc);
 	BUG_ON(!pkt->pn_offset);
 
@@ -5460,7 +5458,7 @@ static inline int qc_try_rm_hp(struct quic_conn *qc,
 			goto out;
 		}
 
-		qpkt_trace = pkt;
+		TRACE_PROTO("RX hp removed", QUIC_EV_CONN_TRMHP, qc, pkt);
 	}
 	else {
 		if (qel->tls_ctx.flags & QUIC_FL_TLS_SECRETS_DCD) {
@@ -5485,7 +5483,7 @@ static inline int qc_try_rm_hp(struct quic_conn *qc,
 	
 	ret = 1;
  out:
-	TRACE_LEAVE(QUIC_EV_CONN_TRMHP, qc, qpkt_trace);
+	TRACE_LEAVE(QUIC_EV_CONN_TRMHP, qc);
 	return ret;
 }
 
