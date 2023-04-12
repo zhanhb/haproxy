@@ -259,7 +259,7 @@ static void quic_trace(enum trace_level level, uint64_t mask, const struct trace
 	if (qc) {
 		const struct quic_tls_ctx *tls_ctx;
 
-		chunk_appendf(&trace_buf, " : qc@%p", qc);
+		chunk_appendf(&trace_buf, " : qc@%p flags=0x%x", qc, qc->flags);
 		if (mask & QUIC_EV_CONN_INIT) {
 			chunk_appendf(&trace_buf, "\n  odcid");
 			quic_cid_dump(&trace_buf, &qc->odcid);
@@ -5214,6 +5214,8 @@ void quic_conn_release(struct quic_conn *qc)
 
 	pool_free(pool_head_quic_conn_rxbuf, qc->rx.buf.area);
 	pool_free(pool_head_quic_conn, qc);
+	qc = NULL;
+
 	TRACE_PROTO("QUIC conn. freed", QUIC_EV_CONN_FREED, qc);
 
 	TRACE_LEAVE(QUIC_EV_CONN_CLOSE, qc);
