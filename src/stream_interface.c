@@ -530,7 +530,7 @@ static void stream_int_notify(struct stream_interface *si)
 	si_chk_rcv(si);
 	si_chk_rcv(sio);
 
-	if ((ic->flags & CF_EOI) || si_rx_blocked(si)) {
+	if (si_rx_blocked(si)) {
 		ic->rex = TICK_ETERNITY;
 	}
 	else if ((ic->flags & (CF_SHUTR|CF_READ_PARTIAL)) == CF_READ_PARTIAL) {
@@ -893,7 +893,7 @@ void si_update_rx(struct stream_interface *si)
 		 */
 		si_rx_room_rdy(si);
 	}
-	if ((ic->flags & CF_EOI) || si->flags & SI_FL_RXBLK_ANY & ~SI_FL_RX_WAIT_EP)
+	if (si->flags & SI_FL_RXBLK_ANY & ~SI_FL_RX_WAIT_EP)
 		ic->rex = TICK_ETERNITY;
 	else if (!(ic->flags & CF_READ_NOEXP) && !tick_isset(ic->rex))
 		ic->rex = tick_add_ifset(now_ms, ic->rto);
