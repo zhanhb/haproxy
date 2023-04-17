@@ -3767,7 +3767,7 @@ static void syslog_io_handler(struct appctx *appctx)
 	size_t size;
 
 	max_accept = l->maxaccept ? l->maxaccept : 1;
-	while (co_data(si_oc(si))) {
+	while (1) {
 		char c;
 
 		if (max_accept <= 0)
