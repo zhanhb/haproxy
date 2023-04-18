@@ -442,6 +442,7 @@ static const char *lock_label(enum lock_label label)
 	case SSL_SERVER_LOCK:      return "SSL_SERVER";
 	case SFT_LOCK:             return "SFT";
 	case IDLE_CONNS_LOCK:      return "IDLE_CONNS";
+	case QC_CID_LOCK:          return "QC_CID";
 	case OTHER_LOCK:           return "OTHER";
 	case DEBUG1_LOCK:          return "DEBUG1";
 	case DEBUG2_LOCK:          return "DEBUG2";
