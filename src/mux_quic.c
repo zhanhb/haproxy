@@ -1507,7 +1507,8 @@ static int qcs_send_reset(struct qcs *qcs)
  * is then generated and inserted in <frms> list.
  *
  * Returns the total bytes transferred between qcs and quic_stream buffers. Can
- * be null if out buffer cannot be allocated.
+ * be null if out buffer cannot be allocated. On error a negative error code is
+ * used.
  */
 static int _qc_send_qcs(struct qcs *qcs, struct list *frms)
 {
@@ -1551,12 +1552,15 @@ static int _qc_send_qcs(struct qcs *qcs, struct list *frms)
 
 	/* Build a new STREAM frame with <out> buffer. */
 	if (qcs->tx.sent_offset != qcs->tx.offset || fin) {
-		int ret;
-		ret = qcs_build_stream_frm(qcs, out, fin, frms);
-		if (ret < 0) { ABORT_NOW(); /* TODO handle this properly */ }
+		if (qcs_build_stream_frm(qcs, out, fin, frms) < 0)
+			goto err;
 	}
 
 	return xfer;
+
+ err:
+	TRACE_DEVEL("leaving on error", QMUX_EV_QCS_SEND, qcc->conn, qcs);
+	return -1;
 }
 
 /* Proceed to sending. Loop through all available streams for the <qcc>
@@ -1569,7 +1573,7 @@ static int qc_send(struct qcc *qcc)
 	struct list frms = LIST_HEAD_INIT(frms);
 	struct eb64_node *node;
 	struct qcs *qcs, *qcs_tmp;
-	int total = 0, tmp_total = 0;
+	int ret, total = 0, tmp_total = 0;
 
 	TRACE_ENTER(QMUX_EV_QCC_SEND, qcc->conn);
 
@@ -1603,7 +1607,6 @@ static int qc_send(struct qcc *qcc)
 	 */
 	node = eb64_first(&qcc->streams_by_id);
 	while (node) {
-		int ret;
 		uint64_t id;
 
 		qcs = eb64_entry(node, struct qcs, by_id);
@@ -1637,7 +1640,11 @@ static int qc_send(struct qcc *qcc)
 			continue;
 		}
 
-		ret = _qc_send_qcs(qcs, &frms);
+		if ((ret = _qc_send_qcs(qcs, &frms)) < 0) {
+			node = eb64_next(node);
+			continue;
+		}
+
 		total += ret;
 		node = eb64_next(node);
 	}
@@ -1650,11 +1657,14 @@ static int qc_send(struct qcc *qcc)
  retry:
 	tmp_total = 0;
 	list_for_each_entry_safe(qcs, qcs_tmp, &qcc->send_retry_list, el) {
-		int ret;
 		BUG_ON(!b_data(&qcs->tx.buf));
 		BUG_ON(qc_stream_buf_get(qcs->stream));
 
-		ret = _qc_send_qcs(qcs, &frms);
+		if ((ret = _qc_send_qcs(qcs, &frms)) < 0) {
+			LIST_DEL_INIT(&qcs->el);
+			continue;
+		}
+
 		tmp_total += ret;
 		LIST_DELETE(&qcs->el);
 	}
