@@ -955,6 +955,22 @@ void si_sync_send(struct stream_interface *si)
 		return;
 
 	si_cs_send(cs);
+
+	if (likely(oc->flags & CF_WRITE_ACTIVITY)) {
+		struct channel *ic = si_ic(si);
+
+		if (tick_isset(ic->rex) && !(si->flags & SI_FL_INDEP_STR)) {
+			/* Note: to prevent the client from expiring read timeouts
+			 * during writes, we refresh it. We only do this if the
+			 * interface is not configured for "independent streams",
+			 * because for some applications it's better not to do this,
+			 * for instance when continuously exchanging small amounts
+			 * of data which can full the socket buffers long before a
+			 * write timeout is detected.
+			 */
+			ic->rex = tick_add_ifset(now_ms, ic->rto);
+		}
+	}
 }
 
 /* Updates at once the channel flags, and timers of both stream interfaces of a
