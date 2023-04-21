@@ -1822,6 +1822,22 @@ void sc_conn_sync_send(struct stconn *sc)
 		return;
 
 	sc_conn_send(sc);
+
+	if (likely(oc->flags & CF_WRITE_ACTIVITY)) {
+		struct channel *ic = sc_ic(sc);
+
+		if (tick_isset(ic->rex) && !(sc->flags & SC_FL_INDEP_STR)) {
+			/* Note: to prevent the client from expiring read timeouts
+			 * during writes, we refresh it. We only do this if the
+			 * interface is not configured for "independent streams",
+			 * because for some applications it's better not to do this,
+			 * for instance when continuously exchanging small amounts
+			 * of data which can full the socket buffers long before a
+			 * write timeout is detected.
+			 */
+			ic->rex = tick_add_ifset(now_ms, ic->rto);
+		}
+	}
 }
 
 /* Called by I/O handlers after completion.. It propagates
