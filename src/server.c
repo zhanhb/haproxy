@@ -2903,7 +2903,7 @@ static void srv_update_state(struct server *srv, int version, char **params)
 					srv_adm_set_drain(srv);
 			}
 
-			srv->last_change = date.tv_sec - srv_last_time_change;
+			srv->last_change = now.tv_sec - srv_last_time_change;
 			srv->check.status = srv_check_status;
 			srv->check.result = srv_check_result;
 
