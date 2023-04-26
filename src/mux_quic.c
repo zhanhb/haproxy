@@ -1271,9 +1271,10 @@ static int qcs_xfer_data(struct qcs *qcs, struct buffer *out, struct buffer *in)
 
 /* Prepare a STREAM frame for <qcs> instance using <out> as payload. The frame
  * is appended in <frm_list>. Set <fin> if this is supposed to be the last
- * stream frame.
+ * stream frame. If <out> is NULL an empty STREAM frame is built : this may be
+ * useful if FIN needs to be sent without any data left.
  *
- * Returns the length of the STREAM frame or a negative error code.
+ * Returns the payload length of the STREAM frame or a negative error code.
  */
 static int qcs_build_stream_frm(struct qcs *qcs, struct buffer *out, char fin,
                                 struct list *frm_list)
@@ -1290,7 +1291,7 @@ static int qcs_build_stream_frm(struct qcs *qcs, struct buffer *out, char fin,
 	BUG_ON(qcs->tx.sent_offset < base_off);
 
 	head = qcs->tx.sent_offset - base_off;
-	total = b_data(out) - head;
+	total = out ? b_data(out) - head : 0;
 	BUG_ON(total < 0);
 
 	if (!total && !fin) {
@@ -1529,20 +1530,21 @@ static int _qc_send_qcs(struct qcs *qcs, struct list *frms)
 	int xfer = 0;
 	char fin = 0;
 
-	/* Allocate <out> buffer if necessary. */
-	if (!out) {
-		if (qcc->flags & QC_CF_CONN_FULL)
-			return 0;
-
-		out = qc_stream_buf_alloc(qcs->stream, qcs->tx.offset);
-		if (!out) {
-			qcc->flags |= QC_CF_CONN_FULL;
-			return 0;
-		}
-	}
-
-	/* Transfer data from <buf> to <out>. */
 	if (b_data(buf)) {
+		/* Allocate <out> buffer if not already done. */
+		if (!out) {
+			if (qcc->flags & QC_CF_CONN_FULL)
+				return 0;
+
+			out = qc_stream_buf_alloc(qcs->stream, qcs->tx.offset);
+			if (!out) {
+				TRACE_STATE("cannot allocate stream desc buffer", QMUX_EV_QCS_SEND, qcc->conn, qcs);
+				qcc->flags |= QC_CF_CONN_FULL;
+				return 0;
+			}
+		}
+
+		/* Transfer data from <buf> to <out>. */
 		xfer = qcs_xfer_data(qcs, out, buf);
 		if (xfer > 0) {
 			qcs_notify_send(qcs);
@@ -1553,10 +1555,10 @@ static int _qc_send_qcs(struct qcs *qcs, struct list *frms)
 		BUG_ON_HOT(qcs->tx.offset > qcs->tx.msd);
 		qcc->tx.offsets += xfer;
 		BUG_ON_HOT(qcc->tx.offsets > qcc->rfctl.md);
-	}
 
-	/* out buffer cannot be emptied if qcs offsets differ. */
-	BUG_ON(!b_data(out) && qcs->tx.sent_offset != qcs->tx.offset);
+		/* out buffer cannot be emptied if qcs offsets differ. */
+		BUG_ON(!b_data(out) && qcs->tx.sent_offset != qcs->tx.offset);
+	}
 
 	/* FIN is set if all incoming data were transferred. */
 	fin = qcs_stream_fin(qcs);
