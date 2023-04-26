@@ -8278,6 +8278,9 @@ int quic_dgram_parse(struct quic_dgram *dgram, struct quic_conn *from_qc,
 			dgram->qc = qc;
 		}
 
+		if (qc->flags & QUIC_FL_CONN_AFFINITY_CHANGED)
+			qc_finalize_affinity_rebind(qc);
+
 		if (qc_rx_check_closing(qc, pkt)) {
 			/* Skip the entire datagram. */
 			pkt->len = end - pos;
@@ -8533,6 +8536,7 @@ int qc_set_tid_affinity(struct quic_conn *qc, uint new_tid)
 	/* Rebinding is considered done when CID points to the new thread. No
 	 * access should be done to quic-conn instance after it.
 	 */
+	qc->flags |= QUIC_FL_CONN_AFFINITY_CHANGED;
 	HA_ATOMIC_STORE(&conn_id->tid, new_tid);
 	qc = NULL;
 
@@ -8553,6 +8557,10 @@ int qc_set_tid_affinity(struct quic_conn *qc, uint new_tid)
 void qc_finalize_affinity_rebind(struct quic_conn *qc)
 {
 	TRACE_ENTER(QUIC_EV_CONN_SET_AFFINITY, qc);
+
+	/* This function must not be called twice after an affinity rebind. */
+	BUG_ON(!(qc->flags & QUIC_FL_CONN_AFFINITY_CHANGED));
+	qc->flags &= ~QUIC_FL_CONN_AFFINITY_CHANGED;
 
 	/* Reactivate FD polling if connection socket is active. */
 	qc_want_recv(qc);
