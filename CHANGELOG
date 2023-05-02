@@ -1,6 +1,9 @@
 ChangeLog :
 ===========
 
+2023/05/02 : 2.7.8
+    - MINOR: listener: remove the now useless LI_F_QUIC_LISTENER flag
+
 2023/04/27 : 2.7.7
     - BUG/MINOR: ssl: ssl-(min|max)-ver parameter not duplicated for bundles in crt-list
     - Revert "BUG/MEDIUM: stconn: Don't rearm the read expiration date if EOI was reached"
