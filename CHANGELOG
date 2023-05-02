@@ -1,6 +1,105 @@
 ChangeLog :
 ===========
 
+2023/05/02 : 2.6.13
+    - BUG/MINOR: ssl: ssl-(min|max)-ver parameter not duplicated for bundles in crt-list
+    - Revert "BUG/MEDIUM: stconn: Don't rearm the read expiration date if EOI was reached"
+    - BUILD: da: extends CFLAGS to support API v3 from 3.1.7 and onwards.
+    - MINOR: proxy/pool: prevent unnecessary calls to pool_gc()
+    - DOC/MINOR: reformat configuration.txt's "quoting and escaping" table
+    - BUG/MINOR: backend: make be_usable_srv() consistent when stopping
+    - BUG/MINOR: quic: Wrong use of now_ms timestamps (cubic algo)
+    - BUG/MINOR: quic: Wrong use of now_ms timestamps (newreno algo)
+    - BUG/MINOR: quic: Missing max_idle_timeout initialization for the connection
+    - BUG/MINOR: quic: Wrong rtt variance computing
+    - BUG/MINOR: quic: Cubic congestion control window may wrap
+    - MINOR: quic: Add missing traces in cubic algorithm implementation
+    - BUG/MINOR: quic: Remaining useless statements in cubic slow start callback
+    - BUG/MAJOR: quic: Congestion algorithms states shared between the connection
+    - BUG/MINOR: quic: Remove useless BUG_ON() in newreno and cubic algo implementation
+    - DOC: config: strict-sni allows to start without certificate
+    - BUG/MINOR: quic: Possible wrong PTO computing
+    - BUG/MEDIUM: channel: Improve reports for shut in co_getblk()
+    - BUG/MEDIUM: dns: Properly handle error when a response consumed
+    - MINOR: server: add SRV_F_DELETED flag
+    - BUG/MINOR: server/del: fix srv->next pointer consistency
+    - BUG/MINOR: stats: properly handle server stats dumping resumption
+    - BUG/MINOR: sink: free forward_px on deinit()
+    - BUG/MINOR: log: free log forward proxies on deinit()
+    - BUG/MINOR: hlua: enforce proper running context for register_x functions
+    - CLEANUP: hlua: fix conflicting comment in hlua_ctx_destroy()
+    - MINOR: http-ana: Add a HTTP_MSGF flag to state the Expect header was checked
+    - BUG/MINOR: http-ana: Don't switch message to DATA when waiting for payload
+    - BUG/MEDIUM: dns: Kill idle DNS sessions during stopping stage
+    - BUG/MINOR: resolvers: Wakeup DNS idle task on stopping
+    - BUG/MEDIUM: resolvers: Force the connect timeout for DNS resolutions
+    - MINOR: quic: Trace fix in quic_pto_pktns() (handshaske status)
+    - BUG/MINOR: quic: Wrong packet number space probing before confirmed handshake
+    - MINOR: quic: Modify qc_try_rm_hp() traces
+    - MINOR: quic: Dump more information at proto level when building packets
+    - MINOR: quic: Add a trace for packet with an ACK frame
+    - BUG/MINOR: stick_table: alert when type len has incorrect characters
+    - BUG/MEDIUM: fd: don't wait for tmask to stabilize if we're not in it.
+    - BUG/MINOR: quic: Ignored less than 1ms RTTs
+    - MINOR: quic: Add connection flags to traces
+    - BUG/MINOR: quic: Possible wrapped values used as ACK tree purging limit.
+    - BUG/MINOR: quic: SIGFPE in quic_cubic_update()
+    - MINOR: quic: Remove a useless test about probing in qc_prep_pkts()
+    - BUG/MINOR: quic: Wrong Application encryption level selection when probing
+    - CI: bump "actions/checkout" to v3 for cross zoo matrix
+    - BUG/MINOR: stream: Fix test on SE_FL_ERROR on the wrong entity
+    - REGTESTS: fix the race conditions in log_uri.vtc
+    - BUG/MEDIUM: log: Properly handle client aborts in syslog applet
+    - BUG/MINOR: task: allow to use tasklet_wakeup_after with tid -1
+    - BUG/MINOR: quic: transform qc_set_timer() as a reentrant function
+    - CLEANUP: backend: Remove useless debug message in assign_server()
+    - BUG/MINOR: cfgparse: make sure to include openssl-compat
+    - BUG/MINOR: quic: Stop removing ACK ranges when building packets
+    - MINOR: quic: Do not allocate too much ack ranges
+    - BUG/MINOR: quic: Unchecked buffer length when building the token
+    - BUG/MINOR: quic: Wrong Retry token generation timestamp computing
+    - MINOR: proto_uxst: add resume method
+    - MINOR: listener/api: add lli hint to listener functions
+    - MINOR: listener: add relax_listener() function
+    - MINOR: listener: workaround for closing a tiny race between resume_listener() and stopping
+    - MINOR: listener: make sure we don't pause/resume bypassed listeners
+    - BUG/MEDIUM: listener: fix pause_listener() suspend return value handling
+    - BUG/MINOR: listener: fix resume_listener() resume return value handling
+    - BUG/MEDIUM: resume from LI_ASSIGNED in default_resume_listener()
+    - MINOR: listener: pause_listener() becomes suspend_listener()
+    - BUG/MEDIUM: listener/proxy: fix listeners notify for proxy resume
+    - MEDIUM: proto_ux: properly suspend named UNIX listeners
+    - MINOR: proto_ux: ability to dump ABNS names in error messages
+    - MINOR: hlua: add simple hlua reference handling API
+    - BUG/MINOR: hlua: fix reference leak in core.register_task()
+    - BUG/MINOR: hlua: fix reference leak in hlua_post_init_state()
+    - BUG/MINOR: hlua: prevent function and table reference leaks on errors
+    - MINOR: hlua: simplify lua locking
+    - BUG/MEDIUM: hlua: prevent deadlocks with main lua lock
+    - BUG/MEDIUM: proxy/sktable: prevent watchdog trigger on soft-stop
+    - MINOR: quic: Add traces to qc_kill_conn()
+    - MINOR: quic: Add trace to debug idle timer task issues
+    - BUG/MINOR: quic: Possible crashes in qc_idle_timer_task()
+    - BUG/MEDIUM: quic: Code sanitization about acknowledgements requirements
+    - MINOR: quic: Add <pto_count> to the traces
+    - MINOR: quic: Display the packet number space flags in traces
+    - BUG/MINOR: mux-quic: properly handle STREAM frame alloc failure
+    - BUG/MEDIUM: Update read expiration date on synchronous send
+    - BUG/MINOR: server: incorrect report for tracking servers leaving drain
+    - MINOR: server: explicitly commit state change in srv_update_status()
+    - BUG/MINOR: server: don't miss proxy stats update on server state transitions
+    - BUG/MINOR: server: don't miss server stats update on server state transitions
+    - BUG/MINOR: server: don't use date when restoring last_change from state file
+    - CI: cirrus-ci: bump FreeBSD image to 13-1
+    - BUG/MINOR: config: fix NUMA topology detection on FreeBSD
+    - BUILD: sock_inet: forward-declare struct receiver
+    - BUILD: proto_tcp: export the correct names for proto_tcpv[46]
+    - MINOR: quic: Move traces at proto level
+    - BUG/MINOR: quic: Useless probing retransmission in draining or killing state
+    - BUG/MINOR: quic: prevent buggy memcpy for empty STREAM
+    - MINOR: mux-quic: do not set buffer for empty STREAM frame
+    - MINOR: mux-quic: do not allocate Tx buf for empty STREAM frame
+
 2023/03/28 : 2.6.12
     - BUG/MAJOR: poller: drop FD's tgid when masks don't match
     - OPTIM: mux-h1: limit first read size to avoid wrapping
