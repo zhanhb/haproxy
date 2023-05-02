@@ -1,6 +1,64 @@
 ChangeLog :
 ===========
 
+2023/05/02 : 2.5.14
+    - BUG/MINOR: ssl: ssl-(min|max)-ver parameter not duplicated for bundles in crt-list
+    - Revert "BUG/MEDIUM: stconn: Don't rearm the read expiration date if EOI was reached"
+    - BUG/MEDIUM: mux-h2: erase h2c->wait_event.tasklet on error path
+    - BUG/MEDIUM: mux-h1: Wakeup H1C on shutw if there is no I/O subscription
+    - BUILD: da: extends CFLAGS to support API v3 from 3.1.7 and onwards.
+    - MINOR: proxy/pool: prevent unnecessary calls to pool_gc()
+    - DOC: config: strict-sni allows to start without certificate
+    - BUG/MEDIUM: channel: Improve reports for shut in co_getblk()
+    - BUG/MEDIUM: dns: Properly handle error when a response consumed
+    - BUG/MINOR: sink: free forward_px on deinit()
+    - BUG/MINOR: log: free log forward proxies on deinit()
+    - BUG/MINOR: hlua: enforce proper running context for register_x functions
+    - CLEANUP: hlua: fix conflicting comment in hlua_ctx_destroy()
+    - MINOR: http-ana: Add a HTTP_MSGF flag to state the Expect header was checked
+    - BUG/MINOR: http-ana: Don't switch message to DATA when waiting for payload
+    - BUG/MEDIUM: resolvers: Force the connect timeout for DNS resolutions
+    - BUG/MINOR: stick_table: alert when type len has incorrect characters
+    - BUG/MEDIUM: fd: don't wait for tmask to stabilize if we're not in it.
+    - CI: bump "actions/checkout" to v3 for cross zoo matrix
+    - REGTESTS: fix the race conditions in log_uri.vtc
+    - BUG/MEDIUM: log: Properly handle client aborts in syslog applet
+    - CLEANUP: backend: Remove useless debug message in assign_server()
+    - BUG/MINOR: cfgparse: make sure to include openssl-compat
+    - MINOR: proto_uxst: add resume method
+    - CLEANUP: listener: function comment typo in stop_listener()
+    - BUG/MINOR: listener: null pointer dereference suspected by coverity
+    - MINOR: listener/api: add lli hint to listener functions
+    - MINOR: listener: add relax_listener() function
+    - MINOR: listener: workaround for closing a tiny race between resume_listener() and stopping
+    - MINOR: listener: make sure we don't pause/resume bypassed listeners
+    - BUG/MEDIUM: listener: fix pause_listener() suspend return value handling
+    - BUG/MINOR: listener: fix resume_listener() resume return value handling
+    - BUG/MEDIUM: resume from LI_ASSIGNED in default_resume_listener()
+    - MINOR: listener: pause_listener() becomes suspend_listener()
+    - BUG/MEDIUM: listener/proxy: fix listeners notify for proxy resume
+    - MEDIUM: proto_ux: properly suspend named UNIX listeners
+    - MINOR: proto_ux: ability to dump ABNS names in error messages
+    - CLEANUP: Remove unused function hlua_get_top_error_string
+    - MINOR: hlua: add simple hlua reference handling API
+    - BUG/MINOR: hlua: fix reference leak in core.register_task()
+    - BUG/MINOR: hlua: fix reference leak in hlua_post_init_state()
+    - BUG/MINOR: hlua: prevent function and table reference leaks on errors
+    - MINOR: hlua: simplify lua locking
+    - BUG/MEDIUM: hlua: prevent deadlocks with main lua lock
+    - BUG/MEDIUM: proxy/sktable: prevent watchdog trigger on soft-stop
+    - BUG/MEDIUM: Update read expiration date on synchronous send
+    - BUG/MINOR: mux-h2: make sure to produce a log on invalid requests
+    - BUG/MINOR: server: incorrect report for tracking servers leaving drain
+    - MINOR: server: explicitly commit state change in srv_update_status()
+    - BUG/MINOR: server: don't miss proxy stats update on server state transitions
+    - BUG/MINOR: server: don't miss server stats update on server state transitions
+    - BUG/MINOR: server: don't use date when restoring last_change from state file
+    - CI: cirrus-ci: bump FreeBSD image to 13-1
+    - BUILD: sock_inet: forward-declare struct receiver
+    - BUILD: proto_tcp: export the correct names for proto_tcpv[46]
+    - MINOR: version: Set the EOL of the 2.5 branch
+
 2023/03/17 : 2.5.13
     - DEV: hpack: fix `trash` build regression
     - BUG/MINOR: mworker: stop doing strtok directly from the env
