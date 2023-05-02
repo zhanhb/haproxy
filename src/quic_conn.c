@@ -867,7 +867,7 @@ static int quic_tls_key_update(struct quic_conn *qc)
 	}
 
 	if (!quic_tls_rx_ctx_init(&nxt_rx->ctx, tls_ctx->rx.aead, nxt_rx->key)) {
-		TRACE_ERROR("could not initial RX TLS cipher context", QUIC_EV_CONN_RWSEC, qc);
+		TRACE_ERROR("could not initialize RX TLS cipher context", QUIC_EV_CONN_RWSEC, qc);
 		goto leave;
 	}
 
@@ -876,8 +876,8 @@ static int quic_tls_key_update(struct quic_conn *qc)
 		nxt_tx->ctx = NULL;
 	}
 
-	if (!quic_tls_rx_ctx_init(&nxt_tx->ctx, tls_ctx->tx.aead, nxt_tx->key)) {
-		TRACE_ERROR("could not initial RX TLS cipher context", QUIC_EV_CONN_RWSEC, qc);
+	if (!quic_tls_tx_ctx_init(&nxt_tx->ctx, tls_ctx->tx.aead, nxt_tx->key)) {
+		TRACE_ERROR("could not initialize TX TLS cipher context", QUIC_EV_CONN_RWSEC, qc);
 		goto leave;
 	}
 
