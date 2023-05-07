@@ -175,11 +175,11 @@ void ha_backtrace_to_stderr(void)
  */
 void ha_thread_dump(struct buffer *buf, int thr, int calling_tid)
 {
-	unsigned long thr_bit = ha_thread_info[thr].ltid_bit;
+	unsigned long __maybe_unused thr_bit = ha_thread_info[thr].ltid_bit;
+	int __maybe_unused tgrp  = ha_thread_info[thr].tgid;
 	unsigned long long p = ha_thread_ctx[thr].prev_cpu_time;
 	unsigned long long n = now_cpu_time_thread(thr);
 	int stuck = !!(ha_thread_ctx[thr].flags & TH_FL_STUCK);
-	int tgrp  = ha_thread_info[thr].tgid;
 
 	chunk_appendf(buf,
 	              "%c%cThread %-2u: id=0x%llx act=%d glob=%d wq=%d rq=%d tl=%d tlsz=%d rqsz=%d\n"
@@ -200,10 +200,12 @@ void ha_thread_dump(struct buffer *buf, int thr, int calling_tid)
 	              stuck,
 	              !!(ha_thread_ctx[thr].flags & TH_FL_TASK_PROFILING));
 
+#if defined(USE_THREAD)
 	chunk_appendf(buf,
 	              " harmless=%d isolated=%d",
 	              !!(_HA_ATOMIC_LOAD(&ha_tgroup_ctx[tgrp-1].threads_harmless) & thr_bit),
 		      isolated_thread == thr);
+#endif
 
 	chunk_appendf(buf, "\n");
 	chunk_appendf(buf, "             cpu_ns: poll=%llu now=%llu diff=%llu\n", p, n, n-p);
