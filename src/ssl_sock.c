@@ -1213,8 +1213,7 @@ static int tlskeys_finalize_config(void)
 	}
 
 	/* swap root */
-	LIST_ADD(&tkr, &tlskeys_reference);
-	LIST_DEL(&tkr);
+	LIST_SPLICE(&tlskeys_reference, &tkr);
 	return 0;
 }
 #endif /* SSL_CTRL_SET_TLSEXT_TICKET_KEY_CB */
