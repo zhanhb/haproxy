@@ -499,10 +499,11 @@ void qcs_notify_send(struct qcs *qcs)
 }
 
 /* A fatal error is detected locally for <qcc> connection. It should be closed
- * with a CONNECTION_CLOSE using <err> code. This function must not be called
- * more than once by connection.
+ * with a CONNECTION_CLOSE using <err> code. Set <app> to true to indicate that
+ * the code must be considered as an application level error. This function
+ * must not be called more than once by connection.
  */
-void qcc_set_error(struct qcc *qcc, int err)
+void qcc_set_error(struct qcc *qcc, int err, int app)
 {
 	/* This must not be called multiple times per connection. */
 	BUG_ON(qcc->flags & QC_CF_ERRL);
@@ -510,7 +511,7 @@ void qcc_set_error(struct qcc *qcc, int err)
 	TRACE_STATE("connection on error", QMUX_EV_QCC_ERR, qcc->conn);
 
 	qcc->flags |= QC_CF_ERRL;
-	qcc->err = quic_err_app(err);
+	qcc->err = app ? quic_err_app(err) : quic_err_transport(err);
 }
 
 /* Open a locally initiated stream for the connection <qcc>. Set <bidi> for a
@@ -543,7 +544,7 @@ struct qcs *qcc_init_stream_local(struct qcc *qcc, int bidi)
 	qcs = qcs_new(qcc, *next, type);
 	if (!qcs) {
 		TRACE_LEAVE(QMUX_EV_QCS_NEW, qcc->conn);
-		qcc_set_error(qcc, QC_ERR_INTERNAL_ERROR);
+		qcc_set_error(qcc, QC_ERR_INTERNAL_ERROR, 0);
 		return NULL;
 	}
 
@@ -590,7 +591,7 @@ static struct qcs *qcc_init_stream_remote(struct qcc *qcc, uint64_t id)
 	                                   qcc->lfctl.ms_uni * 4;
 	if (id >= max_id) {
 		TRACE_ERROR("flow control error", QMUX_EV_QCS_NEW|QMUX_EV_PROTO_ERR, qcc->conn);
-		qcc_set_error(qcc, QC_ERR_STREAM_LIMIT_ERROR);
+		qcc_set_error(qcc, QC_ERR_STREAM_LIMIT_ERROR, 0);
 		goto err;
 	}
 
@@ -604,7 +605,7 @@ static struct qcs *qcc_init_stream_remote(struct qcc *qcc, uint64_t id)
 		qcs = qcs_new(qcc, *largest, type);
 		if (!qcs) {
 			TRACE_ERROR("stream fallocation failure", QMUX_EV_QCS_NEW, qcc->conn);
-			qcc_set_error(qcc, QC_ERR_INTERNAL_ERROR);
+			qcc_set_error(qcc, QC_ERR_INTERNAL_ERROR, 0);
 			goto err;
 		}
 
@@ -663,13 +664,13 @@ int qcc_get_qcs(struct qcc *qcc, uint64_t id, int receive_only, int send_only,
 
 	if (!receive_only && quic_stream_is_uni(id) && quic_stream_is_remote(qcc, id)) {
 		TRACE_ERROR("receive-only stream not allowed", QMUX_EV_QCC_RECV|QMUX_EV_QCC_NQCS|QMUX_EV_PROTO_ERR, qcc->conn, NULL, &id);
-		qcc_set_error(qcc, QC_ERR_STREAM_STATE_ERROR);
+		qcc_set_error(qcc, QC_ERR_STREAM_STATE_ERROR, 0);
 		goto err;
 	}
 
 	if (!send_only && quic_stream_is_uni(id) && quic_stream_is_local(qcc, id)) {
 		TRACE_ERROR("send-only stream not allowed", QMUX_EV_QCC_RECV|QMUX_EV_QCC_NQCS|QMUX_EV_PROTO_ERR, qcc->conn, NULL, &id);
-		qcc_set_error(qcc, QC_ERR_STREAM_STATE_ERROR);
+		qcc_set_error(qcc, QC_ERR_STREAM_STATE_ERROR, 0);
 		goto err;
 	}
 
@@ -701,7 +702,7 @@ int qcc_get_qcs(struct qcc *qcc, uint64_t id, int receive_only, int send_only,
 		 * stream.
 		 */
 		TRACE_ERROR("locally initiated stream not yet created", QMUX_EV_QCC_RECV|QMUX_EV_QCC_NQCS|QMUX_EV_PROTO_ERR, qcc->conn, NULL, &id);
-		qcc_set_error(qcc, QC_ERR_STREAM_STATE_ERROR);
+		qcc_set_error(qcc, QC_ERR_STREAM_STATE_ERROR, 0);
 		goto err;
 	}
 	else {
@@ -757,7 +758,7 @@ static void qcs_consume(struct qcs *qcs, uint64_t bytes)
 		TRACE_DATA("increase stream credit via MAX_STREAM_DATA", QMUX_EV_QCS_RECV, qcc->conn, qcs);
 		frm = qc_frm_alloc(QUIC_FT_MAX_STREAM_DATA);
 		if (!frm) {
-			qcc_set_error(qcc, QC_ERR_INTERNAL_ERROR);
+			qcc_set_error(qcc, QC_ERR_INTERNAL_ERROR, 0);
 			return;
 		}
 
@@ -776,7 +777,7 @@ static void qcs_consume(struct qcs *qcs, uint64_t bytes)
 		TRACE_DATA("increase conn credit via MAX_DATA", QMUX_EV_QCS_RECV, qcc->conn, qcs);
 		frm = qc_frm_alloc(QUIC_FT_MAX_DATA);
 		if (!frm) {
-			qcc_set_error(qcc, QC_ERR_INTERNAL_ERROR);
+			qcc_set_error(qcc, QC_ERR_INTERNAL_ERROR, 0);
 			return;
 		}
 
@@ -991,7 +992,7 @@ int qcc_recv(struct qcc *qcc, uint64_t id, uint64_t len, uint64_t offset,
 	if (qcs->flags & QC_SF_SIZE_KNOWN &&
 	    (offset + len > qcs->rx.offset_max || (fin && offset + len < qcs->rx.offset_max))) {
 		TRACE_ERROR("final size error", QMUX_EV_QCC_RECV|QMUX_EV_QCS_RECV|QMUX_EV_PROTO_ERR, qcc->conn, qcs);
-		qcc_set_error(qcc, QC_ERR_FINAL_SIZE_ERROR);
+		qcc_set_error(qcc, QC_ERR_FINAL_SIZE_ERROR, 0);
 		goto err;
 	}
 
@@ -1024,7 +1025,7 @@ int qcc_recv(struct qcc *qcc, uint64_t id, uint64_t len, uint64_t offset,
 			 */
 			TRACE_ERROR("flow control error", QMUX_EV_QCC_RECV|QMUX_EV_QCS_RECV|QMUX_EV_PROTO_ERR,
 			            qcc->conn, qcs);
-			qcc_set_error(qcc, QC_ERR_FLOW_CONTROL_ERROR);
+			qcc_set_error(qcc, QC_ERR_FLOW_CONTROL_ERROR, 0);
 			goto err;
 		}
 	}
@@ -1063,7 +1064,7 @@ int qcc_recv(struct qcc *qcc, uint64_t id, uint64_t len, uint64_t offset,
 			 */
 			TRACE_ERROR("overlapping data rejected", QMUX_EV_QCC_RECV|QMUX_EV_QCS_RECV|QMUX_EV_PROTO_ERR,
 			            qcc->conn, qcs);
-			qcc_set_error(qcc, QC_ERR_PROTOCOL_VIOLATION);
+			qcc_set_error(qcc, QC_ERR_PROTOCOL_VIOLATION, 0);
 			return 1;
 
 		case NCB_RET_GAP_SIZE:
@@ -1196,7 +1197,7 @@ int qcc_recv_reset_stream(struct qcc *qcc, uint64_t id, uint64_t err, uint64_t f
 	 */
 	if (qcc_get_qcs(qcc, id, 1, 0, &qcs)) {
 		TRACE_ERROR("RESET_STREAM for send-only stream received", QMUX_EV_QCC_RECV|QMUX_EV_QCS_RECV, qcc->conn, qcs);
-		qcc_set_error(qcc, QC_ERR_STREAM_STATE_ERROR);
+		qcc_set_error(qcc, QC_ERR_STREAM_STATE_ERROR, 0);
 		goto err;
 	}
 
@@ -1216,7 +1217,7 @@ int qcc_recv_reset_stream(struct qcc *qcc, uint64_t id, uint64_t err, uint64_t f
 	if (qcs->rx.offset_max > final_size ||
 	    ((qcs->flags & QC_SF_SIZE_KNOWN) && qcs->rx.offset_max != final_size)) {
 		TRACE_ERROR("final size error on RESET_STREAM", QMUX_EV_QCC_RECV|QMUX_EV_QCS_RECV, qcc->conn, qcs);
-		qcc_set_error(qcc, QC_ERR_FINAL_SIZE_ERROR);
+		qcc_set_error(qcc, QC_ERR_FINAL_SIZE_ERROR, 0);
 		goto err;
 	}
 
@@ -1343,7 +1344,7 @@ static int qcc_release_remote_stream(struct qcc *qcc, uint64_t id)
 			TRACE_DATA("increase max stream limit with MAX_STREAMS_BIDI", QMUX_EV_QCC_SEND, qcc->conn);
 			frm = qc_frm_alloc(QUIC_FT_MAX_STREAMS_BIDI);
 			if (!frm) {
-				qcc_set_error(qcc, QC_ERR_INTERNAL_ERROR);
+				qcc_set_error(qcc, QC_ERR_INTERNAL_ERROR, 0);
 				goto err;
 			}
 
