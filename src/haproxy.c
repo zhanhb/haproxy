@@ -2764,6 +2764,7 @@ void deinit(void)
 				free(rdr->cond);
 			}
 			free(rdr->rdr_str);
+			free(rdr->cookie_str);
 			list_for_each_entry_safe(lf, lfb, &rdr->rdr_fmt, list) {
 				LIST_DEL(&lf->list);
 				release_sample_expr(lf->expr);
