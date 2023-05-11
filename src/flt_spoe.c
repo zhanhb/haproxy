@@ -2995,6 +2995,14 @@ spoe_sig_stop(struct sig_handler *sh)
 	while (p) {
 		struct flt_conf *fconf;
 
+		/* SPOE filter are not initialized for disabled proxoes. Move to
+		 * the next one
+		 */
+		if (p->disabled) {
+			p = p->next;
+			continue;
+		}
+
 		list_for_each_entry(fconf, &p->filter_configs, list) {
 			struct spoe_config *conf;
 			struct spoe_agent  *agent;
