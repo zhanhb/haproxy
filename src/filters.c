@@ -292,10 +292,9 @@ flt_init_all()
 	int err_code = 0;
 
 	for (px = proxies_list; px; px = px->next) {
-		if (px->state == PR_STSTOPPED) {
-			flt_deinit(px);
+		if (px->state == PR_STSTOPPED)
 			continue;
-		}
+
 		err_code |= flt_init(px);
 		if (err_code & (ERR_ABORT|ERR_FATAL)) {
 			ha_alert("Failed to initialize filters for proxy '%s'.\n",
