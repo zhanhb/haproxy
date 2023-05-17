@@ -4527,7 +4527,9 @@ __LJMP static int hlua_applet_tcp_set_var(lua_State *L)
 	memset(&smp, 0, sizeof(smp));
 	hlua_lua2smp(L, 3, &smp);
 
-	/* Store the sample in a variable. */
+	/* Store the sample in a variable. We don't need to dup the smp, vars API
+	 * already takes care of duplicating dynamic var data.
+	 */
 	smp_set_owner(&smp, s->be, s->sess, s, 0);
 
 	if (lua_gettop(L) == 4 && lua_toboolean(L, 4))
@@ -5016,7 +5018,9 @@ __LJMP static int hlua_applet_http_set_var(lua_State *L)
 	memset(&smp, 0, sizeof(smp));
 	hlua_lua2smp(L, 3, &smp);
 
-	/* Store the sample in a variable. */
+	/* Store the sample in a variable. We don't need to dup the smp, vars API
+	 * already takes care of duplicating dynamic var data.
+	 */
 	smp_set_owner(&smp, s->be, s->sess, s, 0);
 
 	if (lua_gettop(L) == 4 && lua_toboolean(L, 4))
@@ -7621,7 +7625,9 @@ __LJMP static int hlua_set_var(lua_State *L)
 	memset(&smp, 0, sizeof(smp));
 	hlua_lua2smp(L, 3, &smp);
 
-	/* Store the sample in a variable. */
+	/* Store the sample in a variable. We don't need to dup the smp, vars API
+	 * already takes care of duplicating dynamic var data.
+	 */
 	smp_set_owner(&smp, htxn->p, htxn->s->sess, htxn->s, htxn->dir & SMP_OPT_DIR);
 
 	if (lua_gettop(L) == 4 && lua_toboolean(L, 4))
@@ -8859,6 +8865,10 @@ static int hlua_sample_conv_wrapper(const struct arg *arg_p, struct sample *smp,
 
 		/* Convert the returned value in sample. */
 		hlua_lua2smp(stream->hlua->T, -1, smp);
+		/* dup the smp before popping the related lua value and
+		 * returning it to haproxy
+		 */
+		smp_dup(smp);
 		lua_pop(stream->hlua->T, 1);
 		return 1;
 
@@ -8994,6 +9004,10 @@ static int hlua_sample_fetch_wrapper(const struct arg *arg_p, struct sample *smp
 
 		/* Convert the returned value in sample. */
 		hlua_lua2smp(stream->hlua->T, -1, smp);
+		/* dup the smp before popping the related lua value and
+		 * returning it to haproxy
+		 */
+		smp_dup(smp);
 		lua_pop(stream->hlua->T, 1);
 
 		/* Set the end of execution flag. */
