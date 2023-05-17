@@ -18,12 +18,14 @@
 #include <haproxy/ticks.h>
 #include <haproxy/tools.h>
 
+struct timeval start_date;                   /* the process's start date */
+struct timeval ready_date;                   /* date when the process was considered ready */
+
 THREAD_LOCAL unsigned int   now_ms;          /* internal date in milliseconds (may wrap) */
 THREAD_LOCAL unsigned int   samp_time;       /* total elapsed time over current sample */
 THREAD_LOCAL unsigned int   idle_time;       /* total idle time over current sample */
 THREAD_LOCAL struct timeval now;             /* internal date is a monotonic function of real clock */
 THREAD_LOCAL struct timeval date;            /* the real current date */
-struct timeval start_date;      /* the process's start date */
 THREAD_LOCAL struct timeval before_poll;     /* system date before calling poll() */
 THREAD_LOCAL struct timeval after_poll;      /* system date after leaving poll() */
 

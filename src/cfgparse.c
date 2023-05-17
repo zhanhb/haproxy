@@ -2651,9 +2651,6 @@ int check_config_validity()
 	 * Now, check for the integrity of all that we have collected.
 	 */
 
-	/* will be needed further to delay some tasks */
-	tv_update_date(0,1);
-
 	if (!global.tune.max_http_hdr)
 		global.tune.max_http_hdr = MAX_HTTP_HDR;
 
