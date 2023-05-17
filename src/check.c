@@ -1356,6 +1356,7 @@ static int start_check_task(struct check *check, int mininter,
 {
 	struct task *t;
 	unsigned long thread_mask = MAX_THREADS_MASK;
+	ulong boottime = tv_ms_remain(&start_date, &ready_date);
 
 	if (check->type == PR_O2_EXT_CHK)
 		thread_mask = 1;
@@ -1386,7 +1387,7 @@ static int start_check_task(struct check *check, int mininter,
 		mininter = global.max_spread_checks;
 
 	/* check this every ms */
-	t->expire = tick_add(now_ms, MS_TO_TICKS(mininter * srvpos / nbcheck));
+	t->expire = tick_add(now_ms, MS_TO_TICKS(boottime + mininter * srvpos / nbcheck));
 	check->start = now;
 	task_queue(t);
 
