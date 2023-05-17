@@ -1994,7 +1994,18 @@ static void init(int argc, char **argv)
 		}
 	}
 
+	/* update the ready date that will be used to count the startup time
+	 * during config checks (e.g. to schedule certain tasks if needed)
+	 */
+	gettimeofday(&date, NULL);
+	ready_date = date;
+
 	err_code |= check_config_validity();
+
+	/* update the ready date to also account for the check time */
+	gettimeofday(&date, NULL);
+	ready_date = date;
+
 	if (err_code & (ERR_ABORT|ERR_FATAL)) {
 		ha_alert("Fatal errors found in configuration.\n");
 		exit(1);
@@ -3257,6 +3268,10 @@ int main(int argc, char **argv)
 		ha_warning("[%s.main()] FD limit (%d) too low for maxconn=%d/maxsock=%d. Please raise 'ulimit-n' to %d or more to avoid any trouble.\n",
 			   argv[0], (int)limit.rlim_cur, global.maxconn, global.maxsock, global.maxsock);
 	}
+
+	/* update the ready date a last time to also account for final setup time */
+	gettimeofday(&date, NULL);
+	ready_date = date;
 
 	if (global.mode & (MODE_DAEMON | MODE_MWORKER | MODE_MWORKER_WAIT)) {
 		struct proxy *px;
