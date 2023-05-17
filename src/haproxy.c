@@ -2167,14 +2167,14 @@ static void init(int argc, char **argv)
 	/* update the ready date that will be used to count the startup time
 	 * during config checks (e.g. to schedule certain tasks if needed)
 	 */
-	clock_update_date(0, 1);
+	gettimeofday(&date, NULL);
 	ready_date = date;
 
 	/* Note: global.nbthread will be initialized as part of this call */
 	err_code |= check_config_validity();
 
 	/* update the ready date to also account for the check time */
-	clock_update_date(0, 1);
+	gettimeofday(&date, NULL);
 	ready_date = date;
 
 	for (px = proxies_list; px; px = px->next) {
@@ -3396,7 +3396,7 @@ int main(int argc, char **argv)
 	}
 
 	/* update the ready date a last time to also account for final setup time */
-	clock_update_date(0, 1);
+	gettimeofday(&date, NULL);
 	ready_date = date;
 
 	if (global.mode & (MODE_DAEMON | MODE_MWORKER | MODE_MWORKER_WAIT)) {
