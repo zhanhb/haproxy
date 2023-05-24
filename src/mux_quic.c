@@ -683,7 +683,7 @@ struct stconn *qc_attach_sc(struct qcs *qcs, struct buffer *buf, char fin)
 
 	if (fin) {
 		TRACE_STATE("report end-of-input", QMUX_EV_STRM_RECV, qcc->conn, qcs);
-		se_fl_set(qcs->sd, SE_FL_EOI);
+		se_fl_set(qcs->sd, SE_FL_EOI|SE_FL_EOS);
 	}
 
 	return qcs->sd->sc;
@@ -2733,7 +2733,7 @@ static size_t qc_recv_buf(struct stconn *sc, struct buffer *buf,
 		/* Set end-of-input when full message properly received. */
 		if (fin) {
 			TRACE_STATE("report end-of-input", QMUX_EV_STRM_RECV, qcc->conn, qcs);
-			se_fl_set(qcs->sd, SE_FL_EOI);
+			se_fl_set(qcs->sd, SE_FL_EOI|SE_FL_EOS);
 		}
 
 		/* Set end-of-stream on read closed. */
