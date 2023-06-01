@@ -2676,6 +2676,7 @@ void deinit(void)
 			LIST_DEL(&l->by_bind);
 			free(l->name);
 			free(l->counters);
+			free(l->interface);
 			free(l);
 		}
 
