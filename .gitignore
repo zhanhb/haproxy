@@ -35,6 +35,7 @@
 *.rej
 *.orig
 *.bak
+*.sw[op]
 # And reject some specific files
 /contrib/base64/base64rev
 /contrib/halog/halog
