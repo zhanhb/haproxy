@@ -4662,9 +4662,10 @@ bind /<path> [, ...] [param*]
                       to a listener will be multiplexed over the listener
                       socket. With a large traffic this has a noticeable impact
                       on performance and CPU consumption. To improve this, you
-                      can change default settings of "tune.quic.conn-owner" to
-                      connection or at least duplicate QUIC listener instances
-                      over several threads, for example using "shards" keyword.
+                      can change default settings of "tune.quic.socket-owner"
+                      to connection or at least duplicate QUIC listener
+                      instances over several threads, for example using
+                      "shards" keyword.
                     - 'quic6@' -> address is resolved as IPv6 and protocol UDP
                       is used. The performance note for QUIC over IPv4 applies
                       as well.
