@@ -1,6 +1,126 @@
 ChangeLog :
 ===========
 
+2023/06/07 : 2.7.9
+    - CI: switch to Fastly CDN to download LibreSSL
+    - BUILD: ssl: switch LibreSSL to Fastly CDN
+    - BUG/MEDIUM: spoe: Don't start new applet if there are enough idle ones
+    - BUG/MINOR: resolvers: Use sc_need_room() to wait more room when dumping stats
+    - MINOR: quic: use real sending rate measurement
+    - BUG/MINOR: ssl/sample: x509_v_err_str converter output when not found
+    - DEV: haring: automatically disable DEBUG_STRICT
+    - DEV: haring: update readme to suggest using the same build options for haring
+    - BUG/MINOR: debug: fix incorrect profiling status reporting in show threads
+    - BUG/MINOR: mux-quic: prevent quic_conn error code to be overwritten
+    - MINOR: mux-quic: add trace event for local error
+    - MINOR: mux-quic: wake up after recv only if avail data
+    - MINOR: mux-quic: adjust local error API
+    - MINOR: mux-quic: report local error on stream endpoint asap
+    - MINOR: mux-quic: close connection asap on local error
+    - BUG/MINOR: debug: do not emit empty lines in thread dumps
+    - MINOR: quic: add format argument for "show quic"
+    - MINOR: quic: implement oneline format for "show quic"
+    - BUILD: debug: do not check the isolated_thread variable in non-threaded builds
+    - BUILD: quic: fix build warning when threads are disabled
+    - BUILD: thread: implement thread_harmless_end_sig() for threadless builds
+    - CLEANUP: quic: No more used q_buf structure
+    - CLEANUP: quic: Rename several <buf> variables in quic_frame.(c|h)
+    - CLEANUP: quic: Typo fix for quic_connection_id pool
+    - BUG/MINOR: quic: Wrong key update cipher context initialization for encryption
+    - BUILD: ssl: buggy -Werror=dangling-pointer since gcc 13.0
+    - DOC: configuration: add info about ssl-engine for 2.6
+    - BUG/MINOR: mux-quic: fix transport VS app CONNECTION_CLOSE
+    - BUG/MEDIUM: mux-quic: wakeup tasklet to close on error
+    - BUG/MINOR: quic: Possible crash when dumping version information
+    - BUILD: mjson: Fix warning about unused variables
+    - MINOR: spoe: Don't stop disabled proxies
+    - BUG/MEDIUM: filters: Don't deinit filters for disabled proxies during startup
+    - MINOR: http-rules: Add missing actions in http-after-response ruleset
+    - BUG/MINOR: quic: Buggy acknowlegments of acknowlegments function
+    - BUG/MINOR: mux-quic: do not prevent shutw on error
+    - BUG/MINOR: mux-quic: do not free frame already released by quic-conn
+    - BUG/MINOR: mux-quic: no need to subscribe for detach streams
+    - MINOR: mux-quic: add traces for stream wake
+    - MINOR: mux-quic: do not send STREAM frames if already subscribe
+    - MINOR: mux-quic: factorize send subscribing
+    - MINOR: mux-quic: simplify return path of qc_send()
+    - MEDIUM: quic: streamline error notification
+    - MEDIUM: mux-quic: adjust transport layer error handling
+    - BUG/MEDIUM: mux-fcgi: Don't request more room if mux is waiting for more data
+    - BUG/MINOR: proxy: missing free in free_proxy for redirect rules
+    - MINOR: proxy: add http_free_redirect_rule() function
+    - BUG/MINOR: http_rules: fix errors paths in http_parse_redirect_rule()
+    - BUG/MINOR: errors: handle malloc failure in usermsgs_put()
+    - BUG/MINOR: log: fix memory error handling in parse_logsrv()
+    - BUG/MINOR: quic: Wrong redispatch for external data on connection socket
+    - MINOR: htx: add function to set EOM reliably
+    - MINOR: mux-quic: remove dedicated function to handle standalone FIN
+    - BUG/MINOR: mux-quic: properly handle buf alloc failure
+    - BUG/MINOR: mux-quic: handle properly recv ncbuf alloc failure
+    - BUG/MINOR: quic: do not alloc buf count on alloc failure
+    - BUG/MINOR: mux-quic: differentiate failure on qc_stream_desc alloc
+    - BUG/MINOR: mux-quic: free task on qc_init() app ops failure
+    - BUG/MEDIUM: mux-h2: make sure control frames do not refresh the idle timeout
+    - BUG/MINOR: mux-quic: handle properly Tx buf exhaustion
+    - BUG/MINOR: h3: missing goto on buf alloc failure
+    - MINOR: mux-quic: add trace to stream rcv_buf operation
+    - MINOR: mux-quic: properly report end-of-stream on recv
+    - MINOR: mux-quic: uninline qc_attach_sc()
+    - BUG/MEDIUM: mux-quic: fix EOI for request without payload
+    - BUG/MINOR: tcp-rules: Don't shortened the inspect-delay when EOI is set
+    - REGTESTS: log: Reduce response inspect-delay for last_rule.vtc
+    - DOC: config: Clarify conditions to shorten the inspect-delay for TCP rules
+    - MINOR: clock: measure the total boot time
+    - BUG/MINOR: checks: postpone the startup of health checks by the boot time
+    - REGTESTS: log: Reduce again response inspect-delay for last_rule.vtc
+    - MINOR: checks: make sure spread-checks is used also at boot time
+    - DEV: flags: add a script to decode most flags in the "show sess all" output
+    - DEV: flags: add missing stream flags to show-sess-to-flags
+    - DEV: flags/show-sess-to-flags: only retrieve hex digits from hex fields
+    - DEV: flags/show-sess-to-flags: add support for color output
+    - CI: drop Fedora m32 pipeline in favour of cross matrix
+    - DOC: add size format section to manual
+    - CLEANUP: mux-quic/h3: complete BUG_ON with comments
+    - MINOR: quic: remove return val of quic_aead_iv_build()
+    - MINOR: quic: use WARN_ON for encrypt failures
+    - BUG/MINOR: quic: handle Tx packet allocation failure properly
+    - MINOR: quic: fix alignment of oneline show quic
+    - DOC/MINOR: config: Fix typo in description for `ssl_bc` in configuration.txt
+    - MINOR: mux-quic: set both EOI EOS for stream fin
+    - MINOR: mux-quic: only set EOS on RESET_STREAM recv
+    - MINOR: mux-quic: report error on stream-endpoint earlier
+    - MINOR: mux-h2: Set H2_SF_ES_RCVD flag when decoding the HEADERS frame
+    - MINOR: mux-h2: Add a function to propagate termination flags from h2s to SE
+    - BUG/MEDIUM: mux-h2: Propagate termination flags when frontend SC is created
+    - MINOR: quic: Add low level traces (addresses, DCID)
+    - BUG/MINOR: quic: Wrong token length check (quic_generate_retry_token())
+    - BUG/MINOR: quic: Missing Retry token length on receipt
+    - MINOR: quic: Align "show quic" command help information
+    - CLEANUP: quic: Indentation fix quic_rx_pkt_retrieve_conn()
+    - CLEANUP: quic: Useless tests in qc_rx_pkt_handle()
+    - MINOR: quic: Add some counters at QUIC connection level
+    - MINOR: quic: Add a counter for sent packets
+    - BUG/MINOR: hlua: unsafe hlua_lua2smp() usage
+    - SCRIPTS: publish-release: update the umask to keep group write access
+    - CLEANUP: mux-quic: remove unneeded fields in qcc
+    - MINOR: mux-quic: remove nb_streams from qcc
+    - MINOR: quic: fix stats naming for flow control BLOCKED frames
+    - BUG/MEDIUM: mux-quic: only set EOI on FIN
+    - BUG/MEDIUM: threads: fix a tiny race in thread_isolate()
+    - CLEANUP: mux-quic: rename functions for mux_ops
+    - CLEANUP: mux-quic: rename internal functions
+    - BUG/MINOR: mux-h2: refresh the idle_timer when the mux is empty
+    - DOC: config: Fix bind/server/peer documentation in the peers section
+    - MINOR: quic: Add QUIC connection statistical counters values to "show quic"
+    - MINOR: quic/cli: clarify the "show quic" help message
+    - BUG/MINOR: quic: Possible crash when SSL session init fails
+    - CONTRIB: Add vi file extensions to .gitignore
+    - BUG/MINOR: spoe: Only skip sending new frame after a receive attempt
+    - DOC: quic: fix misspelled tune.quic.socket-owner
+    - DOC: config: fix jwt_verify() example using var()
+    - BUG/MINOR: cfgparse-tcp: leak when re-declaring interface from bind line
+    - BUG/MINOR: proxy: add missing interface bind free in free_proxy
+
 2023/05/02 : 2.7.8
     - MINOR: listener: remove the now useless LI_F_QUIC_LISTENER flag
 
