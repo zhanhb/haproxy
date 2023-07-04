@@ -4173,6 +4173,7 @@ int cfg_parse_log_forward(const char *file, int linenum, char **args, int kwm)
 		goto out;
 	}
 out:
+	ha_free(&errmsg);
 	return err_code;
 }
 
