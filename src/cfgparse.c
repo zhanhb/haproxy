@@ -2532,8 +2532,8 @@ static int read_file_to_trash(const char *path)
  */
 static int numa_detect_topology()
 {
-	struct dirent **node_dirlist;
-	int node_dirlist_size;
+	struct dirent **node_dirlist = NULL;
+	int node_dirlist_size = 0;
 
 	struct hap_cpuset active_cpus, node_cpu_set;
 	const char *parse_cpu_set_args[2];
@@ -2542,6 +2542,10 @@ static int numa_detect_topology()
 
 	/* node_cpu_set count is used as return value */
 	ha_cpuset_zero(&node_cpu_set);
+
+	/* let's ignore restricted affinity */
+	if (thread_cpu_mask_forced())
+		goto free_scandir_entries;
 
 	/* 1. count the sysfs node<X> directories */
 	node_dirlist = NULL;
@@ -2613,14 +2617,18 @@ static int numa_detect_topology()
 	int ndomains = 0, i;
 	size_t len = sizeof(ndomains);
 
+	ha_cpuset_zero(&node_cpu_set);
+
+	/* let's ignore restricted affinity */
+	if (thread_cpu_mask_forced())
+		goto leave;
+
 	if (sysctlbyname("vm.ndomains", &ndomains, &len, NULL, 0) == -1) {
 		ha_notice("Cannot assess the number of CPUs domains\n");
 		return 0;
 	}
 
 	BUG_ON(ndomains > MAXMEMDOM);
-	ha_cpuset_zero(&node_cpu_set);
-
 	if (ndomains < 2)
 		goto leave;
 
@@ -2713,7 +2721,7 @@ int check_config_validity()
 		{
 			int numa_cores = 0;
 #if defined(USE_CPU_AFFINITY)
-			if (global.numa_cpu_mapping && !thread_cpu_mask_forced())
+			if (global.numa_cpu_mapping)
 				numa_cores = numa_detect_topology();
 #endif
 			global.nbthread = numa_cores ? numa_cores :
