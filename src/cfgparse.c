@@ -2556,6 +2556,75 @@ static int read_filefmt_to_trash(const char *path_fmt, ...)
 	return ret;
 }
 
+/* function used by qsort to compare two hwcpus and arrange them by vicinity.
+ * -1 says a<b, 1 says a>b.
+ */
+static int cmp_hw_cpus(const void *a, const void *b)
+{
+	const struct hw_cpu *l = (const struct hw_cpu *)a;
+	const struct hw_cpu *r = (const struct hw_cpu *)b;
+
+	/* first, online vs offline */
+
+	if ((l->st & (HW_CPU_F_ONLINE | HW_CPU_F_BOUND)) == (HW_CPU_F_ONLINE | HW_CPU_F_BOUND) &&
+	    (r->st & (HW_CPU_F_ONLINE | HW_CPU_F_BOUND)) != (HW_CPU_F_ONLINE | HW_CPU_F_BOUND))
+		return -1;
+	if ((l->st & (HW_CPU_F_ONLINE | HW_CPU_F_BOUND)) != (HW_CPU_F_ONLINE | HW_CPU_F_BOUND) &&
+	    (r->st & (HW_CPU_F_ONLINE | HW_CPU_F_BOUND)) == (HW_CPU_F_ONLINE | HW_CPU_F_BOUND))
+		return 1;
+
+	/* next, package ID */
+	if (l->pk_id >= 0 && l->pk_id < r->pk_id)
+		return -1;
+	if (l->pk_id > r->pk_id && r->pk_id >= 0)
+		return  1;
+
+	/* next, node ID */
+	if (l->no_id >= 0 && l->no_id < r->no_id)
+		return -1;
+	if (l->no_id > r->no_id && r->no_id >= 0)
+		return  1;
+
+	/* next, L3 */
+	if (l->l3_id >= 0 && l->l3_id < r->l3_id)
+		return -1;
+	if (l->l3_id > r->l3_id && r->l3_id >= 0)
+		return  1;
+
+	/* next, cluster */
+	if (l->cl_id >= 0 && l->cl_id < r->cl_id)
+		return -1;
+	if (l->cl_id > r->cl_id && r->cl_id >= 0)
+		return  1;
+
+	/* next, L2 */
+	if (l->l2_id >= 0 && l->l2_id < r->l2_id)
+		return -1;
+	if (l->l2_id > r->l2_id && r->l2_id >= 0)
+		return  1;
+
+	/* next, thread set */
+	if (l->ts_id >= 0 && l->ts_id < r->ts_id)
+		return -1;
+	if (l->ts_id > r->ts_id && r->ts_id >= 0)
+		return  1;
+
+	/* next, L1 */
+	if (l->l1_id >= 0 && l->l1_id < r->l1_id)
+		return -1;
+	if (l->l1_id > r->l1_id && r->l1_id >= 0)
+		return  1;
+
+	/* next, IDX, so that SMT ordering is preserved */
+	if (l->idx >= 0 && l->idx < r->idx)
+		return -1;
+	if (l->idx > r->idx && r->idx >= 0)
+		return  1;
+
+	/* exactly the same (e.g. absent) */
+	return 0;
+}
+
 /* Inspect the cpu topology of the machine on startup. If a multi-socket
  * machine is detected, try to bind on the first node with active cpu. This is
  * done to prevent an impact on the overall performance when the topology of
@@ -2576,10 +2645,227 @@ static int numa_detect_topology()
 	struct hap_cpuset active_cpus, node_cpu_set;
 	const char *parse_cpu_set_args[2];
 	char cpumap_path[PATH_MAX];
+	struct hw_cpu cpu_id = { }; /* all zeroes */
+	struct hw_cpu *hwcpus = NULL;
 	char *err = NULL;
+	cpu_set_t cpuset;
+	int maxcpus = 0;
+	int lastcpu = 0;
+	int cpu;
 
 	/* node_cpu_set count is used as return value */
 	ha_cpuset_zero(&node_cpu_set);
+
+	maxcpus = ha_cpuset_size();
+	hwcpus = (struct hw_cpu*)malloc(maxcpus * sizeof(*hwcpus));
+	if (!hwcpus) {
+		ha_notice("Will not try to detect HW CPUs to create groups: not enough memory.\n");
+		goto skip_hw_cpus;
+	}
+
+	/* preset all fields to -1 except the state flags which are assumed to
+	 * all be bound unless detected otherwise.
+	 */
+	for (cpu = 0; cpu < maxcpus; cpu++) {
+		memset(&hwcpus[cpu], 0xff, sizeof(*hwcpus));
+		hwcpus[cpu].st = HW_CPU_F_BOUND;
+		hwcpus[cpu].idx = cpu;
+		lastcpu = cpu;
+	}
+
+	/* remove the known-unbound CPUs */
+	if (sched_getaffinity(0, sizeof(cpuset), &cpuset) == 0) {
+		for (cpu = 0; cpu < maxcpus; cpu++) {
+			if (!CPU_ISSET(cpu, &cpuset))
+				hwcpus[cpu].st &= ~HW_CPU_F_BOUND;
+		}
+	}
+
+	/* Update the list of currently online cpu. Normally it's a superset of
+	 * the bound ones, so if we can't read it we'll duplicate the bound
+	 * state.
+	 */
+	parse_cpu_set_args[0] = trash.area;
+	parse_cpu_set_args[1] = "\0";
+	if (read_file_to_trash(NUMA_DETECT_SYSTEM_SYSFS_PATH "/cpu/online") == 0 &&
+	    parse_cpu_set(parse_cpu_set_args, &active_cpus, &err) == 0) {
+		for (cpu = 0; cpu < maxcpus; cpu++) {
+			if (ha_cpuset_isset(&active_cpus, cpu)) {
+				hwcpus[cpu].st |= HW_CPU_F_ONLINE;
+				lastcpu = cpu;
+			}
+		}
+	} else {
+		ha_free(&err);
+		for (cpu = 0; cpu < maxcpus; cpu++) {
+			if (hwcpus[cpu].st & HW_CPU_F_BOUND) {
+				hwcpus[cpu].st |= HW_CPU_F_ONLINE;
+				lastcpu = cpu;
+			}
+		}
+	}
+
+
+	/* now let's only focus on online and bound CPUs to learn more about
+	 * their topology, their siblings, their cache affinity etc. We can
+	 * stop at lastcpu which matches the ID of the last known bound CPU
+	 * when it's set. We'll pre-assign and auto-increment indexes for
+	 * thread_set_id, cluster_id, l1/l2/l3 id, etc. We don't revisit entries
+	 * already filled from the list provided by another CPU.
+	 */
+	for (cpu = 0; cpu <= lastcpu; cpu++) {
+		struct hap_cpuset cpus_list;
+		int cpu2;
+
+		if ((hwcpus[cpu].st & (HW_CPU_F_ONLINE | HW_CPU_F_BOUND)) != (HW_CPU_F_ONLINE | HW_CPU_F_BOUND))
+			continue;
+
+		/* First, let's check the cache hierarchy. On systems exposing
+		 * it, index0 generally is the L1D cache, index1 the L1I, index2
+		 * the L2 and index3 the L3.
+		 */
+
+		/* other CPUs sharing the same L1 cache (SMT) */
+		if (hwcpus[cpu].l1_id < 0 &&
+		    read_filefmt_to_trash(NUMA_DETECT_SYSTEM_SYSFS_PATH "/cpu/cpu%d/cache/index0/shared_cpu_list", cpu) == 0) {
+			parse_cpu_set_args[0] = trash.area;
+			parse_cpu_set_args[1] = "\0";
+			if (parse_cpu_set(parse_cpu_set_args, &cpus_list, &err) == 0) {
+				for (cpu2 = 0; cpu2 <= lastcpu; cpu2++) {
+					if (ha_cpuset_isset(&cpus_list, cpu2))
+						hwcpus[cpu2].l1_id = cpu_id.l1_id;
+				}
+				cpu_id.l1_id++;
+			}
+			ha_free(&err);
+		}
+
+		/* other CPUs sharing the same L2 cache (clusters of cores) */
+		if (hwcpus[cpu].l2_id < 0 &&
+		    read_filefmt_to_trash(NUMA_DETECT_SYSTEM_SYSFS_PATH "/cpu/cpu%d/cache/index2/shared_cpu_list", cpu) == 0) {
+			parse_cpu_set_args[0] = trash.area;
+			parse_cpu_set_args[1] = "\0";
+			if (parse_cpu_set(parse_cpu_set_args, &cpus_list, &err) == 0) {
+				for (cpu2 = 0; cpu2 <= lastcpu; cpu2++) {
+					if (ha_cpuset_isset(&cpus_list, cpu2))
+						hwcpus[cpu2].l2_id = cpu_id.l2_id;
+				}
+				cpu_id.l2_id++;
+			}
+			ha_free(&err);
+		}
+
+		/* other CPUs sharing the same L3 cache slices (local cores) */
+		if (hwcpus[cpu].l3_id < 0 &&
+		    read_filefmt_to_trash(NUMA_DETECT_SYSTEM_SYSFS_PATH "/cpu/cpu%d/cache/index3/shared_cpu_list", cpu) == 0) {
+			parse_cpu_set_args[0] = trash.area;
+			parse_cpu_set_args[1] = "\0";
+			if (parse_cpu_set(parse_cpu_set_args, &cpus_list, &err) == 0) {
+				for (cpu2 = 0; cpu2 <= lastcpu; cpu2++) {
+					if (ha_cpuset_isset(&cpus_list, cpu2))
+						hwcpus[cpu2].l3_id = cpu_id.l3_id;
+				}
+				cpu_id.l3_id++;
+			}
+			ha_free(&err);
+		}
+
+		/* Now let's try to get more info about how the cores are
+		 * arranged in packages, clusters, cores, threads etc. It
+		 * overlaps a bit with the cache above, but as not all systems
+		 * provide all of these, they're quite complementary in fact.
+		 */
+
+		/* threads mapped to same cores */
+		if (hwcpus[cpu].ts_id < 0 &&
+		    read_filefmt_to_trash(NUMA_DETECT_SYSTEM_SYSFS_PATH "/cpu/cpu%d/topology/thread_siblings_list", cpu) == 0) {
+			parse_cpu_set_args[0] = trash.area;
+			parse_cpu_set_args[1] = "\0";
+			if (parse_cpu_set(parse_cpu_set_args, &cpus_list, &err) == 0) {
+				for (cpu2 = 0; cpu2 <= lastcpu; cpu2++) {
+					if (ha_cpuset_isset(&cpus_list, cpu2))
+						hwcpus[cpu2].ts_id = cpu_id.ts_id;
+				}
+				cpu_id.ts_id++;
+			}
+			ha_free(&err);
+		}
+
+		/* clusters of cores when they exist, can be smaller and more
+		 * precise than core lists (e.g. big.little), otherwise use
+		 * core lists.
+		 */
+		if (hwcpus[cpu].cl_id < 0 &&
+		    read_filefmt_to_trash(NUMA_DETECT_SYSTEM_SYSFS_PATH "/cpu/cpu%d/topology/cluster_cpus_list", cpu) == 0) {
+			parse_cpu_set_args[0] = trash.area;
+			parse_cpu_set_args[1] = "\0";
+			if (parse_cpu_set(parse_cpu_set_args, &cpus_list, &err) == 0) {
+				for (cpu2 = 0; cpu2 <= lastcpu; cpu2++) {
+					if (ha_cpuset_isset(&cpus_list, cpu2))
+						hwcpus[cpu2].cl_id = cpu_id.cl_id;
+				}
+				cpu_id.cl_id++;
+			}
+			ha_free(&err);
+		} else if (hwcpus[cpu].cl_id < 0 &&
+		    read_filefmt_to_trash(NUMA_DETECT_SYSTEM_SYSFS_PATH "/cpu/cpu%d/topology/core_siblings_list", cpu) == 0) {
+			parse_cpu_set_args[0] = trash.area;
+			parse_cpu_set_args[1] = "\0";
+			if (parse_cpu_set(parse_cpu_set_args, &cpus_list, &err) == 0) {
+				for (cpu2 = 0; cpu2 <= lastcpu; cpu2++) {
+					if (ha_cpuset_isset(&cpus_list, cpu2))
+						hwcpus[cpu2].cl_id = cpu_id.cl_id;
+				}
+				cpu_id.cl_id++;
+			}
+			ha_free(&err);
+		}
+
+		/* package CPUs list, like nodes, are generally a hard limit
+		 * for groups, which must not span over multiple of them. On
+		 * some systems, the package_cpus_list is not always provided,
+		 * so we may fall back to the physical package id from each
+		 * CPU, whose number starts at 0. The first one is preferred
+		 * because it provides a list in a single read().
+		 */
+		if (hwcpus[cpu].pk_id < 0 &&
+		    read_filefmt_to_trash(NUMA_DETECT_SYSTEM_SYSFS_PATH "/cpu/cpu%d/topology/package_cpus_list", cpu) == 0) {
+			parse_cpu_set_args[0] = trash.area;
+			parse_cpu_set_args[1] = "\0";
+			if (parse_cpu_set(parse_cpu_set_args, &cpus_list, &err) == 0) {
+				for (cpu2 = 0; cpu2 <= lastcpu; cpu2++) {
+					if (ha_cpuset_isset(&cpus_list, cpu2))
+						hwcpus[cpu2].pk_id = cpu_id.pk_id;
+				}
+				cpu_id.pk_id++;
+			}
+			ha_free(&err);
+		} else if (hwcpus[cpu].pk_id < 0 &&
+		    read_filefmt_to_trash(NUMA_DETECT_SYSTEM_SYSFS_PATH "/cpu/cpu%d/topology/physical_package_id", cpu) == 0) {
+			if (trash.data)
+				hwcpus[cpu].pk_id = str2uic(trash.area);
+		}
+	}
+
+	qsort(hwcpus, lastcpu+1, sizeof(*hwcpus), cmp_hw_cpus);
+
+	for (cpu = 0; cpu <= lastcpu; cpu++) {
+		printf("thr %3d -> cpu %3d  onl=%d bnd=%d pk=%02d no=%02d l3=%02d cl=%03d l2=%03d ts=%03d l1=%03d\n", cpu, hwcpus[cpu].idx,
+		       !!(hwcpus[cpu].st & HW_CPU_F_ONLINE),
+		       !!(hwcpus[cpu].st & HW_CPU_F_BOUND),
+		       hwcpus[cpu].pk_id,
+		       hwcpus[cpu].no_id,
+		       hwcpus[cpu].l3_id,
+		       hwcpus[cpu].cl_id,
+		       hwcpus[cpu].l2_id,
+		       hwcpus[cpu].ts_id,
+		       hwcpus[cpu].l1_id);
+	}
+
+ skip_hw_cpus:
+	free(hwcpus);
+
+	/* FIXME: Now figure a criterion for not proceeding below (e.g. found pk/no/l3/l2 above maybe) */
 
 	/* let's ignore restricted affinity */
 	if (thread_cpu_mask_forced())
