@@ -2518,6 +2518,44 @@ static int read_file_to_trash(const char *path)
 	return ret;
 }
 
+/* Read the first line of a file from <path> into the trash buffer. The
+ * trailing LF if any is stripped. Returns 0 on success, with trash.data
+ * value reflecting the number of bytes returned in the trash, otherwise
+ * non-zero, typically a positive value on path construction failure, or
+ * a negative one on I/O error.
+ */
+static int read_filefmt_to_trash(const char *path_fmt, ...)
+{
+	char path[MAXPATHLEN + 1];
+	va_list args;
+	FILE *file;
+	int ret;
+
+	chunk_reset(&trash);
+
+	va_start(args, path_fmt);
+	ret = vsnprintf(path, sizeof(path), path_fmt, args);
+	va_end(args);
+	if (ret >= sizeof(path))
+		return ret;
+
+	ret = -1;
+	file = fopen(path, "r");
+	if (file) {
+		if (fgets(trash.area, trash.size, file)) {
+			ret = strlen(trash.area);
+			if (ret && trash.area[ret - 1] == '\n')
+				ret--;
+			trash.area[ret] = 0;
+			trash.data = ret;
+			ret = 0; // success
+		}
+		fclose(file);
+	}
+
+	return ret;
+}
+
 /* Inspect the cpu topology of the machine on startup. If a multi-socket
  * machine is detected, try to bind on the first node with active cpu. This is
  * done to prevent an impact on the overall performance when the topology of
