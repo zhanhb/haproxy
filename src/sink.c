@@ -1079,6 +1079,9 @@ struct sink *sink_new_from_logsrv(struct logsrv *logsrv)
 
 	return sink;
 error:
+	if (srv)
+		free_server(srv);
+
 	if (p) {
 		if (p->id)
 			free(p->id);
@@ -1086,16 +1089,6 @@ error:
 			free(p->conf.file);
 
 		free(p);
-	}
-
-	if (srv) {
-		if (srv->id)
-			free(srv->id);
-		if (srv->conf.file)
-			free((void *)srv->conf.file);
-		if (srv->per_thr)
-		       free(srv->per_thr);
-		free(srv);
 	}
 
 	if (sft)
