@@ -1265,7 +1265,7 @@ static inline void hlua_sendlog(struct proxy *px, int level, const char *msg)
 /* This function just ensure that the yield will be always
  * returned with a timeout and permit to set some flags
  */
-__LJMP void hlua_yieldk(lua_State *L, int nresults, int ctx,
+__LJMP void hlua_yieldk(lua_State *L, int nresults, lua_KContext ctx,
                         lua_KFunction k, int timeout, unsigned int flags)
 {
 	struct hlua *hlua;

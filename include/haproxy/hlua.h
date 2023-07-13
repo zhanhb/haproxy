@@ -55,6 +55,7 @@ void hlua_applet_tcp_fct(struct appctx *ctx);
 void hlua_applet_http_fct(struct appctx *ctx);
 struct task *hlua_process_task(struct task *task, void *context, unsigned int state);
 const char *hlua_show_current_location(const char *pfx);
+void hlua_yieldk(lua_State *L, int nresults, lua_KContext ctx, lua_KFunction k, int timeout, unsigned int flags);
 
 #else /* USE_LUA */
 
