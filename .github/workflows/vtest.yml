@@ -155,3 +155,4 @@ jobs:
           cat $asan
           echo "::endgroup::"
         done
+        exit 1
