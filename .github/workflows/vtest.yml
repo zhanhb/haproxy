@@ -166,3 +166,4 @@ jobs:
           sudo cat $asan
           echo "::endgroup::"
         done
+        exit 1
