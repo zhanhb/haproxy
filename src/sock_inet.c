@@ -55,7 +55,7 @@ struct proto_fam proto_fam_inet6 = {
 	.addrcmp = sock_inet6_addrcmp,
 	.bind = sock_inet_bind_receiver,
 	.get_src = sock_get_src,
-	.get_dst = sock_get_dst,
+	.get_dst = sock_inet_get_dst,
 	.set_port = sock_inet_set_port,
 };
 
@@ -178,6 +178,8 @@ int sock_inet_get_dst(int fd, struct sockaddr *sa, socklen_t salen, int dir)
 			return ret;
 # endif
 		if (getsockopt(fd, IPPROTO_IP, SO_ORIGINAL_DST, sa, &salen) == 0)
+			return 0;
+		if (getsockopt(fd, IPPROTO_IPV6, SO_ORIGINAL_DST, sa, &salen) == 0)
 			return 0;
 #endif
 		return ret;
