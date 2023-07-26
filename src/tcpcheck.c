@@ -1788,7 +1788,7 @@ enum tcpcheck_eval_ret tcpcheck_eval_send(struct check *check, struct tcpcheck_r
 		     send->http.meth.meth != HTTP_METH_HEAD &&
 		     send->http.meth.meth != HTTP_METH_DELETE) || istlen(body)) {
 			clen = ist((!istlen(body) ? "0" : ultoa(istlen(body))));
-			if (!htx_add_header(htx, ist("Content-length"), clen))
+			if (!htx_add_header(htx, ist("Content-Length"), clen))
 				goto error_htx;
 			sl->flags |= HTX_SL_F_CLEN;
 		}
