@@ -2602,7 +2602,7 @@ int http_apply_redirect_rule(struct redirect_rule *rule, struct stream *s, struc
 	sl->info.res.status = rule->code;
 	s->txn->status = rule->code;
 
-	if (!htx_add_header(htx, ist("Content-length"), ist("0")) ||
+	if (!htx_add_header(htx, ist("Content-Length"), ist("0")) ||
 	    !htx_add_header(htx, ist("Location"), location))
 		goto fail;
 
@@ -4451,7 +4451,7 @@ void http_perform_server_redirect(struct stream *s, struct stconn *sc)
 	s->txn->status = 302;
 
         if (!htx_add_header(htx, ist("Cache-Control"), ist("no-cache")) ||
-	    !htx_add_header(htx, ist("Content-length"), ist("0")) ||
+	    !htx_add_header(htx, ist("Content-Length"), ist("0")) ||
 	    !htx_add_header(htx, ist("Location"), location))
 		goto fail;
 
