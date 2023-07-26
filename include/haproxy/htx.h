@@ -31,7 +31,7 @@
 #include <haproxy/htx-t.h>
 
 /* ->extra field value when the payload length is unknown (non-chunked message
- * with no "Content-length" header)
+ * with no "Content-Length" header)
  */
 #define HTX_UNKOWN_PAYLOAD_LENGTH ULLONG_MAX
 
