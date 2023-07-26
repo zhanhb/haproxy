@@ -468,7 +468,7 @@ static int h3_check_body_size(struct qcs *qcs, int fin)
 	 */
 	if (h3s->data_len > h3s->body_len ||
 	    (fin && h3s->data_len < h3s->body_len)) {
-		TRACE_ERROR("Content-length does not match DATA frame size", H3_EV_RX_FRAME|H3_EV_RX_DATA, qcs->qcc->conn, qcs);
+		TRACE_ERROR("Content-Length does not match DATA frame size", H3_EV_RX_FRAME|H3_EV_RX_DATA, qcs->qcc->conn, qcs);
 		h3s->err = H3_ERR_MESSAGE_ERROR;
 		qcc_report_glitch(qcs->qcc, 1);
 		ret = -1;
