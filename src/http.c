@@ -188,7 +188,7 @@ const int http_err_codes[HTTP_ERR_SIZE] = {
 const char *http_err_msgs[HTTP_ERR_SIZE] = {
 	[HTTP_ERR_200] =
 	"HTTP/1.1 200 OK\r\n"
-	"Content-length: 58\r\n"
+	"Content-Length: 58\r\n"
 	"Cache-Control: no-cache\r\n"
 	"Content-Type: text/html\r\n"
 	"\r\n"
@@ -196,7 +196,7 @@ const char *http_err_msgs[HTTP_ERR_SIZE] = {
 
 	[HTTP_ERR_400] =
 	"HTTP/1.1 400 Bad request\r\n"
-	"Content-length: 90\r\n"
+	"Content-Length: 90\r\n"
 	"Cache-Control: no-cache\r\n"
 	"Connection: close\r\n"
 	"Content-Type: text/html\r\n"
@@ -205,7 +205,7 @@ const char *http_err_msgs[HTTP_ERR_SIZE] = {
 
 	[HTTP_ERR_401] =
 	"HTTP/1.1 401 Unauthorized\r\n"
-	"Content-length: 112\r\n"
+	"Content-Length: 112\r\n"
 	"Cache-Control: no-cache\r\n"
 	"Content-Type: text/html\r\n"
 	"\r\n"
@@ -213,7 +213,7 @@ const char *http_err_msgs[HTTP_ERR_SIZE] = {
 
 	[HTTP_ERR_403] =
 	"HTTP/1.1 403 Forbidden\r\n"
-	"Content-length: 93\r\n"
+	"Content-Length: 93\r\n"
 	"Cache-Control: no-cache\r\n"
 	"Content-Type: text/html\r\n"
 	"\r\n"
@@ -221,7 +221,7 @@ const char *http_err_msgs[HTTP_ERR_SIZE] = {
 
 	[HTTP_ERR_404] =
 	"HTTP/1.1 404 Not Found\r\n"
-	"Content-length: 83\r\n"
+	"Content-Length: 83\r\n"
 	"Cache-Control: no-cache\r\n"
 	"Content-Type: text/html\r\n"
 	"\r\n"
@@ -229,7 +229,7 @@ const char *http_err_msgs[HTTP_ERR_SIZE] = {
 
 	[HTTP_ERR_405] =
 	"HTTP/1.1 405 Method Not Allowed\r\n"
-	"Content-length: 147\r\n"
+	"Content-Length: 147\r\n"
 	"Cache-Control: no-cache\r\n"
 	"Content-Type: text/html\r\n"
 	"\r\n"
@@ -237,7 +237,7 @@ const char *http_err_msgs[HTTP_ERR_SIZE] = {
 
 	[HTTP_ERR_407] =
 	"HTTP/1.1 407 Unauthorized\r\n"
-	"Content-length: 112\r\n"
+	"Content-Length: 112\r\n"
 	"Cache-Control: no-cache\r\n"
 	"Content-Type: text/html\r\n"
 	"\r\n"
@@ -245,7 +245,7 @@ const char *http_err_msgs[HTTP_ERR_SIZE] = {
 
 	[HTTP_ERR_408] =
 	"HTTP/1.1 408 Request Time-out\r\n"
-	"Content-length: 110\r\n"
+	"Content-Length: 110\r\n"
 	"Cache-Control: no-cache\r\n"
 	"Connection: close\r\n"
 	"Content-Type: text/html\r\n"
@@ -254,7 +254,7 @@ const char *http_err_msgs[HTTP_ERR_SIZE] = {
 
 	[HTTP_ERR_410] =
 	"HTTP/1.1 410 Gone\r\n"
-	"Content-length: 114\r\n"
+	"Content-Length: 114\r\n"
 	"Cache-Control: no-cache\r\n"
 	"Content-Type: text/html\r\n"
 	"\r\n"
@@ -262,7 +262,7 @@ const char *http_err_msgs[HTTP_ERR_SIZE] = {
 
 	[HTTP_ERR_413] =
 	"HTTP/1.1 413 Payload Too Large\r\n"
-	"Content-length: 106\r\n"
+	"Content-Length: 106\r\n"
 	"Cache-Control: no-cache\r\n"
 	"Content-Type: text/html\r\n"
 	"\r\n"
@@ -270,7 +270,7 @@ const char *http_err_msgs[HTTP_ERR_SIZE] = {
 
 	[HTTP_ERR_414] =
 	"HTTP/1.1 414 URI Too Long\r\n"
-	"Content-length: 110\r\n"
+	"Content-Length: 110\r\n"
 	"Cache-Control: no-cache\r\n"
 	"Content-Type: text/html\r\n"
 	"\r\n"
@@ -278,7 +278,7 @@ const char *http_err_msgs[HTTP_ERR_SIZE] = {
 
 	[HTTP_ERR_421] =
 	"HTTP/1.1 421 Misdirected Request\r\n"
-	"Content-length: 104\r\n"
+	"Content-Length: 104\r\n"
 	"Cache-Control: no-cache\r\n"
 	"Content-Type: text/html\r\n"
 	"\r\n"
@@ -286,7 +286,7 @@ const char *http_err_msgs[HTTP_ERR_SIZE] = {
 
 	[HTTP_ERR_422] =
 	"HTTP/1.1 422 Unprocessable Content\r\n"
-	"Content-length: 116\r\n"
+	"Content-Length: 116\r\n"
 	"Cache-Control: no-cache\r\n"
 	"Content-Type: text/html\r\n"
 	"\r\n"
@@ -294,7 +294,7 @@ const char *http_err_msgs[HTTP_ERR_SIZE] = {
 
 	[HTTP_ERR_425] =
 	"HTTP/1.1 425 Too Early\r\n"
-	"Content-length: 80\r\n"
+	"Content-Length: 80\r\n"
 	"Cache-Control: no-cache\r\n"
 	"Content-Type: text/html\r\n"
 	"\r\n"
@@ -302,7 +302,7 @@ const char *http_err_msgs[HTTP_ERR_SIZE] = {
 
 	[HTTP_ERR_429] =
 	"HTTP/1.1 429 Too Many Requests\r\n"
-	"Content-length: 117\r\n"
+	"Content-Length: 117\r\n"
 	"Cache-Control: no-cache\r\n"
 	"Content-Type: text/html\r\n"
 	"\r\n"
@@ -310,7 +310,7 @@ const char *http_err_msgs[HTTP_ERR_SIZE] = {
 
 	[HTTP_ERR_431] =
 	"HTTP/1.1 431 Request Header Fields Too Large\r\n"
-	"Content-length: 105\r\n"
+	"Content-Length: 105\r\n"
 	"Cache-Control: no-cache\r\n"
 	"Content-Type: text/html\r\n"
 	"\r\n"
@@ -318,7 +318,7 @@ const char *http_err_msgs[HTTP_ERR_SIZE] = {
 
 	[HTTP_ERR_500] =
 	"HTTP/1.1 500 Internal Server Error\r\n"
-	"Content-length: 97\r\n"
+	"Content-Length: 97\r\n"
 	"Cache-Control: no-cache\r\n"
 	"Content-Type: text/html\r\n"
 	"\r\n"
@@ -326,7 +326,7 @@ const char *http_err_msgs[HTTP_ERR_SIZE] = {
 
 	[HTTP_ERR_501] =
 	"HTTP/1.1 501 Not Implemented\r\n"
-	"Content-length: 135\r\n"
+	"Content-Length: 135\r\n"
 	"Cache-Control: no-cache\r\n"
 	"Content-Type: text/html\r\n"
 	"\r\n"
@@ -334,7 +334,7 @@ const char *http_err_msgs[HTTP_ERR_SIZE] = {
 
 	[HTTP_ERR_502] =
 	"HTTP/1.1 502 Bad Gateway\r\n"
-	"Content-length: 107\r\n"
+	"Content-Length: 107\r\n"
 	"Cache-Control: no-cache\r\n"
 	"Content-Type: text/html\r\n"
 	"\r\n"
@@ -342,7 +342,7 @@ const char *http_err_msgs[HTTP_ERR_SIZE] = {
 
 	[HTTP_ERR_503] =
 	"HTTP/1.1 503 Service Unavailable\r\n"
-	"Content-length: 107\r\n"
+	"Content-Length: 107\r\n"
 	"Cache-Control: no-cache\r\n"
 	"Content-Type: text/html\r\n"
 	"\r\n"
@@ -350,7 +350,7 @@ const char *http_err_msgs[HTTP_ERR_SIZE] = {
 
 	[HTTP_ERR_504] =
 	"HTTP/1.1 504 Gateway Time-out\r\n"
-	"Content-length: 92\r\n"
+	"Content-Length: 92\r\n"
 	"Cache-Control: no-cache\r\n"
 	"Content-Type: text/html\r\n"
 	"\r\n"
