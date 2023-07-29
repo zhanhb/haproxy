@@ -517,8 +517,8 @@ ifeq ($(IGNOREGIT),)
   VERSION := $(shell [ -d .git/. ] && (git describe --tags --match 'v*' --abbrev=0 | cut -c 2-) 2>/dev/null)
   ifneq ($(VERSION),)
     # OK git is there and works.
-    SUBVERS := $(shell comms=`git log --format=oneline --no-merges v$(VERSION).. 2>/dev/null | wc -l | tr -d '[:space:]'`; commit=`(git log -1 --pretty=%h --abbrev=6) 2>/dev/null`; [ $$comms -gt 0 ] && echo "-$$commit-$$comms")
-    VERDATE := $(shell git log -1 --pretty=format:%ci | cut -f1 -d' ' | tr '-' '/')
+    SUBVERS := $(shell comms=`git log --format=oneline --no-merges v$(VERSION)..@{u} 2>/dev/null | wc -l | tr -d '[:space:]'`; commit=`(git log -1 --pretty=%h --abbrev=6 @{u}) 2>/dev/null`; [ $$comms -gt 0 ] && echo "-$$commit-$$comms")
+    VERDATE := $(shell git log -1 --pretty=format:%ci @{u} | cut -f1 -d' ' | tr '-' '/')
   endif
 endif
 
