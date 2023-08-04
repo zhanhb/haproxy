@@ -2642,11 +2642,12 @@ int htx_transform_header_str(struct stream* s, struct channel *chn, struct htx *
 			     struct ist name, const char *str, struct my_regex *re, int action)
 {
 	struct http_hdr_ctx ctx;
-	struct buffer *output = get_trash_chunk();
 
 	/* find full header is action is ACT_HTTP_REPLACE_HDR */
 	ctx.blk = NULL;
 	while (http_find_header(htx, name, &ctx, (action == ACT_HTTP_REPLACE_HDR))) {
+		struct buffer *output = get_trash_chunk();
+
 		if (!regex_exec_match2(re, ctx.value.ptr, ctx.value.len, MAX_MATCH, pmatch, 0))
 			continue;
 
