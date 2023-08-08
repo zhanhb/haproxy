@@ -61,6 +61,26 @@ static int has_forbidden_char(const struct ist ist, const char *start)
 	return 0;
 }
 
+/* Looks into <ist> for forbidden characters for :path values (0x00..0x1F,
+ * 0x20, 0x23), starting at pointer <start> which must be within <ist>.
+ * Returns non-zero if such a character is found, 0 otherwise. When run on
+ * unlikely header match, it's recommended to first check for the presence
+ * of control chars using ist_find_ctl().
+ */
+static inline int http_path_has_forbidden_char(const struct ist ist, const char *start)
+{
+	do {
+		if ((uint8_t)*start <= 0x23) {
+			if ((uint8_t)*start < 0x20)
+				return 1;
+			if ((1U << ((uint8_t)*start & 0x1F)) & ((1<<3) | (1<<0)))
+				return 1;
+		}
+		start++;
+	} while (start < istend(ist));
+	return 0;
+}
+
 /* Prepare the request line into <*ptr> (stopping at <end>) from pseudo headers
  * stored in <phdr[]>. <fields> indicates what was found so far. This should be
  * called once at the detection of the first general header field or at the end
