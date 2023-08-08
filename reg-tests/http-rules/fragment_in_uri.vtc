@@ -1,0 +1,35 @@
+varnishtest "check for fragments in URL"
+#REQUIRE_VERSION=2.0
+
+# This reg-test checks that '#' is properly blocked in requests
+
+feature ignore_unknown_macro
+
+server s1 {
+    rxreq
+    txresp -hdr "connection: close"
+} -start
+
+haproxy h1 -conf {
+    global
+
+    defaults
+        mode http
+        timeout connect 1s
+        timeout client  1s
+        timeout server  1s
+
+    frontend fe_fragment_block
+        bind "fd@${fe_fragment_block}"
+        default_backend be
+
+    backend be
+        server s1 ${s1_addr}:${s1_port}
+
+} -start
+
+client c11 -connect ${h1_fe_fragment_block_sock} {
+    txreq -url "/#foo"
+    rxresp
+    expect resp.status == 400
+} -run
