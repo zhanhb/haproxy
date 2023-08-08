@@ -402,6 +402,7 @@ static ssize_t h3_headers_to_htx(struct qcs *qcs, const struct buffer *buf,
 	int hdr_idx, ret;
 	int cookie = -1, last_cookie = -1, i;
 	const char *ctl;
+	int relaxed = !!(h3c->qcc->proxy->options2 & PR_O2_REQBUG_OK);
 
 	/* RFC 9114 4.1.2. Malformed Requests and Responses
 	 *
@@ -500,6 +501,19 @@ static ssize_t h3_headers_to_htx(struct qcs *qcs, const struct buffer *buf,
 				len = -1;
 				goto out;
 			}
+
+			if (!relaxed) {
+				/* we need to reject any control chars or '#' from the path,
+				 * unless option accept-invalid-http-request is set.
+				 */
+				ctl = ist_find_range(list[hdr_idx].v, 0, '#');
+				if (unlikely(ctl) && http_path_has_forbidden_char(list[hdr_idx].v, ctl)) {
+					TRACE_ERROR("forbidden character in ':path' pseudo-header", H3_EV_RX_FRAME|H3_EV_RX_HDR, qcs->qcc->conn, qcs);
+					len = -1;
+					goto out;
+				}
+			}
+
 			path = list[hdr_idx].v;
 		}
 		else if (isteq(list[hdr_idx].n, ist(":scheme"))) {
