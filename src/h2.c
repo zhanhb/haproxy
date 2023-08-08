@@ -178,8 +178,12 @@ static int h2_prepare_h1_reqline(uint32_t fields, struct ist *phdr, char **ptr, 
  *
  * The Cookie header will be reassembled at the end, and for this, the <list>
  * will be used to create a linked list, so its contents may be destroyed.
+ *
+ * When <relaxed> is non-nul, some non-dangerous checks will be ignored. This
+ * is in order to satisfy "option accept-invalid-http-request" for
+ * interoperability purposes.
  */
-int h2_make_h1_request(struct http_hdr *list, char *out, int osize, unsigned int *msgf, unsigned long long *body_len)
+int h2_make_h1_request(struct http_hdr *list, char *out, int osize, unsigned int *msgf, unsigned long long *body_len, int relaxed)
 {
 	struct ist phdr_val[H2_PHDR_NUM_ENTRIES];
 	char *out_end = out + osize;
@@ -660,8 +664,12 @@ static struct htx_sl *h2_prepare_htx_reqline(uint32_t fields, struct ist *phdr, 
  *
  * The Cookie header will be reassembled at the end, and for this, the <list>
  * will be used to create a linked list, so its contents may be destroyed.
+ *
+ * When <relaxed> is non-nul, some non-dangerous checks will be ignored. This
+ * is in order to satisfy "option accept-invalid-http-request" for
+ * interoperability purposes.
  */
-int h2_make_htx_request(struct http_hdr *list, struct htx *htx, unsigned int *msgf, unsigned long long *body_len)
+int h2_make_htx_request(struct http_hdr *list, struct htx *htx, unsigned int *msgf, unsigned long long *body_len, int relaxed)
 {
 	struct ist phdr_val[H2_PHDR_NUM_ENTRIES];
 	uint32_t fields; /* bit mask of H2_PHDR_FND_* */

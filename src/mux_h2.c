@@ -3913,10 +3913,12 @@ next_frame:
 		if (h2c->flags & H2_CF_IS_BACK)
 			outlen = h2_make_htx_response(list, htx, &msgf, body_len);
 		else
-			outlen = h2_make_htx_request(list, htx, &msgf, body_len);
+			outlen = h2_make_htx_request(list, htx, &msgf, body_len,
+					     !!(((const struct session *)h2c->conn->owner)->fe->options2 & PR_O2_REQBUG_OK));
 	} else {
 		/* HTTP/1 mode */
-		outlen = h2_make_h1_request(list, b_tail(rxbuf), try, &msgf, body_len);
+		outlen = h2_make_h1_request(list, b_tail(rxbuf), try, &msgf, body_len,
+					     !!(((const struct session *)h2c->conn->owner)->fe->options2 & PR_O2_REQBUG_OK));
 		if (outlen > 0)
 			b_add(rxbuf, outlen);
 	}
