@@ -716,11 +716,11 @@ const char *http_parse_reqline(struct http_msg *msg,
     defined(__ARM_ARCH_7A__)
 		/* speedup: skip bytes not between 0x21 and 0x7e inclusive */
 		while (ptr <= end - sizeof(int)) {
-			int x = *(int *)ptr - 0x21212121;
+			int x = *(int *)ptr - 0x24242424;
 			if (x & 0x80808080)
 				break;
 
-			x -= 0x5e5e5e5e;
+			x -= 0x5b5b5b5b;
 			if (!(x & 0x80808080))
 				break;
 
@@ -732,8 +732,15 @@ const char *http_parse_reqline(struct http_msg *msg,
 			goto http_msg_ood;
 		}
 	http_msg_rquri2:
-		if (likely((unsigned char)(*ptr - 33) <= 93)) /* 33 to 126 included */
+		if (likely((unsigned char)(*ptr - 33) <= 93)) { /* 33 to 126 included */
+			if (*ptr == '#') {
+				if (msg->err_pos < -1) /* PR_O2_REQBUG_OK not set */
+					goto invalid_char;
+				if (msg->err_pos == -1) /* PR_O2_REQBUG_OK set: just log */
+					msg->err_pos = ptr - msg_start;
+			}
 			EAT_AND_JUMP_OR_RETURN(ptr, end, http_msg_rquri2, http_msg_ood, state, HTTP_MSG_RQURI);
+		}
 
 		if (likely(HTTP_IS_SPHT(*ptr))) {
 			msg->sl.rq.u_l = ptr - msg_start - msg->sl.rq.u;
