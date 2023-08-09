@@ -1244,7 +1244,6 @@ resume_execution:
 		}
 		msg = lua_tostring(lua->T, -1);
 		lua_settop(lua->T, 0); /* Empty the stack. */
-		lua_pop(lua->T, 1);
 		trace = hlua_traceback(lua->T, ", ");
 		if (msg)
 			lua_pushfstring(lua->T, "runtime error: %s from %s", msg, trace);
@@ -1267,7 +1266,6 @@ resume_execution:
 		}
 		msg = lua_tostring(lua->T, -1);
 		lua_settop(lua->T, 0); /* Empty the stack. */
-		lua_pop(lua->T, 1);
 		if (msg)
 			lua_pushfstring(lua->T, "message handler error: %s", msg);
 		else
