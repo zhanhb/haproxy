@@ -79,13 +79,20 @@ int h2_parse_cont_len_header(unsigned int *msgf, struct ist *value, unsigned lon
 	int not_first = !!(*msgf & H2_MSGF_BODY_CL);
 	struct ist word;
 
-	word.ptr = value->ptr - 1; // -1 for next loop's pre-increment
+	word.ptr = value->ptr;
 	e = value->ptr + value->len;
 
-	while (++word.ptr < e) {
+	while (1) {
+		if (word.ptr >= e) {
+			/* empty header or empty value */
+			goto fail;
+		}
+
 		/* skip leading delimiter and blanks */
-		if (unlikely(HTTP_IS_LWS(*word.ptr)))
+		if (unlikely(HTTP_IS_LWS(*word.ptr))) {
+			word.ptr++;
 			continue;
+		}
 
 		/* digits only now */
 		for (cl = 0, n = word.ptr; n < e; n++) {
@@ -124,6 +131,13 @@ int h2_parse_cont_len_header(unsigned int *msgf, struct ist *value, unsigned lon
 		*msgf |= H2_MSGF_BODY_CL;
 		*body_len = cl;
 		*value = word;
+
+		/* Now either n==e and we're done, or n points to the comma,
+		 * and we skip it and continue.
+		 */
+		if (n++ == e)
+			break;
+
 		word.ptr = n;
 	}
 	/* here we've reached the end with a single value or a series of
