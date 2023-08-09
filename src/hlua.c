@@ -1620,7 +1620,6 @@ resume_execution:
 		}
 		msg = lua_tostring(lua->T, -1);
 		lua_settop(lua->T, 0); /* Empty the stack. */
-		lua_pop(lua->T, 1);
 		trace = hlua_traceback(lua->T, ", ");
 		if (msg)
 			lua_pushfstring(lua->T, "[state-id %d] runtime error: %s from %s", lua->state_id, msg, trace);
@@ -1643,7 +1642,6 @@ resume_execution:
 		}
 		msg = lua_tostring(lua->T, -1);
 		lua_settop(lua->T, 0); /* Empty the stack. */
-		lua_pop(lua->T, 1);
 		if (msg)
 			lua_pushfstring(lua->T, "[state-id %d] message handler error: %s", lua->state_id, msg);
 		else
@@ -11965,7 +11963,6 @@ int hlua_post_init_state(lua_State *L)
 				kind = "runtime error";
 			msg = lua_tostring(L, -1);
 			lua_settop(L, 0); /* Empty the stack. */
-			lua_pop(L, 1);
 			trace = hlua_traceback(L, ", ");
 			if (msg)
 				ha_alert("Lua init: %s: '%s' from %s\n", kind, msg, trace);
@@ -11986,8 +11983,7 @@ int hlua_post_init_state(lua_State *L)
 		case LUA_ERRMEM:
 			if (!kind)
 				kind = "out of memory error";
-			lua_settop(L, 0);
-			lua_pop(L, 1);
+			lua_settop(L, 0); /* Empty the stack. */
 			trace = hlua_traceback(L, ", ");
 			ha_alert("Lua init: %s: %s\n", kind, trace);
 			return_status = 0;
