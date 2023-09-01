@@ -1805,7 +1805,7 @@ static void stream_int_chk_snd_applet(struct stream_interface *si)
 
 	/* we only wake the applet up if it was waiting for some data */
 
-	if (!(si->flags & SI_FL_WAIT_DATA))
+	if (!(si->flags & SI_FL_WAIT_DATA) && !(oc->flags & CF_SHUTW_NOW))
 		return;
 
 	if (!tick_isset(oc->wex))
