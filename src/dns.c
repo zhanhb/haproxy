@@ -659,8 +659,10 @@ read:
 				/* retrieve message len */
 				ret = co_getblk(si_oc(si), (char *)&msg_len, 2, 0);
 				if (ret <= 0) {
-					if (ret == -1)
+					if (ret == -1) {
+						HA_SPIN_UNLOCK(DNS_LOCK, &ds->dss->lock);
 						goto close;
+					}
 					si_cant_get(si);
 					break;
 				}
@@ -680,8 +682,10 @@ read:
 				/* read available data */
 				ret = co_getblk(si_oc(si), ds->rx_msg.area + ds->rx_msg.offset, co_data(si_oc(si)), 0);
 				if (ret <= 0) {
-					if (ret == -1)
+					if (ret == -1) {
+						HA_SPIN_UNLOCK(DNS_LOCK, &ds->dss->lock);
 						goto close;
+					}
 					si_cant_get(si);
 					break;
 				}
@@ -702,8 +706,10 @@ read:
 			/* read from the channel until the end of the message */
 			ret = co_getblk(si_oc(si), ds->rx_msg.area + ds->rx_msg.offset, ds->rx_msg.len - ds->rx_msg.offset, 0);
 			if (ret <= 0) {
-				if (ret == -1)
+				if (ret == -1) {
+					HA_SPIN_UNLOCK(DNS_LOCK, &ds->dss->lock);
 					goto close;
+				}
 				si_cant_get(si);
 				break;
 			}
