@@ -506,6 +506,10 @@ struct appctx *sc_applet_create(struct stconn *sc, struct applet *app)
  */
 static inline int sc_cond_forward_shutw(struct stconn *sc)
 {
+	/* Foward the shutdown if an write error occurred on the input channel */
+	if (sc_ic(sc)->flags & CF_WRITE_TIMEOUT)
+		return 1;
+
 	/* The close must not be forwarded */
 	if (!(sc_ic(sc)->flags & CF_SHUTR) || !(sc->flags & SC_FL_NOHALF))
 		return 0;
