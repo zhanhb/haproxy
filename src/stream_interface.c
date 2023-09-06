@@ -161,6 +161,10 @@ void si_retnclose(struct stream_interface *si,
  */
 static inline int si_cond_forward_shutw(struct stream_interface *si)
 {
+	/* Foward the shutdown if an write error occurred on the input channel */
+	if (si_ic(si)->flags & CF_WRITE_TIMEOUT)
+		return 1;
+
 	/* The close must not be forwarded */
 	if (!(si_ic(si)->flags & CF_SHUTR) || !(si->flags & SI_FL_NOHALF))
 		return 0;
