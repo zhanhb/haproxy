@@ -2276,7 +2276,7 @@ struct task *process_stream(struct task *t, void *context, unsigned int state)
 
 	/* shutdown(write) pending */
 	if (unlikely((req->flags & (CF_SHUTW|CF_SHUTW_NOW)) == CF_SHUTW_NOW &&
-		     channel_is_empty(req))) {
+		     (channel_is_empty(req)  || (req->flags & CF_WRITE_TIMEOUT)))) {
 		if (req->flags & CF_READ_ERROR)
 			si_b->flags |= SI_FL_NOLINGER;
 		si_shutw(si_b);
@@ -2403,7 +2403,7 @@ struct task *process_stream(struct task *t, void *context, unsigned int state)
 
 	/* shutdown(write) pending */
 	if (unlikely((res->flags & (CF_SHUTW|CF_SHUTW_NOW)) == CF_SHUTW_NOW &&
-		     channel_is_empty(res))) {
+		     (channel_is_empty(res) || (res->flags & CF_WRITE_TIMEOUT)))) {
 		si_shutw(si_f);
 	}
 
