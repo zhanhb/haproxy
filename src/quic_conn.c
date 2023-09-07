@@ -3645,8 +3645,8 @@ static int quic_stateless_reset_token_cpy(struct quic_conn *qc,
                                           const unsigned char *salt, size_t saltlen)
 {
 	/* Input secret */
-	const unsigned char *key = (const unsigned char *)global.cluster_secret;
-	size_t keylen = strlen(global.cluster_secret);
+	const unsigned char *key = global.cluster_secret;
+	size_t keylen = sizeof global.cluster_secret;
 	/* Info */
 	const unsigned char label[] = "stateless token";
 	size_t labellen = sizeof label - 1;
@@ -3666,28 +3666,14 @@ static int quic_stateless_reset_token_cpy(struct quic_conn *qc,
 static int quic_stateless_reset_token_init(struct quic_conn *qc,
                                            struct quic_connection_id *quic_cid)
 {
-	int ret;
+	/* Output secret */
+	unsigned char *token = quic_cid->stateless_reset_token;
+	size_t tokenlen = sizeof quic_cid->stateless_reset_token;
+	/* Salt */
+	const unsigned char *cid = quic_cid->cid.data;
+	size_t cidlen = quic_cid->cid.len;
 
-	TRACE_ENTER(QUIC_EV_CONN_TXPKT, qc);
-
-	if (global.cluster_secret) {
-		/* Output secret */
-		unsigned char *token = quic_cid->stateless_reset_token;
-		size_t tokenlen = sizeof quic_cid->stateless_reset_token;
-		/* Salt */
-		const unsigned char *cid = quic_cid->cid.data;
-		size_t cidlen = quic_cid->cid.len;
-
-		ret = quic_stateless_reset_token_cpy(qc, token, tokenlen, cid, cidlen);
-	}
-	else {
-		/* TODO: RAND_bytes() should be replaced */
-		ret = RAND_bytes(quic_cid->stateless_reset_token,
-		                 sizeof quic_cid->stateless_reset_token) == 1;
-	}
-
-	TRACE_LEAVE(QUIC_EV_CONN_TXPKT, qc);
-	return ret;
+	return quic_stateless_reset_token_cpy(qc, token, tokenlen, cid, cidlen);
 }
 
 /* Allocate a new CID with <seq_num> as sequence number and attach it to <root>
@@ -5527,7 +5513,7 @@ static inline int qc_try_rm_hp(struct quic_conn *qc,
 	memcpy(b_tail(&qc->rx.buf), beg, pkt->len);
 	pkt->data = (unsigned char *)b_tail(&qc->rx.buf);
 	b_add(&qc->rx.buf, pkt->len);
-	
+
 	ret = 1;
  out:
 	TRACE_LEAVE(QUIC_EV_CONN_TRMHP, qc);
@@ -5773,8 +5759,8 @@ static int quic_generate_retry_token(unsigned char *buf, size_t len,
 	unsigned char salt[QUIC_RETRY_TOKEN_SALTLEN];
 	unsigned char key[QUIC_TLS_KEY_LEN];
 	unsigned char iv[QUIC_TLS_IV_LEN];
-	const unsigned char *sec = (const unsigned char *)global.cluster_secret;
-	size_t seclen = strlen(global.cluster_secret);
+	const unsigned char *sec = global.cluster_secret;
+	size_t seclen = sizeof global.cluster_secret;
 	EVP_CIPHER_CTX *ctx = NULL;
 	const EVP_CIPHER *aead = EVP_aes_128_gcm();
 	uint32_t timestamp = (uint32_t)date.tv_sec;
@@ -5868,8 +5854,8 @@ static int quic_retry_token_check(struct quic_rx_packet *pkt,
 	const unsigned char *salt;
 	unsigned char key[QUIC_TLS_KEY_LEN];
 	unsigned char iv[QUIC_TLS_IV_LEN];
-	const unsigned char *sec = (const unsigned char *)global.cluster_secret;
-	size_t seclen = strlen(global.cluster_secret);
+	const unsigned char *sec = global.cluster_secret;
+	size_t seclen = sizeof global.cluster_secret;
 	EVP_CIPHER_CTX *ctx = NULL;
 	const EVP_CIPHER *aead = EVP_aes_128_gcm();
 	const struct quic_version *qv = qc ? qc->original_version :
@@ -5878,7 +5864,7 @@ static int quic_retry_token_check(struct quic_rx_packet *pkt,
 	TRACE_ENTER(QUIC_EV_CONN_LPKT, qc);
 
 	/* The caller must ensure this. */
-	BUG_ON(!global.cluster_secret || !pkt->token_len);
+	BUG_ON(!pkt->token_len);
 
 	prx = l->bind_conf->frontend;
 	prx_counters = EXTRA_COUNTERS_GET(prx->extra_counters_fe, &quic_stats_module);
@@ -6206,7 +6192,7 @@ static struct quic_conn *quic_rx_pkt_retrieve_conn(struct quic_rx_packet *pkt,
 	if (pkt->type == QUIC_PACKET_TYPE_INITIAL) {
 		BUG_ON(!pkt->version); /* This must not happen. */
 
-		if (global.cluster_secret && pkt->token_len) {
+		if (pkt->token_len) {
 			if (!quic_retry_token_check(pkt, dgram, l, qc, &token_odcid))
 				goto err;
 		}
@@ -6214,7 +6200,7 @@ static struct quic_conn *quic_rx_pkt_retrieve_conn(struct quic_rx_packet *pkt,
 		if (!qc) {
 			int ipv4;
 
-			if (global.cluster_secret && !pkt->token_len && !(l->bind_conf->options & BC_O_QUIC_FORCE_RETRY) &&
+			if (!pkt->token_len && !(l->bind_conf->options & BC_O_QUIC_FORCE_RETRY) &&
 			    HA_ATOMIC_LOAD(&prx_counters->half_open_conn) >= global.tune.quic_retry_threshold) {
 				TRACE_PROTO("Initial without token, sending retry",
 				            QUIC_EV_CONN_LPKT, NULL, NULL, NULL, pkt->version);
@@ -6257,7 +6243,7 @@ static struct quic_conn *quic_rx_pkt_retrieve_conn(struct quic_rx_packet *pkt,
 	}
 	else if (!qc) {
 		TRACE_PROTO("No connection on a non Initial packet", QUIC_EV_CONN_LPKT, NULL, NULL, NULL, pkt->version);
-		if (global.cluster_secret && !send_stateless_reset(l, &dgram->saddr, pkt))
+		if (!send_stateless_reset(l, &dgram->saddr, pkt))
 			TRACE_ERROR("stateless reset not sent", QUIC_EV_CONN_LPKT, qc);
 		goto err;
 	}
@@ -6386,7 +6372,7 @@ static int quic_rx_pkt_parse(struct quic_rx_packet *pkt,
 			/* TODO Retry should be automatically activated if
 			 * suspect network usage is detected.
 			 */
-			if (global.cluster_secret && !token_len) {
+			if (!token_len) {
 				if (l->bind_conf->options & BC_O_QUIC_FORCE_RETRY) {
 					TRACE_PROTO("Initial without token, sending retry",
 					            QUIC_EV_CONN_LPKT, NULL, NULL, NULL, qv);
@@ -6399,14 +6385,6 @@ static int quic_rx_pkt_parse(struct quic_rx_packet *pkt,
 					HA_ATOMIC_INC(&prx_counters->retry_sent);
 					goto drop_silent;
 				}
-			}
-			else if (!global.cluster_secret && token_len) {
-				/* Impossible case: a token was received without configured
-				 * cluster secret.
-				 */
-				TRACE_PROTO("Packet dropped", QUIC_EV_CONN_LPKT,
-				            NULL, NULL, NULL, qv);
-				goto drop;
 			}
 
 			pkt->token = buf;
