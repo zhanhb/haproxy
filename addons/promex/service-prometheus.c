@@ -844,8 +844,10 @@ static int promex_dump_back_metrics(struct appctx *appctx, struct htx *htx)
 						goto next_px;
 					sv = px->srv;
 					while (sv) {
-						srv_check_status = sv->check.status;
-						srv_check_count[srv_check_status] += 1;
+						if ((sv->check.state & (CHK_ST_ENABLED|CHK_ST_PAUSED)) == CHK_ST_ENABLED) {
+							srv_check_status = sv->check.status;
+							srv_check_count[srv_check_status] += 1;
+						}
 						sv = sv->next;
 					}
 					for (; appctx->ctx.stats.st_code < HCHK_STATUS_SIZE; appctx->ctx.stats.st_code++) {
