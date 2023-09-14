@@ -1173,8 +1173,13 @@ int http_request_forward_body(struct stream *s, struct channel *req, int an_bit)
 
  waiting:
 	/* waiting for the last bits to leave the buffer */
-	if (req->flags & CF_SHUTW)
-		goto return_srv_abort;
+	if (req->flags & CF_SHUTW) {
+		/* Handle server aborts only if there is no response. Otherwise,
+		 * let a change to foward the response first.
+		 */
+		if (htx_is_empty(htxbuf(&s->res.buf)))
+			goto return_srv_abort;
+	}
 
 	/* When TE: chunked is used, we need to get there again to parse remaining
 	 * chunks even if the client has closed, so we don't want to set CF_DONTCLOSE.
