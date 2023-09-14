@@ -2373,6 +2373,7 @@ struct server *free_server(struct server *srv)
 
 	free(srv->id);
 	free(srv->cookie);
+	free(srv->rdr_pfx);
 	free(srv->hostname);
 	free(srv->hostname_dn);
 	free((char*)srv->conf.file);
