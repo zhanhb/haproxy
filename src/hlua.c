@@ -2255,6 +2255,9 @@ __LJMP static int hlua_socket_receive_yield(struct lua_State *L, int status, lua
 		goto no_peer;
 
 	csk_ctx = container_of(peer, struct hlua_csk_ctx, xref);
+	if (!csk_ctx->connected)
+		goto connection_closed;
+
 	appctx = csk_ctx->appctx;
 	s = appctx_strm(appctx);
 
@@ -2496,6 +2499,12 @@ static int hlua_socket_write_yield(struct lua_State *L,int status, lua_KContext 
 	}
 
 	csk_ctx = container_of(peer, struct hlua_csk_ctx, xref);
+	if (!csk_ctx->connected) {
+		xref_unlock(&socket->xref, peer);
+		lua_pushinteger(L, -1);
+		return 1;
+	}
+
 	appctx = csk_ctx->appctx;
 	sc = appctx_sc(appctx);
 	s = __sc_strm(sc);
@@ -2708,6 +2717,7 @@ __LJMP static int hlua_socket_getpeername(struct lua_State *L)
 {
 	struct hlua_socket *socket;
 	struct xref *peer;
+	struct hlua_csk_ctx *csk_ctx;
 	struct appctx *appctx;
 	struct stconn *sc;
 	const struct sockaddr_storage *dst;
@@ -2730,7 +2740,14 @@ __LJMP static int hlua_socket_getpeername(struct lua_State *L)
 		return 1;
 	}
 
-	appctx = container_of(peer, struct hlua_csk_ctx, xref)->appctx;
+	csk_ctx = container_of(peer, struct hlua_csk_ctx, xref);
+	if (!csk_ctx->connected) {
+		xref_unlock(&socket->xref, peer);
+		lua_pushnil(L);
+		return 1;
+	}
+
+	appctx = csk_ctx->appctx;
 	sc = appctx_sc(appctx);
 	dst = sc_dst(sc_opposite(sc));
 	if (!dst) {
@@ -2751,6 +2768,7 @@ static int hlua_socket_getsockname(struct lua_State *L)
 	struct connection *conn;
 	struct appctx *appctx;
 	struct xref *peer;
+	struct hlua_csk_ctx *csk_ctx;
 	struct stream *s;
 	int ret;
 
@@ -2771,7 +2789,14 @@ static int hlua_socket_getsockname(struct lua_State *L)
 		return 1;
 	}
 
-	appctx = container_of(peer, struct hlua_csk_ctx, xref)->appctx;
+	csk_ctx = container_of(peer, struct hlua_csk_ctx, xref);
+	if (!csk_ctx->connected) {
+		xref_unlock(&socket->xref, peer);
+		lua_pushnil(L);
+		return 1;
+	}
+
+	appctx = csk_ctx->appctx;
 	s = appctx_strm(appctx);
 
 	conn = sc_conn(s->scb);
