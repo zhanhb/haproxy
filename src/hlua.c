@@ -276,6 +276,7 @@ struct hlua_csk_ctx {
 	struct list wake_on_read;
 	struct list wake_on_write;
 	struct appctx *appctx;
+	struct server *srv;
 	int timeout;
 	int die;
 };
@@ -2989,6 +2990,10 @@ __LJMP static int hlua_socket_connect(struct lua_State *L)
 		return 1;
 	}
 
+	csk_ctx = container_of(peer, struct hlua_csk_ctx, xref);
+	if (!csk_ctx->srv)
+		csk_ctx->srv = socket_tcp;
+
 	/* Parse ip address. */
 	addr = str2sa_range(ip, NULL, &low, &high, NULL, NULL, NULL, NULL, NULL, PA_O_PORT_OK | PA_O_STREAM);
 	if (!addr) {
@@ -3069,6 +3074,7 @@ __LJMP static int hlua_socket_connect_ssl(struct lua_State *L)
 	}
 
 	s = appctx_strm(container_of(peer, struct hlua_csk_ctx, xref)->appctx);
+	container_of(peer, struct hlua_csk_ctx, xref)->srv = socket_ssl;
 
 	s->target = &socket_ssl->obj_type;
 	xref_unlock(&socket->xref, peer);
@@ -3190,6 +3196,7 @@ __LJMP static int hlua_socket_new(lua_State *L)
 	ctx = applet_reserve_svcctx(appctx, sizeof(*ctx));
 	ctx->connected = 0;
 	ctx->die = 0;
+	ctx->srv = NULL;
 	ctx->timeout = 0;
 	ctx->appctx = appctx;
 	LIST_INIT(&ctx->wake_on_write);
