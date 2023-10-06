@@ -30,6 +30,8 @@ int act_resolution_error_cb(struct dns_requester *requester, int error_code);
 static inline struct action_kw *action_lookup(struct list *keywords, const char *kw)
 {
 	struct action_kw_list *kw_list;
+	struct action_kw *best = NULL;
+	int len, bestlen = 0;
 	int i;
 
 	if (LIST_ISEMPTY(keywords))
@@ -38,13 +40,18 @@ static inline struct action_kw *action_lookup(struct list *keywords, const char 
 	list_for_each_entry(kw_list, keywords, list) {
 		for (i = 0; kw_list->kw[i].kw != NULL; i++) {
 			if (kw_list->kw[i].match_pfx &&
-			    strncmp(kw, kw_list->kw[i].kw, strlen(kw_list->kw[i].kw)) == 0)
-				return &kw_list->kw[i];
+			    (len = strlen(kw_list->kw[i].kw)) > bestlen &&
+			    strncmp(kw, kw_list->kw[i].kw, len) == 0) {
+				if (len > bestlen) {
+					bestlen = len;
+					best = &kw_list->kw[i];
+				}
+			}
 			if (!strcmp(kw, kw_list->kw[i].kw))
 				return &kw_list->kw[i];
 		}
 	}
-	return NULL;
+	return best;
 }
 
 static inline void action_build_list(struct list *keywords,
