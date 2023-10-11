@@ -123,23 +123,6 @@ static struct qcs *qcs_new(struct qcc *qcc, uint64_t id, enum qcs_type type)
 
 	qcc->strms[type].nb_streams++;
 
-	/* Allocate transport layer stream descriptor. Only needed for TX. */
-	if (!quic_stream_is_uni(id) || !quic_stream_is_remote(qcc, id)) {
-		struct quic_conn *qc = qcc->conn->handle.qc;
-		qcs->stream = qc_stream_desc_new(id, type, qcs, qc);
-		if (!qcs->stream) {
-			TRACE_ERROR("qc_stream_desc alloc failure", QMUX_EV_QCS_NEW, qcc->conn, qcs);
-			goto err;
-		}
-	}
-
-	if (qcc->app_ops->attach) {
-		if (qcc->app_ops->attach(qcs, qcc->ctx)) {
-			TRACE_ERROR("app proto failure", QMUX_EV_QCS_NEW, qcc->conn, qcs);
-			goto err;
-		}
-	}
-
 	/* If stream is local, use peer remote-limit, or else the opposite. */
 	if (quic_stream_is_bidi(id)) {
 		qcs->tx.msd = quic_stream_is_local(qcc, id) ? qcc->rfctl.msd_bidi_r :
@@ -175,6 +158,23 @@ static struct qcs *qcs_new(struct qcc *qcc, uint64_t id, enum qcs_type type)
 	qcs->subs = NULL;
 
 	qcs->err = 0;
+
+	/* Allocate transport layer stream descriptor. Only needed for TX. */
+	if (!quic_stream_is_uni(id) || !quic_stream_is_remote(qcc, id)) {
+		struct quic_conn *qc = qcc->conn->handle.qc;
+		qcs->stream = qc_stream_desc_new(id, type, qcs, qc);
+		if (!qcs->stream) {
+			TRACE_ERROR("qc_stream_desc alloc failure", QMUX_EV_QCS_NEW, qcc->conn, qcs);
+			goto err;
+		}
+	}
+
+	if (qcc->app_ops->attach) {
+		if (qcc->app_ops->attach(qcs, qcc->ctx)) {
+			TRACE_ERROR("app proto failure", QMUX_EV_QCS_NEW, qcc->conn, qcs);
+			goto err;
+		}
+	}
 
  out:
 	TRACE_LEAVE(QMUX_EV_QCS_NEW, qcc->conn, qcs);
