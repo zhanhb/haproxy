@@ -4820,7 +4820,6 @@ struct task *qc_process_timer(struct task *task, void *ctx, unsigned int state)
 
 	if (qc->flags & (QUIC_FL_CONN_DRAINING|QUIC_FL_CONN_TO_KILL)) {
 		TRACE_PROTO("cancelled action (draining state)", QUIC_EV_CONN_PTIMER, qc);
-		task = NULL;
 		goto out;
 	}
 
@@ -5322,6 +5321,7 @@ struct task *qc_idle_timer_task(struct task *t, void *ctx, unsigned int state)
 	if (qc->mux_state != QC_MUX_READY) {
 		quic_conn_release(qc);
 		qc = NULL;
+		t = NULL;
 	}
 
 	/* TODO if the quic-conn cannot be freed because of the MUX, we may at
@@ -5335,7 +5335,7 @@ struct task *qc_idle_timer_task(struct task *t, void *ctx, unsigned int state)
 	}
 
 	TRACE_LEAVE(QUIC_EV_CONN_IDLE_TIMER, qc);
-	return NULL;
+	return t;
 }
 
 /* Initialize the idle timeout task for <qc>.
