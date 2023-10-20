@@ -2762,12 +2762,13 @@ static struct h2s *h2c_frt_handle_headers(struct h2c *h2c, struct h2s *h2s)
 			}
 			goto done;
 		}
-		/* the connection was already killed by an RST, let's consume
+		/* the stream was already killed by an RST, let's consume
 		 * the data and send another RST.
 		 */
 		error = h2c_dec_hdrs(h2c, &rxbuf, &flags, &body_len, NULL);
 		sess_log(h2c->conn->owner);
 		h2s = (struct h2s*)h2_error_stream;
+		TRACE_USER("rcvd H2 trailers on closed stream", H2_EV_RX_FRAME|H2_EV_RX_HDR|H2_EV_STRM_NEW|H2_EV_STRM_END, h2c->conn, h2s, &rxbuf);
 		goto send_rst;
 	}
 	else if (h2c->dsi <= h2c->max_id || !(h2c->dsi & 1)) {
@@ -2820,6 +2821,7 @@ static struct h2s *h2c_frt_handle_headers(struct h2c *h2c, struct h2s *h2s)
 		/* Failed to decode this stream (e.g. too large request)
 		 * but the HPACK decompressor is still synchronized.
 		 */
+		TRACE_USER("rcvd unparsable H2 request", H2_EV_RX_FRAME|H2_EV_RX_HDR|H2_EV_STRM_NEW|H2_EV_STRM_END, h2c->conn, h2s, &rxbuf);
 		goto strm_err;
 	}
 
@@ -2832,7 +2834,7 @@ static struct h2s *h2c_frt_handle_headers(struct h2c *h2c, struct h2s *h2s)
 		h2c->max_id = h2c->dsi;
 	h2c->stream_cnt++;
 
-	/* Note: we don't emit any other logs below because ff we return
+	/* Note: we don't emit any other logs below because if we return
 	 * positively from h2c_frt_stream_new(), the stream will report the error,
 	 * and if we return in error, h2c_frt_stream_new() will emit the error.
 	 *
@@ -2842,6 +2844,7 @@ static struct h2s *h2c_frt_handle_headers(struct h2c *h2c, struct h2s *h2s)
 	h2s = h2c_frt_stream_new(h2c, h2c->dsi, &rxbuf, flags);
 	if (!h2s) {
 		h2s = (struct h2s*)h2_refused_stream;
+		TRACE_USER("refused H2 req.  ", H2_EV_RX_FRAME|H2_EV_RX_HDR|H2_EV_STRM_NEW|H2_EV_STRM_END, h2c->conn, h2s, &rxbuf);
 		goto send_rst;
 	}
 
@@ -2890,7 +2893,6 @@ static struct h2s *h2c_frt_handle_headers(struct h2c *h2c, struct h2s *h2s)
 	h2_release_buf(h2c, &rxbuf);
 	h2c->st0 = H2_CS_FRAME_E;
 
-	TRACE_USER("rejected H2 request", H2_EV_RX_FRAME|H2_EV_RX_HDR|H2_EV_STRM_NEW|H2_EV_STRM_END, h2c->conn, h2s, &rxbuf);
 	TRACE_DEVEL("leaving on error", H2_EV_RX_FRAME|H2_EV_RX_HDR, h2c->conn, h2s);
 
  leave:
