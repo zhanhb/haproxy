@@ -5307,7 +5307,32 @@ static void qc_idle_timer_do_rearm(struct quic_conn *qc)
 {
 	unsigned int expire;
 
-	expire = QUIC_MAX(3 * quic_pto(qc), qc->max_idle_timeout);
+	if (qc->flags & (QUIC_FL_CONN_CLOSING|QUIC_FL_CONN_DRAINING)) {
+		/* RFC 9000 10.2. Immediate Close
+		 *
+		 * The closing and draining connection states exist to ensure that
+		 * connections close cleanly and that delayed or reordered packets are
+		 * properly discarded. These states SHOULD persist for at least three
+		 * times the current PTO interval as defined in [QUIC-RECOVERY].
+		 */
+
+		/* Delay is limited to 1s which should cover most of
+		 * network conditions. The process should not be
+		 * impacted by a connection with a high RTT.
+		 */
+		expire = MIN(3 * quic_pto(qc), 1000);
+	}
+	else {
+		/* RFC 9000 10.1. Idle Timeout
+		 *
+		 * To avoid excessively small idle timeout periods, endpoints MUST
+		 * increase the idle timeout period to be at least three times the
+		 * current Probe Timeout (PTO). This allows for multiple PTOs to expire,
+		 * and therefore multiple probes to be sent and lost, prior to idle
+		 * timeout.
+		 */
+		expire = QUIC_MAX(3 * quic_pto(qc), qc->max_idle_timeout);
+	}
 	qc->idle_timer_task->expire = tick_add(now_ms, MS_TO_TICKS(expire));
 	task_queue(qc->idle_timer_task);
 	TRACE_PROTO("idle timer armed", QUIC_EV_CONN_IDLE_TIMER, qc);
