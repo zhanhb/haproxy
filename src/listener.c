@@ -911,6 +911,13 @@ int listener_backlog(const struct listener *l)
 	return 1024;
 }
 
+/* Returns true if listener <l> must check maxconn limit prior to accept. */
+static inline int listener_uses_maxconn(const struct listener *l)
+{
+	return !(l->options & LI_O_UNLIMITED) &&
+	       !(l->bind_conf->options & BC_O_XPRT_MAXCONN);
+}
+
 /* This function is called on a read event from a listening socket, corresponding
  * to an accept. It tries to accept as many connections as possible, and for each
  * calls the listener's accept handler (generally the frontend's accept handler).
@@ -1028,7 +1035,7 @@ void listener_accept(struct listener *l)
 			} while (!_HA_ATOMIC_CAS(&p->feconn, &count, next_feconn));
 		}
 
-		if (!(l->options & LI_O_UNLIMITED)) {
+		if (listener_uses_maxconn(l)) {
 			next_actconn = increment_actconn();
 			if (!next_actconn) {
 				/* the process was marked full or another
@@ -1060,7 +1067,7 @@ void listener_accept(struct listener *l)
 				_HA_ATOMIC_DEC(&l->nbconn);
 				if (p)
 					_HA_ATOMIC_DEC(&p->feconn);
-				if (!(l->options & LI_O_UNLIMITED))
+				if (listener_uses_maxconn(l))
 					_HA_ATOMIC_DEC(&actconn);
 				continue;
 
@@ -1321,7 +1328,7 @@ void listener_release(struct listener *l)
 {
 	struct proxy *fe = l->bind_conf->frontend;
 
-	if (!(l->options & LI_O_UNLIMITED))
+	if (listener_uses_maxconn(l))
 		_HA_ATOMIC_DEC(&actconn);
 	if (fe)
 		_HA_ATOMIC_DEC(&fe->feconn);
