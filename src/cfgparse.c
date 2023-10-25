@@ -4006,17 +4006,14 @@ init_proxies_list_stage2:
 					memprintf(&listener->name, "sock-%d", listener->luid);
 			}
 
-			if (curproxy->options & PR_O_TCP_NOLING)
-				listener->options |= LI_O_NOLINGER;
-			if (!listener->maxaccept)
-				listener->maxaccept = global.tune.maxaccept ? global.tune.maxaccept : MAX_ACCEPT;
-
 			/* listener accept callback */
 			listener->accept = session_accept_fd;
 #ifdef USE_QUIC
 			/* override the accept callback for QUIC listeners. */
 			if (listener->flags & LI_F_QUIC_LISTENER) {
 				li_init_per_thr(listener);
+				/* quic_conn are counted against maxconn. */
+				listener->bind_conf->options |= BC_O_XPRT_MAXCONN;
 			}
 #endif
 

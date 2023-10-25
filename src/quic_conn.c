@@ -37,6 +37,7 @@
 #include <haproxy/connection.h>
 #include <haproxy/fd.h>
 #include <haproxy/freq_ctr.h>
+#include <haproxy/frontend.h>
 #include <haproxy/global.h>
 #include <haproxy/h3.h>
 #include <haproxy/hq_interop.h>
@@ -5204,6 +5205,12 @@ void quic_conn_release(struct quic_conn *qc)
 	/* We must not free the quic-conn if the MUX is still allocated. */
 	BUG_ON(qc->mux_state == QC_MUX_READY);
 
+	/* Decrement on quic_conn free. quic_cc_conn instances are not counted
+	 * into global counters because they are designed to run for a limited
+	 * time with a limited memory.
+	 */
+	_HA_ATOMIC_DEC(&actconn);
+
 	/* in the unlikely (but possible) case the connection was just added to
 	 * the accept_list we must delete it from there.
 	 */
@@ -6243,6 +6250,7 @@ static struct quic_conn *quic_rx_pkt_retrieve_conn(struct quic_rx_packet *pkt,
 	struct quic_conn *qc = NULL;
 	struct proxy *prx;
 	struct quic_counters *prx_counters;
+	unsigned int next_actconn = 0;
 
 	TRACE_ENTER(QUIC_EV_CONN_LPKT);
 
@@ -6291,11 +6299,25 @@ static struct quic_conn *quic_rx_pkt_retrieve_conn(struct quic_rx_packet *pkt,
 			pkt->saddr = dgram->saddr;
 			ipv4 = dgram->saddr.ss_family == AF_INET;
 
+			next_actconn = increment_actconn();
+			if (!next_actconn) {
+				TRACE_STATE("drop packet on maxconn reached",
+					    QUIC_EV_CONN_LPKT, NULL, NULL, NULL, pkt->version);
+				goto err;
+			}
+
 			qc = qc_new_conn(pkt->version, ipv4, &pkt->dcid, &pkt->scid, &token_odcid,
 			                 &dgram->daddr, &pkt->saddr, 1,
 			                 !!pkt->token_len, l);
 			if (qc == NULL)
 				goto err;
+
+			/* Now quic_conn is allocated. If a future error
+			 * occurred it will be freed with quic_conn_release()
+			 * which also ensure actconn is decremented.
+			 * Reset guard value to prevent a double decrement.
+			 */
+			next_actconn = 0;
 
 			HA_ATOMIC_INC(&prx_counters->half_open_conn);
 			/* Insert the DCID the QUIC client has chosen (only for listeners) */
@@ -6318,6 +6340,11 @@ static struct quic_conn *quic_rx_pkt_retrieve_conn(struct quic_rx_packet *pkt,
 
  err:
 	HA_ATOMIC_INC(&prx_counters->dropped_pkt);
+
+	/* Reset active conn counter if needed. */
+	if (next_actconn)
+		_HA_ATOMIC_DEC(&actconn);
+
 	TRACE_LEAVE(QUIC_EV_CONN_LPKT);
 	return NULL;
 }
