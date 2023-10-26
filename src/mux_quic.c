@@ -228,7 +228,7 @@ static inline int qcc_is_dead(const struct qcc *qcc)
 	/* Mux connection is considered dead if :
 	 * - all stream-desc are detached AND
 	 *   = connection is on error OR
-	 *   = mux timeout has already fired or is unset
+	 * - MUX timeout expired
 	 */
 	if (!qcc->nb_sc && ((qcc->conn->flags & CO_FL_ERROR) || !qcc->task))
 		return 1;
@@ -2023,6 +2023,7 @@ static struct task *qc_timeout_task(struct task *t, void *ctx, unsigned int stat
 		goto out;
 	}
 
+	/* Mark timeout as triggered by setting task to NULL. */
 	qcc->task = NULL;
 
 	/* TODO depending on the timeout condition, different shutdown mode
@@ -2145,19 +2146,18 @@ static int qc_init(struct connection *conn, struct proxy *prx,
 
 	qcc->proxy = prx;
 	/* haproxy timeouts */
-	qcc->task = NULL;
 	qcc->timeout = conn_is_back(qcc->conn) ? prx->timeout.server :
 	                                         prx->timeout.client;
-	if (tick_isset(qcc->timeout)) {
-		qcc->task = task_new_here();
-		if (!qcc->task) {
-			TRACE_ERROR("timeout task alloc failure", QMUX_EV_QCC_NEW);
-			goto fail_no_timeout_task;
-		}
-		qcc->task->process = qc_timeout_task;
-		qcc->task->context = qcc;
-		qcc->task->expire = tick_add(now_ms, qcc->timeout);
+
+	qcc->task = task_new_here();
+	if (!qcc->task) {
+		TRACE_ERROR("timeout task alloc failure", QMUX_EV_QCC_NEW);
+		goto fail_no_timeout_task;
 	}
+	qcc->task->process = qc_timeout_task;
+	qcc->task->context = qcc;
+	qcc->task->expire = tick_add(now_ms, qcc->timeout);
+
 	qcc_reset_idle_start(qcc);
 	LIST_INIT(&qcc->opening_list);
 
@@ -2228,12 +2228,9 @@ static void qc_detach(struct sedesc *sd)
 		TRACE_STATE("killing dead connection", QMUX_EV_STRM_END, qcc->conn);
 		goto release;
 	}
-	else if (qcc->task) {
+	else {
 		TRACE_DEVEL("refreshing connection's timeout", QMUX_EV_STRM_END, qcc->conn);
 		qcc_refresh_timeout(qcc);
-	}
-	else {
-		TRACE_DEVEL("completed", QMUX_EV_STRM_END, qcc->conn);
 	}
 
 	TRACE_LEAVE(QMUX_EV_STRM_END, qcc->conn);
