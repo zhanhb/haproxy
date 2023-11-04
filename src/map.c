@@ -997,6 +997,12 @@ static int cli_io_handler_clear_map(struct appctx *appctx)
 		si_rx_endp_more(si);
 		return 0;
 	}
+
+#if defined(HA_HAVE_MALLOC_TRIM)
+	if (finished) {
+		malloc_trim(0);
+	}
+#endif
 	return 1;
 }
 
