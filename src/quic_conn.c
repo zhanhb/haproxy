@@ -5019,12 +5019,18 @@ static struct quic_conn *qc_new_conn(const struct quic_version *qv, int ipv4,
 	struct listener *l = NULL;
 	struct quic_cc_algo *cc_algo = NULL;
 	struct quic_tls_ctx *ictx;
-	unsigned int next_actconn = 0;
+	unsigned int next_actconn = 0, next_sslconn = 0;
 	TRACE_ENTER(QUIC_EV_CONN_INIT);
 
 	next_actconn = increment_actconn();
 	if (!next_actconn) {
 		TRACE_STATE("maxconn reached", QUIC_EV_CONN_INIT);
+		goto err;
+	}
+
+	next_sslconn = increment_sslconn();
+	if (!next_sslconn) {
+		TRACE_STATE("sslconn reached", QUIC_EV_CONN_INIT);
 		goto err;
 	}
 
@@ -5041,7 +5047,7 @@ static struct quic_conn *qc_new_conn(const struct quic_version *qv, int ipv4,
 	/* Now that quic_conn instance is allocated, quic_conn_release() will
 	 * ensure global accounting is decremented.
 	 */
-	next_actconn = 0;
+	next_sslconn = next_actconn = 0;
 
 	/* Initialize in priority qc members required for a safe dealloc. */
 
@@ -5202,6 +5208,8 @@ static struct quic_conn *qc_new_conn(const struct quic_version *qv, int ipv4,
 	 */
 	if (next_actconn)
 		_HA_ATOMIC_DEC(&actconn);
+	if (next_sslconn)
+		_HA_ATOMIC_DEC(&global.sslconns);
 
 	TRACE_LEAVE(QUIC_EV_CONN_INIT);
 	return NULL;
@@ -5275,7 +5283,6 @@ void quic_conn_release(struct quic_conn *qc)
 		SSL_free(conn_ctx->ssl);
 		pool_free(pool_head_quic_conn_ctx, conn_ctx);
 	}
-	_HA_ATOMIC_DEC(&global.sslconns);
 
 	quic_tls_ku_free(qc);
 	for (i = 0; i < QUIC_TLS_ENC_LEVEL_MAX; i++) {
@@ -5303,6 +5310,7 @@ void quic_conn_release(struct quic_conn *qc)
 	 * time with limited ressources.
 	 */
 	_HA_ATOMIC_DEC(&actconn);
+	_HA_ATOMIC_DEC(&global.sslconns);
 
 	TRACE_PROTO("QUIC conn. freed", QUIC_EV_CONN_FREED, qc);
 
@@ -6275,7 +6283,6 @@ static struct quic_conn *quic_rx_pkt_retrieve_conn(struct quic_rx_packet *pkt,
 	struct quic_conn *qc = NULL;
 	struct proxy *prx;
 	struct quic_counters *prx_counters;
-	unsigned int next_sslconn = 0;
 
 	TRACE_ENTER(QUIC_EV_CONN_LPKT);
 
@@ -6324,20 +6331,11 @@ static struct quic_conn *quic_rx_pkt_retrieve_conn(struct quic_rx_packet *pkt,
 			pkt->saddr = dgram->saddr;
 			ipv4 = dgram->saddr.ss_family == AF_INET;
 
-			next_sslconn = increment_sslconn();
-			if (!next_sslconn) {
-				TRACE_STATE("drop packet on sslconn reached",
-					    QUIC_EV_CONN_LPKT, NULL, NULL, NULL, pkt->version);
-				goto err;
-			}
-
 			qc = qc_new_conn(pkt->version, ipv4, &pkt->dcid, &pkt->scid, &token_odcid,
 			                 &dgram->daddr, &pkt->saddr, 1,
 			                 !!pkt->token_len, l);
 			if (qc == NULL)
 				goto err;
-
-			next_sslconn = 0;
 
 			HA_ATOMIC_INC(&prx_counters->half_open_conn);
 			/* Insert the DCID the QUIC client has chosen (only for listeners) */
@@ -6360,9 +6358,6 @@ static struct quic_conn *quic_rx_pkt_retrieve_conn(struct quic_rx_packet *pkt,
 
  err:
 	HA_ATOMIC_INC(&prx_counters->dropped_pkt);
-
-	if (next_sslconn)
-		_HA_ATOMIC_DEC(&global.sslconns);
 
 	TRACE_LEAVE(QUIC_EV_CONN_LPKT);
 	return NULL;
