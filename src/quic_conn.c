@@ -5012,14 +5012,22 @@ static struct quic_conn *qc_new_conn(const struct quic_version *qv, int ipv4,
                                      int server, int token, void *owner)
 {
 	int i;
-	struct quic_conn *qc;
+	struct quic_conn *qc = NULL;
 	/* Initial CID. */
 	struct quic_connection_id *icid;
 	char *buf_area = NULL;
 	struct listener *l = NULL;
 	struct quic_cc_algo *cc_algo = NULL;
 	struct quic_tls_ctx *ictx;
+	unsigned int next_actconn = 0;
 	TRACE_ENTER(QUIC_EV_CONN_INIT);
+
+	next_actconn = increment_actconn();
+	if (!next_actconn) {
+		TRACE_STATE("maxconn reached", QUIC_EV_CONN_INIT);
+		goto err;
+	}
+
 	/* TODO replace pool_zalloc by pool_alloc(). This requires special care
 	 * to properly initialized internal quic_conn members to safely use
 	 * quic_conn_release() on alloc failure.
@@ -5029,6 +5037,11 @@ static struct quic_conn *qc_new_conn(const struct quic_version *qv, int ipv4,
 		TRACE_ERROR("Could not allocate a new connection", QUIC_EV_CONN_INIT);
 		goto err;
 	}
+
+	/* Now that quic_conn instance is allocated, quic_conn_release() will
+	 * ensure global accounting is decremented.
+	 */
+	next_actconn = 0;
 
 	/* Initialize in priority qc members required for a safe dealloc. */
 
@@ -5182,6 +5195,14 @@ static struct quic_conn *qc_new_conn(const struct quic_version *qv, int ipv4,
 		qc->rx.buf.area = NULL;
 		quic_conn_release(qc);
 	}
+
+	/* Decrement global counters. Done only for errors happening before or
+	 * on pool_head_quic_conn alloc. All other cases are covered by
+	 * quic_conn_release().
+	 */
+	if (next_actconn)
+		_HA_ATOMIC_DEC(&actconn);
+
 	TRACE_LEAVE(QUIC_EV_CONN_INIT);
 	return NULL;
 }
@@ -5204,12 +5225,6 @@ void quic_conn_release(struct quic_conn *qc)
 
 	/* We must not free the quic-conn if the MUX is still allocated. */
 	BUG_ON(qc->mux_state == QC_MUX_READY);
-
-	/* Decrement on quic_conn free. quic_cc_conn instances are not counted
-	 * into global counters because they are designed to run for a limited
-	 * time with a limited memory.
-	 */
-	_HA_ATOMIC_DEC(&actconn);
 
 	/* in the unlikely (but possible) case the connection was just added to
 	 * the accept_list we must delete it from there.
@@ -5282,6 +5297,12 @@ void quic_conn_release(struct quic_conn *qc)
 	pool_free(pool_head_quic_conn_rxbuf, qc->rx.buf.area);
 	pool_free(pool_head_quic_conn, qc);
 	qc = NULL;
+
+	/* Decrement global counters when quic_conn is deallocated.
+	 * quic_cc_conn instances are not accounted as they run for a short
+	 * time with limited ressources.
+	 */
+	_HA_ATOMIC_DEC(&actconn);
 
 	TRACE_PROTO("QUIC conn. freed", QUIC_EV_CONN_FREED, qc);
 
@@ -6254,7 +6275,7 @@ static struct quic_conn *quic_rx_pkt_retrieve_conn(struct quic_rx_packet *pkt,
 	struct quic_conn *qc = NULL;
 	struct proxy *prx;
 	struct quic_counters *prx_counters;
-	unsigned int next_actconn = 0, next_sslconn = 0;
+	unsigned int next_sslconn = 0;
 
 	TRACE_ENTER(QUIC_EV_CONN_LPKT);
 
@@ -6303,13 +6324,6 @@ static struct quic_conn *quic_rx_pkt_retrieve_conn(struct quic_rx_packet *pkt,
 			pkt->saddr = dgram->saddr;
 			ipv4 = dgram->saddr.ss_family == AF_INET;
 
-			next_actconn = increment_actconn();
-			if (!next_actconn) {
-				TRACE_STATE("drop packet on maxconn reached",
-					    QUIC_EV_CONN_LPKT, NULL, NULL, NULL, pkt->version);
-				goto err;
-			}
-
 			next_sslconn = increment_sslconn();
 			if (!next_sslconn) {
 				TRACE_STATE("drop packet on sslconn reached",
@@ -6323,12 +6337,7 @@ static struct quic_conn *quic_rx_pkt_retrieve_conn(struct quic_rx_packet *pkt,
 			if (qc == NULL)
 				goto err;
 
-			/* Now quic_conn is allocated. If a future error
-			 * occurred it will be freed with quic_conn_release()
-			 * which also ensure actconn/sslconns is decremented.
-			 * Reset guard values to prevent a double decrement.
-			 */
-			next_sslconn = next_actconn = 0;
+			next_sslconn = 0;
 
 			HA_ATOMIC_INC(&prx_counters->half_open_conn);
 			/* Insert the DCID the QUIC client has chosen (only for listeners) */
@@ -6352,9 +6361,6 @@ static struct quic_conn *quic_rx_pkt_retrieve_conn(struct quic_rx_packet *pkt,
  err:
 	HA_ATOMIC_INC(&prx_counters->dropped_pkt);
 
-	/* Reset active conn counter if needed. */
-	if (next_actconn)
-		_HA_ATOMIC_DEC(&actconn);
 	if (next_sslconn)
 		_HA_ATOMIC_DEC(&global.sslconns);
 
