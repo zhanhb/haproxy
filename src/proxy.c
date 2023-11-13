@@ -1378,6 +1378,9 @@ void init_new_proxy(struct proxy *p)
 	p->extra_counters_be = NULL;
 
 	HA_RWLOCK_INIT(&p->lock);
+
+	/* initialize the default settings */
+	proxy_preset_defaults(p);
 }
 
 /* Preset default settings onto proxy <defproxy>. */
@@ -1900,9 +1903,6 @@ struct proxy *parse_new_proxy(const char *name, unsigned int cap,
 			ha_free(&curproxy);
 			return NULL;
 		}
-	}
-	else {
-		proxy_preset_defaults(curproxy);
 	}
 
 	curproxy->conf.args.file = curproxy->conf.file = strdup(file);
