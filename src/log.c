@@ -762,7 +762,10 @@ struct logsrv *dup_logsrv(struct logsrv *def)
 		if (!cpy->conf.file)
 			goto error;
 	}
-	cpy->ref = def;
+
+	/* inherit from original reference if set */
+	cpy->ref = (def->ref) ? def->ref : def;
+
 	return cpy;
 
  error:
