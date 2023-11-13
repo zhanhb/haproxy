@@ -1420,7 +1420,13 @@ int si_cs_recv(struct conn_stream *cs)
 		 * CS_FL_RCV_MORE on the CS if more space is needed.
 		 */
 		max = channel_recv_max(ic);
-		flags |= ((!conn_is_back(conn) && (si_strm(si)->be->options & PR_O_ABRT_CLOSE)) ? CO_RFL_KEEP_RECV : 0);
+
+		/* Instruct the mux it must subscribed for read events */
+		if (!conn_is_back(conn) &&                                 /* for frontend conns only */
+		    (si_opposite(si)->state != SI_ST_INI) &&               /* before backend connection setup */
+		    (si_strm(si)->be->options & PR_O_ABRT_CLOSE))          /* if abortonclose option is set for the current backend */
+			flags |= CO_RFL_KEEP_RECV;
+
 		ret = cs->conn->mux->rcv_buf(cs, &ic->buf, max, flags | (co_data(ic) ? CO_RFL_BUF_WET : 0));
 
 		if (cs->flags & CS_FL_WANT_ROOM) {
