@@ -1166,7 +1166,6 @@ static int httpclient_precheck()
 		goto err;
 	}
 
-	proxy_preset_defaults(httpclient_proxy);
 
 	httpclient_proxy->options |= PR_O_WREQ_BODY;
 	httpclient_proxy->retry_type |= PR_RE_CONN_FAILED | PR_RE_DISCONNECTED | PR_RE_TIMEOUT;
