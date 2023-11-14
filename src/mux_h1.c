@@ -3652,7 +3652,7 @@ static int h1_snd_pipe(struct conn_stream *cs, struct pipe *pipe)
 
 static int h1_ctl(struct connection *conn, enum mux_ctl_type mux_ctl, void *output)
 {
-	const struct h1c *h1c = conn->ctx;
+	struct h1c *h1c = conn->ctx;
 	int ret = 0;
 
 	switch (mux_ctl) {
@@ -3667,6 +3667,10 @@ static int h1_ctl(struct connection *conn, enum mux_ctl_type mux_ctl, void *outp
 			 (h1c->errcode == 500 ? MUX_ES_INTERNAL_ERR :
 			  MUX_ES_SUCCESS))));
 		return ret;
+	case MUX_SUBS_RECV:
+		if (!(h1c->wait_event.events & SUB_RETRY_RECV))
+			h1c->conn->xprt->subscribe(h1c->conn, h1c->conn->xprt_ctx, SUB_RETRY_RECV, &h1c->wait_event);
+		return 0;
 	default:
 		return -1;
 	}
