@@ -2211,7 +2211,7 @@ struct task *process_stream(struct task *t, void *context, unsigned int state)
 				if (s->be->options & PR_O_ABRT_CLOSE) {
 					struct connection *conn = objt_conn(strm_orig(s));
 
-					if (conn)
+					if (conn && conn->mux && conn->mux->ctl)
 						conn->mux->ctl(conn, MUX_SUBS_RECV, NULL);
 				}
 			}
