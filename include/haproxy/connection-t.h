@@ -302,6 +302,7 @@ enum proto_proxy_side {
 /* ctl command used by mux->ctl() */
 enum mux_ctl_type {
 	MUX_STATUS, /* Expects an int as output, sets it to a combinaison of MUX_STATUS flags */
+	MUX_SUBS_RECV, /* Notify the mux it must wait for read events again  */
 };
 
 /* response for ctl MUX_STATUS */
