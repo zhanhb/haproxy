@@ -168,6 +168,15 @@ void conn_fd_handler(int fd)
 
 	/* commit polling changes */
 	conn_cond_update_polling(conn);
+
+        if (unlikely(conn->flags & CO_FL_ERROR)) {
+		if (conn->subs) {
+			tasklet_wakeup(conn->subs->tasklet);
+			if (!conn->subs->events)
+				conn->subs = NULL;
+		}
+	}
+
 	return;
 }
 
