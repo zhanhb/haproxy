@@ -2092,6 +2092,13 @@ struct task *process_stream(struct task *t, void *context, unsigned short state)
 				    (s->be->mode == PR_MODE_HTTP) &&
 				    !(si_b->flags & SI_FL_D_L7_RETRY))
 					si_b->flags |= SI_FL_L7_RETRY;
+
+				if (s->be->options & PR_O_ABRT_CLOSE) {
+					struct connection *conn = objt_conn(strm_orig(s));
+
+					if (conn)
+						conn->mux->ctl(conn, MUX_SUBS_RECV, NULL);
+				}
 			}
 		}
 		else {
