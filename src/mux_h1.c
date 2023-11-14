@@ -2984,12 +2984,17 @@ static int h1_snd_pipe(struct conn_stream *cs, struct pipe *pipe)
 
 static int h1_ctl(struct connection *conn, enum mux_ctl_type mux_ctl, void *output)
 {
+	struct h1c *h1c = conn->ctx;
 	int ret = 0;
 	switch (mux_ctl) {
 	case MUX_STATUS:
 		if (!(conn->flags & CO_FL_WAIT_XPRT))
 			ret |= MUX_STATUS_READY;
 		return ret;
+	case MUX_SUBS_RECV:
+		if (!(h1c->wait_event.events & SUB_RETRY_RECV))
+			h1c->conn->xprt->subscribe(h1c->conn, h1c->conn->xprt_ctx, SUB_RETRY_RECV, &h1c->wait_event);
+		return 0;
 	default:
 		return -1;
 	}
