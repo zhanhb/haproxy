@@ -508,7 +508,7 @@ static void stream_int_notify(struct stream_interface *si)
 	 */
 	if (!channel_is_empty(ic) &&
 	    (sio->flags & SI_FL_WAIT_DATA) &&
-	    (!(ic->flags & CF_EXPECT_MORE) || c_full(ic) || ci_data(ic) == 0 || ic->pipe)) {
+	    (!(ic->flags & CF_EXPECT_MORE) || channel_full(ic, co_data(ic)) || channel_input_data(ic) == 0)) {
 		int new_len, last_len;
 
 		last_len = co_data(ic);
@@ -1329,7 +1329,7 @@ int si_cs_recv(struct conn_stream *cs)
 	if (cs->flags & CS_FL_MAY_SPLICE &&
 	    (ic->pipe || ic->to_forward >= MIN_SPLICE_FORWARD) &&
 	    ic->flags & CF_KERN_SPLICING) {
-		if (c_data(ic)) {
+		if (channel_data(ic)) {
 			/* We're embarrassed, there are already data pending in
 			 * the buffer and we don't want to have them at two
 			 * locations at a time. Let's indicate we need some
