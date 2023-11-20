@@ -3704,23 +3704,6 @@ int main(int argc, char **argv)
 		global.chroot = NULL;
 		set_identity(argv[0]);
 
-		/* pass through every cli socket, and check if it's bound to
-		 * the current process and if it exposes listeners sockets.
-		 * Caution: the GTUNE_SOCKET_TRANSFER is now set after the fork.
-		 * */
-
-		if (global.stats_fe) {
-			struct bind_conf *bind_conf;
-
-			list_for_each_entry(bind_conf, &global.stats_fe->conf.bind, by_fe) {
-				if (bind_conf->level & ACCESS_FD_LISTENERS) {
-					if (!bind_conf->bind_proc || bind_conf->bind_proc & (1UL << proc)) {
-						global.tune.options |= GTUNE_SOCKET_TRANSFER;
-						break;
-					}
-				}
-			}
-		}
 
 		/* we might have to unbind some proxies from some processes */
 		px = proxies_list;
@@ -3773,6 +3756,24 @@ int main(int argc, char **argv)
 		if (!(global.mode & MODE_MWORKER)) /* in mworker mode we don't want a new pgid for the children */
 			setsid();
 		fork_poller();
+	}
+
+	/* pass through every cli socket, and check if it's bound to
+	 * the current process and if it exposes listeners sockets.
+	 * Caution: the GTUNE_SOCKET_TRANSFER is now set after the fork.
+	 * */
+
+	if (global.stats_fe) {
+		struct bind_conf *bind_conf;
+
+		list_for_each_entry(bind_conf, &global.stats_fe->conf.bind, by_fe) {
+			if (bind_conf->level & ACCESS_FD_LISTENERS) {
+				if (!bind_conf->bind_proc || bind_conf->bind_proc & pid_bit) {
+					global.tune.options |= GTUNE_SOCKET_TRANSFER;
+					break;
+				}
+			}
+		}
 	}
 
 	/* try our best to re-enable core dumps depending on system capabilities.
