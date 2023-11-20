@@ -33,6 +33,7 @@
 #define RX_F_BOUND              0x00000001  /* receiver already bound */
 #define RX_F_INHERITED          0x00000002  /* inherited FD from the parent process (fd@) */
 #define RX_F_MWORKER            0x00000004  /* keep the FD open in the master but close it in the children */
+#define RX_F_NON_SUSPENDABLE    0x00000010  /* this socket cannot be suspended hence must always be unbound */
 
 /* Bit values for rx_settings->options */
 #define RX_O_FOREIGN            0x00000001  /* receives on foreign addresses */
