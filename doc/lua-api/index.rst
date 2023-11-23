@@ -930,7 +930,8 @@ Proxy class
 
 .. js:attribute:: Proxy.stktable
 
-  Contains a stick table object attached to the proxy.
+  Contains a stick table object of type :ref:`sticktable_class` attached to the
+  proxy.
 
 .. js:attribute:: Proxy.listeners
 
@@ -3044,6 +3045,8 @@ AppletTCP class
   :param string var: The variable name according with the HAProxy variable syntax.
   :see: :js:func:`AppletTCP.unset_var`
   :see: :js:func:`AppletTCP.set_var`
+
+.. _sticktable_class:
 
 StickTable class
 ================
