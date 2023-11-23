@@ -988,8 +988,8 @@ Proxy class
   Returns a string describing the mode of the current proxy.
 
   :param class_proxy px: A :ref:`proxy_class` which indicates the manipulated
-    proxy.
-  :returns: a string "tcp", "http", "health" or "unknown"
+   proxy.
+  :returns: a string "tcp", "http" or "unknown"
 
 .. js:function:: Proxy.get_stats(px)
 
