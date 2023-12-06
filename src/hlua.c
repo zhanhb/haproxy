@@ -12881,7 +12881,14 @@ __LJMP static int hlua_ckch_set(lua_State *L)
 			goto end;
 		}
 
-		/* appply the change on the duplicate */
+		/* Reset the OCSP CID */
+		if (cert_ext->type == CERT_TYPE_PEM || cert_ext->type == CERT_TYPE_KEY ||
+		    cert_ext->type == CERT_TYPE_ISSUER) {
+			OCSP_CERTID_free(new_ckchs->data->ocsp_cid);
+			new_ckchs->data->ocsp_cid = NULL;
+		}
+
+		/* apply the change on the duplicate */
 		if (cert_ext->load(filename, payload, data, &err) != 0) {
 			memprintf(&err, "%sCan't load the payload for '%s'", err ? err : "", cert_ext->ext);
 			errcode |= ERR_ALERT | ERR_FATAL;
