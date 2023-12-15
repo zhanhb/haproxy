@@ -1361,7 +1361,11 @@ static struct buffer *mux_get_buf(struct qcs *qcs)
 	return &qcs->tx.buf;
 }
 
-/* Function used to emit stream data from <qcs> control uni-stream */
+/* Function used to emit stream data from <qcs> control uni-stream.
+ *
+ * On success return the number of sent bytes. A negative code is used on
+ * error.
+ */
 static int h3_control_send(struct qcs *qcs, void *ctx)
 {
 	int ret;
@@ -1400,6 +1404,11 @@ static int h3_control_send(struct qcs *qcs, void *ctx)
 	}
 
 	res = mux_get_buf(qcs);
+	if (!res) {
+		TRACE_ERROR("cannot allocate Tx buffer", H3_EV_TX_SETTINGS, qcs->qcc->conn, qcs);
+		goto err;
+	}
+
 	if (b_room(res) < b_data(&pos)) {
 		// TODO the mux should be put in blocked state, with
 		// the stream in state waiting for settings to be sent
@@ -1415,6 +1424,10 @@ static int h3_control_send(struct qcs *qcs, void *ctx)
 
 	TRACE_LEAVE(H3_EV_TX_SETTINGS, qcs->qcc->conn, qcs);
 	return ret;
+
+ err:
+	TRACE_DEVEL("leaving on error", H3_EV_TX_SETTINGS, qcs->qcc->conn, qcs);
+	return -1;
 }
 
 static int h3_resp_headers_send(struct qcs *qcs, struct htx *htx)
@@ -1455,7 +1468,7 @@ static int h3_resp_headers_send(struct qcs *qcs, struct htx *htx)
 		}
 		else if (type == HTX_BLK_HDR) {
 			if (unlikely(hdr >= sizeof(list) / sizeof(list[0]) - 1)) {
-				TRACE_ERROR("too many headers", H3_EV_TX_FRAME|H3_EV_TX_HDR, qcs->qcc->conn, qcs);
+				TRACE_ERROR("too many headers", H3_EV_TX_HDR, qcs->qcc->conn, qcs);
 				h3c->err = H3_INTERNAL_ERROR;
 				goto err;
 			}
@@ -1585,7 +1598,7 @@ static int h3_resp_trailers_send(struct qcs *qcs, struct htx *htx)
 
 		if (type == HTX_BLK_TLR) {
 			if (unlikely(hdr >= sizeof(list) / sizeof(list[0]) - 1)) {
-				TRACE_ERROR("too many headers", H3_EV_TX_FRAME|H3_EV_TX_HDR, qcs->qcc->conn, qcs);
+				TRACE_ERROR("too many headers", H3_EV_TX_HDR, qcs->qcc->conn, qcs);
 				h3c->err = H3_INTERNAL_ERROR;
 				goto err;
 			}
@@ -1955,8 +1968,10 @@ static int h3_finalize(void *ctx)
 	if (!qcs)
 		return 1;
 
-	h3_control_send(qcs, h3c);
 	h3c->ctrl_strm = qcs;
+
+	if (h3_control_send(qcs, h3c) < 0)
+		return 1;
 
 	return 0;
 }
