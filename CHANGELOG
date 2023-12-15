@@ -1,6 +1,28 @@
 ChangeLog :
 ===========
 
+2023/12/15 : 2.9.1
+    - BUG/MINOR: ssl: Double free of OCSP Certificate ID
+    - MINOR: ssl/cli: Add ha_(warning|alert) msgs to CLI ckch callback
+    - BUG/MINOR: ssl: Wrong OCSP CID after modifying an SSL certficate
+    - BUG/MINOR: lua: Wrong OCSP CID after modifying an SSL certficate (LUA)
+    - DOC: configuration: typo req.ssl_hello_type
+    - BUG/MINOR: mworker/cli: fix set severity-output support
+    - BUG/MEDIUM: quic: Possible buffer overflow when building TLS records
+    - BUILD: ssl: update types in wolfssl cert selection callback
+    - BUG/MEDIUM: map/acl: pat_ref_{set,delete}_by_id regressions
+    - BUG/MINOR: ext-check: cannot use without preserve-env
+    - MINOR: version: mention that it's stable now
+    - BUG/MEDIUM: quic: QUIC CID removed from tree without locking
+    - BUG/MEDIUM: stconn: Block zero-copy forwarding if EOS/ERROR on consumer side
+    - BUG/MEDIUM: mux-h1: Cound data from input buf during zero-copy forwarding
+    - BUG/MEDIUM: mux-h1: Explicitly skip request's C-L header if not set originally
+    - CLEANUP: mux-h1: Fix a trace message about C-L header addition
+    - BUG/MEDIUM: mux-h2: Report too large HEADERS frame only when rxbuf is empty
+    - BUG/MEDIUM: mux-quic: report early error on stream
+    - DOC: config: add arguments to sample fetch methods in the table
+    - DOC: config: also add arguments to the converters in the table
+
 2023/12/05 : 2.9.0
     - DOC: config: add missing colon to "bytes_out" sample fetch keyword (2)
     - BUG/MINOR: cfgparse-listen: fix warning being reported as an alert
