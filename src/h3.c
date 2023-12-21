@@ -1189,6 +1189,8 @@ static int h3_control_send(struct qcs *qcs, void *ctx)
 
 static int h3_resp_headers_send(struct qcs *qcs, struct htx *htx)
 {
+	struct h3s *h3s = qcs->ctx;
+	struct h3c *h3c = h3s->h3c;
 	struct buffer outbuf;
 	struct buffer headers_buf = BUF_NULL;
 	struct buffer *res;
@@ -1222,8 +1224,11 @@ static int h3_resp_headers_send(struct qcs *qcs, struct htx *htx)
 			status = sl->info.res.status;
 		}
 		else if (type == HTX_BLK_HDR) {
-			if (unlikely(hdr >= sizeof(list) / sizeof(list[0]) - 1))
+			if (unlikely(hdr >= sizeof(list) / sizeof(list[0]) - 1)) {
+				TRACE_ERROR("too many headers", H3_EV_TX_FRAME|H3_EV_TX_HDR, qcs->qcc->conn, qcs);
+				h3c->err = H3_INTERNAL_ERROR;
 				goto err;
+			}
 			list[hdr].n = htx_get_blk_name(htx, blk);
 			list[hdr].v = htx_get_blk_value(htx, blk);
 			hdr++;
