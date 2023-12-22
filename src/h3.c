@@ -1487,6 +1487,11 @@ static int h3_resp_headers_send(struct qcs *qcs, struct htx *htx)
 	list[hdr].n = ist("");
 
 	res = mux_get_buf(qcs);
+	if (!res) {
+		TRACE_ERROR("cannot allocate Tx buffer", H3_EV_TX_HDR, qcs->qcc->conn, qcs);
+		h3c->err = H3_INTERNAL_ERROR;
+		goto err;
+	}
 
 	/* At least 5 bytes to store frame type + length as a varint max size */
 	if (b_room(res) < 5)
@@ -1558,7 +1563,7 @@ static int h3_resp_headers_send(struct qcs *qcs, struct htx *htx)
 
  err:
 	TRACE_DEVEL("leaving on error", H3_EV_TX_HDR, qcs->qcc->conn, qcs);
-	return 0;
+	return -1;
 }
 
 /* Convert a series of HTX trailer blocks from <htx> buffer into <qcs> buffer
@@ -1623,6 +1628,11 @@ static int h3_resp_trailers_send(struct qcs *qcs, struct htx *htx)
 	list[hdr].n = ist("");
 
 	res = mux_get_buf(qcs);
+	if (!res) {
+		TRACE_ERROR("cannot allocate Tx buffer", H3_EV_TX_HDR, qcs->qcc->conn, qcs);
+		h3c->err = H3_INTERNAL_ERROR;
+		goto err;
+	}
 
 	/* At least 9 bytes to store frame type + length as a varint max size */
 	if (b_room(res) < 9) {
@@ -1696,12 +1706,14 @@ static int h3_resp_trailers_send(struct qcs *qcs, struct htx *htx)
 
  err:
 	TRACE_DEVEL("leaving on error", H3_EV_TX_HDR, qcs->qcc->conn, qcs);
-	return 0;
+	return -1;
 }
 
 /* Returns the total of bytes sent. */
 static int h3_resp_data_send(struct qcs *qcs, struct htx *htx, size_t count)
 {
+	struct h3s *h3s = qcs->ctx;
+	struct h3c *h3c = h3s->h3c;
 	struct buffer outbuf;
 	struct buffer *res;
 	size_t total = 0;
@@ -1723,6 +1735,11 @@ static int h3_resp_data_send(struct qcs *qcs, struct htx *htx, size_t count)
 		goto end;
 
 	res = mux_get_buf(qcs);
+	if (!res) {
+		TRACE_ERROR("cannot allocate Tx buffer", H3_EV_TX_DATA, qcs->qcc->conn, qcs);
+		h3c->err = H3_INTERNAL_ERROR;
+		goto err;
+	}
 
 	if (fsize > count)
 		fsize = count;
@@ -1743,8 +1760,9 @@ static int h3_resp_data_send(struct qcs *qcs, struct htx *htx, size_t count)
 	 * on SEND.
 	 */
 	if (b_size(&outbuf) <= hsize) {
+		TRACE_STATE("not enough room for data frame", H3_EV_TX_DATA, qcs->qcc->conn, qcs);
 		qcs->flags |= QC_SF_BLK_MROOM;
-		goto end;
+		goto err;
 	}
 
 	if (b_size(&outbuf) < hsize + fsize)
@@ -1770,6 +1788,10 @@ static int h3_resp_data_send(struct qcs *qcs, struct htx *htx, size_t count)
  end:
 	TRACE_LEAVE(H3_EV_TX_DATA, qcs->qcc->conn, qcs);
 	return total;
+
+ err:
+	TRACE_DEVEL("leaving on error", H3_EV_TX_DATA, qcs->qcc->conn, qcs);
+	return -1;
 }
 
 static size_t h3_snd_buf(struct qcs *qcs, struct htx *htx, size_t count)
@@ -1781,7 +1803,7 @@ static size_t h3_snd_buf(struct qcs *qcs, struct htx *htx, size_t count)
 	struct htx_blk *blk;
 	uint32_t bsize;
 	int32_t idx;
-	int ret;
+	int ret = 0;
 
 	h3_debug_printf(stderr, "%s\n", __func__);
 
@@ -1834,6 +1856,11 @@ static size_t h3_snd_buf(struct qcs *qcs, struct htx *htx, size_t count)
 			count -= bsize;
 			break;
 		}
+
+		/* If an error occured, either buffer space or connection error
+		 * must be set to break current loop.
+		 */
+		BUG_ON(ret < 0 && !(qcs->flags & QC_SF_BLK_MROOM) && !h3c->err);
 	}
 
 	/* Interrupt sending on connection error. */
