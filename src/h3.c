@@ -2007,8 +2007,11 @@ static size_t h3_nego_ff(struct qcs *qcs, size_t count)
 
 	h3_debug_printf(stderr, "%s\n", __func__);
 
-	/* FIXME: no check on ALLOC ? */
 	res = mux_get_buf(qcs);
+	if (!res) {
+		qcs->sd->iobuf.flags |= IOBUF_FL_NO_FF;
+		goto end;
+	}
 
 	/* h3 DATA headers : 1-byte frame type + varint frame length */
 	hsize = 1 + QUIC_VARINT_MAX_SIZE;
