@@ -1750,6 +1750,8 @@ static int h3_resp_data_send(struct qcs *qcs, struct htx *htx, size_t count)
 
 static size_t h3_snd_buf(struct qcs *qcs, struct htx *htx, size_t count)
 {
+	struct h3s *h3s = qcs->ctx;
+	struct h3c *h3c = h3s->h3c;
 	size_t total = 0;
 	enum htx_blk_type btype;
 	struct htx_blk *blk;
@@ -1759,7 +1761,8 @@ static size_t h3_snd_buf(struct qcs *qcs, struct htx *htx, size_t count)
 
 	h3_debug_printf(stderr, "%s\n", __func__);
 
-	while (count && !htx_is_empty(htx) && !(qcs->flags & QC_SF_BLK_MROOM)) {
+	while (count && !htx_is_empty(htx) &&
+	       !(qcs->flags & QC_SF_BLK_MROOM) && !h3c->err) {
 		idx = htx_get_head(htx);
 		blk = htx_get_blk(htx, idx);
 		btype = htx_get_blk_type(blk);
@@ -1807,6 +1810,12 @@ static size_t h3_snd_buf(struct qcs *qcs, struct htx *htx, size_t count)
 			count -= bsize;
 			break;
 		}
+	}
+
+	/* Interrupt sending on connection error. */
+	if (unlikely(h3c->err)) {
+		qcc_set_error(qcs->qcc, h3c->err, 1);
+		goto out;
 	}
 
  out:
