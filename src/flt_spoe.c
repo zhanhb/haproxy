@@ -2033,10 +2033,28 @@ struct applet spoe_applet = {
 static struct appctx *
 spoe_create_appctx(struct spoe_config *conf)
 {
+	struct spoe_agent *agent = conf->agent;
 	struct appctx      *appctx;
 	struct session     *sess;
 	struct stream      *strm;
 
+	/* Do not try to create a new applet if there is no server up for the
+	 * agent's backend. */
+	if (!agent->b.be->srv_act && !agent->b.be->srv_bck) {
+		SPOE_PRINTF(stderr, "%d.%06d [SPOE/%-15s] %s: don't create SPOE appctx: no server up\n",
+			    (int)now.tv_sec, (int)now.tv_usec, agent->id, __FUNCTION__);
+		goto out;
+	}
+
+	/* Do not try to create a new applet if we have reached the maximum of
+	 * connection per seconds */
+	if (agent->cps_max > 0) {
+		if (!freq_ctr_remain(&agent->rt[tid].conn_per_sec, agent->cps_max, 0)) {
+			SPOE_PRINTF(stderr, "%d.%06d [SPOE/%-15s] %s: don't create SPOE appctx: max CPS reached\n",
+				    (int)now.tv_sec, (int)now.tv_usec, agent->id, __FUNCTION__);
+			goto out;
+		}
+	}
 	if ((appctx = appctx_new(&spoe_applet, tid_bit)) == NULL)
 		goto out_error;
 
@@ -2052,9 +2070,9 @@ spoe_create_appctx(struct spoe_config *conf)
 	SPOE_APPCTX(appctx)->owner           = appctx;
 	SPOE_APPCTX(appctx)->task->process   = spoe_process_appctx;
 	SPOE_APPCTX(appctx)->task->context   = appctx;
-	SPOE_APPCTX(appctx)->agent           = conf->agent;
+	SPOE_APPCTX(appctx)->agent           = agent;
 	SPOE_APPCTX(appctx)->version         = 0;
-	SPOE_APPCTX(appctx)->max_frame_size  = conf->agent->max_frame_size;
+	SPOE_APPCTX(appctx)->max_frame_size  = agent->max_frame_size;
 	SPOE_APPCTX(appctx)->flags           = 0;
 	SPOE_APPCTX(appctx)->status_code     = SPOE_FRM_ERR_NONE;
 	SPOE_APPCTX(appctx)->buffer          = BUF_NULL;
@@ -2074,10 +2092,15 @@ spoe_create_appctx(struct spoe_config *conf)
 	if ((strm = stream_new(sess, &appctx->obj_type)) == NULL)
 		goto out_free_sess;
 
-	stream_set_backend(strm, conf->agent->b.be);
+	stream_set_backend(strm, agent->b.be);
 
 	/* applet is waiting for data */
 	si_cant_get(&strm->si[0]);
+
+	/* Increase the per-process number of cumulated connections */
+	if (agent->cps_max > 0)
+		update_freq_ctr(&agent->rt[tid].conn_per_sec, 1);
+
 	appctx_wakeup(appctx);
 
 	strm->do_log = NULL;
@@ -2102,6 +2125,11 @@ spoe_create_appctx(struct spoe_config *conf)
  out_free_appctx:
 	appctx_free(appctx);
  out_error:
+	SPOE_PRINTF(stderr, "%d.%06d [SPOE/%-15s] %s: failed to create SPOE appctx\n",
+		    (int)now.tv_sec, (int)now.tv_usec, agent->id, __FUNCTION__);
+	send_log(&conf->agent_fe, LOG_EMERG, "SPOE: [%s] failed to create SPOE applet\n", agent->id);
+ out:
+
 	return NULL;
 }
 
@@ -2110,7 +2138,6 @@ spoe_queue_context(struct spoe_context *ctx)
 {
 	struct spoe_config *conf = FLT_CONF(ctx->filter);
 	struct spoe_agent  *agent = conf->agent;
-	struct appctx      *appctx;
 	struct spoe_appctx *spoe_appctx;
 
 	/* Check if we need to create a new SPOE applet or not. */
@@ -2123,44 +2150,7 @@ spoe_queue_context(struct spoe_context *ctx)
 		    (int)now.tv_sec, (int)now.tv_usec, agent->id, __FUNCTION__,
 		    ctx->strm);
 
-	/* Do not try to create a new applet if there is no server up for the
-	 * agent's backend. */
-	if (!agent->b.be->srv_act && !agent->b.be->srv_bck) {
-		SPOE_PRINTF(stderr, "%d.%06d [SPOE/%-15s] %s: stream=%p"
-			    " - cannot create SPOE appctx: no server up\n",
-			    (int)now.tv_sec, (int)now.tv_usec, agent->id,
-			    __FUNCTION__, ctx->strm);
-		goto end;
-	}
-
-	/* Do not try to create a new applet if we have reached the maximum of
-	 * connection per seconds */
-	if (agent->cps_max > 0) {
-		if (!freq_ctr_remain(&agent->rt[tid].conn_per_sec, agent->cps_max, 0)) {
-			SPOE_PRINTF(stderr, "%d.%06d [SPOE/%-15s] %s: stream=%p"
-				    " - cannot create SPOE appctx: max CPS reached\n",
-				    (int)now.tv_sec, (int)now.tv_usec, agent->id,
-				    __FUNCTION__, ctx->strm);
-			goto end;
-		}
-	}
-
-	appctx = spoe_create_appctx(conf);
-	if (appctx == NULL) {
-		SPOE_PRINTF(stderr, "%d.%06d [SPOE/%-15s] %s: stream=%p"
-			    " - failed to create SPOE appctx\n",
-			    (int)now.tv_sec, (int)now.tv_usec, agent->id,
-			    __FUNCTION__, ctx->strm);
-		send_log(&conf->agent_fe, LOG_EMERG,
-			 "SPOE: [%s] failed to create SPOE applet\n",
-			 agent->id);
-
-		goto end;
-	}
-
-	/* Increase the per-process number of cumulated connections */
-	if (agent->cps_max > 0)
-		update_freq_ctr(&agent->rt[tid].conn_per_sec, 1);
+	spoe_create_appctx(conf);
 
   end:
 	/* The only reason to return an error is when there is no applet */
