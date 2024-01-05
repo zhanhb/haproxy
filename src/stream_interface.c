@@ -161,15 +161,11 @@ void si_retnclose(struct stream_interface *si,
  */
 static inline int si_cond_forward_shutw(struct stream_interface *si)
 {
-	/* Foward the shutdown if an write error occurred on the input channel */
-	if (si_ic(si)->flags & CF_WRITE_TIMEOUT)
-		return 1;
-
 	/* The close must not be forwarded */
 	if (!(si_ic(si)->flags & CF_SHUTR) || !(si->flags & SI_FL_NOHALF))
 		return 0;
 
-	if (!channel_is_empty(si_ic(si))) {
+	if (!channel_is_empty(si_ic(si)) && !(si_ic(si)->flags & CF_WRITE_TIMEOUT)) {
 		/* the close to the write side cannot be forwarded now because
 		 * we should flush outgoing data first. But instruct the output
 		 * channel it should be done ASAP.
