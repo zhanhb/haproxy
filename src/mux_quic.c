@@ -1693,9 +1693,6 @@ static int qc_send(struct qcc *qcc)
 		}
 	}
 
-	if (qcc->flags & QC_CF_BLK_MFCTL)
-		return 0;
-
 	if (!(qcc->flags & QC_CF_APP_FINAL) && !eb_is_empty(&qcc->streams_by_id) &&
 	    qcc->app_ops->finalize) {
 		/* Finalize the application layer before sending any stream.
@@ -1731,7 +1728,8 @@ static int qc_send(struct qcc *qcc)
 			continue;
 		}
 
-		if (qcs->flags & QC_SF_BLK_SFCTL) {
+		if (qcc->flags & QC_CF_BLK_MFCTL ||
+		    qcs->flags & QC_SF_BLK_SFCTL) {
 			node = eb64_next(node);
 			continue;
 		}
