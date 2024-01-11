@@ -1,6 +1,45 @@
 ChangeLog :
 ===========
 
+2024/01/11 : 2.9.2
+    - BUG/MINOR: resolvers: default resolvers fails when network not configured
+    - DOC: config: Update documentation about local haproxy response
+    - BUG/MINOR: server: Use the configured address family for the initial resolution
+    - BUG/MAJOR: stconn: Disable zero-copy forwarding if consumer is shut or in error
+    - MINOR: stats: store the parent proxy in stats ctx (http)
+    - BUG/MEDIUM: stats: unhandled switching rules with TCP frontend
+    - MINOR: server/event_hdl: add server_inetaddr struct to facilitate event data usage
+    - MINOR: server/event_hdl: update _srv_event_hdl_prepare_inetaddr prototype
+    - BUG/MINOR: server/event_hdl: propagate map port info through inetaddr event
+    - DOC: fix typo for fastfwd QUIC option
+    - BUG/MINOR: mux-quic: always report error to SC on RESET_STREAM emission
+    - BUG/MINOR: mux-quic: disable fast-fwd if connection on error
+    - BUG/MINOR: quic: Wrong keylog callback setting.
+    - BUG/MINOR: quic: Missing call to TLS message callbacks
+    - MINOR: h3: check connection error during sending
+    - BUG/MINOR: h3: close connection on header list too big
+    - MINOR: h3: add traces for connection init stage
+    - BUG/MINOR: h3: properly handle alloc failure on finalize
+    - BUG/MINOR: h3: close connection on sending alloc errors
+    - BUG/MINOR: h3: disable fast-forward on buffer alloc failure
+    - CI: use semantic version compare for determing "latest" OpenSSL
+    - MINOR: global: export a way to list build options
+    - MINOR: debug: add features and build options to "show dev"
+    - REGTESTS: check attach-srv out of order declaration
+    - CLEANUP: quic: Remaining useless code into server part
+    - BUILD: quic: Missing quic_ssl.h header protection
+    - BUG/MEDIUM: h3: fix incorrect snd_buf return value
+    - BUG/MEDIUM: stconn: Forward shutdown on write timeout only if it is forwardable
+    - BUG/MEDIUM: stconn: Set fsb date if zero-copy forwarding is blocked during nego
+    - BUG/MEDIUM: spoe: Never create new spoe applet if there is no server up
+    - MINOR: mux-h2: support limiting the total number of H2 streams per connection
+    - MINOR: ot: logsrv struct becomes logger
+    - MINOR: ssl: Update ssl_fc_curve/ssl_bc_curve to use SSL_get0_group_name
+    - CLEANUP: quic: Double quic_dgram_parse() prototype declaration.
+    - BUG/MINOR: map: list-based matching potential ordering regression
+    - REGTESTS: add a test to ensure map-ordering is preserved
+    - DOC: configuration: corrected description of keyword tune.ssl.ocsp-update.mindelay
+
 2023/12/15 : 2.9.1
     - BUG/MINOR: ssl: Double free of OCSP Certificate ID
     - MINOR: ssl/cli: Add ha_(warning|alert) msgs to CLI ckch callback
