@@ -4518,6 +4518,9 @@ static int h2_ctl(struct connection *conn, enum mux_ctl_type mux_ctl, void *outp
 		return ret;
 	case MUX_EXIT_STATUS:
 		return MUX_ES_UNKNOWN;
+	case MUX_CTL_GET_GLITCHES:
+		return h2c->glitches;
+
 	default:
 		return -1;
 	}
