@@ -1,6 +1,12 @@
 ChangeLog :
 ===========
 
+2024/01/18 : 2.9.3
+    - BUILD: quic: missing include for quic_tp
+    - BUG/MINOR: mux-quic: do not prevent non-STREAM sending on flow control
+    - BUG/MINOR: mux-h2: also count streams for refused ones
+    - BUG/MEDIUM: quic: keylog callback not called (USE_OPENSSL_COMPAT)
+
 2024/01/11 : 2.9.2
     - BUG/MINOR: resolvers: default resolvers fails when network not configured
     - DOC: config: Update documentation about local haproxy response
