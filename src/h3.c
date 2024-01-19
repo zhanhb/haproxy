@@ -1634,7 +1634,7 @@ static int h3_init(struct qcc *qcc)
 
 	h3c->qcc = qcc;
 	h3c->ctrl_strm = NULL;
-	h3c->err = H3_NO_ERROR;
+	h3c->err = 0;
 	h3c->flags = 0;
 	h3c->id_goaway = 0;
 
