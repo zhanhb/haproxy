@@ -1177,7 +1177,7 @@ static int h3_control_send(struct qcs *qcs, void *ctx)
 	}
 
 	res = mux_get_buf(qcs);
-	if (!res) {
+	if (b_is_null(res)) {
 		TRACE_ERROR("cannot allocate Tx buffer", H3_EV_TX_SETTINGS, qcs->qcc->conn, qcs);
 		goto err;
 	}
@@ -1257,7 +1257,7 @@ static int h3_resp_headers_send(struct qcs *qcs, struct htx *htx)
 	list[hdr].n = ist("");
 
 	res = mux_get_buf(qcs);
-	if (!res) {
+	if (b_is_null(res)) {
 		TRACE_ERROR("cannot allocate Tx buffer", H3_EV_TX_HDR, qcs->qcc->conn, qcs);
 		h3c->err = H3_INTERNAL_ERROR;
 		goto err;
@@ -1361,7 +1361,7 @@ static int h3_resp_data_send(struct qcs *qcs, struct htx *htx, size_t count)
 		goto end;
 
 	res = mux_get_buf(qcs);
-	if (!res) {
+	if (b_is_null(res)) {
 		TRACE_ERROR("cannot allocate Tx buffer", H3_EV_TX_DATA, qcs->qcc->conn, qcs);
 		h3c->err = H3_INTERNAL_ERROR;
 		goto err;
@@ -1610,7 +1610,7 @@ static int h3_send_goaway(struct h3c *h3c)
 	b_quic_enc_int(&pos, h3c->id_goaway);
 
 	res = mux_get_buf(qcs);
-	if (!res || b_room(res) < b_data(&pos)) {
+	if (b_is_null(res) || b_room(res) < b_data(&pos)) {
 		/* Do not try forcefully to emit GOAWAY if no space left. */
 		return 1;
 	}
