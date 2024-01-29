@@ -67,6 +67,8 @@ static const struct trace_event h3_trace_events[] = {
 	{ .mask = H3_EV_H3S_NEW,      .name = "h3s_new",     .desc = "new H3 stream" },
 #define           H3_EV_H3S_END       (1ULL <<  8)
 	{ .mask = H3_EV_H3S_END,      .name = "h3s_end",     .desc = "H3 stream terminated" },
+#define           H3_EV_STRM_SEND     (1ULL << 12)
+	{ .mask = H3_EV_STRM_SEND,    .name = "strm_send",   .desc = "sending data for stream" },
 	{ }
 };
 
@@ -1432,7 +1434,7 @@ static size_t h3_snd_buf(struct qcs *qcs, struct htx *htx, size_t count)
 	int32_t idx;
 	int ret = 0;
 
-	h3_debug_printf(stderr, "%s\n", __func__);
+	TRACE_ENTER(H3_EV_STRM_SEND, qcs->qcc->conn, qcs);
 
 	while (count && !htx_is_empty(htx) &&
 	       !(qcs->flags & QC_SF_BLK_MROOM) && !h3c->err) {
@@ -1490,6 +1492,7 @@ static size_t h3_snd_buf(struct qcs *qcs, struct htx *htx, size_t count)
 	}
 
  out:
+	TRACE_LEAVE(H3_EV_STRM_SEND, qcs->qcc->conn, qcs);
 	return total;
 }
 
