@@ -1,6 +1,32 @@
 ChangeLog :
 ===========
 
+2024/01/31 : 2.9.4
+    - BUG/MINOR: h3: fix checking on NULL Tx buffer
+    - DOC: configuration: fix set-dst in actions keywords matrix
+    - BUG/MEDIUM: mux-h2: refine connection vs stream error on headers
+    - MINOR: mux-h2/traces: add a missing trace on connection WU with negative inc
+    - BUG/MEDIUM: cli: some err/warn msg dumps add LR into CSV output on stat's CLI
+    - BUG/MINOR: jwt: fix jwt_verify crash on 32-bit archs
+    - BUG/MINOR: hlua: fix uninitialized var in hlua_core_get_var()
+    - BUG/MEDIUM: cache: Fix crash when deleting secondary entry
+    - BUG/MINOR: quic: newreno QUIC congestion control algorithm no more available
+    - CLEANUP: quic: Remove unused CUBIC_BETA_SCALE_FACTOR_SHIFT macro.
+    - MINOR: quic: Stop hardcoding a scale shifting value (CUBIC_BETA_SCALE_FACTOR_SHIFT)
+    - MINOR: quic: extract qc_stream_buf free in a dedicated function
+    - BUG/MEDIUM: quic: remove unsent data from qc_stream_desc buf
+    - DOC: configuration: clarify http-request wait-for-body
+    - BUG/MAJOR: ssl_sock: Always clear retry flags in read/write functions
+    - MINOR: h3: add traces for stream sending function
+    - BUG/MEDIUM: h3: do not crash on invalid response status code
+    - BUG/MEDIUM: qpack: allow 6xx..9xx status codes
+    - BUG/MEDIUM: quic: fix crash on invalid qc_stream_buf_free() BUG_ON
+    - BUG/MINOR: h1: Don't support LF only at the end of chunks
+    - BUG/MEDIUM: h1: Don't support LF only to mark the end of a chunk size
+    - DOC: httpclient: add dedicated httpclient section
+    - BUG/MINOR: h1-htx: properly initialize the err_pos field
+    - BUG/MEDIUM: h1: always reject the NUL character in header values
+
 2024/01/18 : 2.9.3
     - BUILD: quic: missing include for quic_tp
     - BUG/MINOR: mux-quic: do not prevent non-STREAM sending on flow control
