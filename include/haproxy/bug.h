@@ -53,6 +53,7 @@ static inline __attribute((always_inline)) void ha_crash_now(void)
 #if __GNUC_PREREQ__(5, 0)
 #pragma GCC diagnostic pop
 #endif
+	DO_NOT_FOLD();
 	my_unreachable();
 }
 
