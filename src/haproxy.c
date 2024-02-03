@@ -2245,6 +2245,10 @@ static void init(int argc, char **argv)
 	if (global.mode & MODE_DUMP_KWD)
 		dump_registered_keywords();
 
+	if (global.mode & MODE_DIAG) {
+		cfg_run_diagnostics();
+	}
+
 	if (global.mode & MODE_CHECK) {
 		struct peers *pr;
 		struct proxy *px;
@@ -2274,10 +2278,6 @@ static void init(int argc, char **argv)
 		}
 		qfprintf(stdout, "Configuration file has no error but will not start (no listener) => exit(2).\n");
 		exit(2);
-	}
-
-	if (global.mode & MODE_DIAG) {
-		cfg_run_diagnostics();
 	}
 
 	/* Initialize the random generators */
