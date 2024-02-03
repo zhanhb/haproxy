@@ -2333,6 +2333,10 @@ static void init(int argc, char **argv)
 	if (global.mode & MODE_DUMP_KWD)
 		dump_registered_keywords();
 
+	if (global.mode & MODE_DIAG) {
+		cfg_run_diagnostics();
+	}
+
 	if (global.mode & MODE_CHECK) {
 		struct peers *pr;
 		struct proxy *px;
@@ -2366,10 +2370,6 @@ static void init(int argc, char **argv)
 
 	if (global.mode & MODE_DUMP_CFG)
 		deinit_and_exit(0);
-
-	if (global.mode & MODE_DIAG) {
-		cfg_run_diagnostics();
-	}
 
 #ifdef USE_OPENSSL
 
