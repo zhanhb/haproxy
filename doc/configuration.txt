@@ -20854,6 +20854,7 @@ src_sess_rate([<table>])                           integer
 src_updt_conn_cnt([<table>])                       integer
 srv_id                                             integer
 srv_name                                           string
+txn.conn_retries                                   integer
 -------------------------------------------------+-------------
 
 Detailed list:
@@ -21844,6 +21845,12 @@ srv_name : string
   Returns a string containing the server's name when processing the response.
   While it's almost only used with ACLs, it may be used for logging or
   debugging. It can also be used in a tcp-check or an http-check ruleset.
+
+txn.conn_retries : integer
+  Returns the the number of connection retries experienced by this stream when
+  trying to connect to the server. This value is subject to change while the
+  connection is not fully established. For HTTP connections, the value may be
+  affected by L7 retries.
 
 7.3.4. Fetching samples at Layer 5
 ----------------------------------
