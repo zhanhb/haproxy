@@ -1442,7 +1442,7 @@ static int cli_parse_del_crtlist(char **args, char *payload, struct appctx *appc
 		}
 		HA_RWLOCK_WRUNLOCK(SNI_LOCK, &inst->bind_conf->sni_lock);
 		LIST_DELETE(&inst->by_ckchs);
-		free(inst);
+		ckch_inst_free(inst);
 	}
 
 	crtlist_free_filters(entry->filters);
