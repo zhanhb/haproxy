@@ -23,8 +23,8 @@
 #   USE_PCRE2_JIT        : enable JIT for faster regex on libpcre2
 #   USE_POLL             : enable poll(). Automatic.
 #   USE_THREAD           : enable threads support.
-#   USE_STATIC_PCRE      : enable static libpcre. Recommended.
-#   USE_STATIC_PCRE2     : enable static libpcre2.
+#   USE_STATIC_PCRE      : enable static libpcre.
+#   USE_STATIC_PCRE2     : enable static libpcre2. Recommended.
 #   USE_TPROXY           : enable transparent proxy. Automatic.
 #   USE_LINUX_TPROXY     : enable full transparent proxy. Automatic.
 #   USE_LINUX_SPLICE     : enable kernel 2.6 splicing. Automatic.
