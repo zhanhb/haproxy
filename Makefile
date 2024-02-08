@@ -25,8 +25,8 @@
 #   USE_PRIVATE_CACHE    : disable shared memory cache of ssl sessions.
 #   USE_THREAD           : enable threads support.
 #   USE_PTHREAD_PSHARED  : enable pthread process shared mutex on sslcache.
-#   USE_STATIC_PCRE      : enable static libpcre. Recommended.
-#   USE_STATIC_PCRE2     : enable static libpcre2.
+#   USE_STATIC_PCRE      : enable static libpcre.
+#   USE_STATIC_PCRE2     : enable static libpcre2. Recommended.
 #   USE_TPROXY           : enable transparent proxy. Automatic.
 #   USE_LINUX_TPROXY     : enable full transparent proxy. Automatic.
 #   USE_LINUX_SPLICE     : enable kernel 2.6 splicing. Automatic.
