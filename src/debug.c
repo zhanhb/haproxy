@@ -942,7 +942,7 @@ static int debug_parse_cli_sched(char **args, char *payload, struct appctx *appc
 			*(uint8_t *)ptr = new;
 	}
 
-	tctx = calloc(sizeof(*tctx), count + 2);
+	tctx = calloc(count + 2, sizeof(*tctx));
 	if (!tctx)
 		goto fail;
 
