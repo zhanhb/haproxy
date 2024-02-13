@@ -3022,6 +3022,12 @@ tune.quic.frontend.max-streams-bidi <number>
 
   The default value is 100.
 
+tune.quic.reorder-ratio <0..100, in percent>
+  The ratio applied to the packet reordering threshold calculated. It may
+  trigger a high packet loss detection when too small.
+
+  The default value is 50.
+
 tune.quic.retry-threshold <number>
   Warning: QUIC support in HAProxy is currently experimental. Configuration may
   change without deprecation in the future.
