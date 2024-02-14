@@ -1271,7 +1271,7 @@ int sc_conn_recv(struct stconn *sc)
 	 * one without using the channel buffer.
 	 */
 	if (!(global.tune.no_zero_copy_fwd & NO_ZERO_COPY_FWD) &&
-	    sc_ep_test(sc, SE_FL_MAY_FASTFWD) && ic->to_forward) {
+	    sc_ep_test(sc, SE_FL_MAY_FASTFWD_PROD) && ic->to_forward) {
 		if (channel_data(ic)) {
 			/* We're embarrassed, there are already data pending in
 			 * the buffer and we don't want to have them at two
@@ -1298,7 +1298,7 @@ int sc_conn_recv(struct stconn *sc)
 		if (sc_ep_test(sc, SE_FL_WANT_ROOM))
 			sc_need_room(sc, -1);
 
-		if (sc_ep_test(sc, SE_FL_MAY_FASTFWD) && ic->to_forward)
+		if (sc_ep_test(sc, SE_FL_MAY_FASTFWD_PROD) && ic->to_forward)
 			goto done_recv;
 	}
 

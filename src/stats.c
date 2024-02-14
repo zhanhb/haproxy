@@ -4476,7 +4476,6 @@ full:
 	return 0;
 }
 
-
 /* This I/O handler runs as an applet embedded in a stream connector. It is
  * used to send HTTP stats over a TCP socket. The mechanism is very simple.
  * appctx->st0 contains the operation in progress (dump, done). The handler
