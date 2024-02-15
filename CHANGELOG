@@ -1,6 +1,56 @@
 ChangeLog :
 ===========
 
+2024/02/15 : 2.9.5
+    - BUG/MINOR: diag: always show the version before dumping a diag warning
+    - BUG/MINOR: diag: run the final diags before quitting when using -c
+    - BUG/MINOR: quic: Wrong ack ranges handling when reaching the limit.
+    - BUILD: quic: Variable name typo inside a BUG_ON().
+    - BUG/MINOR: ssl: Fix error message after ssl_sock_load_ocsp call
+    - CLEANUP: quic: Code clarifications for QUIC CUBIC (RFC 9438)
+    - BUG/MINOR: quic: fix possible integer wrap around in cubic window calculation
+    - MINOR: quic: Stop using 1024th of a second.
+    - MINOR: compiler: add a new DO_NOT_FOLD() macro to prevent code folding
+    - MINOR: debug: make sure calls to ha_crash_now() are never merged
+    - MINOR: debug: make ABORT_NOW() store the caller's line number when using abort
+    - BUILD: debug: remove leftover parentheses in ABORT_NOW()
+    - MINOR: debug: make BUG_ON() catch build errors even without DEBUG_STRICT
+    - BUG/MINOR: ssl: Duplicate ocsp update mode when dup'ing ckch
+    - BUG/MINOR: ssl: Clear the ckch instance when deleting a crt-list line
+    - MINOR: ssl: Use OCSP_CERTID instead of ckch_store in ckch_store_build_certid
+    - BUG/MEDIUM: ocsp: Separate refcount per instance and per store
+    - BUG/MINOR: ssl: Destroy ckch instances before the store during deinit
+    - BUG/MINOR: ssl: Reenable ocsp auto-update after an "add ssl crt-list"
+    - REGTESTS: ssl: Fix empty line in cli command input
+    - REGTESTS: ssl: Add OCSP related tests
+    - DOC: install: recommend pcre2
+    - DOC: config: fix misplaced "txn.conn_retries"
+    - DOC: config: fix typos for "bytes_{in,out}"
+    - DOC: config: fix misplaced "bytes_{in,out}"
+    - DOC: internal: update missing data types in peers-v2.0.txt
+    - BUG/MINOR: vars/cli: fix missing LF after "get var" output
+    - BUG/MEDIUM: cli: fix once for all the problem of missing trailing LFs
+    - CI: Update to actions/cache@v4
+    - BUILD: address a few remaining calloc(size, n) cases
+    - BUG/MEDIUM: pool: fix rare risk of deadlock in pool_flush()
+    - BUG/MEDIUM: ssl: Fix crash when calling "update ssl ocsp-response" when an update is ongoing
+    - BUG/MEDIUM: quic: Wrong K CUBIC calculation.
+    - MINOR: quic: Update K CUBIC calculation (RFC 9438)
+    - MINOR: quic: Dynamic packet reordering threshold
+    - MINOR: quic: Add a counter for reordered packets
+    - BUG/MEDIUM: stconn: Allow expiration update when READ/WRITE event is pending
+    - BUG/MEDIUM: stconn: Don't check pending shutdown to wake an applet up
+    - CLEANUP: stconn: Move SE flags set by app layer at the end of the bitfield
+    - MINOR: stconn: Rename SE_FL_MAY_FASTFWD and reorder bitfield
+    - MINOR: stconn: Add SE flag to announce zero-copy forwarding on consumer side
+    - MINOR: muxes: Announce support for zero-copy forwarding on consumer side
+    - BUG/MAJOR: stconn: Check support for zero-copy forwarding on both sides
+    - MINOR: muxes/applet: Simplify checks on options to disable zero-copy forwarding
+    - BUG/MEDIUM: mux-h2: Switch pending error to error if demux buffer is empty
+    - BUG/MEDIUM: mux-h2: Only Report H2C error on read error if demux buffer is empty
+    - BUG/MEDIUM: mux-h2: Don't report error on SE if error is only pending on H2C
+    - BUG/MEDIUM: mux-h2: Don't report error on SE for closed H2 streams
+
 2024/01/31 : 2.9.4
     - BUG/MINOR: h3: fix checking on NULL Tx buffer
     - DOC: configuration: fix set-dst in actions keywords matrix
