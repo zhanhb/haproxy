@@ -298,7 +298,7 @@ void appctx_free_on_early_error(struct appctx *appctx)
 		stream_free(appctx_strm(appctx));
 		return;
 	}
-	appctx_free(appctx);
+	__appctx_free(appctx);
 }
 
 void appctx_free(struct appctx *appctx)
