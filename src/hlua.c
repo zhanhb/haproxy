@@ -2325,8 +2325,10 @@ static void hlua_socket_handler(struct appctx *appctx)
 		notification_wake(&ctx->wake_on_write);
 
 	/* Wake the tasks which wants to read if the buffer contains data. */
-	if (!channel_is_empty(sc_oc(sc)))
+	if (!channel_is_empty(sc_oc(sc))) {
 		notification_wake(&ctx->wake_on_read);
+		applet_wont_consume(appctx);
+	}
 
 	/* If write notifications are registered, we considers we want
 	 * to write, so we clear the blocking flag.
@@ -2595,6 +2597,7 @@ __LJMP static int hlua_socket_receive_yield(struct lua_State *L, int status, lua
 	co_skip(oc, len + skip_at_end);
 
 	/* Don't wait anything. */
+	applet_will_consume(appctx);
 	appctx_wakeup(appctx);
 
 	/* If the pattern reclaim to read all the data
