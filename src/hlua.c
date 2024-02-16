@@ -1925,8 +1925,10 @@ static void hlua_socket_handler(struct appctx *appctx)
 		notification_wake(&appctx->ctx.hlua_cosocket.wake_on_write);
 
 	/* Wake the tasks which wants to read if the buffer contains data. */
-	if (!channel_is_empty(si_oc(si)))
+	if (!channel_is_empty(si_oc(si))) {
 		notification_wake(&appctx->ctx.hlua_cosocket.wake_on_read);
+		si_cant_get(si);
+	}
 
 	/* Some data were injected in the buffer, notify the stream
 	 * interface.
@@ -2156,6 +2158,7 @@ __LJMP static int hlua_socket_receive_yield(struct lua_State *L, int status, lua
 	co_skip(oc, len + skip_at_end);
 
 	/* Don't wait anything. */
+	si_want_get(si);
 	appctx_wakeup(appctx);
 
 	/* If the pattern reclaim to read all the data
