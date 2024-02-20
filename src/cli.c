@@ -790,6 +790,21 @@ static int cli_parse_request(struct appctx *appctx)
 	for (; i < MAX_CLI_ARGS + 1; i++)
 		args[i] = p;
 
+	if (appctx->st1 & APPCTX_CLI_ST1_SHUT_EXPECTED) {
+		/* The previous command line was finished by a \n in non-interactive mode.
+		 * It should not be followed by another command line. In non-interactive mode,
+		 * only one line should be processed. Because of a bug, it is not respected.
+		 * So emit a warning, only once in the process life, to warn users their script
+		 * must be updated.
+		 */
+		appctx->st1 &= ~APPCTX_CLI_ST1_SHUT_EXPECTED;
+		if (ONLY_ONCE()) {
+			ha_warning("Commands sent to the CLI were chained using a new line character while in non-interactive mode."
+				   " This is not reliable, not officially supported and will not be supported anymore in future versions. "
+				   "Please use ';' to delimit commands instead.");
+		}
+	}
+
 	kw = cli_find_kw(args);
 	if (!kw ||
 	    (kw->level & ~appctx->cli_level & ACCESS_MASTER_ONLY) ||
@@ -893,6 +908,7 @@ static void cli_io_handler(struct appctx *appctx)
 	struct bind_conf *bind_conf = strm_li(__sc_strm(sc))->bind_conf;
 	int reql;
 	int len;
+	int lf = 0;
 
 	if (unlikely(sc->state == SC_ST_DIS || sc->state == SC_ST_CLO))
 		goto out;
@@ -965,6 +981,8 @@ static void cli_io_handler(struct appctx *appctx)
 				continue;
 			}
 
+			if (str[reql-1] == '\n')
+				lf = 1;
 
 			/* now it is time to check that we have a full line,
 			 * remove the trailing \n and possibly \r, then cut the
@@ -1001,8 +1019,9 @@ static void cli_io_handler(struct appctx *appctx)
 					/* NB: cli_sock_parse_request() may have put
 					 * another CLI_ST_O_* into appctx->st0.
 					 */
-
 					appctx->st1 &= ~APPCTX_CLI_ST1_PAYLOAD;
+					if (!(appctx->st1 & APPCTX_CLI_ST1_PROMPT) && lf)
+						appctx->st1 |= APPCTX_CLI_ST1_SHUT_EXPECTED;
 				}
 			}
 			else {
@@ -1019,6 +1038,8 @@ static void cli_io_handler(struct appctx *appctx)
 					/* no payload, the command is complete: parse the request */
 					cli_parse_request(appctx);
 					chunk_reset(appctx->chunk);
+					if (!(appctx->st1 & APPCTX_CLI_ST1_PROMPT) && lf)
+						appctx->st1 |= APPCTX_CLI_ST1_SHUT_EXPECTED;
 				}
 			}
 
