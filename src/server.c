@@ -5637,7 +5637,7 @@ static int cli_parse_delete_server(char **args, char *payload, struct appctx *ap
 	 * TODO idle connections should not prevent server deletion. A proper
 	 * cleanup function should be implemented to be used here.
 	 */
-	if (srv->cur_sess || srv->curr_idle_conns ||
+	if (srv->curr_used_conns || srv->curr_idle_conns ||
 	    !eb_is_empty(&srv->queue.head) || srv_has_streams(srv)) {
 		cli_err(appctx, "Server still has connections attached to it, cannot remove it.");
 		goto out;
