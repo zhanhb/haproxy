@@ -1,6 +1,9 @@
 ChangeLog :
 ===========
 
+2024/02/26 : 2.8.7
+    - BUG/MAJOR: ssl/ocsp: crash with ocsp when old process exit or using ocsp CLI
+
 2024/02/15 : 2.8.6
     - DOC: configuration: typo req.ssl_hello_type
     - BUG/MINOR: mworker/cli: fix set severity-output support
