@@ -1,6 +1,10 @@
 ChangeLog :
 ===========
 
+2024/02/26 : 2.9.6
+    - BUG/MAJOR: promex: fix crash on deleted server
+    - BUG/MAJOR: ssl/ocsp: crash with ocsp when old process exit or using ocsp CLI
+
 2024/02/15 : 2.9.5
     - BUG/MINOR: diag: always show the version before dumping a diag warning
     - BUG/MINOR: diag: run the final diags before quitting when using -c
