@@ -6477,10 +6477,12 @@ struct task *hlua_process_task(struct task *task, void *context, unsigned int st
 
 	/* finished with error. */
 	case HLUA_E_ERRMSG:
+		hlua_lock(hlua);
 		SEND_ERR(NULL, "Lua task: %s.\n", hlua_tostring_safe(hlua->T, -1));
 		hlua_ctx_destroy(hlua);
 		task_destroy(task);
 		task = NULL;
+		hlua_unlock(hlua);
 		break;
 	case HLUA_E_ERR:
 	default:
@@ -6714,9 +6716,12 @@ static int hlua_sample_conv_wrapper(const struct arg *arg_p, struct sample *smp,
 	switch (hlua_ctx_resume(stream->hlua, 0)) {
 	/* finished. */
 	case HLUA_E_OK:
+		hlua_lock(stream->hlua);
 		/* If the stack is empty, the function fails. */
-		if (lua_gettop(stream->hlua->T) <= 0)
+		if (lua_gettop(stream->hlua->T) <= 0) {
+			hlua_unlock(stream->hlua);
 			return 0;
+		}
 
 		/* Convert the returned value in sample. */
 		hlua_lua2smp(stream->hlua->T, -1, smp);
@@ -6725,6 +6730,7 @@ static int hlua_sample_conv_wrapper(const struct arg *arg_p, struct sample *smp,
 		 */
 		smp_dup(smp);
 		lua_pop(stream->hlua->T, 1);
+		hlua_unlock(stream->hlua);
 		return 1;
 
 	/* yield. */
@@ -6735,9 +6741,11 @@ static int hlua_sample_conv_wrapper(const struct arg *arg_p, struct sample *smp,
 	/* finished with error. */
 	case HLUA_E_ERRMSG:
 		/* Display log. */
+		hlua_lock(stream->hlua);
 		SEND_ERR(stream->be, "Lua converter '%s': %s.\n",
 		         fcn->name, hlua_tostring_safe(stream->hlua->T, -1));
 		lua_pop(stream->hlua->T, 1);
+		hlua_unlock(stream->hlua);
 		return 0;
 
 	case HLUA_E_ETMOUT:
@@ -6839,9 +6847,12 @@ static int hlua_sample_fetch_wrapper(const struct arg *arg_p, struct sample *smp
 	switch (hlua_ctx_resume(stream->hlua, 0)) {
 	/* finished. */
 	case HLUA_E_OK:
+		hlua_lock(stream->hlua);
 		/* If the stack is empty, the function fails. */
-		if (lua_gettop(stream->hlua->T) <= 0)
+		if (lua_gettop(stream->hlua->T) <= 0) {
+			hlua_unlock(stream->hlua);
 			return 0;
+		}
 
 		/* Convert the returned value in sample. */
 		hlua_lua2smp(stream->hlua->T, -1, smp);
@@ -6850,6 +6861,7 @@ static int hlua_sample_fetch_wrapper(const struct arg *arg_p, struct sample *smp
 		 */
 		smp_dup(smp);
 		lua_pop(stream->hlua->T, 1);
+		hlua_unlock(stream->hlua);
 
 		/* Set the end of execution flag. */
 		smp->flags &= ~SMP_F_MAY_CHANGE;
@@ -6863,9 +6875,11 @@ static int hlua_sample_fetch_wrapper(const struct arg *arg_p, struct sample *smp
 	/* finished with error. */
 	case HLUA_E_ERRMSG:
 		/* Display log. */
+		hlua_lock(stream->hlua);
 		SEND_ERR(smp->px, "Lua sample-fetch '%s': %s.\n",
 		         fcn->name, hlua_tostring_safe(stream->hlua->T, -1));
 		lua_pop(stream->hlua->T, 1);
+		hlua_unlock(stream->hlua);
 		return 0;
 
 	case HLUA_E_ETMOUT:
@@ -7171,8 +7185,10 @@ static enum act_return hlua_action(struct act_rule *rule, struct proxy *px,
 	/* finished. */
 	case HLUA_E_OK:
 		/* Catch the return value */
+		hlua_lock(s->hlua);
 		if (lua_gettop(s->hlua->T) > 0)
 			act_ret = lua_tointeger(s->hlua->T, -1);
+		hlua_unlock(s->hlua);
 
 		/* Set timeout in the required channel. */
 		if (act_ret == ACT_RET_YIELD) {
@@ -7212,9 +7228,11 @@ static enum act_return hlua_action(struct act_rule *rule, struct proxy *px,
 	/* finished with error. */
 	case HLUA_E_ERRMSG:
 		/* Display log. */
+		hlua_lock(s->hlua);
 		SEND_ERR(px, "Lua function '%s': %s.\n",
 		         rule->arg.hlua_rule->fcn->name, hlua_tostring_safe(s->hlua->T, -1));
 		lua_pop(s->hlua->T, 1);
+		hlua_unlock(s->hlua);
 		goto end;
 
 	case HLUA_E_ETMOUT:
@@ -7395,9 +7413,11 @@ void hlua_applet_tcp_fct(struct appctx *ctx)
 	/* finished with error. */
 	case HLUA_E_ERRMSG:
 		/* Display log. */
+		hlua_lock(hlua);
 		SEND_ERR(px, "Lua applet tcp '%s': %s.\n",
 		         rule->arg.hlua_rule->fcn->name, hlua_tostring_safe(hlua->T, -1));
 		lua_pop(hlua->T, 1);
+		hlua_unlock(hlua);
 		goto error;
 
 	case HLUA_E_ETMOUT:
@@ -7602,9 +7622,11 @@ void hlua_applet_http_fct(struct appctx *ctx)
 		/* finished with error. */
 		case HLUA_E_ERRMSG:
 			/* Display log. */
+			hlua_lock(hlua);
 			SEND_ERR(px, "Lua applet http '%s': %s.\n",
 				 rule->arg.hlua_rule->fcn->name, hlua_tostring_safe(hlua->T, -1));
 			lua_pop(hlua->T, 1);
+			hlua_unlock(hlua);
 			goto error;
 
 		case HLUA_E_ETMOUT:
@@ -8221,9 +8243,11 @@ static int hlua_cli_io_handler_fct(struct appctx *appctx)
 	/* finished with error. */
 	case HLUA_E_ERRMSG:
 		/* Display log. */
+		hlua_lock(hlua);
 		SEND_ERR(NULL, "Lua cli '%s': %s.\n",
 		         fcn->name, hlua_tostring_safe(hlua->T, -1));
 		lua_pop(hlua->T, 1);
+		hlua_unlock(hlua);
 		return 1;
 
 	case HLUA_E_ETMOUT:
