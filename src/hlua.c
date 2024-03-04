@@ -6661,11 +6661,13 @@ static int hlua_sample_conv_wrapper(const struct arg *arg_p, struct sample *smp,
 
 		/* The following Lua calls can fail. */
 		if (!SET_SAFE_LJMP(stream->hlua)) {
+			hlua_lock(stream->hlua);
 			if (lua_type(stream->hlua->T, -1) == LUA_TSTRING)
 				error = hlua_tostring_safe(stream->hlua->T, -1);
 			else
 				error = "critical error";
 			SEND_ERR(stream->be, "Lua converter '%s': %s.\n", fcn->name, error);
+			hlua_unlock(stream->hlua);
 			return 0;
 		}
 
@@ -6786,11 +6788,13 @@ static int hlua_sample_fetch_wrapper(const struct arg *arg_p, struct sample *smp
 
 		/* The following Lua calls can fail. */
 		if (!SET_SAFE_LJMP(stream->hlua)) {
+			hlua_lock(stream->hlua);
 			if (lua_type(stream->hlua->T, -1) == LUA_TSTRING)
 				error = hlua_tostring_safe(stream->hlua->T, -1);
 			else
 				error = "critical error";
 			SEND_ERR(smp->px, "Lua sample-fetch '%s': %s.\n", fcn->name, error);
+			hlua_unlock(stream->hlua);
 			return 0;
 		}
 
@@ -7112,12 +7116,14 @@ static enum act_return hlua_action(struct act_rule *rule, struct proxy *px,
 
 		/* The following Lua calls can fail. */
 		if (!SET_SAFE_LJMP(s->hlua)) {
+			hlua_lock(s->hlua);
 			if (lua_type(s->hlua->T, -1) == LUA_TSTRING)
 				error = hlua_tostring_safe(s->hlua->T, -1);
 			else
 				error = "critical error";
 			SEND_ERR(px, "Lua function '%s': %s.\n",
 			         rule->arg.hlua_rule->fcn->name, error);
+			hlua_unlock(s->hlua);
 			goto end;
 		}
 
@@ -7296,12 +7302,14 @@ static int hlua_applet_tcp_init(struct appctx *ctx, struct proxy *px, struct str
 
 	/* The following Lua calls can fail. */
 	if (!SET_SAFE_LJMP(hlua)) {
+		hlua_lock(hlua);
 		if (lua_type(hlua->T, -1) == LUA_TSTRING)
 			error = hlua_tostring_safe(hlua->T, -1);
 		else
 			error = "critical error";
 		SEND_ERR(px, "Lua applet tcp '%s': %s.\n",
 		         ctx->rule->arg.hlua_rule->fcn->name, error);
+		hlua_unlock(hlua);
 		return 0;
 	}
 
@@ -7489,12 +7497,14 @@ static int hlua_applet_http_init(struct appctx *ctx, struct proxy *px, struct st
 
 	/* The following Lua calls can fail. */
 	if (!SET_SAFE_LJMP(hlua)) {
+		hlua_lock(hlua);
 		if (lua_type(hlua->T, -1) == LUA_TSTRING)
 			error = hlua_tostring_safe(hlua->T, -1);
 		else
 			error = "critical error";
 		SEND_ERR(px, "Lua applet http '%s': %s.\n",
 		         ctx->rule->arg.hlua_rule->fcn->name, error);
+		hlua_unlock(hlua);
 		return 0;
 	}
 
@@ -8121,11 +8131,13 @@ static int hlua_cli_parse_fct(char **args, char *payload, struct appctx *appctx,
 
 	/* The following Lua calls can fail. */
 	if (!SET_SAFE_LJMP(hlua)) {
+		hlua_lock(hlua);
 		if (lua_type(hlua->T, -1) == LUA_TSTRING)
 			error = hlua_tostring_safe(hlua->T, -1);
 		else
 			error = "critical error";
 		SEND_ERR(NULL, "Lua cli '%s': %s.\n", fcn->name, error);
+		hlua_unlock(hlua);
 		goto error;
 	}
 
