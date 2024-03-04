@@ -2472,8 +2472,17 @@ static inline int qc_provide_cdata(struct quic_enc_level *el,
 		qc->wait_event.tasklet->process = quic_conn_app_io_cb;
 		if (qc_is_listener(ctx->qc)) {
 			qc->state = QUIC_HS_ST_CONFIRMED;
-			/* The connection is ready to be accepted. */
-			quic_accept_push_qc(qc);
+
+			if (!(qc->flags & QUIC_FL_CONN_ACCEPT_REGISTERED)) {
+				quic_accept_push_qc(qc);
+			}
+			else {
+				/* Connection already accepted if 0-RTT used.
+				 * In this case, schedule quic-conn to ensure
+				 * post-handshake frames are emitted.
+				 */
+				tasklet_wakeup(qc->wait_event.tasklet);
+			}
 		}
 		else {
 			qc->state = QUIC_HS_ST_COMPLETE;
