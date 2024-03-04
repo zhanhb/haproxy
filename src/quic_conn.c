@@ -2567,8 +2567,17 @@ static inline int qc_provide_cdata(struct quic_enc_level *el,
 		if (qc_is_listener(ctx->qc)) {
 			qc->flags |= QUIC_FL_CONN_NEED_POST_HANDSHAKE_FRMS;
 			qc->state = QUIC_HS_ST_CONFIRMED;
-			/* The connection is ready to be accepted. */
-			quic_accept_push_qc(qc);
+
+			if (!(qc->flags & QUIC_FL_CONN_ACCEPT_REGISTERED)) {
+				quic_accept_push_qc(qc);
+			}
+			else {
+				/* Connection already accepted if 0-RTT used.
+				 * In this case, schedule quic-conn to ensure
+				 * post-handshake frames are emitted.
+				 */
+				tasklet_wakeup(qc->wait_event.tasklet);
+			}
 		}
 		else {
 			qc->state = QUIC_HS_ST_COMPLETE;
@@ -8793,7 +8802,14 @@ int qc_set_tid_affinity(struct quic_conn *qc, uint new_tid, struct listener *new
 	qc_detach_th_ctx_list(qc, 0);
 
 	node = eb64_first(&qc->cids);
-	BUG_ON(!node || eb64_next(node)); /* One and only one CID must be present before affinity rebind. */
+	/* One and only one CID must be present before affinity rebind.
+	 *
+	 * This could be triggered fairly easily if tasklet is scheduled just
+	 * before thread migration for post-handshake state to generate new
+	 * CIDs. In this case, QUIC_FL_CONN_IO_TO_REQUEUE should be used
+	 * instead of tasklet_wakeup().
+	 */
+	BUG_ON(!node || eb64_next(node));
 	conn_id = eb64_entry(node, struct quic_connection_id, seq_num);
 
 	/* At this point no connection was accounted for yet on this
