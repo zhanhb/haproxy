@@ -1425,12 +1425,16 @@ resume_execution:
 	lua->start_time = now_ms;
 	lua->wake_time = TICK_ETERNITY;
 
+	HLUA_SET_BUSY(lua);
+
 	/* Call the function. */
 #if defined(LUA_VERSION_NUM) && LUA_VERSION_NUM >= 504
 	ret = lua_resume(lua->T, hlua_states[lua->state_id], lua->nargs, &nres);
 #else
 	ret = lua_resume(lua->T, hlua_states[lua->state_id], lua->nargs);
 #endif
+
+	HLUA_CLR_BUSY(lua);
 
 	/* reset nargs because those possibly passed to the lua_resume() call
 	 * were already consumed, and since we may call lua_resume() again
