@@ -329,7 +329,8 @@ void ha_task_dump(struct buffer *buf, const struct task *task, const char *pfx)
 
 #ifdef USE_LUA
 	hlua = NULL;
-	if (s && (hlua = s->hlua)) {
+	if (s && s->hlua && HLUA_IS_BUSY(s->hlua)) {
+		hlua = s->hlua;
 		chunk_appendf(buf, "%sCurrent executing Lua from a stream analyser -- ", pfx);
 	}
 	else if (task->process == hlua_process_task && (hlua = task->context)) {
