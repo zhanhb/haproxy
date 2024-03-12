@@ -2326,6 +2326,8 @@ struct server *new_server(struct proxy *proxy)
 	srv->cids = EB_ROOT_UNIQUE;
 #endif
 
+	MT_LIST_INIT(&srv->sess_conns);
+
 	srv->extra_counters = NULL;
 #ifdef USE_OPENSSL
 	HA_RWLOCK_INIT(&srv->ssl_ctx.lock);
@@ -4820,6 +4822,7 @@ static int cli_parse_delete_server(char **args, char *payload, struct appctx *ap
 	 * cleanup function should be implemented to be used here.
 	 */
 	if (srv->cur_sess || srv->curr_idle_conns ||
+	    !MT_LIST_ISEMPTY(&srv->sess_conns) ||
 	    !eb_is_empty(&srv->pendconns)) {
 		cli_err(appctx, "Server still has connections attached to it, cannot remove it.");
 		goto out;

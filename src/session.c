@@ -88,6 +88,7 @@ void session_free(struct session *sess)
 				conn_free(conn);
 			}
 		}
+		MT_LIST_DELETE(&pconns->srv_el);
 		pool_free(pool_head_sess_priv_conns, pconns);
 	}
 	pool_free(pool_head_session, sess);
