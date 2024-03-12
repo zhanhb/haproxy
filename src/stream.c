@@ -554,7 +554,7 @@ struct stream *stream_new(struct session *sess, enum obj_type *origin, struct bu
 	s->res.analyse_exp = TICK_ETERNITY;
 
 	s->txn = NULL;
-	s->hlua = NULL;
+	s->hlua[0] = s->hlua[1] = NULL;
 
 	s->resolv_ctx.requester = NULL;
 	s->resolv_ctx.hostname_dn = NULL;
@@ -670,8 +670,10 @@ static void stream_free(struct stream *s)
 	pool_free(pool_head_uniqueid, s->unique_id.ptr);
 	s->unique_id = IST_NULL;
 
-	hlua_ctx_destroy(s->hlua);
-	s->hlua = NULL;
+	hlua_ctx_destroy(s->hlua[0]);
+	hlua_ctx_destroy(s->hlua[1]);
+	s->hlua[0] = s->hlua[1] = NULL;
+
 	if (s->txn)
 		http_destroy_txn(s);
 
