@@ -4515,7 +4515,7 @@ static void h2_detach(struct conn_stream *cs)
 				}
 				else if (!h2c->conn->hash_node->node.node.leaf_p &&
 					 h2_avail_streams(h2c->conn) > 0 && objt_server(h2c->conn->target) &&
-					 !LIST_INLIST(&h2c->conn->session_list)) {
+					 !LIST_INLIST(&h2c->conn->sess_el)) {
 					ebmb_insert(&__objt_server(h2c->conn->target)->per_thr[tid].avail_conns,
 					            &h2c->conn->hash_node->node,
 					            sizeof(h2c->conn->hash_node->hash));

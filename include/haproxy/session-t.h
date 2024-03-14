@@ -57,13 +57,14 @@ struct session {
 	long t_idle;                    /* idle duration, -1 if never occurs */
 	int idle_conns;                 /* Number of connections we're currently responsible for that we are not using */
 	unsigned int flags;             /* session flags, SESS_FL_* */
-	struct list srv_list;           /* List of servers and the connections the session is currently responsible for */
+	struct list priv_conns;         /* list of private conns */
 };
 
-struct sess_srv_list {
-	void *target;
+/* List of private conns managed by a session, indexed by server */
+struct sess_priv_conns {
+	void *target;                   /* Server or dispatch used for indexing */
 	struct list conn_list;          /* Head of the connections list */
-	struct list srv_list;           /* Next element of the server list */
+	struct list sess_el;            /* Element of session.priv_conns */
 };
 
 #endif /* _HAPROXY_SESSION_T_H */
