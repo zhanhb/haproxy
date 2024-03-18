@@ -1168,6 +1168,10 @@ spoe_recv_frame(struct appctx *appctx, char *buf, size_t framesz)
 	ret = co_getblk(sc_oc(sc), (char *)&netint, 4, 0);
 	if (ret > 0) {
 		framesz = ntohl(netint);
+		if (framesz < 7)  {
+			SPOE_APPCTX(appctx)->status_code = SPOE_FRM_ERR_INVALID;
+			return -1;
+		}
 		if (framesz > SPOE_APPCTX(appctx)->max_frame_size) {
 			SPOE_APPCTX(appctx)->status_code = SPOE_FRM_ERR_TOO_BIG;
 			return -1;
@@ -2001,6 +2005,7 @@ spoe_handle_appctx(struct appctx *appctx)
 			__fallthrough;
 
 		case SPOE_APPCTX_ST_END:
+			co_skip(sc_oc(sc), co_data(sc_oc(sc)));
 			return;
 	}
   out:
