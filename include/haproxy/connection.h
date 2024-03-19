@@ -592,12 +592,12 @@ static inline void conn_force_unsubscribe(struct connection *conn)
 /* Releases a connection previously allocated by conn_new() */
 static inline void conn_free(struct connection *conn)
 {
-	/* If the connection is owned by the session, remove it from its list
-	 */
-	if (conn_is_back(conn) && LIST_INLIST(&conn->session_list)) {
+	/* If the connection is owned by the session, remove it from its list. */
+	if (LIST_INLIST(&conn->session_list))
 		session_unown_conn(conn->owner, conn);
-	}
-	else if (!(conn->flags & CO_FL_PRIVATE)) {
+
+	/* If the connection is not private, it is accounted by the server. */
+	if (!(conn->flags & CO_FL_PRIVATE)) {
 		if (obj_type(conn->target) == OBJ_TYPE_SERVER)
 			srv_release_conn(__objt_server(conn->target), conn);
 	}
