@@ -114,6 +114,12 @@ static inline int session_add_conn(struct session *sess, struct connection *conn
 		LIST_ADDQ(&sess->srv_list, &srv_list->srv_list);
 	}
 	LIST_ADDQ(&srv_list->conn_list, &conn->session_list);
+
+	/* Ensure owner is set for connection. It could have been resetted
+	 * prior on after a session_add_conn() failure.
+	 */
+	conn->owner = sess;
+
 	return 1;
 }
 
