@@ -6745,7 +6745,11 @@ http-reuse { never | safe | aggressive | always }
       and are never shared;
 
     - connections with certain bogus authentication schemes (relying on the
-      connection) like NTLM are detected, marked private and are never shared;
+      connection) like NTLM are detected, marked private if possible and are
+      never shared. This won't be the case however when using a protocol with
+      multiplexing abilities and using reuse mode level value greater than the
+      default "safe" strategy as in this case nothing prevents the connection
+      from being already shared.
 
   A connection pool is involved and configurable with "pool-max-conn".
 
