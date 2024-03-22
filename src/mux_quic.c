@@ -2400,20 +2400,20 @@ static void qcc_release(struct qcc *qcc)
 		qcc->task = NULL;
 	}
 
-	if (qcc->wait_event.tasklet)
-		tasklet_free(qcc->wait_event.tasklet);
-	if (conn && qcc->wait_event.events) {
-		conn->xprt->unsubscribe(conn, conn->xprt_ctx,
-		                        qcc->wait_event.events,
-		                        &qcc->wait_event);
-	}
-
 	/* liberate remaining qcs instances */
 	node = eb64_first(&qcc->streams_by_id);
 	while (node) {
 		struct qcs *qcs = eb64_entry(node, struct qcs, by_id);
 		node = eb64_next(node);
 		qcs_free(qcs);
+	}
+
+	if (qcc->wait_event.tasklet)
+		tasklet_free(qcc->wait_event.tasklet);
+	if (conn && qcc->wait_event.events) {
+		conn->xprt->unsubscribe(conn, conn->xprt_ctx,
+		                        qcc->wait_event.events,
+		                        &qcc->wait_event);
 	}
 
 	while (!LIST_ISEMPTY(&qcc->lfctl.frms)) {
