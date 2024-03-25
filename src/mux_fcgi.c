@@ -4095,6 +4095,15 @@ static size_t fcgi_snd_buf(struct conn_stream *cs, struct buffer *buf, size_t co
 				}
 				break;
 
+			case HTX_BLK_EOT:
+				if (htx_is_unique_blk(htx, blk) && (htx->flags & HTX_FL_EOM)) {
+					TRACE_PROTO("sending FCGI STDIN record", FCGI_EV_TX_RECORD|FCGI_EV_TX_STDIN, fconn->conn, fstrm, htx);
+					ret = fcgi_strm_send_empty_stdin(fconn, fstrm);
+					if (!ret)
+						goto done;
+				}
+				/* fall through */
+
 			default:
 			  remove_blk:
 				htx_remove_blk(htx, blk);
