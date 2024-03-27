@@ -1633,6 +1633,7 @@ add server <backend>/<server> [args]*
   - check-via-socks4
   - ciphers
   - ciphersuites
+  - cookie
   - crl-file
   - crt
   - disabled
