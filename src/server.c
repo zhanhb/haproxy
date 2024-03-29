@@ -654,6 +654,11 @@ static int srv_parse_disabled(char **args, int *cur_arg,
 static int srv_parse_enabled(char **args, int *cur_arg,
                              struct proxy *curproxy, struct server *newsrv, char **err)
 {
+	if (newsrv->flags & SRV_F_DYNAMIC) {
+		ha_warning("Keyword 'enabled' is ignored for dynamic servers. It will be rejected from 3.0 onward.");
+		return 0;
+	}
+
 	newsrv->next_admin &= ~SRV_ADMF_CMAINT & ~SRV_ADMF_FMAINT;
 	newsrv->next_state = SRV_ST_RUNNING;
 	newsrv->check.state &= ~CHK_ST_PAUSED;
