@@ -39,7 +39,7 @@
 #ifdef  CONFIG_PRODUCT_STATUS
 #define PRODUCT_STATUS    CONFIG_PRODUCT_STATUS
 #else
-#define PRODUCT_STATUS   "Status: stable branch - will stop receiving fixes around Q1 2024."
+#define PRODUCT_STATUS   "Status: End of life - please upgrade to branch 2.8."
 #endif
 
 #ifdef CONFIG_PRODUCT_URL_BUGS
