@@ -1,6 +1,9 @@
 ChangeLog :
 ===========
 
+2024/04/05 : 2.8.9
+    - BUILD: proxy: Replace free_logformat_list() to manually release log-format
+
 2024/04/05 : 2.8.8
     - MINOR: mux-h2: add a counter of "glitches" on a connection
     - BUG/MINOR: mux-h2: count rejected DATA frames against the connection's flow control
