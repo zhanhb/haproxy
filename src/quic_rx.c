@@ -1503,7 +1503,7 @@ static inline int quic_read_uint32(uint32_t *val,
 	if (end - *buf < sizeof *val)
 		return 0;
 
-	*val = ntohl(*(uint32_t *)*buf);
+	*val = ntohl(read_u32(*buf));
 	*buf += sizeof *val;
 
 	return 1;
