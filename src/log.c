@@ -1234,6 +1234,8 @@ int get_log_facility(const char *fac)
  * When using the +E log format option, it will try to escape '"\]'
  * characters with '\' as prefix. The same prefix should not be used as
  * <escape>.
+ *
+ * Return the address of the \0 character, or NULL on error
  */
 static char *lf_encode_string(char *start, char *stop,
                               const char escape, const long *map,
@@ -1264,13 +1266,14 @@ static char *lf_encode_string(char *start, char *stop,
 				string++;
 			}
 			*start = '\0';
+			return start;
 		}
 	}
 	else {
 		return encode_string(start, stop, escape, map, string);
 	}
 
-	return start;
+	return NULL;
 }
 
 /*
@@ -1279,6 +1282,8 @@ static char *lf_encode_string(char *start, char *stop,
  * When using the +E log format option, it will try to escape '"\]'
  * characters with '\' as prefix. The same prefix should not be used as
  * <escape>.
+ *
+ * Return the address of the \0 character, or NULL on error
  */
 static char *lf_encode_chunk(char *start, char *stop,
                              const char escape, const long *map,
@@ -1314,13 +1319,14 @@ static char *lf_encode_chunk(char *start, char *stop,
 				str++;
 			}
 			*start = '\0';
+			return start;
 		}
 	}
 	else {
 		return encode_chunk(start, stop, escape, map, chunk);
 	}
 
-	return start;
+	return NULL;
 }
 
 /*
