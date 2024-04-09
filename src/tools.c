@@ -1873,11 +1873,11 @@ int addr_is_local(const struct netns_entry *ns,
  * <map> with the hexadecimal representation of their ASCII-code (2 digits)
  * prefixed by <escape>, and will store the result between <start> (included)
  * and <stop> (excluded), and will always terminate the string with a '\0'
- * before <stop>. The position of the '\0' is returned if the conversion
- * completes. If bytes are missing between <start> and <stop>, then the
- * conversion will be incomplete and truncated. If <stop> <= <start>, the '\0'
- * cannot even be stored so we return <start> without writing the 0.
+ * before <stop>. If bytes are missing between <start> and <stop>, then the
+ * conversion will be incomplete and truncated.
  * The input string must also be zero-terminated.
+ *
+ * Return the address of the \0 character, or NULL on error
  */
 const char hextab[16] = "0123456789ABCDEF";
 char *encode_string(char *start, char *stop,
@@ -1899,8 +1899,9 @@ char *encode_string(char *start, char *stop,
 			string++;
 		}
 		*start = '\0';
+		return start;
 	}
-	return start;
+	return NULL;
 }
 
 /*
@@ -1929,8 +1930,9 @@ char *encode_chunk(char *start, char *stop,
 			str++;
 		}
 		*start = '\0';
+		return start;
 	}
-	return start;
+	return NULL;
 }
 
 /*
@@ -1939,8 +1941,9 @@ char *encode_chunk(char *start, char *stop,
  * is reached or NULL-byte is encountered. The result will
  * be stored between <start> (included) and <stop> (excluded). This
  * function will always try to terminate the resulting string with a '\0'
- * before <stop>, and will return its position if the conversion
- * completes.
+ * before <stop>.
+ *
+ * Return the address of the \0 character, or NULL on error
  */
 char *escape_string(char *start, char *stop,
 		    const char escape, const long *map,
@@ -1960,8 +1963,9 @@ char *escape_string(char *start, char *stop,
 			string++;
 		}
 		*start = '\0';
+		return start;
 	}
-	return start;
+	return NULL;
 }
 
 /*
