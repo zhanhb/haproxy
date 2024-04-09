@@ -1750,7 +1750,7 @@ char *lf_ip(char *dst, const struct sockaddr *sockaddr, size_t size, const struc
 		default:
 			return NULL;
 		}
-		if (iret < 0 || iret > size)
+		if (iret < 0 || iret >= size)
 			return NULL;
 		ret += iret;
 	} else {
@@ -1774,7 +1774,7 @@ char *lf_port(char *dst, const struct sockaddr *sockaddr, size_t size, const str
 	if (node->options & LOG_OPT_HEXA) {
 		const unsigned char *port = (const unsigned char *)&((struct sockaddr_in *)sockaddr)->sin_port;
 		iret = snprintf(dst, size, "%02X%02X", port[0], port[1]);
-		if (iret < 0 || iret > size)
+		if (iret < 0 || iret >= size)
 			return NULL;
 		ret += iret;
 	} else {
@@ -2930,7 +2930,7 @@ int sess_build_logline(struct session *sess, struct stream *s, char *dst, size_t
 			case LOG_FMT_TS: // %Ts
 				if (tmp->options & LOG_OPT_HEXA) {
 					iret = snprintf(tmplog, dst + maxsize - tmplog, "%04X", (unsigned int)logs->accept_date.tv_sec);
-					if (iret < 0 || iret > dst + maxsize - tmplog)
+					if (iret < 0 || iret >= dst + maxsize - tmplog)
 						goto out;
 					last_isspace = 0;
 					tmplog += iret;
@@ -2946,7 +2946,7 @@ int sess_build_logline(struct session *sess, struct stream *s, char *dst, size_t
 			case LOG_FMT_MS: // %ms
 			if (tmp->options & LOG_OPT_HEXA) {
 					iret = snprintf(tmplog, dst + maxsize - tmplog, "%02X",(unsigned int)logs->accept_date.tv_usec/1000);
-					if (iret < 0 || iret > dst + maxsize - tmplog)
+					if (iret < 0 || iret >= dst + maxsize - tmplog)
 						goto out;
 					last_isspace = 0;
 					tmplog += iret;
@@ -3631,7 +3631,7 @@ int sess_build_logline(struct session *sess, struct stream *s, char *dst, size_t
 			case LOG_FMT_COUNTER: // %rt
 				if (tmp->options & LOG_OPT_HEXA) {
 					iret = snprintf(tmplog, dst + maxsize - tmplog, "%04X", uniq_id);
-					if (iret < 0 || iret > dst + maxsize - tmplog)
+					if (iret < 0 || iret >= dst + maxsize - tmplog)
 						goto out;
 					last_isspace = 0;
 					tmplog += iret;
@@ -3647,7 +3647,7 @@ int sess_build_logline(struct session *sess, struct stream *s, char *dst, size_t
 			case LOG_FMT_LOGCNT: // %lc
 				if (tmp->options & LOG_OPT_HEXA) {
 					iret = snprintf(tmplog, dst + maxsize - tmplog, "%04X", fe->log_count);
-					if (iret < 0 || iret > dst + maxsize - tmplog)
+					if (iret < 0 || iret >= dst + maxsize - tmplog)
 						goto out;
 					last_isspace = 0;
 					tmplog += iret;
@@ -3672,7 +3672,7 @@ int sess_build_logline(struct session *sess, struct stream *s, char *dst, size_t
 			case LOG_FMT_PID: // %pid
 				if (tmp->options & LOG_OPT_HEXA) {
 					iret = snprintf(tmplog, dst + maxsize - tmplog, "%04X", pid);
-					if (iret < 0 || iret > dst + maxsize - tmplog)
+					if (iret < 0 || iret >= dst + maxsize - tmplog)
 						goto out;
 					last_isspace = 0;
 					tmplog += iret;
