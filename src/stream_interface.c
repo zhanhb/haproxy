@@ -24,6 +24,7 @@
 #include <haproxy/channel.h>
 #include <haproxy/connection.h>
 #include <haproxy/dynbuf.h>
+#include <haproxy/filters.h>
 #include <haproxy/http_htx.h>
 #include <haproxy/pipe-t.h>
 #include <haproxy/pipe.h>
@@ -504,6 +505,7 @@ static void stream_int_notify(struct stream_interface *si)
 	 */
 	if (!channel_is_empty(ic) &&
 	    (sio->flags & SI_FL_WAIT_DATA) &&
+	     (!HAS_DATA_FILTERS(si_strm(si), ic) || channel_input_data(ic) == 0) &&
 	    (!(ic->flags & CF_EXPECT_MORE) || channel_full(ic, co_data(ic)) || channel_input_data(ic) == 0)) {
 		int new_len, last_len;
 
