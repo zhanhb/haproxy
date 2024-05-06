@@ -2892,7 +2892,7 @@ void run_poll_loop()
 			if (thread_has_tasks()) {
 				activity[tid].wake_tasks++;
 				_HA_ATOMIC_AND(&sleeping_thread_mask, ~tid_bit);
-			} else if (signal_queue_len) {
+			} else if (signal_queue_len && tid == 0) {
 				/* this check is required to avoid
 				 * a race with wakeup on signals using wake_threads() */
 				_HA_ATOMIC_AND(&sleeping_thread_mask, ~tid_bit);
