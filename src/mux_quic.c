@@ -1918,7 +1918,9 @@ static void qc_release(struct qcc *qcc)
 			qc_send(qcc);
 		}
 		else {
-			qcc_emit_cc_app(qcc, QC_ERR_NO_ERROR, 0);
+			/* Duplicate from qcc_emit_cc_app() for Transport error code. */
+			if (!(qcc->conn->handle.qc->flags & QUIC_FL_CONN_IMMEDIATE_CLOSE))
+				qcc->conn->handle.qc->err = quic_err_transport(QC_ERR_NO_ERROR);
 		}
 	}
 
