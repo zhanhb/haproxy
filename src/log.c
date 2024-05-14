@@ -749,6 +749,7 @@ struct logsrv *dup_logsrv(struct logsrv *def)
 	/* default values */
 	cpy->ring_name = NULL;
 	cpy->conf.file = NULL;
+	cpy->lb.smp_rgs = NULL;
 	LIST_INIT(&cpy->list);
 	HA_SPIN_INIT(&cpy->lock);
 
@@ -762,6 +763,13 @@ struct logsrv *dup_logsrv(struct logsrv *def)
 		cpy->conf.file = strdup(def->conf.file);
 		if (!cpy->conf.file)
 			goto error;
+	}
+	if (def->lb.smp_rgs) {
+		cpy->lb.smp_rgs = malloc(sizeof(*cpy->lb.smp_rgs) * def->lb.smp_rgs_sz);
+		if (!cpy->lb.smp_rgs)
+			goto error;
+		memcpy(cpy->lb.smp_rgs, def->lb.smp_rgs,
+		       sizeof(*cpy->lb.smp_rgs) * def->lb.smp_rgs_sz);
 	}
 
 	/* inherit from original reference if set */
@@ -786,6 +794,7 @@ void free_logsrv(struct logsrv *logsrv)
 	BUG_ON(LIST_INLIST(&logsrv->list));
 	ha_free(&logsrv->conf.file);
 	ha_free(&logsrv->ring_name);
+	free(logsrv->lb.smp_rgs);
 	free(logsrv);
 }
 
