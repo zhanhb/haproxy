@@ -2726,7 +2726,6 @@ static void *run_thread_poll_loop(void *data)
 	__decl_thread(static pthread_cond_t  init_cond  = PTHREAD_COND_INITIALIZER);
 
 	ha_set_tid((unsigned long)data);
-	sched = &task_per_thread[tid];
 
 #if (_POSIX_TIMERS > 0) && defined(_POSIX_THREAD_CPUTIME)
 #ifdef USE_THREAD

@@ -30,9 +30,12 @@
 #endif
 
 #include <haproxy/api.h>
+#include <haproxy/task-t.h>
 #include <haproxy/thread-t.h>
 #include <haproxy/tinfo.h>
 
+extern THREAD_LOCAL struct task_per_thread *sched;
+extern struct task_per_thread task_per_thread[MAX_THREADS];
 
 /* Note: this file mainly contains 5 sections:
  *   - a small common part, which also corresponds to the common API
@@ -93,6 +96,7 @@ enum { tid = 0 };
 static inline void ha_set_tid(unsigned int tid)
 {
 	ti = &ha_thread_info[tid];
+	sched = &task_per_thread[tid];
 }
 
 static inline unsigned long long ha_get_pthread_id(unsigned int thr)
@@ -203,6 +207,7 @@ static inline void ha_set_tid(unsigned int data)
 	tid     = data;
 	tid_bit = (1UL << tid);
 	ti      = &ha_thread_info[tid];
+	sched   = &task_per_thread[tid];
 }
 
 /* Retrieves the opaque pthread_t of thread <thr> cast to an unsigned long long
