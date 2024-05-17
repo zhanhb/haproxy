@@ -142,7 +142,7 @@ union stktable_data {
 	struct freq_ctr bytes_out_rate;
 	unsigned int http_fail_cnt;
 	struct freq_ctr http_fail_rate;
-} __attribute__((packed));
+} __attribute__((packed, aligned(sizeof(int))));
 
 /* known data types */
 struct stktable_data_type {
