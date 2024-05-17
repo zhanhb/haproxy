@@ -3256,7 +3256,7 @@ static int stats_send_http_redirect(struct stream_interface *si, struct htx *htx
 		     (appctx->ctx.stats.flags & STAT_NO_REFRESH) ? ";norefresh" : "",
 		     scope_txt);
 
-	flags = (HTX_SL_F_IS_RESP|HTX_SL_F_VER_11|HTX_SL_F_XFER_LEN|HTX_SL_F_CLEN|HTX_SL_F_CHNK);
+	flags = (HTX_SL_F_IS_RESP|HTX_SL_F_VER_11|HTX_SL_F_XFER_LEN|HTX_SL_F_CLEN|HTX_SL_F_BODYLESS);
 	sl = htx_add_stline(htx, HTX_BLK_RES_SL, flags, ist("HTTP/1.1"), ist("303"), ist("See Other"));
 	if (!sl)
 		goto full;
