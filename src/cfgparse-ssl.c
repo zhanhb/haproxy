@@ -2199,7 +2199,12 @@ static int ssl_parse_global_ocsp_mindelay(char **args, int section_type, struct 
  */
 
 /* the <ssl_crtlist_kws> keywords are used for crt-list parsing, they *MUST* be safe
- * with their proxy argument NULL and must only fill the ssl_bind_conf */
+ * with their proxy argument NULL and must only fill the ssl_bind_conf
+ *
+ * /!\ Please update configuration.txt at the crt-list option of the Bind options
+ * section when adding a keyword in ssl_crtlist_kws. /!\
+ *
+ */
 struct ssl_crtlist_kw ssl_crtlist_kws[] = {
 	{ "allow-0rtt",            ssl_bind_parse_allow_0rtt,       0 }, /* allow 0-RTT */
 	{ "alpn",                  ssl_bind_parse_alpn,             1 }, /* set ALPN supported protocols */
