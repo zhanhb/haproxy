@@ -2439,6 +2439,17 @@ static inline int qc_provide_cdata(struct quic_enc_level *el,
 			ERR_clear_error();
 			goto leave;
 		}
+#if defined(LIBRESSL_VERSION_NUMBER)
+		else if (qc->flags & QUIC_FL_CONN_IMMEDIATE_CLOSE) {
+			/* Some libressl versions emit TLS alerts without making the handshake
+			 * (SSL_do_handshake()) fail. This is at least the case for
+			 * libressl-3.9.0 when forcing the TLS cipher to TLS_AES_128_CCM_SHA256.
+			 */
+			TRACE_ERROR("SSL handshake error", QUIC_EV_CONN_IO_CB, qc, &state, &ssl_err);
+			HA_ATOMIC_INC(&qc->prx_counters->hdshk_fail);
+			goto leave;
+		}
+#endif
 
 		TRACE_PROTO("SSL handshake OK", QUIC_EV_CONN_IO_CB, qc, &state);
 
