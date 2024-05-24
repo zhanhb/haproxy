@@ -200,7 +200,8 @@ carry the stream identifier.
 HTTP/3 is implemented over QUIC, itself implemented over UDP. QUIC solves the
 head of line blocking at transport level by means of independently treated
 streams. Indeed, when experiencing loss, an impacted stream does not affect the
-other streams.
+other streams. QUIC also provides connection migration support but currently
+haproxy does not support it.
 
 By default HAProxy operates in keep-alive mode with regards to persistent
 connections: for each connection it processes each request and response, and
