@@ -1479,7 +1479,7 @@ static int ssl_sock_load_ocsp(SSL_CTX *ctx, const struct cert_key_and_chain *ckc
 	struct certificate_ocsp *ocsp = NULL, *iocsp;
 	char *warn = NULL;
 	unsigned char *p;
-	void (*callback) (void);
+	void (*callback) (void) = NULL;
 
 
 	x = ckch->cert;
