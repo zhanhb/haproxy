@@ -1117,9 +1117,10 @@ static int ssl_sock_load_ocsp(const char *path, SSL_CTX *ctx, struct ckch_data *
 	char *warn = NULL;
 	unsigned char *p;
 #ifdef USE_OPENSSL_WOLFSSL
-	tlsextStatusCb callback;
+	/* typedef int(*tlsextStatusCb)(WOLFSSL* ssl, void*); */
+	tlsextStatusCb callback = NULL;
 #else
-	void (*callback) (void);
+	void (*callback) (void) = NULL;
 #endif
 	struct buffer *ocsp_uri = get_trash_chunk();
 	char *err = NULL;
