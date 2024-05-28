@@ -25103,6 +25103,7 @@ Please refer to the table below for currently defined variables :
   |   |      | HTTP/%[req.ver]                                      |         |
   +---+------+------------------------------------------------------+---------+
   |   | %ID  | unique-id                                            | string  |
+  |   |      | %[unique-id]                                         |         |
   +---+------+------------------------------------------------------+---------+
   |   | %ST  | status_code                                          | numeric |
   |   |      | %[txn.status]                                        |         |
