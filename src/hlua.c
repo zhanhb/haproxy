@@ -13072,8 +13072,9 @@ __LJMP static int hlua_ckch_commit_yield(lua_State *L, int status, lua_KContext 
 error:
 	ckch_store_free(new_ckchs);
 	HA_SPIN_UNLOCK(CKCH_LOCK, &ckch_lock);
-	WILL_LJMP(luaL_error(L, "%s", err));
+	hlua_pushfstring_safe(L, "%s", err);
 	free(err);
+	WILL_LJMP(lua_error(L));
 
 	return 0;
 }
@@ -13216,7 +13217,9 @@ end:
 
 	if (errcode & ERR_CODE) {
 		ckch_store_free(new_ckchs);
-		WILL_LJMP(luaL_error(L, "%s", err));
+		hlua_pushfstring_safe(L, "%s", err);
+		free(err);
+		WILL_LJMP(lua_error(L));
 	}
 	free(err);
 
