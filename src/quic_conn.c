@@ -6922,6 +6922,7 @@ static inline int qc_build_frms(struct list *outlist, struct list *inlist,
 	ret = 0;
 	if (*len > room)
 		goto leave;
+	room -= *len;
 
 	/* If we are not probing we must take into an account the congestion
 	 * control window.
@@ -6955,8 +6956,8 @@ static inline int qc_build_frms(struct list *outlist, struct list *inlist,
 			            QUIC_EV_CONN_BCFRMS, qc, &room, len);
 			/* Compute the length of this CRYPTO frame header */
 			hlen = 1 + quic_int_getsize(cf->crypto.offset);
-			/* Compute the data length of this CRyPTO frame. */
-			dlen = max_stream_data_size(room, *len + hlen, cf->crypto.len);
+			/* Compute the data length of this CRYPTO frame. */
+			dlen = max_stream_data_size(room, hlen, cf->crypto.len);
 			TRACE_DEVEL(" CRYPTO data length (hlen, crypto.len, dlen)",
 			            QUIC_EV_CONN_BCFRMS, qc, &hlen, &cf->crypto.len, &dlen);
 			if (!dlen)
@@ -7051,7 +7052,7 @@ static inline int qc_build_frms(struct list *outlist, struct list *inlist,
 			hlen = 1 + quic_int_getsize(cf->stream.id) +
 				((cf->type & QUIC_STREAM_FRAME_TYPE_OFF_BIT) ? quic_int_getsize(cf->stream.offset.key) : 0);
 			/* Compute the data length of this STREAM frame. */
-			avail_room = room - hlen - *len;
+			avail_room = room - hlen;
 			if ((ssize_t)avail_room <= 0)
 				continue;
 
