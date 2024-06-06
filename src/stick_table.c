@@ -232,13 +232,11 @@ int __stktable_trash_oldest(struct stktable *t, int to_batch)
 	int max_search = to_batch * 2; // no more than 50% misses
 	int batched = 0;
 	int looped = 0;
-	int updt_locked;
+	int updt_locked = 0;
 
 	eb = eb32_lookup_ge(&t->exps, now_ms - TIMER_LOOK_BACK);
 
 	while (batched < to_batch) {
-		updt_locked = 0;
-
 		if (unlikely(!eb)) {
 			/* we might have reached the end of the tree, typically because
 			 * <now_ms> is in the first half and we're first scanning the last
@@ -312,10 +310,10 @@ int __stktable_trash_oldest(struct stktable *t, int to_batch)
 		eb32_delete(&ts->upd);
 		__stksess_free(t, ts);
 		batched++;
-
-		if (updt_locked)
-			HA_RWLOCK_WRUNLOCK(STK_TABLE_LOCK, &t->updt_lock);
 	}
+
+	if (updt_locked)
+		HA_RWLOCK_WRUNLOCK(STK_TABLE_LOCK, &t->updt_lock);
 
 	return batched;
 }
