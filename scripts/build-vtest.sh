@@ -15,11 +15,4 @@ tar xvf VTest.tar.gz -C ../vtest --strip-components=1
 
 cd ../vtest
 
-#
-# temporarily detect Apple Silicon (it's using /opt/homebrew instead of /usr/local)
-#
-if test -f /opt/homebrew/include/pcre2.h; then
-   make FLAGS="-O2 -s -Wall" INCS="-Isrc -Ilib -I/usr/local/include -I/opt/homebrew/include -pthread"
-else
-   make FLAGS="-O2 -s -Wall"
-fi
+make FLAGS="-O2 -s -Wall"
