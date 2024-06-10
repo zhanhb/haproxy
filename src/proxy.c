@@ -251,6 +251,8 @@ void free_proxy(struct proxy *p)
 		free_logsrv(log);
 	}
 
+	chunk_destroy(&p->log_tag);
+
 	list_for_each_entry_safe(lf, lfb, &p->logformat, list) {
 		LIST_DELETE(&lf->list);
 		release_sample_expr(lf->expr);
