@@ -294,6 +294,8 @@ void free_proxy(struct proxy *p)
 		free_logger(log);
 	}
 
+	chunk_destroy(&p->log_tag);
+
 	free_logformat_list(&p->logformat);
 	free_logformat_list(&p->logformat_sd);
 	free_logformat_list(&p->format_unique_id);
