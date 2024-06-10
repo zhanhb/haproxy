@@ -172,6 +172,8 @@ void free_proxy(struct proxy *p)
 	free(p->capture_name);
 	istfree(&p->monitor_uri);
 	istfree(&p->server_id_hdr_name);
+	ha_free(&p->check_command);
+	ha_free(&p->check_path);
 	free(p->rdp_cookie_name);
 	free(p->invalid_rep);
 	free(p->invalid_req);
