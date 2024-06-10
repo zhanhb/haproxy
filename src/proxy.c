@@ -178,6 +178,7 @@ void free_proxy(struct proxy *p)
 	free(p->rdp_cookie_name);
 	free(p->invalid_rep);
 	free(p->invalid_req);
+	ha_free(&p->conn_src.iface_name);
 #if defined(CONFIG_HAP_TRANSPARENT)
 	free(p->conn_src.bind_hdr_name);
 #endif
@@ -1494,6 +1495,9 @@ void proxy_free_defaults(struct proxy *defproxy)
 	istfree(&defproxy->monitor_uri);
 	ha_free(&defproxy->defbe.name);
 	ha_free(&defproxy->conn_src.iface_name);
+#if defined(CONFIG_HAP_TRANSPARENT)
+	ha_free(&defproxy->conn_src.bind_hdr_name);
+#endif
 	istfree(&defproxy->server_id_hdr_name);
 
 	http_ext_clean(defproxy);
