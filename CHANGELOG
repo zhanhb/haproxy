@@ -1,6 +1,114 @@
 ChangeLog :
 ===========
 
+2024/06/11 : 2.9.8
+    - BUG/MEDIUM: server: fix dynamic servers initial settings
+    - MINOR: mux-h1: Move checks performed before a shutdown in a dedicated function
+    - MINOR: mux-h1: Move all stuff to detach a stream in an internal function
+    - MAJOR: mux-h1: Drain requests on client side before shut a stream down
+    - MEDIUM: htx/http-ana: No longer close connection on early HAProxy response
+    - BUG/MEDIUM: quic: fix connection freeze on post handshake
+    - MEDIUM: ssl: initialize the SSL stack explicitely
+    - BUG/MAJOR: ocsp: Separate refcount per instance and per store
+    - BUG/MEDIUM: ssl: Fix crash when calling "update ssl ocsp-response" when an update is ongoing
+    - MINOR: session: rename private conns elements
+    - BUG/MAJOR: server: do not delete srv referenced by session
+    - BUG/MEDIUM: http_ana: ignore NTLM for reuse aggressive/always and no H1
+    - BUG/MAJOR: connection: fix server used_conns with H2 + reuse safe
+    - BUG/MINOR: cli: Report an error to user if command or payload is too big
+    - BUG/MEDIUM: quic: don't blindly rely on unaligned accesses
+    - BUG/MINOR: listener: always assign distinct IDs to shards
+    - BUG/MINOR: log: fix lf_text_len() truncate inconsistency
+    - BUG/MINOR: tools/log: invalid encode_{chunk,string} usage
+    - BUG/MINOR: log: invalid snprintf() usage in sess_build_logline()
+    - CLEANUP: log: lf_text_len() returns a pointer not an integer
+    - BUG/MEDIUM: http-ana: Deliver 502 on keep-alive for fressh server connection
+    - BUG/MINOR: http-ana: Fix TX_L7_RETRY and TX_D_L7_RETRY values
+    - BUG/MINOR: debug: make sure DEBUG_STRICT=0 does work as documented
+    - BUILD: cache: fix non-inline vs inline declaration mismatch to silence a warning
+    - BUG/MEDIUM: peers/trace: fix crash when listing event types
+    - BUG/MAJOR: stick-tables: fix race with peers in entry expiration
+    - CI: revert kernel addr randomization introduced in 3a0fc864
+    - MINOR: net_helper: Add support for floats/doubles.
+    - BUG/MEDIUM: grpc: Fix several unaligned 32/64 bits accesses
+    - BUG/MEDIUM: stconn: Don't forward channel data if input data must be filtered
+    - BUG/MEDIUM: evports: do not clear returned events list on signal
+    - BUG/MEDIUM: applet: Fix applet API to put input data in a buffer
+    - BUG/MEDIUM: spoe: Always retry when an applet fails to send a frame
+    - BUG/MEDIUM: peers: Fix exit condition when max-updates-at-once is reached
+    - BUG/MINOR: server: fix slowstart behavior
+    - BUG/MEDIUM: cache: Vary not working properly on anything other than accept-encoding
+    - REGTESTS: cache: Add test on 'vary' other than accept-encoding
+    - BUG/MINOR: stconn: Fix sc_mux_strm() return value
+    - BUG/MINOR: sock: handle a weird condition with connect()
+    - BUG/MINOR: fd: my_closefrom() on Linux could skip contiguous series of sockets
+    - BUG/MINOR: backend: use cum_sess counters instead of cum_conn
+    - BUG/MINOR: h1: fix detection of upper bytes in the URI
+    - BUG/MINOR: mworker: reintroduce way to disable seamless reload with -x /dev/null
+    - BUILD: clock: improve check for pthread_getcpuclockid()
+    - BUG/MINOR: haproxy: only tid 0 must not sleep if got signal
+    - REGTEST: add tests for acl() sample fetch
+    - BUG/MINOR: acl: support built-in ACLs with acl() sample
+    - BUG/MINOR: cfgparse: use curproxy global var from config post validation
+    - DOC: lua: fix filters.txt file location
+    - BUG/MINOR: log: smp_rgs array issues with inherited global log directives
+    - BUG/MINOR: mux-quic: fix error code on shutdown for non HTTP/3
+    - BUG/MINOR: qpack: fix error code reported on QPACK decoding failure
+    - BUG/MEDIUM: htx: mark htx_sl as packed since it may be realigned
+    - BUG/MEDIUM: stick-tables: properly mark stktable_data as packed
+    - BUG/MINOR: h1: Check authority for non-CONNECT methods only if a scheme is found
+    - BUG/MEDIUM: h1: Reject CONNECT request if the target has a scheme
+    - BUILD: stick-tables: better mark the stktable_data as 32-bit aligned
+    - BUG/MEDIUM: fd: prevent memory waste in fdtab array
+    - BUG/MINOR: stats: Don't state the 303 redirect response is chunked
+    - MINOR: mux-h1: Add a flag to ignore the request payload
+    - MEDIUM: mux-h1: Support C-L/T-E header suppressions when sending messages
+    - CLEANUP: ssl/cli: remove unused code in dump_crtlist_conf
+    - DOC: configuration: update the crt-list documentation
+    - BUG/MINOR: http-ana: Don't crush stream termination condition on internal error
+    - BUG/MINOR: connection: parse PROXY TLV for LOCAL mode
+    - BUG/MINOR: server: free PROXY v2 TLVs on srv drop
+    - BUG/MEDIUM: rhttp: fix preconnect on single-thread
+    - BUG/MINOR: rhttp: prevent listener suspend
+    - BUG/MINOR: rhttp: fix task_wakeup state
+    - BUG/MAJOR: quic: Crash with TLS_AES_128_CCM_SHA256 (libressl only)
+    - BUG/MEDIUM: quic_tls: prevent LibreSSL < 4.0 from negotiating CHACHA20_POLY1305
+    - BUG/MEDIUM: mux-quic: Create sedesc in same time of the QUIC stream
+    - BUILD: quic: fix unused variable warning when threads are disabled
+    - BUG/MEDIUM: stick-tables: Fix race with peers when trashing oldest entries
+    - BUG/MEDIUM: stick-tables: Fix race with peers when killing a sticky session
+    - BUG/MEDIUM: stick-tables: make sure never to create two same remote entries
+    - MEDIUM: config: prevent communication with privileged ports
+    - BUG/MINOR: quic: adjust restriction for stateless reset emission
+    - BUG/MINOR: http-htx: Support default path during scheme based normalization
+    - BUG/MINOR: server: Don't reset resolver options on a new default-server line
+    - DOC: quic: specify that connection migration is not supported
+    - DOC: config: fix incorrect section reference about custom log format
+    - REGTESTS: acl_cli_spaces: avoid a warning caused by undefined logs
+    - CI: modernize macos matrix
+    - CI: scripts: fix build of vtest regarding option -C
+    - BUILD: fd: errno is also needed without poll()
+    - DOC: config: add %ID logformat alias alternative
+    - CLEANUP: ssl/ocsp: readable ifdef in ssl_sock_load_ocsp
+    - BUG/MINOR: ssl/ocsp: init callback func ptr as NULL
+    - BUG/MINOR: activity: fix Delta_calls and Delta_bytes count
+    - BUG/MINOR: cfgparse: remove the correct option on httpcheck send-state warning
+    - BUG/MINOR: tcpcheck: report correct error in tcp-check rule parser
+    - BUG/MINOR: tools: fix possible null-deref in env_expand() on out-of-memory
+    - BUG/MINOR: hlua: use CertCache.set() from various hlua contexts
+    - BUG/MEDIUM: h1-htx: Don't state interim responses are bodyless
+    - BUG/MINOR: quic: prevent crash on qc_kill_conn()
+    - CLEANUP: hlua: use hlua_pusherror() where relevant
+    - BUG/MINOR: hlua: don't use lua_pushfstring() when we don't expect LJMP
+    - BUG/MINOR: hlua: fix unsafe hlua_pusherror() usage
+    - BUG/MINOR: hlua: prevent LJMP in hlua_traceback()
+    - BUG/MINOR: hlua: fix leak in hlua_ckch_set() error path
+    - CLEANUP: hlua: simplify ambiguous lua_insert() usage in hlua_ctx_resume()
+    - BUG/MEDIUM: ssl: wrong priority whem limiting ECDSA ciphers in ECDSA+RSA configuration
+    - BUG/MEDIUM: stick-tables: Fix locking of updt_lock when trashing oldest entries
+    - CI: scripts: reset backported changes on macOS version
+    - BUG/MEDIUM: ssl: bad auth selection with TLS1.2 and WolfSSL
+
 2024/04/05 : 2.9.7
     - MINOR: mux-h2: add a counter of "glitches" on a connection
     - BUG/MINOR: mux-h2: count rejected DATA frames against the connection's flow control
