@@ -333,6 +333,11 @@ list of options is :
         the byte's value to -dM but using this option allows to disable/enable
         use of a previously set value.
 
+  -dR : disable SO_REUSEPORT socket option on listening ports. It is equivalent
+    to the "global" section's "noreuseport" keyword. This may be applied in
+    multi-threading scenarios, when load distribution issues observed among the
+    haproxy threads (could be monitored with top).
+
   -dS : disable use of the splice() system call. It is equivalent to the
     "global" section's "nosplice" keyword. This may be used when splice() is
     suspected to behave improperly or to cause performance issues, or when
@@ -381,6 +386,12 @@ list of options is :
     list of address resolution methods for all servers, ensuring that even if
     the libc fails to resolve an address, the startup sequence is not
     interrupted.
+
+  -dv : disable the use of the "evports" poller. It is equivalent to the
+    "global" section's keyword "noevports". It is mostly useful when suspecting
+    a bug related to this poller. On systems supporting event ports (SunOS
+    derived from Solaris 10 and later), the fallback will generally be the
+    "poll" poller.
 
   -m <limit> : limit the total allocatable memory to <limit> megabytes across
     all processes. This may cause some connection refusals or some slowdowns
@@ -4205,4 +4216,3 @@ A safe configuration will have :
     group allowed to access the CLI so that nobody may access it :
 
       stats socket /var/run/haproxy.stat uid hatop gid hatop mode 600
-
