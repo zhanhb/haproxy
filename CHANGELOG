@@ -1,6 +1,21 @@
 ChangeLog :
 ===========
 
+2024/06/14 : 2.9.9
+    - BUG/MINOR: quic: fix computed length of emitted STREAM frames
+    - MINOR: log: fix "http-send-name-header" ignore warning message
+    - BUG/MINOR: proxy: fix server_id_hdr_name leak on deinit()
+    - BUG/MINOR: proxy: fix log_tag leak on deinit()
+    - BUG/MINOR: proxy: fix email-alert leak on deinit()
+    - BUG/MINOR: proxy: fix check_{command,path} leak on deinit()
+    - BUG/MINOR: proxy: fix dyncookie_key leak on deinit()
+    - BUG/MINOR: proxy: fix source interface and usesrc leaks on deinit()
+    - BUG/MINOR: proxy: fix header_unique_id leak on deinit()
+    - BUG/MAJOR: mux-h1: Prevent any UAF on H1 connection after draining a request
+    - DOC/MINOR: management: add missed -dR and -dv options
+    - DOC/MINOR: management: add -dZ option
+    - DOC: management: rename show stats domain cli "dns" to "resolvers"
+
 2024/06/11 : 2.9.8
     - BUG/MEDIUM: server: fix dynamic servers initial settings
     - MINOR: mux-h1: Move checks performed before a shutdown in a dedicated function
