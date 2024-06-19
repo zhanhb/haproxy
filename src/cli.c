@@ -832,7 +832,7 @@ static int cli_output_msg(struct channel *chn, const char *msg, int severity, in
 	chunk_istcat(tmp, imsg);
 	chunk_istcat(tmp, ist("\n"));
 
-	return ci_putblk(chn, tmp->area, strlen(tmp->area));
+	return ci_putchk(chn, tmp);
 }
 
 /* This I/O handler runs as an applet embedded in a stream interface. It is
