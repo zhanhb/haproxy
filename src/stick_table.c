@@ -144,13 +144,11 @@ int __stksess_kill(struct stktable *t, struct stksess *ts)
  */
 int stksess_kill(struct stktable *t, struct stksess *ts, int decrefcnt)
 {
-	int ret;
-
-	if (decrefcnt && HA_ATOMIC_SUB_FETCH(&ts->ref_cnt, 1) != 0)
-		return 0;
+	int ret = 0;
 
 	HA_RWLOCK_WRLOCK(STK_TABLE_LOCK, &t->lock);
-	ret = __stksess_kill(t, ts);
+	if (!decrefcnt || !HA_ATOMIC_SUB_FETCH(&ts->ref_cnt, 1))
+		ret = __stksess_kill(t, ts);
 	HA_RWLOCK_WRUNLOCK(STK_TABLE_LOCK, &t->lock);
 
 	return ret;
