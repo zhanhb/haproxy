@@ -530,4 +530,12 @@
 # endif
 #endif
 
+/* Elements used by memory profiling. This determines the number of buckets to
+ * store stats.
+ */
+#ifndef MEMPROF_HASH_BITS
+# define MEMPROF_HASH_BITS 10
+#endif
+#define MEMPROF_HASH_BUCKETS (1U << MEMPROF_HASH_BITS)
+
 #endif /* _HAPROXY_DEFAULTS_H */
