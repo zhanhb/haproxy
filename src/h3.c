@@ -576,6 +576,13 @@ static ssize_t h3_headers_to_htx(struct qcs *qcs, const struct buffer *buf,
 				len = -1;
 				goto out;
 			}
+
+			if (!http_validate_scheme(list[hdr_idx].v)) {
+				TRACE_ERROR("invalid scheme pseudo-header", H3_EV_RX_FRAME|H3_EV_RX_HDR, qcs->qcc->conn, qcs);
+				len = -1;
+				goto out;
+			}
+
 			scheme = list[hdr_idx].v;
 		}
 		else if (isteq(list[hdr_idx].n, ist(":authority"))) {
