@@ -539,6 +539,13 @@ static ssize_t h3_headers_to_htx(struct qcs *qcs, const struct buffer *buf,
 				len = -1;
 				goto out;
 			}
+
+			if (!istlen(list[hdr_idx].v) || http_method_has_forbidden_char(list[hdr_idx].v)) {
+				TRACE_ERROR("invalid method pseudo-header", H3_EV_RX_FRAME|H3_EV_RX_HDR, qcs->qcc->conn, qcs);
+				len = -1;
+				goto out;
+			}
+
 			meth = list[hdr_idx].v;
 		}
 		else if (isteq(list[hdr_idx].n, ist(":path"))) {
