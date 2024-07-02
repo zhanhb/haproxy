@@ -234,7 +234,6 @@ void free_proxy(struct proxy *p)
 	ha_free(&p->check_path);
 	ha_free(&p->dyncookie_key);
 	free(p->rdp_cookie_name);
-	free_email_alert(p);
 	free(p->invalid_rep);
 	free(p->invalid_req);
 	ha_free(&p->conn_src.iface_name);
