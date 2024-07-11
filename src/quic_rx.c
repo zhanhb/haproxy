@@ -2175,8 +2175,8 @@ int quic_dgram_parse(struct quic_dgram *dgram, struct quic_conn *from_qc,
 		}
 
 		/* Ensure thread connection migration is finalized ASAP. */
-		if (qc->flags & QUIC_FL_CONN_AFFINITY_CHANGED)
-			qc_finalize_affinity_rebind(qc);
+		if (qc->flags & QUIC_FL_CONN_TID_REBIND)
+			qc_finalize_tid_rebind(qc);
 
 		if (qc_rx_check_closing(qc, pkt)) {
 			/* Skip the entire datagram. */
