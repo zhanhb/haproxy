@@ -1,6 +1,50 @@
 ChangeLog :
 ===========
 
+2024/07/11 : 3.0.3
+    - BUG/MINOR: log: fix broken '+bin' logformat node option
+    - DEBUG: hlua: distinguish burst timeout errors from exec timeout errors
+    - REGTESTS: ssl: fix some regtests 'feature cmd' start condition
+    - BUG/MEDIUM: proxy: fix email-alert invalid free
+    - DOC: configuration: fix alphabetical order of bind options
+    - DOC: management: document ptr lookup for table commands
+    - BUG/MAJOR: quic: fix padding with short packets
+    - SCRIPTS: git-show-backports: do not truncate git-show output
+    - DOC: api/event_hdl: small updates, fix an example and add some precisions
+    - BUG/MINOR: h3: fix crash on STOP_SENDING receive after GOAWAY emission
+    - BUG/MINOR: mux-quic: fix crash on qcs SD alloc failure
+    - BUG/MINOR: h3: fix BUG_ON() crash on control stream alloc failure
+    - BUG/MINOR: quic: fix BUG_ON() on Tx pkt alloc failure
+    - DEV: flags/show-fd-to-flags: adapt to recent versions
+    - BUG/MINOR: hlua: report proper context upon error in hlua_cli_io_handler_fct()
+    - BUG/MEDIUM: stick-table: Decrement the ref count inside lock to kill a session
+    - DOC: configuration: add details about crt-store in bind "crt" keyword
+    - BUG/MINOR: server: fix first server template name lookup UAF
+    - MINOR: activity: make the memory profiling hash size configurable at build time
+    - BUG/MEDIUM: server/dns: prevent DOWN/UP flap upon resolution timeout or error
+    - BUG/MEDIUM: h3: ensure the ":method" pseudo header is totally valid
+    - BUG/MEDIUM: h3: ensure the ":scheme" pseudo header is totally valid
+    - BUG/MEDIUM: quic: fix race-condition in quic_get_cid_tid()
+    - BUG/MINOR: quic: fix race condition in qc_check_dcid()
+    - BUG/MINOR: quic: fix race-condition on trace for CID retrieval
+    - BUG/MEDIUM: quic: fix possible exit from qc_check_dcid() without unlocking
+    - BUG/MINOR: promex: Remove Help prefix repeated twice for each metric
+    - BUG/MEDIUM: hlua/cli: Fix lua CLI commands to work with applet's buffers
+    - DOC: configuration: more details about the master-worker mode
+    - BUG/MEDIUM: server: fix race on server_atomic_sync()
+    - BUG/MINOR: jwt: don't try to load files with HMAC algorithm
+    - MEDIUM: init: set default for fd_hard_limit via DEFAULT_MAXFD
+    - DOC: configuration: update maxconn description
+    - BUG/MEDIUM: peers: Fix crash when syncing learn state of a peer without appctx
+    - Revert "MEDIUM: init: set default for fd_hard_limit via DEFAULT_MAXFD"
+    - BUG/MINOR: jwt: fix variable initialisation
+    - BUG/MINOR: h1: Fail to parse empty transfer coding names
+    - BUG/MINOR: h1: Reject empty coding name as last transfer-encoding value
+    - BUG/MEDIUM: h1: Reject empty Transfer-encoding header
+    - BUG/MEDIUM: spoe: Be sure to create a SPOE applet if none on the current thread
+    - DEV: flags/quic: decode quic_conn flags
+    - BUG/MEDIUM: bwlim: Be sure to never set the analyze expiration date in past
+
 2024/06/14 : 3.0.2
     - MINOR: log: fix "http-send-name-header" ignore warning message
     - BUG/MINOR: proxy: fix server_id_hdr_name leak on deinit()
