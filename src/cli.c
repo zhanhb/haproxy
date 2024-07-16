@@ -2545,7 +2545,7 @@ int pcli_wait_for_response(struct stream *s, struct channel *rep, int an_bit)
 		s->target = NULL;
 		/* re-init store persistence */
 		s->store_count = 0;
-		s->uniq_id = global.req_count++;
+		s->uniq_id = _HA_ATOMIC_XADD(&global.req_count, 1);
 
 		s->req.flags |= CF_READ_DONTWAIT; /* one read is usually enough */
 
