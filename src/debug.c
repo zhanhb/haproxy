@@ -363,28 +363,25 @@ void ha_task_dump(struct buffer *buf, const struct task *task, const char *pfx)
 static int cli_io_handler_show_threads(struct appctx *appctx)
 {
 	struct stconn *sc = appctx_sc(appctx);
-	int thr;
+	int *thr = appctx->svcctx;
 
 	/* FIXME: Don't watch the other side !*/
 	if (unlikely(sc_opposite(sc)->flags & SC_FL_SHUT_DONE))
 		return 1;
 
-	if (appctx->st0)
-		thr = appctx->st1;
-	else
-		thr = 0;
+	if (!thr)
+		thr = applet_reserve_svcctx(appctx, sizeof(*thr));
 
 	do {
 		chunk_reset(&trash);
-		ha_thread_dump(&trash, thr);
+		ha_thread_dump(&trash, *thr);
 
 		if (applet_putchk(appctx, &trash) == -1) {
 			/* failed, try again */
-			appctx->st1 = thr;
 			return 0;
 		}
-		thr++;
-	} while (thr < global.nbthread);
+		(*thr)++;
+	} while (*thr < global.nbthread);
 
 	return 1;
 }
