@@ -1675,6 +1675,10 @@ issuers-chain-path <dir>
   "issuers-chain-path" directory. All other certificates with the same issuer
   will share the chain in memory.
 
+  The OCSP features are not able to use the completed chain from
+  'issuers-chain-path', please use an additionnal .issuer file if you want to
+  achieve OCSP stapling.
+
 localpeer <name>
   Sets the local instance's peer name. It will be ignored if the "-L"
   command line argument is specified or if used after "peers" section
