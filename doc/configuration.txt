@@ -1942,6 +1942,10 @@ issuers-chain-path <dir>
   "issuers-chain-path" directory. All other certificates with the same issuer
   will share the chain in memory.
 
+  The OCSP features are not able to use the completed chain from
+  'issuers-chain-path', please use an additionnal .issuer file if you want to
+  achieve OCSP stapling.
+
 limited-quic
   This setting must be used to explicitly enable the QUIC listener bindings when
   haproxy is compiled against a TLS/SSL stack without QUIC support, typically
