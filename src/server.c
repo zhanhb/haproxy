@@ -3936,7 +3936,7 @@ static int srv_iterate_initaddr(struct server *srv)
 		case SRV_IADDR_IP:
 			ipcpy(&srv->init_addr, &srv->addr);
 			if (return_code) {
-				ha_warning("parsing [%s:%d] : 'server %s' : could not resolve address '%s', falling back to configured address.\n",
+				ha_notice("parsing [%s:%d] : 'server %s' : could not resolve address '%s', falling back to configured address.\n",
 					   srv->conf.file, srv->conf.line, srv->id, name);
 			}
 			goto out;
