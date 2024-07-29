@@ -4600,7 +4600,7 @@ static inline void qc_rm_hp_pkts(struct quic_conn *qc, struct quic_enc_level *el
 			quic_rx_packet_refinc(pqpkt);
 			TRACE_PROTO("RX hp removed", QUIC_EV_CONN_ELRMHP, qc, pqpkt);
 		}
-		LIST_DELETE(&pqpkt->list);
+		LIST_DEL_INIT(&pqpkt->list);
 		quic_rx_packet_refdec(pqpkt);
 	}
 
@@ -5267,6 +5267,33 @@ struct task *quic_conn_io_cb(struct task *t, void *context, unsigned int state)
 		if (qc->els[QUIC_TLS_ENC_LEVEL_HANDSHAKE].pktns->flags & QUIC_FL_PKTNS_ACK_REQUIRED) {
 			/* There may be remaining handshake to build (acks) */
 			st = QUIC_HS_ST_SERVER_HANDSHAKE;
+		}
+
+		/* Release 0RTT packets still waiting for HP removal. These
+		 * packets are considered unneeded after handshake completion.
+		 * They will be freed later from Rx buf via quic_rx_pkts_del().
+		 */
+		if (!LIST_ISEMPTY(&qc->els[QUIC_TLS_ENC_LEVEL_EARLY_DATA].rx.pqpkts)) {
+			struct quic_rx_packet *pqpkt, *pkttmp;
+			list_for_each_entry_safe(pqpkt, pkttmp, &qc->els[QUIC_TLS_ENC_LEVEL_EARLY_DATA].rx.pqpkts, list) {
+				LIST_DEL_INIT(&pqpkt->list);
+				quic_rx_packet_refdec(pqpkt);
+			}
+
+			/* RFC 9001 4.9.3. Discarding 0-RTT Keys
+			 * Additionally, a server MAY discard 0-RTT keys as soon as it receives
+			 * a 1-RTT packet. However, due to packet reordering, a 0-RTT packet
+			 * could arrive after a 1-RTT packet. Servers MAY temporarily retain 0-
+			 * RTT keys to allow decrypting reordered packets without requiring
+			 * their contents to be retransmitted with 1-RTT keys. After receiving a
+			 * 1-RTT packet, servers MUST discard 0-RTT keys within a short time;
+			 * the RECOMMENDED time period is three times the Probe Timeout (PTO,
+			 * see [QUIC-RECOVERY]). A server MAY discard 0-RTT keys earlier if it
+			 * determines that it has received all 0-RTT packets, which can be done
+			 * by keeping track of missing packet numbers.
+			 *
+			 * TODO implement discarding of 0-RTT keys
+			 */
 		}
 	}
 
