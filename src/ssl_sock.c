@@ -2505,14 +2505,7 @@ sni_lookup:
 		return SSL_TLSEXT_ERR_ALERT_FATAL;
 	}
 
-#if defined(OPENSSL_IS_AWSLC)
-	/* Note that ssl_sock_switchctx_set() calls SSL_set_SSL_CTX() which propagates the
-	 * "early data enabled" setting from the SSL_CTX object to the SSL objects.
-	 * So enable early data for this SSL_CTX context if configured.
-	 */
-	if (s->ssl_conf.early_data)
-		SSL_CTX_set_early_data_enabled(container_of(node, struct sni_ctx, name)->ctx, 1);
-#endif
+
 	/* switch ctx */
 	ssl_sock_switchctx_set(ssl, container_of(node, struct sni_ctx, name)->ctx);
 	HA_RWLOCK_RDUNLOCK(SNI_LOCK, &s->sni_lock);
@@ -4097,6 +4090,8 @@ ssl_sock_initial_ctx(struct bind_conf *bind_conf)
 # ifdef OPENSSL_IS_BORINGSSL
 	SSL_CTX_set_select_certificate_cb(ctx, ssl_sock_switchctx_cbk);
 	SSL_CTX_set_tlsext_servername_callback(ctx, ssl_sock_switchctx_err_cbk);
+	if (bind_conf->ssl_conf.early_data)
+		SSL_CTX_set_early_data_enabled(ctx, 1);
 # elif defined(HAVE_SSL_CLIENT_HELLO_CB)
 #  if defined(SSL_OP_NO_ANTI_REPLAY)
 	if (bind_conf->ssl_conf.early_data)
