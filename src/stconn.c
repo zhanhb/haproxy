@@ -2046,8 +2046,8 @@ smp_fetch_sid(const struct arg *args, struct sample *smp, const char *kw, void *
  * common denominator, the type that can be casted into all other ones.
  */
 static struct sample_fetch_kw_list sample_fetch_keywords = {ILH, {
-	{ "bs.id", smp_fetch_sid, 0, NULL, SMP_T_SINT, SMP_USE_L6REQ },
-	{ "fs.id", smp_fetch_sid, 0, NULL, SMP_T_STR, SMP_USE_L6RES },
+	{ "bs.id", smp_fetch_sid, 0, NULL, SMP_T_SINT, SMP_USE_L5SRV },
+	{ "fs.id", smp_fetch_sid, 0, NULL, SMP_T_STR, SMP_USE_L5CLI },
 	{ /* END */ },
 }};
 
