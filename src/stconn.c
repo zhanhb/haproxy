@@ -1608,7 +1608,7 @@ static int sc_conn_send(struct stconn *sc)
 		if (ret > 0)
 			did_send = 1;
 
-		if (!oc->pipe->data) {
+		if (!oc->pipe->data || sc_ep_test(sc, SE_FL_ERROR | SE_FL_ERR_PENDING)) {
 			put_pipe(oc->pipe);
 			oc->pipe = NULL;
 		}
