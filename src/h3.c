@@ -1568,6 +1568,7 @@ static int h3_resp_headers_send(struct qcs *qcs, struct htx *htx)
 			hdr++;
 		}
 		else {
+			/* Unhandled HTX block type. */
 			ABORT_NOW();
 			goto err;
 		}
@@ -1584,19 +1585,21 @@ static int h3_resp_headers_send(struct qcs *qcs, struct htx *htx)
 		goto err;
 	}
 
-	/* At least 5 bytes to store frame type + length as a varint max size */
-	if (b_room(res) < 5)
-		ABORT_NOW();
+	/* Buffer allocated just now : must be enough for frame type + length as a max varint size */
+	BUG_ON(b_room(res) < 5);
 
 	b_reset(&outbuf);
 	outbuf = b_make(b_tail(res), b_contig_space(res), 0, 0);
 	/* Start the headers after frame type + length */
 	headers_buf = b_make(b_head(res) + 5, b_size(res) - 5, 0, 0);
 
-	if (qpack_encode_field_section_line(&headers_buf))
-		ABORT_NOW();
+	if (qpack_encode_field_section_line(&headers_buf)) {
+		h3c->err = H3_INTERNAL_ERROR;
+		goto err;
+	}
 	if (qpack_encode_int_status(&headers_buf, status)) {
-		TRACE_ERROR("invalid status code", H3_EV_TX_HDR, qcs->qcc->conn, qcs);
+		/* TODO handle invalid status code VS no buf space left */
+		TRACE_ERROR("error during status code encoding", H3_EV_TX_HDR, qcs->qcc->conn, qcs);
 		h3c->err = H3_INTERNAL_ERROR;
 		goto err;
 	}
@@ -1628,8 +1631,10 @@ static int h3_resp_headers_send(struct qcs *qcs, struct htx *htx)
 			list[hdr].v = ist("trailers");
 		}
 
-		if (qpack_encode_header(&headers_buf, list[hdr].n, list[hdr].v))
-			ABORT_NOW();
+		if (qpack_encode_header(&headers_buf, list[hdr].n, list[hdr].v)) {
+			h3c->err = H3_INTERNAL_ERROR;
+			goto err;
+		}
 	}
 
 	/* Now that all headers are encoded, we are certain that res buffer is
@@ -1638,8 +1643,7 @@ static int h3_resp_headers_send(struct qcs *qcs, struct htx *htx)
 	frame_length_size = quic_int_getsize(b_data(&headers_buf));
 	res->head += 4 - frame_length_size;
 	b_putchr(res, 0x01); /* h3 HEADERS frame type */
-	if (!b_quic_enc_int(res, b_data(&headers_buf), 0))
-		ABORT_NOW();
+	b_quic_enc_int(res, b_data(&headers_buf), 0);
 	b_add(res, b_data(&headers_buf));
 
 	ret = 0;
@@ -1780,8 +1784,7 @@ static int h3_resp_trailers_send(struct qcs *qcs, struct htx *htx)
 	 * big enough.
 	 */
 	b_putchr(res, 0x01); /* h3 HEADERS frame type */
-	if (!b_quic_enc_int(res, b_data(&headers_buf), 8))
-		ABORT_NOW();
+	b_quic_enc_int(res, b_data(&headers_buf), 8);
 	b_add(res, b_data(&headers_buf));
 
  end:
