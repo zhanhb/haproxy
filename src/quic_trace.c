@@ -12,6 +12,8 @@
 
 #include <inttypes.h>
 
+#include <haproxy/api-t.h>
+#include <haproxy/chunk.h>
 #include <haproxy/quic_conn.h>
 #include <haproxy/quic_ssl.h>
 #include <haproxy/quic_tls.h>
@@ -638,4 +640,10 @@ static void quic_trace(enum trace_level level, uint64_t mask, const struct trace
 			quic_cid_dump(&trace_buf, cid);
 	}
 
+}
+
+void quic_dump_qc_info(struct buffer *msg, const struct quic_conn *qc)
+{
+	chunk_appendf(msg, " qc.wnd=%llu/%llu", (ullong)qc->path->in_flight,
+	                                        (ullong)qc->path->cwnd);
 }
