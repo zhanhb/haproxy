@@ -817,7 +817,8 @@ int qc_prep_hpkts(struct quic_conn *qc, struct buffer *buf, struct list *qels)
 					/* If there was already a correct packet present, set the
 					 * current datagram as prepared into <cbuf>.
 					 */
-					if (prv_pkt)
+					if (first_pkt && (first_pkt->type != QUIC_PACKET_TYPE_INITIAL ||
+					                  dglen >= QUIC_INITIAL_PACKET_MINLEN))
 						qc_txb_store(buf, dglen, first_pkt);
 					TRACE_PROTO("could not prepare anymore packet", QUIC_EV_CONN_PHPKTS, qc, qel);
 					goto out;
