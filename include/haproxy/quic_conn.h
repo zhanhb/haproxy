@@ -584,6 +584,7 @@ int qc_send_mux(struct quic_conn *qc, struct list *frms);
 void qc_notify_err(struct quic_conn *qc);
 int qc_notify_send(struct quic_conn *qc);
 
+int qc_stream_frm_is_acked(struct quic_conn *qc, struct quic_frame *f);
 void qc_release_frm(struct quic_conn *qc, struct quic_frame *frm);
 
 void qc_check_close_on_released_mux(struct quic_conn *qc);
