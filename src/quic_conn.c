@@ -5436,7 +5436,7 @@ static int quic_conn_enc_level_init(struct quic_conn *qc,
 	int ret = 0;
 	struct quic_enc_level *qel;
 
-	TRACE_ENTER(QUIC_EV_CONN_CLOSE, qc);
+	TRACE_ENTER(QUIC_EV_CONN_NEW, qc);
 
 	qel = &qc->els[level];
 	qel->level = quic_to_ssl_enc_level(level);
@@ -5474,7 +5474,7 @@ static int quic_conn_enc_level_init(struct quic_conn *qc,
 
 	ret = 1;
  leave:
-	TRACE_LEAVE(QUIC_EV_CONN_CLOSE, qc);
+	TRACE_LEAVE(QUIC_EV_CONN_NEW, qc);
 	return ret;
 }
 
