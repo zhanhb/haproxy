@@ -726,7 +726,7 @@ int tcp_bind_listener(struct listener *listener, char *errmsg, int errlen)
 	goto tcp_return;
 
  tcp_close_return:
-	close(fd);
+	fd_delete(fd);
  tcp_return:
 	if (msg && errlen) {
 		char pn[INET6_ADDRSTRLEN];
