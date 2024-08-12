@@ -1763,28 +1763,15 @@ int pat_ref_set(struct pat_ref *ref, const char *key, const char *value, char **
 {
 	struct pat_ref_elt *elt;
 	int found = 0;
-	char *_merr;
-	char **merr;
-
-	if (err) {
-		merr = &_merr;
-		*merr = NULL;
-	}
-	else
-		merr = NULL;
 
 	/* Look for pattern in the reference. */
 	list_for_each_entry(elt, &ref->head, list) {
 		if (strcmp(key, elt->pattern) == 0) {
-			if (!pat_ref_set_elt(ref, elt, value, merr)) {
-				if (err && merr) {
-					if (!found) {
-						*err = *merr;
-					} else {
-						memprintf(err, "%s, %s", *err, *merr);
-						ha_free(merr);
-					}
-				}
+			char *tmp_err = NULL;
+
+			if (!pat_ref_set_elt(ref, elt, value, &tmp_err)) {
+				memprintf(err, "%s, %s", err && *err ? *err : "", tmp_err);
+				ha_free(&tmp_err);
 			}
 			found = 1;
 		}
