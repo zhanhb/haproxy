@@ -1506,6 +1506,9 @@ int stream_set_backend(struct stream *s, struct proxy *be)
 			struct connection  *conn = objt_conn(strm_sess(s)->origin);
 			struct conn_stream *cs   = objt_cs(s->si[0].end);
 
+			if (!si_conn_ready(&s->si[0]))
+				return 0;
+
 			if (conn && cs) {
 				si_rx_endp_more(&s->si[0]);
 				/* Make sure we're unsubscribed, the the new
