@@ -1511,6 +1511,10 @@ int stream_set_http_mode(struct stream *s, const struct mux_proto_list *mux_prot
 		return 0;
 
 	conn = objt_conn(strm_sess(s)->origin);
+
+	if (!si_conn_ready(&s->si[0]))
+		return 0;
+
 	cs = objt_cs(s->si[0].end);
 	if (conn && cs) {
 		si_rx_endp_more(&s->si[0]);
