@@ -1,6 +1,8 @@
 #ifndef _HAPROXY_RX_T_H
 #define _HAPROXY_RX_T_H
 
+#include <haproxy/quic_cid-t.h>
+
 extern struct pool_head *pool_head_quic_conn_rxbuf;
 extern struct pool_head *pool_head_quic_dgram;
 extern struct pool_head *pool_head_quic_rx_packet;
