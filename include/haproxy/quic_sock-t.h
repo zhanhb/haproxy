@@ -25,6 +25,9 @@ struct quic_receiver_buf {
 	struct mt_list rxbuf_el; /* list element into receiver.rxbuf_list. */
 };
 
+#define QUIC_DGRAM_FL_REJECT                   0x00000001
+#define QUIC_DGRAM_FL_SEND_RETRY               0x00000002
+
 /* QUIC datagram */
 struct quic_dgram {
 	void *owner;
@@ -38,6 +41,8 @@ struct quic_dgram {
 
 	struct list recv_list; /* element pointing to quic_receiver_buf <dgram_list>. */
 	struct mt_list handler_list; /* element pointing to quic_dghdlr <dgrams>. */
+
+	int flags; /* QUIC_DGRAM_FL_* values */
 };
 
 /* QUIC datagram handler */
