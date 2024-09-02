@@ -2648,13 +2648,10 @@ int pcli_wait_for_response(struct stream *s, struct channel *rep, int an_bit)
 
 		s->target = NULL;
 
-		/* only release our endpoint if we don't intend to reuse the
-		 * connection.
-		 */
-		if (!si_conn_ready(&s->si[1])) {
-			si_release_endpoint(&s->si[1]);
-			s->srv_conn = NULL;
-		}
+
+		/* Always release our endpoint */
+		si_release_endpoint(&s->si[1]);
+		s->srv_conn = NULL;
 
 		sockaddr_free(&s->target_addr);
 
