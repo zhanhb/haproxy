@@ -471,7 +471,7 @@ static void mux_pt_shut(struct stconn *sc, enum se_shut_mode mode, struct se_abo
 	if (mode & (SE_SHW_SILENT|SE_SHW_NORMAL)) {
 		if (conn_xprt_ready(conn) && conn->xprt->shutw)
 			conn->xprt->shutw(conn, conn->xprt_ctx, (mode & SE_SHW_NORMAL));
-		if (!(conn->flags & CO_FL_SOCK_RD_SH))
+		if (!(conn->flags & CO_FL_SOCK_WR_SH))
 			conn_sock_shutw(conn, (mode & SE_SHW_NORMAL));
 	}
 
