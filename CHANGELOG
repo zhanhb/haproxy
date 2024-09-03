@@ -1,6 +1,50 @@
 ChangeLog :
 ===========
 
+2024/09/03 : 3.0.4
+    - MINOR: proto: extend connection thread rebind API
+    - BUILD: listener: silence a build warning about unused value without threads
+    - BUG/MEDIUM: quic: prevent crash on accept queue full
+    - CLEANUP: proto: rename TID affinity callbacks
+    - CLEANUP: quic: rename TID affinity elements
+    - BUG/MINOR: session: Eval L4/L5 rules defined in the default section
+    - BUG/MEDIUM: debug/cli: fix "show threads" crashing with low thread counts
+    - DOC: install: don't reference removed CPU arg
+    - BUG/MEDIUM: ssl_sock: fix deadlock in ssl_sock_load_ocsp() on error path
+    - BUG/MAJOR: mux-h2: force a hard error upon short read with pending error
+    - DOC: configuration: issuers-chain-path not compatible with OCSP
+    - DOC: config: improve the http-keep-alive section
+    - BUG/MINOR: stick-table: fix crash for src_inc_gpc() without stkcounter
+    - BUG/MINOR: server: Don't warn fallback IP is used during init-addr resolution
+    - BUG/MINOR: cli: Atomically inc the global request counter between CLI commands
+    - BUG/MINOR: quic: Non optimal first datagram.
+    - MEDIUM: sink: don't set NOLINGER flag on the outgoing stream interface
+    - BUG/MINOR: quic: Lack of precision when computing K (cubic only cc)
+    - BUG/MEDIUM: jwt: Clear SSL error queue on error when checking the signature
+    - MINOR: quic: Dump TX in flight bytes vs window values ratio.
+    - MINOR: quic: Add information to "show quic" for CUBIC cc.
+    - MEDIUM: h1: allow to preserve keep-alive on T-E + C-L
+    - MINOR: queue: add a function to check for TOCTOU after queueing
+    - BUG/MEDIUM: queue: deal with a rare TOCTOU in assign_server_and_queue()
+    - MEDIUM: init: set default for fd_hard_limit via DEFAULT_MAXFD (take #2)
+    - BUG/MEDIUM: init: fix fd_hard_limit default in compute_ideal_maxconn
+    - Revert "MEDIUM: sink: don't set NOLINGER flag on the outgoing stream interface"
+    - MEDIUM: log: relax some checks and emit diag warnings instead in lf_expr_postcheck()
+    - DOC: quic: fix default minimal value for max window size
+    - MINOR: proxy: Add support of 429-Too-Many-Requests in retry-on status
+    - BUG/MEDIUM: mux-h2: Set ES flag when necessary on 0-copy data forwarding
+    - BUG/MEDIUM: stream: Prevent mux upgrades if client connection is no longer ready
+    - BUG/MINIR: proxy: Match on 429 status when trying to perform a L7 retry
+    - BUG/MEDIUM: mux-pt: Never fully close the connection on shutdown
+    - BUG/MEDIUM: cli: Always release back endpoint between two commands on the mcli
+    - BUG/MINOR: quic: unexploited retransmission cases for Initial pktns.
+    - BUG/MEDIUM: mux-h1: Properly handle empty message when an error is triggered
+    - MINOR: mux-h2: try to clear DEM_MROOM and MUX_MFULL at more places
+    - BUG/MAJOR: mux-h2: always clear MUX_MFULL and DEM_MROOM when clearing the mbuf
+    - BUG/MINOR: quic: Too shord datagram during O-RTT handshakes (aws-lc only)
+    - BUG/MINOR: Crash on O-RTT RX packet after dropping Initial pktns
+    - BUG/MEDIUM: mux-pt: Fix condition to perform a shutdown for writes in mux_pt_shut()
+
 2024/07/11 : 3.0.3
     - BUG/MINOR: log: fix broken '+bin' logformat node option
     - DEBUG: hlua: distinguish burst timeout errors from exec timeout errors
