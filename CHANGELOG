@@ -1,6 +1,60 @@
 ChangeLog :
 ===========
 
+2024/09/03 : 2.9.10
+    - REGTESTS: ssl: fix some regtests 'feature cmd' start condition
+    - BUG/MEDIUM: proxy: fix email-alert invalid free
+    - DOC: configuration: fix alphabetical order of bind options
+    - SCRIPTS: git-show-backports: do not truncate git-show output
+    - DOC: api/event_hdl: small updates, fix an example and add some precisions
+    - BUG/MINOR: h3: fix crash on STOP_SENDING receive after GOAWAY emission
+    - BUG/MINOR: mux-quic: fix crash on qcs SD alloc failure
+    - BUG/MINOR: quic: fix BUG_ON() on Tx pkt alloc failure
+    - BUG/MINOR: hlua: report proper context upon error in hlua_cli_io_handler_fct()
+    - BUG/MEDIUM: stick-table: Decrement the ref count inside lock to kill a session
+    - MINOR: activity: make the memory profiling hash size configurable at build time
+    - BUG/MEDIUM: h3: ensure the ":method" pseudo header is totally valid
+    - BUG/MEDIUM: h3: ensure the ":scheme" pseudo header is totally valid
+    - BUG/MEDIUM: quic: fix race-condition in quic_get_cid_tid()
+    - BUG/MINOR: quic: fix race condition in qc_check_dcid()
+    - BUG/MINOR: quic: fix race-condition on trace for CID retrieval
+    - BUG/MEDIUM: quic: fix possible exit from qc_check_dcid() without unlocking
+    - DOC: configuration: more details about the master-worker mode
+    - BUG/MINOR: jwt: don't try to load files with HMAC algorithm
+    - DOC: configuration: update maxconn description
+    - BUG/MINOR: jwt: fix variable initialisation
+    - BUG/MINOR: h1: Fail to parse empty transfer coding names
+    - BUG/MINOR: h1: Reject empty coding name as last transfer-encoding value
+    - BUG/MEDIUM: h1: Reject empty Transfer-encoding header
+    - BUG/MEDIUM: spoe: Be sure to create a SPOE applet if none on the current thread
+    - BUG/MEDIUM: bwlim: Be sure to never set the analyze expiration date in past
+    - BUG/MINOR: session: Eval L4/L5 rules defined in the default section
+    - BUG/MEDIUM: debug/cli: fix "show threads" crashing with low thread counts
+    - BUG/MEDIUM: ssl_sock: fix deadlock in ssl_sock_load_ocsp() on error path
+    - BUG/MAJOR: mux-h2: force a hard error upon short read with pending error
+    - DOC: configuration: issuers-chain-path not compatible with OCSP
+    - DOC: config: improve the http-keep-alive section
+    - BUG/MINOR: stick-table: fix crash for src_inc_gpc() without stkcounter
+    - BUG/MINOR: server: Don't warn fallback IP is used during init-addr resolution
+    - BUG/MINOR: cli: Atomically inc the global request counter between CLI commands
+    - BUG/MINOR: quic: Lack of precision when computing K (cubic only cc)
+    - BUG/MEDIUM: jwt: Clear SSL error queue on error when checking the signature
+    - MINOR: queue: add a function to check for TOCTOU after queueing
+    - BUG/MEDIUM: queue: deal with a rare TOCTOU in assign_server_and_queue()
+    - MEDIUM: init: set default for fd_hard_limit via DEFAULT_MAXFD (take #2)
+    - BUG/MEDIUM: init: fix fd_hard_limit default in compute_ideal_maxconn
+    - DOC: quic: fix default minimal value for max window size
+    - BUG/MEDIUM: mux-h2: Set ES flag when necessary on 0-copy data forwarding
+    - BUG/MEDIUM: stream: Prevent mux upgrades if client connection is no longer ready
+    - BUG/MEDIUM: mux-pt: Never fully close the connection on shutdown
+    - BUG/MEDIUM: cli: Always release back endpoint between two commands on the mcli
+    - BUG/MINOR: quic: unexploited retransmission cases for Initial pktns.
+    - BUG/MEDIUM: mux-h1: Properly handle empty message when an error is triggered
+    - MINOR: mux-h2: try to clear DEM_MROOM and MUX_MFULL at more places
+    - BUG/MAJOR: mux-h2: always clear MUX_MFULL and DEM_MROOM when clearing the mbuf
+    - BUG/MINOR: quic: Too shord datagram during O-RTT handshakes (aws-lc only)
+    - BUG/MINOR: Crash on O-RTT RX packet after dropping Initial pktns
+
 2024/06/14 : 2.9.9
     - BUG/MINOR: quic: fix computed length of emitted STREAM frames
     - MINOR: log: fix "http-send-name-header" ignore warning message
