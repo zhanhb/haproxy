@@ -2636,7 +2636,7 @@ static int h1_send_error(struct h1c *h1c)
 	    b_is_null(h1c->px->replies[rc]->body.errmsg)) {
 		/* Empty error, so claim a success */
 		ret = 1;
-		goto out;
+		goto out_abort;
 	}
 
 	if (h1c->flags & (H1C_F_OUT_ALLOC|H1C_F_OUT_FULL)) {
@@ -2668,6 +2668,7 @@ static int h1_send_error(struct h1c *h1c)
 		h1s_destroy(h1c->h1s);
 	}
 
+  out_abort:
 	h1c->flags = (h1c->flags & ~(H1C_F_WAIT_NEXT_REQ|H1C_F_ABRT_PENDING)) | H1C_F_ABRTED;
 	h1_close(h1c);
   out:
