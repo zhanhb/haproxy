@@ -1760,8 +1760,10 @@ int pat_ref_set(struct pat_ref *ref, const char *key, const char *value, char **
 			char *tmp_err = NULL;
 
 			if (!pat_ref_set_elt(ref, elt, value, &tmp_err)) {
-				memprintf(err, "%s, %s", err && *err ? *err : "", tmp_err);
-				ha_free(&tmp_err);
+				if (err)
+					*err = tmp_err;
+				else
+					ha_free(&tmp_err);
 				return 0;
 			}
 			found = 1;
