@@ -2188,7 +2188,10 @@ static size_t h1_process_mux(struct h1c *h1c, struct buffer *buf, size_t count)
 				if (isteq(n, ist("transfer-encoding"))) {
 					if ((h1m->flags & H1_MF_RESP) && (h1s->status < 200 || h1s->status == 204))
 						goto skip_hdr;
-					h1_parse_xfer_enc_header(h1m, v);
+					if (h1m->flags & H1_MF_CHNK)
+						goto skip_hdr;
+					h1m->flags |= (H1_MF_XFER_ENC|H1_MF_CHNK);
+					v = ist("chunked");
 				}
 				else if (isteq(n, ist("content-length"))) {
 					if ((h1m->flags & H1_MF_RESP) && (h1s->status < 200 || h1s->status == 204))
