@@ -159,7 +159,7 @@ static void _do_poll(struct poller *p, int exp, int wake)
 		                kev,       // struct kevent *eventlist
 		                fd,        // int nevents
 		                &timeout_ts); // const struct timespec *timeout
-		tv_update_date(timeout, status);
+		tv_update_date(timeout, (global.tune.options & GTUNE_BUSY_POLLING) ? 1 : status);
 
 		if (status) {
 			activity[tid].poll_io++;

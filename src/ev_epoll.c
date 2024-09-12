@@ -193,7 +193,7 @@ static void _do_poll(struct poller *p, int exp, int wake)
 		int timeout = (global.tune.options & GTUNE_BUSY_POLLING) ? 0 : wait_time;
 
 		status = epoll_wait(epoll_fd[tid], epoll_events, global.tune.maxpollevents, timeout);
-		tv_update_date(timeout, status);
+		tv_update_date(timeout, (global.tune.options & GTUNE_BUSY_POLLING) ? 1 : status);
 
 		if (status) {
 			activity[tid].poll_io++;

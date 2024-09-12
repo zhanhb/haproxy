@@ -193,7 +193,7 @@ static void _do_poll(struct poller *p, int exp, int wake)
 				break;
 			}
 		}
-		tv_update_date(timeout, nevlist);
+		tv_update_date(timeout, (global.tune.options & GTUNE_BUSY_POLLING) ? 1 : nevlist);
 
 		if (nevlist || interrupted)
 			break;
