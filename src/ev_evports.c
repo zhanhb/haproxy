@@ -215,7 +215,7 @@ static void _do_poll(struct poller *p, int exp, int wake)
 				break;
 			}
 		}
-		clock_update_date(timeout, nevlist);
+		clock_update_date(timeout, (global.tune.options & GTUNE_BUSY_POLLING) ? 1 : nevlist);
 
 		if (nevlist || interrupted)
 			break;
