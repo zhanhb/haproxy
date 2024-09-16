@@ -1484,21 +1484,23 @@ static void http_cache_io_handler(struct appctx *appctx)
 	if (unlikely(sc->state == SC_ST_DIS || sc->state == SC_ST_CLO))
 		goto out;
 
-	/* Check if the input buffer is available. */
-	if (!b_size(&res->buf)) {
-		sc_need_room(sc);
-		goto out;
-	}
-
 	if (res->flags & (CF_SHUTW|CF_SHUTR|CF_SHUTW_NOW))
 		appctx->st0 = HTX_CACHE_END;
 
 	if (appctx->st0 == HTX_CACHE_INIT) {
+		if (!co_data(req))
+			goto wait_request;
 		ctx->next = block_ptr(cache_ptr);
 		ctx->offset = sizeof(*cache_ptr);
 		ctx->sent = 0;
 		ctx->rem_data = 0;
 		appctx->st0 = HTX_CACHE_HEADER;
+	}
+
+	/* Check if the input buffer is available. */
+	if (!b_size(&res->buf)) {
+		sc_need_room(sc);
+		goto out;
 	}
 
 	if (appctx->st0 == HTX_CACHE_HEADER) {
@@ -1564,6 +1566,12 @@ static void http_cache_io_handler(struct appctx *appctx)
 		co_htx_skip(req, req_htx, co_data(req));
 		htx_to_buf(req_htx, &req->buf);
 	}
+	return;
+
+  wait_request:
+	/* Wait for the request before starting to deliver the response */
+	b_reset(&res->buf);
+	applet_need_more_data(appctx);
 	return;
 
   error:
