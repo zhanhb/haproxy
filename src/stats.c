@@ -4500,6 +4500,11 @@ static void http_stats_io_handler(struct appctx *appctx)
 		goto out;
 	}
 
+	if (appctx->st0 != STAT_HTTP_END) {
+		if (!co_data(req))
+			goto wait_request;
+	}
+
 	/* Check if the input buffer is available. */
 	if (!b_size(&res->buf)) {
 		sc_need_room(sc, 0);
@@ -4580,6 +4585,13 @@ static void http_stats_io_handler(struct appctx *appctx)
 	}
 	else if (co_data(res))
 		applet_wont_consume(appctx);
+	return;
+
+  wait_request:
+	/* Wait for the request before starting to deliver the response */
+	b_reset(&res->buf);
+	applet_need_more_data(appctx);
+	return;
 }
 
 /* Dump all fields from <info> into <out> using the "show info" format (name: value) */
