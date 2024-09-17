@@ -2181,7 +2181,7 @@ stats_error_parsing:
 					oldlogformat = "option httplog clf";
 				else if (curproxy->conf.logformat_string == default_https_log_format)
 					oldlogformat = "option httpslog";
-				ha_warning("parsing [%s:%d]: 'option httplog' overrides previous '%s' in 'defaults' section.\n",
+				ha_warning("parsing [%s:%d]: 'option httpslog' overrides previous '%s' in 'defaults' section.\n",
 					   file, linenum, oldlogformat);
 			}
 			if (curproxy->conf.logformat_string != default_http_log_format &&
