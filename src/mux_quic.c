@@ -20,6 +20,7 @@
 #include <haproxy/quic_sock.h>
 #include <haproxy/quic_stream.h>
 #include <haproxy/quic_tp-t.h>
+#include <haproxy/session.h>
 #include <haproxy/ssl_sock-t.h>
 #include <haproxy/stconn.h>
 #include <haproxy/time.h>
@@ -934,6 +935,7 @@ static int qcc_decode_qcs(struct qcc *qcc, struct qcs *qcs)
 	struct buffer b;
 	ssize_t ret;
 	int fin = 0;
+	int prev_glitches = qcc->glitches;
 
 	TRACE_ENTER(QMUX_EV_QCS_RECV, qcc->conn, qcs);
 
@@ -945,6 +947,10 @@ static int qcc_decode_qcs(struct qcc *qcc, struct qcs *qcs)
 
 	if (!(qcs->flags & QC_SF_READ_ABORTED)) {
 		ret = qcc->app_ops->rcv_buf(qcs, &b, fin);
+
+		if (qcc->glitches != prev_glitches)
+			session_add_glitch_ctr(qcc->conn->owner, qcc->glitches - prev_glitches);
+
 		if (ret < 0) {
 			TRACE_ERROR("decoding error", QMUX_EV_QCS_RECV, qcc->conn, qcs);
 			goto err;
@@ -1482,6 +1488,7 @@ int qcc_recv_max_stream_data(struct qcc *qcc, uint64_t id, uint64_t max)
 int qcc_recv_reset_stream(struct qcc *qcc, uint64_t id, uint64_t err, uint64_t final_size)
 {
 	struct qcs *qcs;
+	int prev_glitches = qcc->glitches;
 
 	TRACE_ENTER(QMUX_EV_QCC_RECV, qcc->conn);
 
@@ -1540,6 +1547,9 @@ int qcc_recv_reset_stream(struct qcc *qcc, uint64_t id, uint64_t err, uint64_t f
 	qcs_free_ncbuf(qcs, &qcs->rx.ncbuf);
 
  out:
+	if (qcc->glitches != prev_glitches)
+		session_add_glitch_ctr(qcc->conn->owner, qcc->glitches - prev_glitches);
+
 	TRACE_LEAVE(QMUX_EV_QCC_RECV, qcc->conn);
 	return 0;
 
@@ -1557,6 +1567,7 @@ int qcc_recv_reset_stream(struct qcc *qcc, uint64_t id, uint64_t err, uint64_t f
 int qcc_recv_stop_sending(struct qcc *qcc, uint64_t id, uint64_t err)
 {
 	struct qcs *qcs;
+	int prev_glitches = qcc->glitches;
 
 	TRACE_ENTER(QMUX_EV_QCC_RECV, qcc->conn);
 
@@ -1642,6 +1653,9 @@ int qcc_recv_stop_sending(struct qcc *qcc, uint64_t id, uint64_t err)
 		qcc_refresh_timeout(qcc);
 
  out:
+	if (qcc->glitches != prev_glitches)
+		session_add_glitch_ctr(qcc->conn->owner, qcc->glitches - prev_glitches);
+
 	TRACE_LEAVE(QMUX_EV_QCC_RECV, qcc->conn);
 	return 0;
 
