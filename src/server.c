@@ -2003,6 +2003,9 @@ void srv_shutdown_streams(struct server *srv, int why)
 		mt_list_for_each_entry_safe(stream, &srv->per_thr[thr].streams, by_srv, elt1, elt2)
 			if (stream->srv_conn == srv)
 				stream_shutdown(stream, why);
+
+	/* also kill the possibly pending streams in the queue */
+	pendconn_redistribute(srv);
 }
 
 /* Shutdown all connections of all backup servers of a proxy. The caller must
