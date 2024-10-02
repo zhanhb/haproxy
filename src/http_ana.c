@@ -1074,7 +1074,8 @@ int http_request_forward_body(struct stream *s, struct channel *req, int an_bit)
 	}
 	else {
 		c_adv(req, htx->data - co_data(req));
-		if (msg->flags & HTTP_MSGF_XFER_LEN)
+		if ((msg->flags & HTTP_MSGF_XFER_LEN) &&
+		    (!(msg->flags & HTTP_MSGF_CONN_UPG) || (htx->flags & HTX_FL_EOM)))
 			channel_htx_forward_forever(req, htx);
 	}
 
