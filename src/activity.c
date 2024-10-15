@@ -179,6 +179,10 @@ struct memprof_stats *memprof_get_bin(const void *ra, enum memprof_method meth)
 	const void *old;
 	unsigned int bin;
 
+	if (unlikely(!ra)) {
+		bin = MEMPROF_HASH_BUCKETS;
+		goto leave;
+	}
 	bin = ptr_hash(ra, MEMPROF_HASH_BITS);
 	for (; memprof_stats[bin].caller != ra; bin = (bin + 1) & (MEMPROF_HASH_BUCKETS - 1)) {
 		if (!--retries) {
@@ -193,6 +197,7 @@ struct memprof_stats *memprof_get_bin(const void *ra, enum memprof_method meth)
 			break;
 		}
 	}
+leave:
 	return &memprof_stats[bin];
 }
 
