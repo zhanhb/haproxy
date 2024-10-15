@@ -1615,6 +1615,12 @@ static int sc_conn_recv(struct stconn *sc)
 		ret = 1;
 	}
 
+	/* Ensure sc_conn_process() is called if waiting on handshake. */
+	if (!(conn->flags & (CO_FL_WAIT_XPRT | CO_FL_EARLY_SSL_HS)) &&
+	    sc_ep_test(sc, SE_FL_WAIT_FOR_HS)) {
+		ret = 1;
+	}
+
 	if (sc_ep_test(sc, SE_FL_ERROR))
 		ret = 1;
 	else if (sc_ep_test(sc, SE_FL_EOS)) {
