@@ -2478,7 +2478,8 @@ struct task *qcc_io_cb(struct task *t, void *ctx, unsigned int status)
 
 	TRACE_ENTER(QMUX_EV_QCC_WAKE, qcc->conn);
 
-	qcc_io_send(qcc);
+	if (!(qcc->wait_event.events & SUB_RETRY_SEND))
+		qcc_io_send(qcc);
 
 	qcc_io_recv(qcc);
 
