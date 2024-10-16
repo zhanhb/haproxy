@@ -2006,7 +2006,8 @@ static struct task *qc_io_cb(struct task *t, void *ctx, unsigned int status)
 
 	TRACE_ENTER(QMUX_EV_QCC_WAKE, qcc->conn);
 
-	qc_send(qcc);
+	if (!(qcc->wait_event.events & SUB_RETRY_SEND))
+		qc_send(qcc);
 
 	if (qc_purge_streams(qcc)) {
 		if (qcc_is_dead(qcc)) {
