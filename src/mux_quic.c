@@ -2913,8 +2913,12 @@ static void qmux_strm_shutw(struct stconn *sc, enum co_shw_mode mode)
 	if (!qcs_is_close_local(qcs) &&
 	    !(qcs->flags & (QC_SF_FIN_STREAM|QC_SF_TO_RESET))) {
 
-		if (qcs->flags & QC_SF_UNKNOWN_PL_LENGTH) {
-			/* Close stream with a FIN STREAM frame. */
+		/* Close stream with FIN if length unknown and some data are
+		 * ready to be/already transmitted.
+		 * TODO select closure method on app proto layer
+		 */
+		if (qcs->flags & QC_SF_UNKNOWN_PL_LENGTH &&
+		    (qcs->tx.offset || b_data(&qcs->tx.buf))) {
 			if (!(qcc->flags & (QC_CF_ERR_CONN|QC_CF_ERRL))) {
 				TRACE_STATE("set FIN STREAM",
 				            QMUX_EV_STRM_SHUT, qcc->conn, qcs);
