@@ -501,8 +501,9 @@ int http_process_req_common(struct stream *s, struct channel *req, int an_bit, s
 			if (!ret)
 				continue;
 		}
-		if (!http_apply_redirect_rule(rule, s, txn))
+		if (!http_apply_redirect_rule(rule, s, txn)) {
 			goto return_int_err;
+		}
 		goto done;
 	}
 
@@ -994,8 +995,10 @@ int http_request_forward_body(struct stream *s, struct channel *req, int an_bit)
 		 * responsability to handle the error. It is especially
 		 * important to properly handle L7-retries but also K/A silent close.
 		 */
-		if (txn->rsp.msg_state >= HTTP_MSG_BODY && htx_is_empty(htxbuf(&s->res.buf)))
+		if (txn->rsp.msg_state >= HTTP_MSG_BODY && htx_is_empty(htxbuf(&s->res.buf))) {
+			COUNT_IF(1, "Server abort during request forwarding");
 			goto return_srv_abort;
+		}
 	}
 
 	http_end_request(s);
@@ -1027,8 +1030,10 @@ int http_request_forward_body(struct stream *s, struct channel *req, int an_bit)
 
  missing_data_or_waiting:
 	/* stop waiting for data if the input is closed before the end */
-	if (msg->msg_state < HTTP_MSG_ENDING && (s->scf->flags & (SC_FL_ABRT_DONE|SC_FL_EOS)))
+	if (msg->msg_state < HTTP_MSG_ENDING && (s->scf->flags & (SC_FL_ABRT_DONE|SC_FL_EOS))) {
+		COUNT_IF(1, "Client abort during request forwarding");
 		goto return_cli_abort;
+	}
 
  waiting:
 	/* waiting for the last bits to leave the buffer */
@@ -1038,8 +1043,10 @@ int http_request_forward_body(struct stream *s, struct channel *req, int an_bit)
 		 * to handle the error. It is especially important to properly
 		 * handle L7-retries but also K/A silent close.
 		 */
-		if (txn->rsp.msg_state >= HTTP_MSG_BODY && htx_is_empty(htxbuf(&s->res.buf)))
+		if (txn->rsp.msg_state >= HTTP_MSG_BODY && htx_is_empty(htxbuf(&s->res.buf))) {
+			COUNT_IF(1, "Server abort during request forwarding");
 			goto return_srv_abort;
+		}
 	}
 
 	/* When TE: chunked is used, we need to get there again to parse remaining
@@ -1102,6 +1109,7 @@ int http_request_forward_body(struct stream *s, struct channel *req, int an_bit)
 	if (objt_server(s->target))
 		_HA_ATOMIC_INC(&__objt_server(s->target)->counters.internal_errors);
 	status = 500;
+	COUNT_IF(1, "Internal error during request forwarding");
 	goto return_prx_cond;
 
   return_bad_req:
@@ -1109,6 +1117,7 @@ int http_request_forward_body(struct stream *s, struct channel *req, int an_bit)
 	if (sess->listener && sess->listener->counters)
 		_HA_ATOMIC_INC(&sess->listener->counters->failed_req);
 	status = 400;
+	COUNT_IF(1, "Request parsing error during request forwarding");
 	/* fall through */
 
   return_prx_cond:
@@ -2140,6 +2149,7 @@ int http_response_forward_body(struct stream *s, struct channel *res, int an_bit
 	if ((s->scf->flags & SC_FL_SHUT_DONE) && co_data(res)) {
 		/* response errors are most likely due to the client aborting
 		 * the transfer. */
+		COUNT_IF(1, "Client abort during response forwarding");
 		goto return_cli_abort;
 	}
 
@@ -2153,8 +2163,10 @@ int http_response_forward_body(struct stream *s, struct channel *res, int an_bit
 	return 0;
 
   missing_data_or_waiting:
-	if (s->scf->flags & SC_FL_SHUT_DONE)
+	if (s->scf->flags & SC_FL_SHUT_DONE) {
+		COUNT_IF(1, "Client abort during response forwarding");
 		goto return_cli_abort;
+	}
 
 	/* stop waiting for data if the input is closed before the end. If the
 	 * client side was already closed, it means that the client has aborted,
@@ -2162,11 +2174,15 @@ int http_response_forward_body(struct stream *s, struct channel *res, int an_bit
 	 * server abort.
 	 */
 	if (msg->msg_state < HTTP_MSG_ENDING && (s->scb->flags & (SC_FL_EOS|SC_FL_ABRT_DONE))) {
-		if ((s->scb->flags & (SC_FL_ABRT_DONE|SC_FL_SHUT_DONE)) == (SC_FL_ABRT_DONE|SC_FL_SHUT_DONE))
+		if ((s->scb->flags & (SC_FL_ABRT_DONE|SC_FL_SHUT_DONE)) == (SC_FL_ABRT_DONE|SC_FL_SHUT_DONE)) {
+			COUNT_IF(1, "Client abort during response forwarding");
 			goto return_cli_abort;
+		}
 		/* If we have some pending data, we continue the processing */
-		if (htx_is_empty(htx))
+		if (htx_is_empty(htx)) {
+			COUNT_IF(1, "Server abort during response forwarding");
 			goto return_srv_abort;
+		}
 	}
 
 	/* When TE: chunked is used, we need to get there again to parse
@@ -2226,6 +2242,7 @@ int http_response_forward_body(struct stream *s, struct channel *res, int an_bit
 		_HA_ATOMIC_INC(&__objt_server(s->target)->counters.internal_errors);
 	if (!(s->flags & SF_ERR_MASK))
 		s->flags |= SF_ERR_INTERNAL;
+	COUNT_IF(1, "Internal error during response forwarding");
 	goto return_error;
 
   return_bad_res:
@@ -2235,6 +2252,7 @@ int http_response_forward_body(struct stream *s, struct channel *res, int an_bit
 		health_adjust(__objt_server(s->target), HANA_STATUS_HTTP_RSP);
 	}
 	stream_inc_http_fail_ctr(s);
+	COUNT_IF(1, "Response parsing error during response forwarding");
 	/* fall through */
 
    return_error:
