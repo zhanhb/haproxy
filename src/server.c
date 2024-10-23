@@ -71,7 +71,7 @@ struct srv_kw_list srv_keywords = {
 __decl_thread(HA_SPINLOCK_T idle_conn_srv_lock);
 struct eb_root idle_conn_srv = EB_ROOT;
 struct task *idle_conn_task __read_mostly = NULL;
-struct list servers_list = LIST_HEAD_INIT(servers_list);
+struct mt_list servers_list = MT_LIST_HEAD_INIT(servers_list);
 
 /* SERVER DELETE(n)->ADD global tracker:
  * This is meant to provide srv->rid (revision id) value.
@@ -2485,7 +2485,7 @@ struct server *new_server(struct proxy *proxy)
 	srv->obj_type = OBJ_TYPE_SERVER;
 	srv->proxy = proxy;
 	queue_init(&srv->queue, proxy, srv);
-	LIST_APPEND(&servers_list, &srv->global_list);
+	MT_LIST_APPEND(&servers_list, &srv->global_list);
 	LIST_INIT(&srv->srv_rec_item);
 	LIST_INIT(&srv->ip_rec_item);
 	MT_LIST_INIT(&srv->prev_deleted);
@@ -2582,7 +2582,7 @@ struct server *srv_drop(struct server *srv)
 
 	HA_SPIN_DESTROY(&srv->lock);
 
-	LIST_DELETE(&srv->global_list);
+	MT_LIST_DELETE(&srv->global_list);
 	event_hdl_sub_list_destroy(&srv->e_subs);
 
 	EXTRA_COUNTERS_FREE(srv->extra_counters);
@@ -2721,7 +2721,7 @@ static int _srv_parse_tmpl_init(struct server *srv, struct proxy *px)
 		release_sample_expr(newsrv->ssl_ctx.sni);
 		free_check(&newsrv->agent);
 		free_check(&newsrv->check);
-		LIST_DELETE(&newsrv->global_list);
+		MT_LIST_DELETE(&newsrv->global_list);
 	}
 	free(newsrv);
 	return i - srv->tmpl_info.nb_low;
