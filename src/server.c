@@ -2923,6 +2923,7 @@ struct server *new_server(struct proxy *proxy)
 	MT_LIST_INIT(&srv->sess_conns);
 
 	guid_init(&srv->guid);
+	MT_LIST_INIT(&srv->watcher_list);
 
 	srv->extra_counters = NULL;
 #ifdef USE_OPENSSL
@@ -6009,6 +6010,7 @@ static int cli_parse_delete_server(char **args, char *payload, struct appctx *ap
 	struct ist be_name, sv_name;
 	struct mt_list *elt1, elt2;
 	struct sess_priv_conns *sess_conns = NULL;
+	struct watcher *srv_watch;
 	const char *msg;
 	int ret, i;
 
@@ -6109,6 +6111,12 @@ static int cli_parse_delete_server(char **args, char *payload, struct appctx *ap
 		check_purge(&srv->check);
 	if (srv->agent.state & CHK_ST_CONFIGURED)
 		check_purge(&srv->agent);
+
+	while (!MT_LIST_ISEMPTY(&srv->watcher_list)) {
+		srv_watch = MT_LIST_NEXT(&srv->watcher_list, struct watcher *, el);
+		BUG_ON(srv->next && srv->next->flags & SRV_F_DELETED);
+		watcher_next(srv_watch, srv->next);
+	}
 
 	/* detach the server from the proxy linked list
 	 * The proxy servers list is currently not protected by a lock, so this
