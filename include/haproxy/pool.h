@@ -101,6 +101,9 @@ extern int mem_poison_byte;
 /* set of POOL_DBG_* flags */
 extern uint pool_debugging;
 
+/* pools are listed here */
+extern struct list pools;
+
 int malloc_trim(size_t pad);
 void trim_all_pools(void);
 
