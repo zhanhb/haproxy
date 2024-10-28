@@ -118,13 +118,6 @@ struct post_mortem {
 		struct rlimit limit_fd;  // RLIMIT_NOFILE
 		struct rlimit limit_ram; // RLIMIT_DATA
 		char **argv;
-
-#if defined(USE_THREAD)
-		struct {
-			ullong pth_id;   // pthread_t cast to a ullong
-			void *stack_top; // top of the stack
-		} thread_info[MAX_THREADS];
-#endif
 		unsigned char argc;
 	} process;
 
@@ -2441,13 +2434,9 @@ static int feed_post_mortem_late()
 {
 	static int per_thread_info_collected;
 
-	if (HA_ATOMIC_ADD_FETCH(&per_thread_info_collected, 1) == global.nbthread) {
-		int i;
-		for (i = 0; i < global.nbthread; i++) {
-			post_mortem.process.thread_info[i].pth_id = ha_thread_info[i].pth_id;
-			post_mortem.process.thread_info[i].stack_top = ha_thread_info[i].stack_top;
-		}
-	}
+	if (HA_ATOMIC_ADD_FETCH(&per_thread_info_collected, 1) != global.nbthread)
+		return 1;
+
 	return 1;
 }
 
