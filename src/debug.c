@@ -138,6 +138,8 @@ struct post_mortem {
 	struct list *pools;              // pointer to the head of the pools list
 	struct proxy **proxies;          // pointer to the head of the proxies list
 	struct global *global;           // pointer to the struct global
+	struct fdtab **fdtab;            // pointer to the fdtab array
+	struct activity *activity;       // pointer to the activity[] per-thread array
 
 	/* info about identified distinct components (executable, shared libs, etc).
 	 * These can be all listed at once in gdb using:
@@ -2290,6 +2292,8 @@ static int feed_post_mortem()
 	post_mortem.pools = &pools;
 	post_mortem.proxies = &proxies_list;
 	post_mortem.global = &global;
+	post_mortem.fdtab = &fdtab;
+	post_mortem.activity = activity;
 
 	return ERR_NONE;
 }
