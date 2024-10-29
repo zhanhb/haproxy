@@ -812,11 +812,22 @@ void _trace_parse_cmd(struct trace_source *src, int level, int verbosity)
  *
  * Returns 0 on success else non-zero.
  */
-int trace_parse_cmd(char *arg, char **errmsg)
+int trace_parse_cmd(const char *arg_src, char **errmsg)
 {
 	char *str;
+	char *arg, *oarg;
+	char *saveptr;
 
-	if (!arg) {
+	if (arg_src) {
+		/* keep a copy of the ptr for strtok */
+		oarg = arg = strdup(arg_src);
+		if (!arg) {
+			memprintf(errmsg, "Can't allocate !");
+			return 1;
+		}
+	}
+
+	if (!arg_src) {
 		/* No trace specification, activate all sources on error level. */
 		struct trace_source *src = NULL;
 
@@ -825,7 +836,7 @@ int trace_parse_cmd(char *arg, char **errmsg)
 		return 0;
 	}
 
-	while ((str = strtok(arg, ","))) {
+	while ((str = strtok_r(arg, ",", &saveptr))) {
 		struct trace_source *src = NULL;
 		char *field, *name;
 		char *sep;
@@ -846,6 +857,7 @@ int trace_parse_cmd(char *arg, char **errmsg)
 			src = trace_find_source(name);
 			if (!src) {
 				memprintf(errmsg, "unknown trace source '%s'", name);
+				ha_free(&oarg);
 				return 1;
 			}
 		}
@@ -868,6 +880,7 @@ int trace_parse_cmd(char *arg, char **errmsg)
 			level = trace_parse_level(field);
 			if (level < 0) {
 				memprintf(errmsg, "no such level '%s'", field);
+				ha_free(&oarg);
 				return 1;
 			}
 		}
@@ -879,17 +892,20 @@ int trace_parse_cmd(char *arg, char **errmsg)
 		field = str;
 		if (strchr(field, ':')) {
 			memprintf(errmsg, "too many double-colon separator");
+			ha_free(&oarg);
 			return 1;
 		}
 
 		if (!src && strcmp(field, "quiet") != 0) {
 			memprintf(errmsg, "trace source must be specified for verbosity other than 'quiet'");
+			ha_free(&oarg);
 			return 1;
 		}
 
 		verbosity = trace_source_parse_verbosity(src, field);
 		if (verbosity < 0) {
 			memprintf(errmsg, "no such verbosity '%s' for source '%s'", field, name);
+			ha_free(&oarg);
 			return 1;
 		}
 
@@ -905,7 +921,7 @@ int trace_parse_cmd(char *arg, char **errmsg)
 		/* Reset arg to NULL for strtok. */
 		arg = NULL;
 	}
-
+	ha_free(&oarg);
 	return 0;
 }
 
