@@ -1275,7 +1275,7 @@ static void sc_conn_read0(struct stconn *sc)
 	ic->flags |= CF_SHUTR;
 	ic->rex = TICK_ETERNITY;
 
-	if (!sc_state_in(sc->state, SC_SB_CON|SC_SB_RDY|SC_SB_EST))
+	if (sc->state != SC_ST_EST)
 		return;
 
 	if (oc->flags & CF_SHUTW)
