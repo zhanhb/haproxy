@@ -3218,7 +3218,7 @@ static int qc_parse_pkt_frms(struct quic_conn *qc, struct quic_rx_packet *pkt,
 {
 	struct quic_frame frm;
 	const unsigned char *pos, *end;
-	int fast_retrans = 0, ret = 0;
+	int fast_retrans = 0;
 
 	TRACE_ENTER(QUIC_EV_CONN_PRSHPKT, qc);
 	/* Skip the AAD */
@@ -3236,13 +3236,13 @@ static int qc_parse_pkt_frms(struct quic_conn *qc, struct quic_rx_packet *pkt,
 		 * a single QUIC packet and cannot span multiple packets.
 		 */
 		quic_set_connection_close(qc, quic_err_transport(QC_ERR_PROTOCOL_VIOLATION));
-		goto leave;
+		goto err;
 	}
 
 	while (pos < end) {
 		if (!qc_parse_frm(&frm, pkt, &pos, end, qc)) {
 			// trace already emitted by function above
-			goto leave;
+			goto err;
 		}
 
 		switch (frm.type) {
@@ -3257,7 +3257,7 @@ static int qc_parse_pkt_frms(struct quic_conn *qc, struct quic_rx_packet *pkt,
 			rtt_sample = UINT_MAX;
 			if (!qc_parse_ack_frm(qc, &frm, qel, &rtt_sample, &pos, end)) {
 				// trace already emitted by function above
-				goto leave;
+				goto err;
 			}
 
 			if (rtt_sample != UINT_MAX) {
@@ -3284,14 +3284,14 @@ static int qc_parse_pkt_frms(struct quic_conn *qc, struct quic_rx_packet *pkt,
 				if (qcc_recv_stop_sending(qc->qcc, ss_frm->id,
 				                          ss_frm->app_error_code)) {
 					TRACE_ERROR("qcc_recv_stop_sending() failed", QUIC_EV_CONN_PRSHPKT, qc);
-					goto leave;
+					goto err;
 				}
 			}
 			break;
 		}
 		case QUIC_FT_CRYPTO:
 			if (!qc_handle_crypto_frm(qc, &frm.crypto, pkt, qel, &fast_retrans))
-				goto leave;
+				goto err;
 			break;
 		case QUIC_FT_STREAM_8 ... QUIC_FT_STREAM_F:
 		{
@@ -3310,12 +3310,12 @@ static int qc_parse_pkt_frms(struct quic_conn *qc, struct quic_rx_packet *pkt,
 						if (!qc_h3_request_reject(qc, strm_frm->id)) {
 							TRACE_ERROR("error on request rejection", QUIC_EV_CONN_PRSHPKT, qc);
 							/* This packet will not be acknowledged */
-							goto leave;
+							goto err;
 						}
 					}
 					else {
 						/* This packet will not be acknowledged */
-						goto leave;
+						goto err;
 					}
 				}
 
@@ -3324,7 +3324,7 @@ static int qc_parse_pkt_frms(struct quic_conn *qc, struct quic_rx_packet *pkt,
 
 			if (!qc_handle_strm_frm(pkt, strm_frm, qc, fin)) {
 				TRACE_ERROR("qc_handle_strm_frm() failed", QUIC_EV_CONN_PRSHPKT, qc);
-				goto leave;
+				goto err;
 			}
 
 			break;
@@ -3341,7 +3341,7 @@ static int qc_parse_pkt_frms(struct quic_conn *qc, struct quic_rx_packet *pkt,
 				if (qcc_recv_max_stream_data(qc->qcc, msd_frm->id,
 				                              msd_frm->max_stream_data)) {
 					TRACE_ERROR("qcc_recv_max_stream_data() failed", QUIC_EV_CONN_PRSHPKT, qc);
-					goto leave;
+					goto err;
 				}
 			}
 			break;
@@ -3369,7 +3369,7 @@ static int qc_parse_pkt_frms(struct quic_conn *qc, struct quic_rx_packet *pkt,
 			struct quic_connection_id *conn_id = NULL;
 
 			if (!qc_handle_retire_connection_id_frm(qc, &frm, &pkt->dcid, &conn_id))
-				goto leave;
+				goto err;
 
 			if (!conn_id)
 				break;
@@ -3429,14 +3429,14 @@ static int qc_parse_pkt_frms(struct quic_conn *qc, struct quic_rx_packet *pkt,
 				 * error of type PROTOCOL_VIOLATION.
 				 */
 				quic_set_connection_close(qc, quic_err_transport(QC_ERR_PROTOCOL_VIOLATION));
-				goto leave;
+				goto err;
 			}
 
 			qc->state = QUIC_HS_ST_CONFIRMED;
 			break;
 		default:
 			TRACE_ERROR("unknosw frame type", QUIC_EV_CONN_PRSHPKT, qc);
-			goto leave;
+			goto err;
 		}
 	}
 
@@ -3472,10 +3472,12 @@ static int qc_parse_pkt_frms(struct quic_conn *qc, struct quic_rx_packet *pkt,
 	    }
 	}
 
-	ret = 1;
- leave:
 	TRACE_LEAVE(QUIC_EV_CONN_PRSHPKT, qc);
-	return ret;
+	return 1;
+
+ err:
+	TRACE_DEVEL("leaving on error", QUIC_EV_CONN_PRSHPKT, qc);
+	return 0;
 }
 
 
