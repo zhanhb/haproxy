@@ -1,6 +1,22 @@
 ChangeLog :
 ===========
 
+2024/11/08 : 2.6.20
+    - BUG/MEDIUM: cli: Deadlock when setting frontend maxconn
+    - BUG/MINOR: cfgparse-global: fix allowed args number for setenv
+    - BUG/MEDIUM: server: server stuck in maintenance after FQDN change
+    - BUG/MEDIUM: hlua: make hlua_ctx_renew() safe
+    - BUG/MEDIUM: hlua: properly handle sample func errors in hlua_run_sample_{fetch,conv}()
+    - BUG/MINOR: http-ana: Don't report a server abort if response payload is invalid
+    - BUG/MINOR: mworker: fix mworker-max-reloads parser
+    - BUG/MEDIUM: connection/http-reuse: fix address collision on unhandled address families
+    - BUG/MINOR: server: fix dynamic server leak with check on failed init
+    - BUG/MEDIUM: server: fix race on servers_list during server deletion
+    - BUG/MINOR: ssl/cli: 'set ssl cert' does not check the transaction name correctly
+    - BUG/MINOR: http-ana: Report internal error if an action yields on a final eval
+    - MINOR: stream: Save last evaluated rule on invalid yield
+    - CLEANUP: connection: properly name the CO_ER_SSL_FATAL enum entry
+
 2024/09/19 : 2.6.19
     - BUG/MEDIUM: cli: fix cli_output_msg() regression
     - BUG/MINOR: quic: fix computed length of emitted STREAM frames
