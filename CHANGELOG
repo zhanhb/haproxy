@@ -1,6 +1,38 @@
 ChangeLog :
 ===========
 
+2024/11/08 : 2.8.12
+    - BUG/MAJOR: ocsp: Separate refcount per instance and per store
+    - BUG/MEDIUM: ssl: Fix crash when calling "update ssl ocsp-response" when an update is ongoing
+    - MEDIUM: h1: Accept invalid T-E values with accept-invalid-http-response option
+    - DOC: config: Explicitly list relaxing rules for accept-invalid-http-* options
+    - BUG/MEDIUM: mux-pt: Never fully close the connection on shutdown
+    - BUG/MEDIUM: cli: Deadlock when setting frontend maxconn
+    - BUG/MINOR: server: make sure the HMAINT state is part of MAINT
+    - BUG/MINOR: cfgparse-global: fix allowed args number for setenv
+    - BUG/MEDIUM: server: server stuck in maintenance after FQDN change
+    - BUG/MEDIUM: hlua: make hlua_ctx_renew() safe
+    - BUG/MEDIUM: hlua: properly handle sample func errors in hlua_run_sample_{fetch,conv}()
+    - BUG/MEDIUM: mux-quic: ensure timeout server is active for short requests
+    - BUG/MINOR: httpclient: return NULL when no proxy available during httpclient_new()
+    - BUG/MINOR: http-ana: Don't report a server abort if response payload is invalid
+    - REGTESTS: Never reuse server connection in http-messaging/truncated.vtc
+    - DOC: config: fix rfc7239 forwarded typo in desc
+    - BUG/MINOR: mworker: fix mworker-max-reloads parser
+    - BUG/MEDIUM: connection/http-reuse: fix address collision on unhandled address families
+    - MINOR: activity/memprofile: always return "other" bin on NULL return address
+    - BUG/MINOR: mux-quic: do not close STREAM with empty FIN if no data sent
+    - BUG/MINOR: server: fix dynamic server leak with check on failed init
+    - BUG/MINOR: http-ana: Fix wrong client abort reports during responses forwarding
+    - BUG/MEDIUM: stconn: Report blocked send if sends are blocked by an error
+    - BUG/MEDIUM: server: fix race on servers_list during server deletion
+    - MINOR: pools: export the pools variable
+    - MINOR: cli: remove non-printable characters from 'debug dev fd'
+    - BUG/MINOR: ssl/cli: 'set ssl cert' does not check the transaction name correctly
+    - BUG/MINOR: http-ana: Report internal error if an action yields on a final eval
+    - MINOR: stream: Save last evaluated rule on invalid yield
+    - CLEANUP: connection: properly name the CO_ER_SSL_FATAL enum entry
+
 2024/09/19 : 2.8.11
     - BUG/MINOR: quic: fix computed length of emitted STREAM frames
     - BUG/MINOR: proxy: fix server_id_hdr_name leak on deinit()
