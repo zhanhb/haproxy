@@ -2448,7 +2448,7 @@ static struct task *process_resolvers(struct task *t, void *context, unsigned in
 		if (resolv_run_resolution(res) != 1) {
 			res->last_resolution = now_ms;
 			LIST_DEL_INIT(&res->list);
-			LIST_APPEND(&resolvers->resolutions.wait, &res->list);
+			LIST_INSERT(&resolvers->resolutions.wait, &res->list);
 		}
 	}
 
