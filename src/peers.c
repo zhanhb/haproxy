@@ -3584,7 +3584,7 @@ struct task *process_peer_sync(struct task * task, void *context, unsigned int s
 
 				/* Set resync timeout for the local peer and request a immediate reconnect */
 				peers->resync_timeout = tick_add(now_ms, MS_TO_TICKS(PEER_RESYNC_TIMEOUT));
-				peers->local->reconnect = now_ms;
+				peers->local->reconnect = tick_add(now_ms, 0);
 			}
 		}
 
