@@ -993,7 +993,7 @@ int http_request_forward_body(struct stream *s, struct channel *req, int an_bit)
 		 * response. Otherwise, let a change to forward the response
 		 * first.
 		 */
-		if (htx_is_empty(htxbuf(&s->res.buf)))
+		if (txn->rsp.msg_state >= HTTP_MSG_BODY && htx_is_empty(htxbuf(&s->res.buf)))
 			goto return_srv_abort;
 	}
 
