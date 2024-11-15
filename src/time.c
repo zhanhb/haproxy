@@ -247,6 +247,9 @@ void tv_update_date(int max_wait, int interrupted)
 		 */
 		new_now = ((ullong)now.tv_sec << 32) + (uint)now.tv_usec;
 		now_ms = __tv_to_ms(&now);
+		/* correct for TICK_ETNERITY (0) */
+		if (unlikely(now_ms == TICK_ETERNITY))
+			now_ms++;
 
 		/* let's try to update the global <now> (both in timeval
 		 * and ms forms) or loop again.
