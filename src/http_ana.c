@@ -2215,6 +2215,7 @@ int http_process_res_common(struct stream *s, struct channel *rep, int an_bit, s
 	goto return_prx_err;
 
  return_bad_res:
+	s->logs.t_data = -1; /* was not a valid response */
 	txn->status = 502;
 	_HA_ATOMIC_ADD(&s->be->be_counters.failed_resp, 1);
 	if (objt_server(s->target)) {
@@ -2228,7 +2229,6 @@ int http_process_res_common(struct stream *s, struct channel *rep, int an_bit, s
 	/* fall through */
 
  return_prx_cond:
-	s->logs.t_data = -1; /* was not a valid response */
 	s->si[1].flags |= SI_FL_NOLINGER;
 
 	if (!(s->flags & SF_ERR_MASK))
