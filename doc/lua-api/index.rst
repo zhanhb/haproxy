@@ -475,7 +475,7 @@ Core class
 
 .. js:function:: core.msleep(milliseconds)
 
-  **context**: body, init, task, action
+  **context**: task, action
 
   The `core.msleep()` stops the Lua execution between specified milliseconds.
 
@@ -831,7 +831,7 @@ Core class
 
 .. js:function:: core.sleep(int seconds)
 
-  **context**: body, init, task, action
+  **context**: task, action
 
   The `core.sleep()` functions stop the Lua execution between specified seconds.
 
@@ -884,7 +884,7 @@ Core class
 
 .. js:function:: core.yield()
 
-  **context**: task, action, sample-fetch, converter
+  **context**: task, action
 
   Give back the hand at the HAProxy scheduler. It is used when the LUA
   processing consumes a lot of processing time.
