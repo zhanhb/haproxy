@@ -4813,7 +4813,7 @@ try_again:
  */
 static size_t h2s_frt_make_resp_headers(struct h2s *h2s, struct htx *htx)
 {
-	struct http_hdr list[global.tune.max_http_hdr];
+	struct http_hdr list[global.tune.max_http_hdr * 2];
 	struct h2c *h2c = h2s->h2c;
 	struct htx_blk *blk;
 	struct htx_blk *blk_end;
@@ -5047,7 +5047,7 @@ static size_t h2s_frt_make_resp_headers(struct h2s *h2s, struct htx *htx)
  */
 static size_t h2s_bck_make_req_headers(struct h2s *h2s, struct htx *htx)
 {
-	struct http_hdr list[global.tune.max_http_hdr];
+	struct http_hdr list[global.tune.max_http_hdr * 2];
 	struct h2c *h2c = h2s->h2c;
 	struct htx_blk *blk;
 	struct htx_blk *blk_end;
@@ -5687,7 +5687,7 @@ static size_t h2s_frt_make_resp_data(struct h2s *h2s, struct buffer *buf, size_t
  */
 static size_t h2s_make_trailers(struct h2s *h2s, struct htx *htx)
 {
-	struct http_hdr list[global.tune.max_http_hdr];
+	struct http_hdr list[global.tune.max_http_hdr * 2];
 	struct h2c *h2c = h2s->h2c;
 	struct htx_blk *blk;
 	struct htx_blk *blk_end;
