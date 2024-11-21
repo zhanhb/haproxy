@@ -1736,7 +1736,6 @@ static void debug_release_memstats(struct appctx *appctx)
 void debug_handler(int sig, siginfo_t *si, void *arg)
 {
 	struct buffer *buf = HA_ATOMIC_LOAD(&th_ctx->thread_dump_buffer);
-	int harmless = is_thread_harmless();
 
 	/* first, let's check it's really for us and that we didn't just get
 	 * a spurious DEBUGSIG.
@@ -1748,13 +1747,6 @@ void debug_handler(int sig, siginfo_t *si, void *arg)
 	 * we come from a sig handler.
 	 */
 	ha_thread_dump_one(tid, 1);
-
-	/* mark the current thread as stuck to detect it upon next invocation
-	 * if it didn't move.
-	 */
-	if (!harmless &&
-	    !(_HA_ATOMIC_LOAD(&th_ctx->flags) & TH_FL_SLEEPING))
-		_HA_ATOMIC_OR(&th_ctx->flags, TH_FL_STUCK);
 }
 
 static int init_debug_per_thread()
