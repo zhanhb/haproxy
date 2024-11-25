@@ -1583,9 +1583,6 @@ int http_wait_for_response(struct stream *s, struct channel *rep, int an_bit)
 		return 0;
 	}
 
-	/* Now, L7 buffer is useless, it can be released */
-	b_free(&s->si[1].l7_buffer);
-
 	msg->msg_state = HTTP_MSG_BODY;
 
 
@@ -1769,6 +1766,9 @@ int http_wait_for_response(struct stream *s, struct channel *rep, int an_bit)
 	}
 
   end:
+	/* Now, L7 buffer is useless, it can be released */
+	b_free(&s->si[1].l7_buffer);
+
 	/* we want to have the response time before we start processing it */
 	s->logs.t_data = tv_ms_elapsed(&s->logs.tv_accept, &now);
 
