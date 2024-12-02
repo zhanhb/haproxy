@@ -529,6 +529,7 @@ int ssl_sock_load_pem_into_ckch(const char *path, char *buf, struct cert_key_and
 	dh = PEM_read_bio_DHparams(in, NULL, NULL, NULL);
 	/* no need to return an error there, dh is not mandatory */
 #endif
+	ERR_clear_error();
 
 	/* Seek back to beginning of file */
 	if (BIO_reset(in) == -1) {
