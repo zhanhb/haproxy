@@ -586,8 +586,8 @@ static int quic_test_sock_per_conn_support(struct listener *l)
 	 * operation.
 	 */
 #if !defined(IP_PKTINFO) && !defined(IP_RECVDSTADDR)
-	ha_alert("Your platform does not seem to support UDP source address retrieval through IP_PKTINFO or an alternative flag. "
-	         "QUIC connections will use listener socket.\n");
+	ha_diag_warning("Your platform does not seem to support UDP source address retrieval through IP_PKTINFO or an alternative flag. "
+			"QUIC connections will use listener socket.\n");
 	ret = 0;
 #endif
 
@@ -602,8 +602,8 @@ static int quic_test_sock_per_conn_support(struct listener *l)
 		if (fdtest >= 0) {
 			if (setsockopt(fdtest, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one)) &&
 			    bind(fdtest, (struct sockaddr *)&rx->addr, rx->proto->fam->sock_addrlen) < 0) {
-				ha_alert("Your platform does not seem to support multiple UDP sockets binded on the same address. "
-				         "QUIC connections will use listener socket.\n");
+				ha_diag_warning("Your platform does not seem to support multiple UDP sockets binded on the same address. "
+						"QUIC connections will use listener socket.\n");
 				ret = 0;
 			}
 
