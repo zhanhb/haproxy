@@ -1,6 +1,45 @@
 ChangeLog :
 ===========
 
+2024/12/12 : 2.9.13
+    - BUG/MINOR: cli: don't show sockpairs in HAPROXY_CLI and HAPROXY_MASTER_CLI
+    - BUG/MEDIUM: resolvers: Insert a non-executed resulution in front of the wait list
+    - BUG/MEDIUM: mux-h2: Don't send RST_STREAM frame for streams with no ID
+    - BUG/MINOR: Don't report early srv aborts on request forwarding in DONE state
+    - BUG/MEDIUM: checks: make sure to always apply offsets to now_ms in expiration
+    - BUG/MEDIUM: mailers: make sure to always apply offsets to now_ms in expiration
+    - BUG/MINOR: mux_quic: make sure to always apply offsets to now_ms in expiration
+    - BUG/MINOR: peers: make sure to always apply offsets to now_ms in expiration
+    - DOC: config: Fix a typo in "1.3.1. The Request line"
+    - BUG/MINOR: http_ana: Report -1 for %Tr for invalid response only
+    - DOC: config: Slightly improve the %Tr documentation
+    - DOC: config: Move wait_end in section about internal samples
+    - DOC: lua: fix yield-dependent methods expected contexts
+    - DOC: configuration: explain quotes and spaces in conditional blocks
+    - DOC: configuration: wrap long line for "strstr()" conditional expression
+    - BUG/MINOR: http-ana: Adjust the server status before the L7 retries
+    - BUG/MEDIUM: mux-h2: Increase max number of headers when encoding HEADERS frames
+    - BUG/MEDIUM: mux-h2: Check the number of headers in HEADERS frame after decoding
+    - BUG/MEDIUM: h3: Properly limit the number of headers received
+    - BUG/MEDIUM: h3: Increase max number of headers when sending headers
+    - DOC: config: Improve documentation of tune.http.maxhdr directive
+    - BUG/MEDIUM: debug: don't set the STUCK flag from debug_handler()
+    - BUG/MEDIUM: wdt: fix the stuck detection for warnings
+    - BUG/MINOR: activity/memprofile: reinitialize the free calls on DSO summary
+    - MINOR: activity/memprofile: offer a function to unregister stale info
+    - BUG/MEDIUM: pools/memprofile: always clean stale pool info on pool_destroy()
+    - BUG/MAJOR: mux-h1: Properly handle wrapping on obuf when dumping the first-line
+    - BUG/MAJOR: quic: fix wrong packet building due to already acked frames
+    - DEV: lags/show-sess-to-flags: Properly handle fd state on server side
+    - BUG/MEDIUM: http-ana: Don't release too early the L7 buffer
+    - BUG/MEDIUM: sock: Remove FD_POLL_HUP during connect() if FD_POLL_ERR is not set
+    - BUG/MEDIUM: event_hdl: fix uninitialized value in async mode when no data is provided
+    - BUG/MEDIUM: http-ana: Reset request flag about data sent to perform a L7 retry
+    - BUG/MINOR: h1-htx: Use default reason if not set when formatting the response
+    - BUG/MINOR: signal: register default handler for SIGINT in signal_init()
+    - BUG/MINOR: quic: remove startup alert if conn socket-owner unsupported
+    - BUG/MINOR: server-state: Fix expiration date of srvrq_check tasks
+
 2024/11/08 : 2.9.12
     - BUG/MINOR: h1: do not forward h2c upgrade header token
     - BUG/MINOR: h2: reject extended connect for h2c protocol
