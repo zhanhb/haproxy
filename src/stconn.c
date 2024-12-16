@@ -1137,15 +1137,14 @@ static void sc_notify(struct stconn *sc)
 		task_wakeup(task, TASK_WOKEN_IO);
 	}
 	else {
-		/* Update expiration date for the task and requeue it if not already expired */
+		/* Update expiration date for the task and requeue it if not already expired.
+		 * Only I/O timeouts are evaluated. The stream is responsible of others.
+		 */
 		if (!tick_is_expired(task->expire, now_ms)) {
 			task->expire = tick_first(task->expire, sc_ep_rcv_ex(sc));
 			task->expire = tick_first(task->expire, sc_ep_snd_ex(sc));
 			task->expire = tick_first(task->expire, sc_ep_rcv_ex(sco));
 			task->expire = tick_first(task->expire, sc_ep_snd_ex(sco));
-			task->expire = tick_first(task->expire, ic->analyse_exp);
-			task->expire = tick_first(task->expire, oc->analyse_exp);
-			task->expire = tick_first(task->expire, __sc_strm(sc)->conn_exp);
 
 			task_queue(task);
 		}
