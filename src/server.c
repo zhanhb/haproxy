@@ -4644,7 +4644,7 @@ static struct task *server_warmup(struct task *t, void *context, unsigned int st
 	server_recalc_eweight(s, 1);
 
 	/* probably that we can refill this server with a bit more connections */
-	pendconn_grab_from_px(s);
+	process_srv_queue(s);
 
 	HA_SPIN_UNLOCK(SERVER_LOCK, &s->lock);
 
@@ -5354,10 +5354,10 @@ static void srv_update_status(struct server *s)
 			    !(s->flags & SRV_F_BACKUP) && s->next_eweight)
 				srv_shutdown_backup_streams(s->proxy, SF_ERR_UP);
 
-			/* check if we can handle some connections queued at the proxy. We
-			 * will take as many as we can handle.
+			/* check if we can handle some connections queued.
+			 * We will take as many as we can handle.
 			 */
-			xferred = pendconn_grab_from_px(s);
+			process_srv_queue(s);
 
 			tmptrash = alloc_trash_chunk();
 			if (tmptrash) {
@@ -5558,10 +5558,10 @@ static void srv_update_status(struct server *s)
 		    !(s->flags & SRV_F_BACKUP) && s->next_eweight)
 			srv_shutdown_backup_streams(s->proxy, SF_ERR_UP);
 
-		/* check if we can handle some connections queued at the proxy. We
-		 * will take as many as we can handle.
+		/* check if we can handle some connections queued.
+		 * We will take as many as we can handle.
 		 */
-		xferred = pendconn_grab_from_px(s);
+		process_srv_queue(s);
 	}
 	else if (s->next_admin & SRV_ADMF_MAINT) {
 		/* remaining in maintenance mode, let's inform precisely about the
