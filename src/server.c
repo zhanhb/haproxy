@@ -5357,7 +5357,7 @@ static void srv_update_status(struct server *s)
 			/* check if we can handle some connections queued.
 			 * We will take as many as we can handle.
 			 */
-			process_srv_queue(s);
+			xferred = process_srv_queue(s);
 
 			tmptrash = alloc_trash_chunk();
 			if (tmptrash) {
@@ -5561,7 +5561,7 @@ static void srv_update_status(struct server *s)
 		/* check if we can handle some connections queued.
 		 * We will take as many as we can handle.
 		 */
-		process_srv_queue(s);
+		xferred = process_srv_queue(s);
 	}
 	else if (s->next_admin & SRV_ADMF_MAINT) {
 		/* remaining in maintenance mode, let's inform precisely about the
