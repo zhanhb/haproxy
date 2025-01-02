@@ -1588,7 +1588,7 @@ static int sc_conn_send(struct stconn *sc)
 		BUG_ON(sc_ep_test(sc, SE_FL_EOS|SE_FL_ERROR|SE_FL_ERR_PENDING) == (SE_FL_EOS|SE_FL_ERR_PENDING));
 		if (sc_ep_test(sc, SE_FL_ERROR))
 			sc->flags |= SC_FL_ERROR;
-		if (channel_is_empty(oc))
+		if (!channel_is_empty(oc))
 			sc_ep_report_blocked_send(sc, 0);
 		return 1;
 	}
