@@ -710,7 +710,14 @@ static struct qcs *qcc_init_stream_remote(struct qcc *qcc, uint64_t id)
 	return NULL;
 }
 
-struct stconn *qcs_attach_sc(struct qcs *qcs, struct buffer *buf, char fin)
+/* Instantiate a streamdesc instance for <qcs> stream. This is necessary to
+ * transfer data after a new request reception. <buf> can be used to forward
+ * the first received request data. <fin> must be set if the whole request is
+ * already received.
+ *
+ * Returns 0 on success else a negative error code.
+ */
+int qcs_attach_sc(struct qcs *qcs, struct buffer *buf, char fin)
 {
 	struct qcc *qcc = qcs->qcc;
 	struct session *sess = qcc->conn->owner;
@@ -720,7 +727,7 @@ struct stconn *qcs_attach_sc(struct qcs *qcs, struct buffer *buf, char fin)
 	sess->t_idle = ns_to_ms(now_ns - sess->accept_ts) - sess->t_handshake;
 
 	if (!sc_new_from_endp(qcs->sd, sess, buf))
-		return NULL;
+		return -1;
 
 	/* QC_SF_HREQ_RECV must be set once for a stream. Else, nb_hreq counter
 	 * will be incorrect for the connection.
@@ -764,7 +771,7 @@ struct stconn *qcs_attach_sc(struct qcs *qcs, struct buffer *buf, char fin)
 		se_fl_set_error(qcs->sd);
 	}
 
-	return qcs->sd->sc;
+	return 0;
 }
 
 /* Use this function for a stream <id> which is not in <qcc> stream tree. It
