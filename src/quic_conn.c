@@ -3079,6 +3079,23 @@ static int qc_parse_pkt_frms(struct quic_conn *qc, struct quic_rx_packet *pkt,
 			if (!qc_handle_crypto_frm(qc, &frm.crypto, pkt, qel, &fast_retrans))
 				goto leave;
 			break;
+		case QUIC_FT_NEW_TOKEN:
+			if (qc_is_listener(qc)) {
+				TRACE_ERROR("reject NEW_TOKEN frame emitted by client",
+					    QUIC_EV_CONN_PRSHPKT, qc);
+
+				/* RFC 9000 19.7. NEW_TOKEN Frames
+				 * Clients MUST NOT send NEW_TOKEN frames. A server MUST treat receipt
+				 * of a NEW_TOKEN frame as a connection error of type
+				 * PROTOCOL_VIOLATION.
+				 */
+				quic_set_connection_close(qc, quic_err_transport(QC_ERR_PROTOCOL_VIOLATION));
+				goto leave;
+			}
+			else {
+				/* TODO */
+			}
+			break;
 		case QUIC_FT_STREAM_8 ... QUIC_FT_STREAM_F:
 		{
 			struct quic_stream *stream = &frm.stream;
