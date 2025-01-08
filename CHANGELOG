@@ -1,6 +1,64 @@
 ChangeLog :
 ===========
 
+2025/01/08 : 3.1.2
+    - MINOR: window_filter: rely on the time to update the filter samples (QUIC/BBR)
+    - BUG/MINOR: quic: wrong logical statement in in_recovery_period() (BBR)
+    - BUG/MINOR: quic: fix BBB max bandwidth oscillation issue.
+    - BUG/MINOR: quic: wrong bbr_target_inflight() implementation
+    - BUG/MINOR: quic: remove max_bw filter from delivery rate sampling
+    - BUG/MINOR: quic: underflow issue for bbr_inflight_hi_from_lost_packet()
+    - BUG/MINOR: quic: reduce packet losses at least during ProbeBW_CRUISE (BBR)
+    - MINOR: quic: reduce the private data size of QUIC cc algos
+    - CLEANUP: quic: remove a wrong comment about ->app_limited (drs)
+    - BUG/MINOR: quic: fix the wrong tracked recovery start time value
+    - BUG/MINOR: quic: too permissive exit condition for high loss detection in Startup (BBR)
+    - BUG/MINOR: cli: cli_snd_buf: preserve \r\n for payload lines
+    - REGTESTS: ssl: add a PEM with mix of LF and CRLF line endings
+    - BUG/MINOR: quic: missing Startup accelerating probing bw states
+    - CLEANUP: quic: Rename some BBR functions in relation with bw probing
+    - BUG/MEDIUM: stconn: Only consider I/O timers to update stream's expiration date
+    - BUG/MEDIUM: queues: Make sure we call process_srv_queue() when leaving
+    - BUG/MEDIUM: queues: Do not use pendconn_grab_from_px().
+    - BUILD: debug: only dump/reset glitch counters when really defined
+    - BUG/MEDIUM: mux-quic: do not mix qcc_io_send() return codes with pacing
+    - CLEANUP: mux-quic: remove unused qcc member send_retry_list
+    - MINOR: quic: add traces
+    - MINOR: mux-quic: refactor wait-for-handshake support
+    - MEDIUM/OPTIM: mux-quic: define a recv_list for demux resumption
+    - MEDIUM/OPTIM: mux-quic: implement purg_list
+    - MINOR: mux-quic: extract code to build STREAM frames list
+    - MINOR: mux-quic: split STREAM and RS/SS emission
+    - MEDIUM/OPTIM: mux-quic: do not rebuild frms list on every send
+    - MEDIUM: mux-quic: remove pacing specific code on qcc_io_cb
+    - MINOR: trace: implement tracing disabling API
+    - MINOR: mux-quic: hide traces when woken up on pacing only
+    - DOC: config: add example for server "track" keyword
+    - DOC: config: reorder "tune.lua.*" keywords by alphabetical order
+    - DOC: config: add "tune.lua.burst-timeout" to the list of global parameters
+    - MINOR: hlua: add option to preserve bool type from smp to lua
+    - REGTESTS: fix lua-based regtests using tune.lua.smp-preserve-bool
+    - BUG/MEDIUM: mux-quic: prevent BUG_ON() by refreshing frms on MAX_DATA
+    - CLEANUP: mux-quic: remove dead err label in qcc_build_frms()
+    - BUG/MINOR: h2/rhttp: fix HTTP2 conn counters on reverse
+    - MINOR: hlua: rename "tune.lua.preserve-smp-bool" to "tune.lua.bool-sample-conversion"
+    - BUG/MEDIUM: queue: Make process_srv_queue return the number of streams
+    - BUG/MINOR: stats: fix segfault caused by uninitialized value in "show schema json"
+    - DOC: config: add missing "track-sc0" in action keywords matrix
+    - BUG/MAJOR: mux-quic: fix BUG_ON on empty STREAM emission
+    - BUG/MEDIUM: mux-h2: Count copied data when looping on RX bufs in h2_rcv_buf()
+    - Revert "BUG/MAJOR: mux-quic: fix BUG_ON on empty STREAM emission"
+    - BUG/MAJOR: mux-quic: properly fix BUG_ON on empty STREAM emission
+    - BUG/MEDIUM: mux-quic: do not attach on already closed stream
+    - BUG/MINOR: log: Allow to use if/unless conditionnals for do-log action
+    - MINOR: config: Alert about extra arguments for errorfile and errorloc
+    - BUG/MINOR: mux-quic: fix wakeup on qcc_set_error()
+    - MINOR: mux-quic: add traces on sd attach
+    - MINOR: mux-quic: change return value of qcs_attach_sc()
+    - BUG/MINOR: mux-quic: handle closure of uni-stream
+    - BUG/MEDIUM: promex/resolvers: Don't dump metrics if no nameserver is defined
+    - BUG/MEDIUM: h1-htx: Properly handle bodyless messages
+
 2024/12/11 : 3.1.1
     - BUG/MEDIUM: sock: Remove FD_POLL_HUP during connect() if FD_POLL_ERR is not set
     - MINOR: proxy: Add support of 421-Misdirected-Request in retry-on status
