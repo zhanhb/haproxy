@@ -87,8 +87,10 @@ static void quic_cc_nr_ss_cb(struct quic_cc *cc, struct quic_cc_event *ev)
 	path = container_of(cc, struct quic_path, cc);
 	switch (ev->type) {
 	case QUIC_CC_EVT_ACK:
-		path->cwnd += ev->ack.acked;
-		path->mcwnd = QUIC_MAX(path->cwnd, path->mcwnd);
+		if (quic_cwnd_may_increase(path)) {
+			path->cwnd += ev->ack.acked;
+			path->mcwnd = QUIC_MAX(path->cwnd, path->mcwnd);
+		}
 		/* Exit to congestion avoidance if slow start threshold is reached. */
 		if (path->cwnd > nr->ssthresh)
 			nr->state = QUIC_CC_ST_CA;
@@ -124,8 +126,10 @@ static void quic_cc_nr_ca_cb(struct quic_cc *cc, struct quic_cc_event *ev)
 		 */
 		acked = ev->ack.acked * path->mtu + nr->remain_acked;
 		nr->remain_acked = acked % path->cwnd;
-		path->cwnd += acked / path->cwnd;
-		path->mcwnd = QUIC_MAX(path->cwnd, path->mcwnd);
+		if (quic_cwnd_may_increase(path)) {
+			path->cwnd += acked / path->cwnd;
+			path->mcwnd = QUIC_MAX(path->cwnd, path->mcwnd);
+		}
 		break;
 	}
 

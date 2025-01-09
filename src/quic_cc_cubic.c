@@ -371,8 +371,10 @@ static inline void quic_cubic_update(struct quic_cc *cc, uint32_t acked)
 			inc = W_est_inc;
 	}
 
-	path->cwnd += inc;
-	path->mcwnd = QUIC_MAX(path->cwnd, path->mcwnd);
+	if (quic_cwnd_may_increase(path)) {
+		path->cwnd += inc;
+		path->mcwnd = QUIC_MAX(path->cwnd, path->mcwnd);
+	}
  leave:
 	TRACE_LEAVE(QUIC_EV_CONN_CC, cc->qc);
 }
@@ -434,8 +436,11 @@ static void quic_cc_cubic_ss_cb(struct quic_cc *cc, struct quic_cc_event *ev)
 	TRACE_PROTO("CC cubic", QUIC_EV_CONN_CC, cc->qc, ev);
 	switch (ev->type) {
 	case QUIC_CC_EVT_ACK:
-		if (path->cwnd < QUIC_CC_INFINITE_SSTHESH - ev->ack.acked)
-			path->cwnd += ev->ack.acked;
+		if (path->cwnd < QUIC_CC_INFINITE_SSTHESH - ev->ack.acked) {
+			if (quic_cwnd_may_increase(path)) {
+				path->cwnd += ev->ack.acked;
+			}
+		}
 		/* Exit to congestion avoidance if slow start threshold is reached. */
 		if (path->cwnd >= c->ssthresh)
 			c->state = QUIC_CC_ST_CA;

@@ -2136,7 +2136,6 @@ static inline void qc_treat_newly_acked_pkts(struct quic_conn *qc,
 	list_for_each_entry_safe(pkt, tmp, newly_acked_pkts, list) {
 		pkt->pktns->tx.in_flight -= pkt->in_flight_len;
 		qc->path->prep_in_flight -= pkt->in_flight_len;
-		qc->path->in_flight -= pkt->in_flight_len;
 		if (pkt->flags & QUIC_FL_TX_PACKET_ACK_ELICITING)
 			qc->path->ifae_pkts--;
 		/* If this packet contained an ACK frame, proceed to the
@@ -2148,6 +2147,7 @@ static inline void qc_treat_newly_acked_pkts(struct quic_conn *qc,
 		ev.ack.acked = pkt->in_flight_len;
 		ev.ack.time_sent = pkt->time_sent;
 		quic_cc_event(&qc->path->cc, &ev);
+		qc->path->in_flight -= pkt->in_flight_len;
 		LIST_DEL_INIT(&pkt->list);
 		quic_tx_packet_refdec(pkt);
 	}
