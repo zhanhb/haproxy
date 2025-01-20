@@ -73,7 +73,9 @@ static inline void *quic_cc_priv(const struct quic_cc *cc)
 	return (void *)cc->priv;
 }
 
-int quic_cwnd_may_increase(const struct quic_path *path);
+void quic_cc_path_reset(struct quic_path *path);
+void quic_cc_path_set(struct quic_path *path, uint64_t val);
+void quic_cc_path_inc(struct quic_path *path, uint64_t val);
 
 #endif /* USE_QUIC */
 #endif /* _PROTO_QUIC_CC_H */
