@@ -2927,6 +2927,7 @@ static int qc_handle_crypto_frm(struct quic_conn *qc,
 	};
 	struct quic_cstream *cstream = qel->cstream;
 	struct ncbuf *ncbuf = &qel->cstream->rx.ncbuf;
+	uint64_t off_rel;
 
 	TRACE_ENTER(QUIC_EV_CONN_PRSHPKT, qc);
 	if (unlikely(qel->tls_ctx.flags & QUIC_FL_TLS_SECRETS_DCD)) {
@@ -2976,8 +2977,24 @@ static int qc_handle_crypto_frm(struct quic_conn *qc,
 	}
 
 	/* frm->offset > cstream-trx.offset */
-	ncb_ret = ncb_add(ncbuf, frm->offset - cstream->rx.offset,
-	                  (const char *)frm->data, frm->len, NCB_ADD_COMPARE);
+	off_rel = frm->offset - cstream->rx.offset;
+
+	/* RFC 9000 7.5. Cryptographic Message Buffering
+	 *
+	 * Being unable to buffer CRYPTO frames during the handshake can lead to
+	 * a connection failure. If an endpoint's buffer is exceeded during the
+	 * handshake, it can expand its buffer temporarily to complete the
+	 * handshake. If an endpoint does not expand its buffer, it MUST close
+	 * the connection with a CRYPTO_BUFFER_EXCEEDED error code.
+	 */
+	if (off_rel + frm->len > ncb_size(ncbuf)) {
+		TRACE_ERROR("CRYPTO frame too large", QUIC_EV_CONN_PRSHPKT, qc);
+		quic_set_connection_close(qc, quic_err_transport(QC_ERR_CRYPTO_BUFFER_EXCEEDED));
+		goto leave;
+	}
+
+	ncb_ret = ncb_add(ncbuf, off_rel, (const char *)frm->data,
+			  frm->len, NCB_ADD_COMPARE);
 	if (ncb_ret != NCB_RET_OK) {
 		if (ncb_ret == NCB_RET_DATA_REJ) {
 			TRACE_ERROR("overlapping data rejected", QUIC_EV_CONN_PRSHPKT, qc);
