@@ -226,4 +226,3 @@ void qc_packet_loss_lookup(struct quic_pktns *pktns, struct quic_conn *qc,
  out:
 	TRACE_LEAVE(QUIC_EV_CONN_PKTLOSS, qc, pktns, lost_pkts);
 }
-
