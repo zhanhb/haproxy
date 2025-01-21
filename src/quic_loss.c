@@ -228,4 +228,3 @@ void qc_packet_loss_lookup(struct quic_pktns *pktns, struct quic_conn *qc,
 	TRACE_PROTO("TX loss", QUIC_EV_CONN_PKTLOSS, qc, pktns, lost_pkts);
 	TRACE_LEAVE(QUIC_EV_CONN_PKTLOSS, qc);
 }
-
