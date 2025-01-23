@@ -518,9 +518,10 @@ struct quic_path {
 	size_t mtu;
 	/* Congestion window. */
 	uint64_t cwnd;
-	uint64_t mcwnd;
-	/* Minimum congestion window. */
-	uint64_t min_cwnd;
+	/* The current maximum congestion window value reached. */
+	uint64_t cwnd_last_max;
+	/* Min limit on congestion window size. */
+	uint64_t limit_min;
 	/* Prepared data to be sent (in bytes). */
 	uint64_t prep_in_flight;
 	/* Outstanding data (in bytes). */

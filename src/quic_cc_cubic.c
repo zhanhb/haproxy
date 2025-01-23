@@ -373,7 +373,7 @@ static inline void quic_cubic_update(struct quic_cc *cc, uint32_t acked)
 
 	if (quic_cwnd_may_increase(path)) {
 		path->cwnd += inc;
-		path->mcwnd = QUIC_MAX(path->cwnd, path->mcwnd);
+		path->cwnd_last_max = QUIC_MAX(path->cwnd, path->cwnd_last_max);
 	}
  leave:
 	TRACE_LEAVE(QUIC_EV_CONN_CC, cc->qc);
@@ -421,7 +421,7 @@ static void quic_enter_recovery(struct quic_cc *cc)
 	}
 
 	c->ssthresh = (CUBIC_BETA_SCALED * path->cwnd) >> CUBIC_SCALE_FACTOR_SHIFT;
-	path->cwnd =  QUIC_MAX(c->ssthresh, (uint32_t)path->min_cwnd);
+	path->cwnd =  QUIC_MAX(c->ssthresh, (uint32_t)path->limit_min);
 	c->state = QUIC_CC_ST_RP;
 	TRACE_LEAVE(QUIC_EV_CONN_CC, cc->qc, NULL, cc);
 }
@@ -444,7 +444,7 @@ static void quic_cc_cubic_ss_cb(struct quic_cc *cc, struct quic_cc_event *ev)
 		/* Exit to congestion avoidance if slow start threshold is reached. */
 		if (path->cwnd >= c->ssthresh)
 			c->state = QUIC_CC_ST_CA;
-		path->mcwnd = QUIC_MAX(path->cwnd, path->mcwnd);
+		path->cwnd_last_max = QUIC_MAX(path->cwnd, path->cwnd_last_max);
 		break;
 
 	case QUIC_CC_EVT_LOSS:
@@ -537,10 +537,10 @@ static void quic_cc_cubic_state_trace(struct buffer *buf, const struct quic_cc *
 	struct cubic *c = quic_cc_priv(cc);
 
 	path = container_of(cc, struct quic_path, cc);
-	chunk_appendf(buf, " state=%s cwnd=%llu mcwnd=%llu ssthresh=%d rpst=%dms",
+	chunk_appendf(buf, " state=%s cwnd=%llu cwnd_last_max=%llu ssthresh=%d rpst=%dms",
 	              quic_cc_state_str(c->state),
 	              (unsigned long long)path->cwnd,
-	              (unsigned long long)path->mcwnd,
+	              (unsigned long long)path->cwnd_last_max,
 	              (int)c->ssthresh,
 	              !tick_isset(c->recovery_start_time) ? -1 :
 	              TICKS_TO_MS(tick_remain(c->recovery_start_time, now_ms)));
