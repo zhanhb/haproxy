@@ -1657,6 +1657,7 @@ static void stream_cond_update_cpu_usage(struct stream *s)
  *  - TASK_WOKEN_MSG forces analysers to be re-evaluated
  *  - TASK_WOKEN_OTHER+TASK_F_UEVT1 shuts the stream down on server down
  *  - TASK_WOKEN_OTHER+TASK_F_UEVT2 shuts the stream down on active kill
+ *  - TASK_WOKEN_OTHER+TASK_F_UEVT3 shuts the stream down because a preferred backend became available
  *  - TASK_WOKEN_OTHER alone has no effect
  */
 struct task *process_stream(struct task *t, void *context, unsigned int state)
@@ -1676,9 +1677,9 @@ struct task *process_stream(struct task *t, void *context, unsigned int state)
 
 	activity[tid].stream_calls++;
 
-	if ((state & TASK_WOKEN_OTHER) && (state & (TASK_F_UEVT1 | TASK_F_UEVT2))) {
+	if ((state & TASK_WOKEN_OTHER) && (state & (TASK_F_UEVT1 | TASK_F_UEVT2 | TASK_F_UEVT3))) {
 		/* that an instant kill message, the reason is in _UEVT* */
-		stream_shutdown_self(s, (state & TASK_F_UEVT2) ? SF_ERR_KILLED : SF_ERR_DOWN);
+		stream_shutdown_self(s, (state & TASK_F_UEVT3) ? SF_ERR_UP : (state & TASK_F_UEVT2) ? SF_ERR_KILLED : SF_ERR_DOWN);
 	}
 
 	req = &s->req;
