@@ -1,6 +1,25 @@
 ChangeLog :
 ===========
 
+2025/01/29 : 3.1.3
+    - BUG/MINOR: stktable: fix big-endian compatiblity in smp_to_stkey()
+    - BUG/MINOR: quic: reject NEW_TOKEN frames from clients
+    - BUG/MEDIUM: stktable: fix missing lock on some table converters
+    - BUG/MEDIUM: promex: Use right context pointers to dump backends extra-counters
+    - BUG/MAJOR: quic: reject too large CRYPTO frames
+    - BUG/MAJOR: log/sink: possible sink collision in sink_new_from_srv()
+    - BUG/MINOR: init: set HAPROXY_STARTUP_VERSION from the variable, not the macro
+    - BUG/MINOR: quic: ensure a detached coalesced packet can't access its neighbours
+    - MINOR: quic: Add a BUG_ON() on quic_tx_packet refcount
+    - BUILD: quic: Move an ASSUME_NONNULL() for variable which is not null
+    - BUG/MEDIUM: mux-h1: Properly close H1C if an error is reported before sending data
+    - BUG/MINOR: quic: do not increase congestion window if app limited
+    - BUG/MINOR: ssl: put ssl_sock_load_ca under SSL_NO_GENERATE_CERTIFICATES
+    - BUG/MINOR: stream: Properly handle "on-marked-up shutdown-backup-sessions"
+    - CLEANUP: quic: remove unused prototype
+    - BUILD: ssl: allow to build without the renegotiation API of WolfSSL
+    - BUILD: ssl: more cleaner approach to WolfSSL without renegotiation
+
 2025/01/08 : 3.1.2
     - MINOR: window_filter: rely on the time to update the filter samples (QUIC/BBR)
     - BUG/MINOR: quic: wrong logical statement in in_recovery_period() (BBR)
