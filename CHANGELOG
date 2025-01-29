@@ -1,6 +1,63 @@
 ChangeLog :
 ===========
 
+2025/01/29 : 3.0.8
+    - BUG/MEDIUM: stconn: Don't forward shut for SC in connecting state
+    - BUG/MINOR: stats: decrement srv refcount on stats-file release
+    - MINOR: list: define a watcher type
+    - BUG/MEDIUM: stats/server: use watcher to track server during stats dump
+    - BUG/MEDIUM: clock: make sure now_ms cannot be TICK_ETERNITY
+    - BUG/MINOR: cli: cli_snd_buf: preserve \r\n for payload lines
+    - REGTESTS: ssl: add a PEM with mix of LF and CRLF line endings
+    - BUG/MEDIUM: stconn: Only consider I/O timers to update stream's expiration date
+    - BUG/MEDIUM: queues: Make sure we call process_srv_queue() when leaving
+    - BUG/MEDIUM: queues: Do not use pendconn_grab_from_px().
+    - DOC: config: add example for server "track" keyword
+    - DOC: config: reorder "tune.lua.*" keywords by alphabetical order
+    - DOC: config: add "tune.lua.burst-timeout" to the list of global parameters
+    - BUG/MINOR: h2/rhttp: fix HTTP2 conn counters on reverse
+    - BUG/MEDIUM: queue: Make process_srv_queue return the number of streams
+    - BUG/MINOR: stats: fix segfault caused by uninitialized value in "show schema json"
+    - DOC: config: add missing "track-sc0" in action keywords matrix
+    - MINOR: config: Alert about extra arguments for errorfile and errorloc
+    - BUG/MEDIUM: promex/resolvers: Don't dump metrics if no nameserver is defined
+    - BUG/MEDIUM: h1-htx: Properly handle bodyless messages
+    - MINOR: stconn: add a new pair of sf functions {bs,fs}.debug_str
+    - MINOR: mux-h2: implement the debug string for logs
+    - MINOR: mux-quic: define dump functions for QCC and QCS
+    - MINOR: mux-quic: implement debug string for logs
+    - MINOR: quic: dump quic_conn debug string for logs
+    - MINOR: time: define tot_time structure
+    - MINOR: mux-quic: measure QCS lifetime and its blocking state
+    - MINOR: mux-h1: Add support of the debug string for logs
+    - MINOR: sample: add the "when" converter to condition some expressions
+    - MINOR: arg: add an argument type for identifier
+    - MINOR: acl: export find_acl_default()
+    - MINOR: sample: extend the "when" converter to support an ACL
+    - CLEANUP: debug: make the BUG_ON() macros check the condition in the outer one
+    - MEDIUM: debug: add match counters for BUG_ON/WARN_ON/CHECK_IF
+    - MINOR: debug: add a new debug macro COUNT_IF()
+    - MINOR: debug: add "debug dev counters" to list code counters
+    - MINOR: debug/cli: replace "debug dev counters" with "debug counters"
+    - DEV: sock: Add a debug counter to track strange flag on fd during connect()
+    - MINOR: activity/memprofile: also monitor strdup() activity
+    - MINOR: activity/memprofile: monitor non-portable calls as well
+    - BUILD: activity/memprofile: fix a build warning in the posix_memalign handler
+    - BUG/MINOR: stktable: fix big-endian compatiblity in smp_to_stkey()
+    - BUG/MINOR: quic: reject NEW_TOKEN frames from clients
+    - BUG/MEDIUM: stktable: fix missing lock on some table converters
+    - BUG/MEDIUM: promex: Use right context pointers to dump backends extra-counters
+    - BUG/MAJOR: quic: reject too large CRYPTO frames
+    - BUG/MAJOR: log/sink: possible sink collision in sink_new_from_srv()
+    - BUG/MINOR: init: set HAPROXY_STARTUP_VERSION from the variable, not the macro
+    - BUG/MINOR: quic: ensure a detached coalesced packet can't access its neighbours
+    - MINOR: quic: Add a BUG_ON() on quic_tx_packet refcount
+    - BUILD: quic: Move an ASSUME_NONNULL() for variable which is not null
+    - BUG/MEDIUM: mux-h1: Properly close H1C if an error is reported before sending data
+    - BUG/MINOR: quic: do not increase congestion window if app limited
+    - BUG/MINOR: ssl: put ssl_sock_load_ca under SSL_NO_GENERATE_CERTIFICATES
+    - BUG/MINOR: stream: Properly handle "on-marked-up shutdown-backup-sessions"
+
 2024/12/12 : 3.0.7
     - BUG/MEDIUM: pattern: prevent uninitialized reads in pat_match_{str,beg}
     - MINOR: quic: notify connection layer on handshake completion
