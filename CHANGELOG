@@ -1,6 +1,43 @@
 ChangeLog :
 ===========
 
+2025/01/29 : 2.9.14
+    - BUG/MEDIUM: pattern: prevent uninitialized reads in pat_match_{str,beg}
+    - MINOR: quic: notify connection layer on handshake completion
+    - BUG/MINOR: stream: unblock stream on wait-for-handshake completion
+    - BUG/MEDIUM: quic: support wait-for-handshake
+    - MINOR: quic: simplify qc_parse_pkt_frms() return path
+    - MINOR: quic: use dynamically allocated frame on parsing
+    - MINOR: quic: extend return value of CRYPTO parsing
+    - BUG/MINOR: quic: repeat packet parsing to deal with fragmented CRYPTO
+    - BUG/MEDIUM: quic: prevent crash due to CRYPTO parsing error
+    - BUG/MEDIUM: stconn: Don't forward shut for SC in connecting state
+    - BUG/MEDIUM: clock: make sure now_ms cannot be TICK_ETERNITY
+    - BUG/MEDIUM: stconn: Only consider I/O timers to update stream's expiration date
+    - BUG/MEDIUM: queues: Make sure we call process_srv_queue() when leaving
+    - BUG/MEDIUM: queues: Do not use pendconn_grab_from_px().
+    - DOC: config: add example for server "track" keyword
+    - DOC: config: reorder "tune.lua.*" keywords by alphabetical order
+    - DOC: config: add "tune.lua.burst-timeout" to the list of global parameters
+    - BUG/MINOR: h2/rhttp: fix HTTP2 conn counters on reverse
+    - BUG/MEDIUM: queue: Make process_srv_queue return the number of streams
+    - DOC: config: add missing "track-sc0" in action keywords matrix
+    - MINOR: config: Alert about extra arguments for errorfile and errorloc
+    - BUG/MEDIUM: h1-htx: Properly handle bodyless messages
+    - BUG/MINOR: stktable: fix big-endian compatiblity in smp_to_stkey()
+    - BUG/MINOR: quic: reject NEW_TOKEN frames from clients
+    - BUG/MEDIUM: stktable: fix missing lock on some table converters
+    - BUG/MAJOR: quic: reject too large CRYPTO frames
+    - BUG/MAJOR: log/sink: possible sink collision in sink_new_from_srv()
+    - BUG/MINOR: init: set HAPROXY_STARTUP_VERSION from the variable, not the macro
+    - BUG/MINOR: quic: ensure a detached coalesced packet can't access its neighbours
+    - MINOR: quic: Add a BUG_ON() on quic_tx_packet refcount
+    - BUILD: quic: Move an ASSUME_NONNULL() for variable which is not null
+    - BUG/MEDIUM: mux-h1: Properly close H1C if an error is reported before sending data
+    - BUG/MINOR: quic: do not increase congestion window if app limited
+    - BUG/MINOR: ssl: put ssl_sock_load_ca under SSL_NO_GENERATE_CERTIFICATES
+    - BUG/MINOR: stream: Properly handle "on-marked-up shutdown-backup-sessions"
+
 2024/12/12 : 2.9.13
     - BUG/MINOR: cli: don't show sockpairs in HAPROXY_CLI and HAPROXY_MASTER_CLI
     - BUG/MEDIUM: resolvers: Insert a non-executed resulution in front of the wait list
