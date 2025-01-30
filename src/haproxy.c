@@ -109,6 +109,7 @@
 #include <haproxy/proto_sockpair.h>
 #include <haproxy/proto_tcp.h>
 #include <haproxy/proxy.h>
+#include <haproxy/quic_tune.h>
 #include <haproxy/regex.h>
 #include <haproxy/sample.h>
 #include <haproxy/server.h>
@@ -1395,7 +1396,7 @@ static void init_args(int argc, char **argv)
 #endif
 #ifdef USE_QUIC
 	global.tune.options |= GTUNE_QUIC_SOCK_PER_CONN;
-	global.tune.options |= GTUNE_QUIC_NO_PACING;
+	quic_tune.options |= QUIC_TUNE_NO_PACING;
 #endif
 	global.tune.options |= GTUNE_STRICT_LIMITS;
 

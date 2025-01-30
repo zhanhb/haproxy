@@ -411,10 +411,10 @@ static int cfg_parse_quic_tune_on_off(char **args, int section_type, struct prox
 				          "'expose-experimental-directives'\n", args[0]);
 				return -1;
 			}
-			global.tune.options &= ~GTUNE_QUIC_NO_PACING;
+			quic_tune.options &= ~QUIC_TUNE_NO_PACING;
 		}
 		else
-			global.tune.options |= GTUNE_QUIC_NO_PACING;
+			quic_tune.options |= QUIC_TUNE_NO_PACING;
 	}
 
 	return 0;
