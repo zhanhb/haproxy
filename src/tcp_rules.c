@@ -363,7 +363,6 @@ resume_execution:
 							s->last_rule_line = rule->conf.line;
 							goto internal;
 						}
-						channel_dont_close(rep);
 						goto missing_data;
 					case ACT_RET_DENY:
 						s->last_rule_file = rule->conf.file;
@@ -425,6 +424,7 @@ resume_execution:
 
  missing_data:
 	/* just set the analyser timeout once at the beginning of the response */
+	channel_dont_close(rep);
 	if (!tick_isset(s->rules_exp) && s->be->tcp_rep.inspect_delay)
 		s->rules_exp = tick_add(now_ms, s->be->tcp_rep.inspect_delay);
 	rep->analyse_exp = tick_first((tick_is_expired(rep->analyse_exp, now_ms) ? 0 : rep->analyse_exp), s->rules_exp);
