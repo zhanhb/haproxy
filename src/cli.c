@@ -2399,7 +2399,7 @@ static int _getsocks(char **args, char *payload, struct appctx *appctx, void *pr
 			iov.iov_len = curoff;
 			if (sendmsg(fd, &msghdr, 0) != curoff) {
 				ha_warning("Failed to transfer sockets\n");
-				return -1;
+				goto out;
 			}
 
 			/* Wait for an ack */
@@ -2409,7 +2409,7 @@ static int _getsocks(char **args, char *payload, struct appctx *appctx, void *pr
 
 			if (ret <= 0) {
 				ha_warning("Unexpected error while transferring sockets\n");
-				return -1;
+				goto out;
 			}
 			curoff = 0;
 			nb_queued = 0;
