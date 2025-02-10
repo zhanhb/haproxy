@@ -3013,6 +3013,9 @@ void run_poll_loop()
 		/* Process a few tasks */
 		process_runnable_tasks();
 
+		/* If this happens this is an accidental leak */
+		BUG_ON(HA_ATOMIC_LOAD(&th_ctx->flags) & TH_FL_DUMPING_OTHERS);
+
 		/* also stop  if we failed to cleanly stop all tasks */
 		if (killed > 1)
 			break;
