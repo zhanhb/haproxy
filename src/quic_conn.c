@@ -8208,7 +8208,7 @@ static int qc_do_build_pkt(unsigned char *pos, const unsigned char *end,
                            const struct quic_version *ver, struct list *frms)
 {
 	unsigned char *beg, *payload;
-	size_t len, len_sz, len_frms, padding_len;
+	size_t len, len_sz = 0, len_frms, padding_len;
 	struct quic_frame frm = { .type = QUIC_FT_CRYPTO, };
 	struct quic_frame ack_frm = { .type = QUIC_FT_ACK, };
 	struct quic_frame cc_frm = { };
@@ -8263,6 +8263,17 @@ static int qc_do_build_pkt(unsigned char *pos, const unsigned char *end,
 	}
 
 	head_len = pos - beg;
+
+	if (pkt->type != QUIC_PACKET_TYPE_SHORT) {
+		/* Reserve enough bytes for packet length. Real value will be
+		 * recalculated later after payload length is determined.
+		 */
+		len_sz = quic_int_getsize(end - pos);
+		if (end - pos <= len_sz)
+			goto no_room;
+		pos += len_sz;
+	}
+
 	/* Build an ACK frame if required. */
 	ack_frm_len = 0;
 	/* Do not ack and probe at the same time. */
@@ -8349,9 +8360,16 @@ comp_pkt_len:
 	}
 	add_ping_frm = 0;
 	padding_len = 0;
-	len_sz = quic_int_getsize(len);
 	/* Add this packet size to <dglen> */
-	dglen += head_len + len_sz + len;
+	dglen += head_len + len;
+
+	if (pkt->type != QUIC_PACKET_TYPE_SHORT) {
+		/* Remove reserved space for packet length. */
+		pos -= len_sz;
+		len_sz = quic_int_getsize(len);
+		dglen += len_sz;
+	}
+
 	/* Note that <padding> is true only when building an Handshake packet
 	 * coalesced to an Initial packet.
 	 */
