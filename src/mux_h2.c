@@ -6175,6 +6175,8 @@ static size_t h2s_snd_fhdrs(struct h2s *h2s, struct htx *htx)
 			BUG_ON(sl); /* Only one start-line expected */
 			sl = htx_get_blk_ptr(htx, blk);
 			h2s->status = sl->info.res.status;
+			if (sl->flags & HTX_SL_F_XFER_LEN)
+				h2s->flags |= H2_SF_MORE_HTX_DATA;
 			if ((sl->flags & HTX_SL_F_BODYLESS_RESP) || h2s->status == 204 || h2s->status == 304)
 				h2s->flags |= H2_SF_BODYLESS_RESP;
 			if (h2s->status < 100 || h2s->status > 999) {
@@ -6335,6 +6337,7 @@ static size_t h2s_snd_fhdrs(struct h2s *h2s, struct htx *htx)
 		/* EOM+empty: we may need to add END_STREAM except for 1xx
 		 * responses and tunneled response.
 		 */
+		h2s->flags &= ~H2_SF_MORE_HTX_DATA;
 		if (!(h2s->flags & H2_SF_BODY_TUNNEL) || h2s->status >= 300)
 			es_now = 1;
 	}
@@ -6494,6 +6497,8 @@ static size_t h2s_snd_bhdrs(struct h2s *h2s, struct htx *htx)
 			sl = htx_get_blk_ptr(htx, blk);
 			meth = htx_sl_req_meth(sl);
 			uri  = htx_sl_req_uri(sl);
+			if (sl->flags & HTX_SL_F_XFER_LEN)
+				h2s->flags |= H2_SF_MORE_HTX_DATA;
 			if ((sl->flags & HTX_SL_F_BODYLESS_RESP) || sl->info.req.meth == HTTP_METH_HEAD)
 				h2s->flags |= H2_SF_BODYLESS_RESP;
 			if (unlikely(uri.len == 0)) {
@@ -6762,6 +6767,7 @@ static size_t h2s_snd_bhdrs(struct h2s *h2s, struct htx *htx)
 		/* EOM+empty: we may need to add END_STREAM (except for CONNECT
 		 * request)
 		 */
+		h2s->flags &= ~H2_SF_MORE_HTX_DATA;
 		if (!(h2s->flags & H2_SF_BODY_TUNNEL))
 			es_now = 1;
 	}
@@ -6932,6 +6938,7 @@ static size_t h2s_make_data(struct h2s *h2s, struct buffer *buf, size_t count)
 			/* EOM+empty: we may need to add END_STREAM (except for tunneled
 			 * message)
 			 */
+			h2s->flags &= ~H2_SF_MORE_HTX_DATA;
 			if (!(h2s->flags & H2_SF_BODY_TUNNEL))
 				es_now = 1;
 		}
@@ -7068,6 +7075,7 @@ static size_t h2s_make_data(struct h2s *h2s, struct buffer *buf, size_t count)
 			/* EOM+empty: we may need to add END_STREAM (except for tunneled
 			 * message)
 			 */
+			h2s->flags &= ~H2_SF_MORE_HTX_DATA;
 			if (!(h2s->flags & H2_SF_BODY_TUNNEL))
 				es_now = 1;
 		}
@@ -7150,6 +7158,7 @@ static size_t h2s_skip_data(struct h2s *h2s, struct buffer *buf, size_t count)
 	if (!(htx->flags & HTX_FL_EOM) || !htx_is_unique_blk(htx, blk))
 		goto skip_data;
 
+	h2s->flags &= ~H2_SF_MORE_HTX_DATA;
 	/* Here, it is the last block and it is also the end of the message. So
 	 * we can emit an empty DATA frame with the ES flag set
 	 */
@@ -7592,11 +7601,6 @@ static size_t h2_snd_buf(struct stconn *sc, struct buffer *buf, size_t count, in
 
 	if (!(h2s->flags & H2_SF_OUTGOING_DATA) && count)
 		h2s->flags |= H2_SF_OUTGOING_DATA;
-
-	if (htx->extra && htx->extra != HTX_UNKOWN_PAYLOAD_LENGTH)
-		h2s->flags |= H2_SF_MORE_HTX_DATA;
-	else
-		h2s->flags &= ~H2_SF_MORE_HTX_DATA;
 
 	if (h2s->id == 0) {
 		int32_t id = h2c_get_next_sid(h2s->h2c);
