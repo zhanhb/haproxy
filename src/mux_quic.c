@@ -2515,7 +2515,6 @@ static void qcc_release(struct qcc *qcc)
 	if (conn) {
 		LIST_DEL_INIT(&conn->stopping_list);
 
-		conn->handle.qc->conn = NULL;
 		conn->mux = NULL;
 		conn->ctx = NULL;
 
