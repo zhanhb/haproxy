@@ -1972,8 +1972,11 @@ spoe_handle_appctx(struct appctx *appctx)
 		case SPOE_APPCTX_ST_PROCESSING:
 		case SPOE_APPCTX_ST_SENDING_FRAG_NOTIFY:
 		case SPOE_APPCTX_ST_WAITING_SYNC_ACK:
-			if (spoe_handle_processing_appctx(appctx))
+			if (spoe_handle_processing_appctx(appctx)) {
+				if (stopping && appctx->st0 == SPOE_APPCTX_ST_IDLE && !SPOE_APPCTX(appctx)->cur_fpa)
+					task_wakeup(SPOE_APPCTX(appctx)->task, TASK_WOKEN_MSG);
 				goto out;
+			}
 			goto switchstate;
 
 		case SPOE_APPCTX_ST_DISCONNECT:
@@ -2001,9 +2004,7 @@ spoe_handle_appctx(struct appctx *appctx)
 			return;
 	}
   out:
-	if (stopping && appctx->st0 == SPOE_APPCTX_ST_IDLE)
-		task_wakeup(SPOE_APPCTX(appctx)->task, TASK_WOKEN_MSG);
-	else if (SPOE_APPCTX(appctx)->task->expire != TICK_ETERNITY)
+	if (SPOE_APPCTX(appctx)->task->expire != TICK_ETERNITY)
 		task_queue(SPOE_APPCTX(appctx)->task);
 }
 
