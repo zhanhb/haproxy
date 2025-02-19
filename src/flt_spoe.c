@@ -1960,6 +1960,7 @@ spoe_handle_appctx(struct appctx *appctx)
 			eb32_delete(&SPOE_APPCTX(appctx)->node);
 			if (stopping &&
 			    LIST_ISEMPTY(&agent->rt[tid].sending_queue) &&
+			    LIST_ISEMPTY(&agent->rt[tid].waiting_queue) &&
 			    LIST_ISEMPTY(&SPOE_APPCTX(appctx)->waiting_queue)) {
 				SPOE_APPCTX(appctx)->task->expire =
 					tick_add_ifset(now_ms, agent->timeout.idle);
