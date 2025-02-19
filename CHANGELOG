@@ -1,6 +1,58 @@
 ChangeLog :
 ===========
 
+2025/02/19 : 3.1.4
+    - BUG/MEDIUM: ssl: chosing correct certificate using RSA-PSS with TLSv1.3
+    - BUG/MEDIUM: debug: close a possible race between thread dump and panic()
+    - BUG/MINOR: quic: reserve length field for long header encoding
+    - BUG/MINOR: quic: fix CRYPTO payload size calcul for encoding
+    - BUG/MINOR: mworker: section ignored in discovery after a post_section_parser
+    - BUG/MINOR: mworker: post_section_parser for the last section in discovery
+    - BUG/MEDIUM: fd: mark FD transferred to another process as FD_CLONED
+    - BUG/MINOR: ssl/cli: "show ssl crt-list" lacks client-sigals
+    - BUG/MINOR: ssl/cli: "show ssl crt-list" lacks sigals
+    - BUG/MEDIUM: cli: Be sure to drop all input data in END state
+    - BUG/MINOR: cli: Wait for the last ACK when FDs are xferred from the old worker
+    - BUG/MEDIUM: filters: Handle filters registered on data with no payload callback
+    - BUG/MINOR: fcgi: Don't set the status to 302 if it is already set
+    - BUG/MINOR: quic: prevent crash on conn access after MUX init failure
+    - BUG/MINOR: mux-quic: prevent crash after MUX init failure
+    - REGTESTS: Fix truncated.vtc to send 0-CRLF
+    - BUG/MINOR: mux-h2: Properly handle full or truncated HTX messages on shut
+    - BUG/MINOR: stktable: invalid use of stkctr_set_entry() with mixed table types
+    - MINOR: quic: rename pacing_rate cb to pacing_inter
+    - MINOR: mux-quic: increment pacing retry counter on expired
+    - MEDIUM: quic: implement credit based pacing
+    - MEDIUM: mux-quic: reduce pacing CPU usage with passive wait
+    - MEDIUM: quic: use dynamic credit for pacing
+    - MINOR: quic: remove unused pacing burst in bind_conf/quic_cc_path
+    - MINOR: quic: adapt credit based pacing to BBR
+    - MINOR: epoll: permit to mask certain specific events
+    - BUG/MEDIUM: chunk: make sure to flush the trash pool before resizing
+    - DEBUG: fd: add a counter of takeovers of an FD since it was last opened
+    - MINOR: fd: add a generation number to file descriptors
+    - DEBUG: epoll: store and compare the FD's generation count with reported event
+    - MEDIUM: epoll: skip reports of stale file descriptors
+    - BUG/MEDIUM: htx: wrong count computation in htx_xfer_blks()
+    - DOC: htx: clarify <mark> parameter for htx_xfer_blks()
+    - BUG/MEDIUM: mux-fcgi: Properly handle read0 on partial records
+    - BUG/MINOR: tcp-rules: Don't forward close during tcp-response content rules eval
+    - BUG/MINOR: http-check: Don't pretend a C-L heeader is set before adding it
+    - BUG/MEDIUM: flt-spoe: Set/test applet flags instead of SE flags from I/O handler
+    - BUG/MEDIUM: applet: Don't pretend to have more data to handle EOI/EOS/ERROR
+    - BUG/MEDIUM: flt-spoe: Properly handle end of stream from the SPOE applet
+    - MINOR: flt-spoe: Report end of input immediately after applet init
+    - MINOR: mux-spop: Report EOI on the SE when a ACK is received for a stream
+    - MINOR: mux-spop: Set SPOP_CF_ERROR flag on connection error only
+    - BUG/MINOR: cli: Don't set SE flags from the cli applet
+    - BUG/MINOR: cli: Fix memory leak on error for _getsocks command
+    - BUG/MINOR: cli: Fix a possible infinite loop in _getsocks()
+    - BUG/MINOR: config/userlist: Support one 'users' option for 'group' directive
+    - BUG/MINOR: auth: Fix a leak on error path when parsing user's groups
+    - BUG/MINOR: flt-trace: Support only one name option
+    - BUG/MINOR: stats-json: Define JSON_INT_MAX as a signed integer
+    - DOC: option redispatch should mention persist options
+
 2025/01/29 : 3.1.3
     - BUG/MINOR: stktable: fix big-endian compatiblity in smp_to_stkey()
     - BUG/MINOR: quic: reject NEW_TOKEN frames from clients
