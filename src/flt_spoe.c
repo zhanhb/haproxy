@@ -1330,13 +1330,12 @@ spoe_release_appctx(struct appctx *appctx)
 	}
 	else {
 		/* It is the last running applet and the sending and async
-		 * waiting queues are not empty. So try to start a new applet if
-		 * HAproxy is not stopping. On success, we remove reference on
-		 * the current appctx from streams in the async waiting queue.
-		 * In async mode, the ACK may be received from another appctx.
+		 * waiting queues are not empty. So try to start a new applet.
+		 * On success, we remove reference on the current appctx
+		 * from streams in the async waiting queue.  In async mode, the
+		 * ACK may be received from another appctx.
 		 */
-		if (!stopping &&
-		    (!LIST_ISEMPTY(&agent->rt[tid].sending_queue) || !LIST_ISEMPTY(&agent->rt[tid].waiting_queue)) &&
+		if ((!LIST_ISEMPTY(&agent->rt[tid].sending_queue) || !LIST_ISEMPTY(&agent->rt[tid].waiting_queue)) &&
 		    spoe_create_appctx(agent->spoe_conf)) {
 			list_for_each_entry_safe(ctx, back, &agent->rt[tid].waiting_queue, list) {
 				if (ctx->spoe_appctx == spoe_appctx)
