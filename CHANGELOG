@@ -1,6 +1,10 @@
 ChangeLog :
 ===========
 
+2025/02/20 : 3.1.5
+    - BUG/MEDIUM: applet: Don't handle EOI/EOS/ERROR is applet is waiting for room
+    - BUG/MEDIUM: spoe/mux-spop: Introduce an NOOP action to deal with empty ACK
+
 2025/02/19 : 3.1.4
     - BUG/MEDIUM: ssl: chosing correct certificate using RSA-PSS with TLSv1.3
     - BUG/MEDIUM: debug: close a possible race between thread dump and panic()
