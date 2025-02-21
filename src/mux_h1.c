@@ -4008,6 +4008,10 @@ static int h1_dump_h1c_info(struct buffer *msg, struct h1c *h1c, const char *pfx
  * <h1s> is NULL. Returns non-zero if the stream is considered suspicious. May
  * emit multiple lines, each new one being prefixed with <pfx>, if <pfx> is not
  * NULL, otherwise a single line is used.
+ *
+ * Remember that this may be called in a signal context from a "show threads"
+ * or panic dump, so the code must be careful about each data it accesses.
+ * However data are stable since the dump happens from the owner thread.
  */
 static int h1_dump_h1s_info(struct buffer *msg, const struct h1s *h1s, const char *pfx)
 {
@@ -4022,9 +4026,8 @@ static int h1_dump_h1s_info(struct buffer *msg, const struct h1s *h1s, const cha
 	else
 		method = "UNKNOWN";
 
-	chunk_appendf(msg, " h1s=%p h1s.flg=0x%x .sd.flg=0x%x .req.state=%s .res.state=%s",
-		      h1s, h1s->flags, se_fl_get(h1s->sd),
-		      h1m_state_str(h1s->req.state), h1m_state_str(h1s->res.state));
+	chunk_appendf(msg, " h1s=%p h1s.flg=0x%x", h1s, h1s->flags);
+	chunk_appendf(msg, " .req.state=%s .res.state=%s", h1m_state_str(h1s->req.state), h1m_state_str(h1s->res.state));
 
 	if (pfx)
 		chunk_appendf(msg, "\n%s", pfx);
@@ -4032,10 +4035,12 @@ static int h1_dump_h1s_info(struct buffer *msg, const struct h1s *h1s, const cha
 	chunk_appendf(msg, " .meth=%s status=%d",
 		      method, h1s->status);
 
-	chunk_appendf(msg, " .sd.flg=0x%08x", se_fl_get(h1s->sd));
-	if (!se_fl_test(h1s->sd, SE_FL_ORPHAN))
-		chunk_appendf(msg, " .sc.flg=0x%08x .sc.app=%p",
-			      h1s_sc(h1s)->flags, h1s_sc(h1s)->app);
+	if (h1s->sd) {
+                chunk_appendf(msg, " .sd.flg=0x%08x", se_fl_get(h1s->sd));
+                if (!se_fl_test(h1s->sd, SE_FL_ORPHAN))
+                        chunk_appendf(msg, " .sc.flg=0x%08x .sc.app=%p",
+                                      h1s_sc(h1s)->flags, h1s_sc(h1s)->app);
+        }
 
 	if (pfx && h1s->subs)
 		chunk_appendf(msg, "\n%s", pfx);
