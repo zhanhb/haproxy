@@ -573,6 +573,7 @@ static struct appctx *sink_forward_session_create(struct sink *sink, struct sink
 	if (appctx_init(appctx) == -1)
 		goto out_free_appctx;
 
+	sft->last_conn = TICK_ETERNITY;
 	return appctx;
 
 	/* Error unrolling */
@@ -595,9 +596,21 @@ static struct task *process_sink_forward(struct task * task, void *context, unsi
 	if (!stopping) {
 		while (sft) {
 			HA_SPIN_LOCK(SFT_LOCK, &sft->lock);
-			/* if appctx is NULL, start a new session */
-			if (!sft->appctx)
-				sft->appctx = sink_forward_session_create(sink, sft);
+			/* if appctx is NULL, start a new session
+			 *
+			 * We enforce a tempo to ensure we don't perform more than 1 session
+			 * establishment attempt per second.
+			 */
+			if (!sft->appctx) {
+				uint tempo = sft->last_conn + MS_TO_TICKS(1000);
+
+				if (sft->last_conn == TICK_ETERNITY || tick_is_expired(tempo, now_ms))
+					sft->appctx = sink_forward_session_create(sink, sft);
+				else if (task->expire == TICK_ETERNITY)
+					task->expire = tempo;
+				else
+					task->expire = tick_first(task->expire, tempo);
+			}
 			HA_SPIN_UNLOCK(SFT_LOCK, &sft->lock);
 			sft = sft->next;
 		}
