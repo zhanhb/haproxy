@@ -3193,7 +3193,7 @@ void strm_dump_to_buffer(struct buffer *buf, const struct stream *strm, const ch
 	conn = objt_conn(strm_orig(strm));
 
 	/* be careful not to allocate RAM from a signal handler! */
-	if (conn && !conn->src && !(th_ctx->flags & TH_FL_IN_SIG_HANDLER))
+	if (conn && !conn->src && !(th_ctx->flags & TH_FL_IN_ANY_HANDLER))
 		conn_get_src(conn);
 
 	switch (conn && conn->src ? addr_to_str(conn->src, pn, sizeof(pn)) : AF_UNSPEC) {
@@ -3228,7 +3228,7 @@ void strm_dump_to_buffer(struct buffer *buf, const struct stream *strm, const ch
 		     strm_li(strm) ? strm_li(strm)->luid : 0);
 
 	/* be careful not to allocate RAM from a signal handler! */
-	if (conn && !conn->dst && !(th_ctx->flags & TH_FL_IN_SIG_HANDLER))
+	if (conn && !conn->dst && !(th_ctx->flags & TH_FL_IN_ANY_HANDLER))
 		conn_get_dst(conn);
 
 	switch (conn && conn->dst ? addr_to_str(conn->dst, pn, sizeof(pn)) : AF_UNSPEC) {
@@ -3257,7 +3257,7 @@ void strm_dump_to_buffer(struct buffer *buf, const struct stream *strm, const ch
 	conn = sc_conn(strm->scb);
 
 	/* be careful not to allocate RAM from a signal handler! */
-	if (conn && !conn->src && !(th_ctx->flags & TH_FL_IN_SIG_HANDLER))
+	if (conn && !conn->src && !(th_ctx->flags & TH_FL_IN_ANY_HANDLER))
 		conn_get_src(conn);
 
 	switch (conn && conn->src ? addr_to_str(conn->src, pn, sizeof(pn)) : AF_UNSPEC) {
@@ -3284,7 +3284,7 @@ void strm_dump_to_buffer(struct buffer *buf, const struct stream *strm, const ch
 		chunk_appendf(buf, "%s  server=<NONE> (id=-1)", pfx);
 
 	/* be careful not to allocate RAM from a signal handler! */
-	if (conn && !conn->dst && !(th_ctx->flags & TH_FL_IN_SIG_HANDLER))
+	if (conn && !conn->dst && !(th_ctx->flags & TH_FL_IN_ANY_HANDLER))
 		conn_get_dst(conn);
 
 	switch (conn && conn->dst ? addr_to_str(conn->dst, pn, sizeof(pn)) : AF_UNSPEC) {
