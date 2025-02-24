@@ -18,6 +18,7 @@
 #include <haproxy/hpack-dec.h>
 #include <haproxy/hpack-enc.h>
 #include <haproxy/hpack-tbl.h>
+#include <haproxy/http.h>
 #include <haproxy/http_htx.h>
 #include <haproxy/htx.h>
 #include <haproxy/istbuf.h>
@@ -948,6 +949,27 @@ static int h2_avail_streams(struct connection *conn)
 	return ret1;
 }
 
+/* hpack-encode header name <hn> and value <hv>. This is done on behalf of
+ * h2c <h2c>, and h2s <h2s>, all of which may be NULL.
+ */
+static inline int h2_encode_header(struct buffer *buf, const struct ist hn, const struct ist hv,
+				   const struct h2c *h2c, const struct h2s *h2s)
+{
+	struct ist v;
+	int ret;
+
+	/* trim leading/trailing LWS as per RC9113#8.2.1 */
+	for (v = hv; v.len; v.len--) {
+		if (unlikely(HTTP_IS_LWS(*v.ptr)))
+			v.ptr++;
+		else if (!unlikely(HTTP_IS_LWS(v.ptr[v.len - 1])))
+			break;
+	}
+
+	ret = hpack_encode_header(buf, hn, v);
+
+	return ret;
+}
 
 /*****************************************************************/
 /* functions below are dedicated to the mux setup and management */
@@ -5358,7 +5380,7 @@ static size_t h2s_frt_make_resp_headers(struct h2s *h2s, struct htx *htx)
 		if (isteq(list[hdr].n, ist("")))
 			break; // end
 
-		if (!hpack_encode_header(&outbuf, list[hdr].n, list[hdr].v)) {
+		if (!h2_encode_header(&outbuf, list[hdr].n, list[hdr].v, h2c, h2s)) {
 			/* output full */
 			if (b_space_wraps(mbuf))
 				goto realign_again;
@@ -5638,12 +5660,13 @@ static size_t h2s_bck_make_req_headers(struct h2s *h2s, struct htx *htx)
 	if (unlikely(sl->info.req.meth == HTTP_METH_CONNECT) && !extended_connect) {
 		auth = uri;
 
-		if (!hpack_encode_header(&outbuf, ist(":authority"), auth)) {
+		if (!h2_encode_header(&outbuf, ist(":authority"), auth, h2c, h2s)) {
 			/* output full */
 			if (b_space_wraps(mbuf))
 				goto realign_again;
 			goto full;
 		}
+
 		h2s->flags |= H2_SF_BODY_TUNNEL;
 	} else {
 		/* other methods need a :scheme. If an authority is known from
@@ -5703,7 +5726,8 @@ static size_t h2s_bck_make_req_headers(struct h2s *h2s, struct htx *htx)
 			goto full;
 		}
 
-		if (auth.len && !hpack_encode_header(&outbuf, ist(":authority"), auth)) {
+		if (auth.len &&
+		    !h2_encode_header(&outbuf, ist(":authority"), auth, h2c, h2s)) {
 			/* output full */
 			if (b_space_wraps(mbuf))
 				goto realign_again;
@@ -5733,9 +5757,7 @@ static size_t h2s_bck_make_req_headers(struct h2s *h2s, struct htx *htx)
 		if (unlikely(extended_connect)) {
 			const struct ist protocol = ist(h2s->upgrade_protocol);
 			if (isttest(protocol)) {
-				if (!hpack_encode_header(&outbuf,
-				                         ist(":protocol"),
-				                         protocol)) {
+				if (!h2_encode_header(&outbuf, ist(":protocol"), protocol, h2c, h2s)) {
 					/* output full */
 					if (b_space_wraps(mbuf))
 						goto realign_again;
@@ -5778,7 +5800,7 @@ static size_t h2s_bck_make_req_headers(struct h2s *h2s, struct htx *htx)
 		if (isteq(n, ist("")))
 			break; // end
 
-		if (!hpack_encode_header(&outbuf, n, v)) {
+		if (!h2_encode_header(&outbuf, n, v, h2c, h2s)) {
 			/* output full */
 			if (b_space_wraps(mbuf))
 				goto realign_again;
@@ -6347,7 +6369,7 @@ static size_t h2s_make_trailers(struct h2s *h2s, struct htx *htx)
 		if (*(list[idx].n.ptr) == ':')
 			continue;
 
-		if (!hpack_encode_header(&outbuf, list[idx].n, list[idx].v)) {
+		if (!h2_encode_header(&outbuf, list[idx].n, list[idx].v, h2c, h2s)) {
 			/* output full */
 			if (b_space_wraps(mbuf))
 				goto realign_again;
