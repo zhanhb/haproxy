@@ -2540,6 +2540,7 @@ void srv_free_params(struct server *srv)
 	free(srv->resolvers_id);
 	free(srv->addr_node.key);
 	free(srv->lb_nodes);
+	free(srv->tmpl_info.prefix);
 
 	if (xprt_get(XPRT_SSL) && xprt_get(XPRT_SSL)->destroy_srv)
 		xprt_get(XPRT_SSL)->destroy_srv(srv);
