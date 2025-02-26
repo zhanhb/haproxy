@@ -2390,6 +2390,7 @@ struct server *free_server(struct server *srv)
 	free(srv->resolvers_id);
 	free(srv->addr_node.key);
 	free(srv->lb_nodes);
+	free(srv->tmpl_info.prefix);
 
 	if (srv->use_ssl == 1 || srv->check.use_ssl == 1 || (srv->proxy->options & PR_O_TCPCHK_SSL)) {
 		if (xprt_get(XPRT_SSL) && xprt_get(XPRT_SSL)->destroy_srv)
