@@ -1246,7 +1246,9 @@ static ssize_t h3_parse_settings_frm(struct h3c *h3c, const struct buffer *buf,
 /* Decode <qcs> remotely initiated bidi-stream. <fin> must be set to indicate
  * that we received the last data of the stream.
  *
- * Returns 0 on success else non-zero.
+ * Returns the count of consumed bytes or a negative error code. If 0 is
+ * returned, stream data is incomplete, decoding should be call again later
+ * with more content.
  */
 static ssize_t h3_decode_qcs(struct qcs *qcs, struct buffer *b, int fin)
 {
