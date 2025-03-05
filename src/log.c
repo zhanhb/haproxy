@@ -1264,7 +1264,7 @@ static int postcheck_log_backend(struct proxy *be)
 	if (err_code & ERR_CODE)
 		return err_code;
 
-	/* "log-balance hash" needs to compile its expression */
+	/* "balance log-hash" needs to compile its expression */
 	if ((be->lbprm.algo & BE_LB_ALGO) == BE_LB_ALGO_LH) {
 		struct sample_expr *expr;
 		char *expr_str = NULL;
@@ -1289,7 +1289,7 @@ static int postcheck_log_backend(struct proxy *be)
 		 */
 		memprintf(&expr_str, "str(dummy),%s", be->lbprm.arg_str);
 		if (!expr_str) {
-			memprintf(&msg, "memory error during converter list argument parsing (from \"log-balance hash\")");
+			memprintf(&msg, "memory error during converter list argument parsing (from \"balance log-hash\")");
 			err_code |= ERR_ALERT | ERR_FATAL;
 			goto end;
 		}
@@ -1298,7 +1298,7 @@ static int postcheck_log_backend(struct proxy *be)
 		                         be->conf.line,
 		                         &err_str, NULL, NULL);
 		if (!expr) {
-			memprintf(&msg, "%s (from converter list argument in \"log-balance hash\")", err_str);
+			memprintf(&msg, "%s (from converter list argument in \"balance log-hash\")", err_str);
 			ha_free(&err_str);
 			err_code |= ERR_ALERT | ERR_FATAL;
 			ha_free(&expr_str);
@@ -1313,7 +1313,7 @@ static int postcheck_log_backend(struct proxy *be)
 		 * error to prevent unexpected results during runtime.
 		 */
 		if (sample_casts[smp_expr_output_type(expr)][SMP_T_BIN] == NULL) {
-			memprintf(&msg, "invalid output type at the end of converter list for \"log-balance hash\" directive");
+			memprintf(&msg, "invalid output type at the end of converter list for \"balance log-hash\" directive");
 			err_code |= ERR_ALERT | ERR_FATAL;
 			release_sample_expr(expr);
 			ha_free(&expr_str);
@@ -2557,7 +2557,6 @@ static char *lf_port(char *dst, const struct sockaddr *sockaddr, size_t size, st
 	return ret;
 }
 
-
 /*
  * This function sends the syslog message using a printf format string. It
  * expects an LF-terminated message.
@@ -3055,7 +3054,7 @@ static inline void __do_send_log_backend(struct proxy *be, struct log_header hdr
 	else if ((be->lbprm.algo & BE_LB_ALGO) == BE_LB_ALGO_LH) {
 		struct sample result;
 
-		/* log-balance hash */
+		/* balance log-hash */
 		memset(&result, 0, sizeof(result));
 		result.data.type = SMP_T_STR;
 		result.flags = SMP_F_CONST;
