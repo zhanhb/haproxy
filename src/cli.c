@@ -840,7 +840,7 @@ static int cli_output_msg(struct channel *chn, const char *msg, int severity, in
  * CLI_ST_* constants. appctx->st1 is used to indicate whether prompt is enabled
  * or not.
  */
-static void cli_io_handler(struct appctx *appctx)
+void cli_io_handler(struct appctx *appctx)
 {
 	struct stream_interface *si = appctx->owner;
 	struct channel *req = si_oc(si);
