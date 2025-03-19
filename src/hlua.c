@@ -7860,6 +7860,8 @@ static int hlua_cli_io_handler_fct(struct appctx *appctx)
 
 static void hlua_cli_io_release_fct(struct appctx *appctx)
 {
+	task_destroy(appctx->ctx.hlua_cli.task);
+	appctx->ctx.hlua_cli.task = NULL;
 	hlua_ctx_destroy(appctx->ctx.hlua_cli.hlua);
 	appctx->ctx.hlua_cli.hlua = NULL;
 }
