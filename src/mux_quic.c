@@ -951,6 +951,28 @@ static int qcc_decode_qcs(struct qcc *qcc, struct qcs *qcs)
 	return 1;
 }
 
+/* Register <qcs> stream for emission of STREAM, STOP_SENDING or RESET_STREAM.
+ * Set <urg> to true if stream should be emitted in priority. This is useful
+ * when sending STOP_SENDING or RESET_STREAM, or for emission on an application
+ * control stream.
+ */
+static void _qcc_send_stream(struct qcs *qcs, int urg)
+{
+	struct qcc *qcc = qcs->qcc;
+
+	if (urg) {
+		LIST_DEL_INIT(&qcs->el_send);
+		LIST_INSERT(&qcc->send_list, &qcs->el_send);
+	}
+	else {
+		/* Cannot send STREAM if already closed. */
+		BUG_ON(qcs_is_close_local(qcs));
+
+		if (!LIST_INLIST(&qcs->el_send))
+			LIST_APPEND(&qcs->qcc->send_list, &qcs->el_send);
+	}
+}
+
 /* Prepare for the emission of RESET_STREAM on <qcs> with error code <err>. */
 void qcc_reset_stream(struct qcs *qcs, int err)
 {
@@ -978,11 +1000,11 @@ void qcc_reset_stream(struct qcs *qcs, int err)
 		qcs_alert(qcs);
 	}
 
-	qcc_send_stream(qcs, 1);
+	_qcc_send_stream(qcs, 1);
 	tasklet_wakeup(qcc->wait_event.tasklet);
 }
 
-/* Register <qcs> stream for emission of STREAM, STOP_SENDING or RESET_STREAM.
+/* Register <qcs> stream for emission of STREAM emission.
  * Set <urg> to 1 if stream content should be treated in priority compared to
  * other streams.
  */
@@ -992,17 +1014,10 @@ void qcc_send_stream(struct qcs *qcs, int urg)
 
 	TRACE_ENTER(QMUX_EV_QCS_SEND, qcc->conn, qcs);
 
-	/* Cannot send if already closed. */
+	/* Cannot send STREAM if already closed. */
 	BUG_ON(qcs_is_close_local(qcs));
 
-	if (urg) {
-		LIST_DEL_INIT(&qcs->el_send);
-		LIST_INSERT(&qcc->send_list, &qcs->el_send);
-	}
-	else {
-		if (!LIST_INLIST(&qcs->el_send))
-			LIST_APPEND(&qcs->qcc->send_list, &qcs->el_send);
-	}
+	_qcc_send_stream(qcs, urg);
 
 	TRACE_LEAVE(QMUX_EV_QCS_SEND, qcc->conn, qcs);
 }
@@ -1020,7 +1035,7 @@ void qcc_abort_stream_read(struct qcs *qcs)
 	TRACE_STATE("abort stream read", QMUX_EV_QCS_END, qcc->conn, qcs);
 	qcs->flags |= (QC_SF_TO_STOP_SENDING|QC_SF_READ_ABORTED);
 
-	qcc_send_stream(qcs, 1);
+	_qcc_send_stream(qcs, 1);
 	tasklet_wakeup(qcc->wait_event.tasklet);
 
  end:
