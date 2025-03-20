@@ -1162,9 +1162,6 @@ static void _qcc_send_stream(struct qcs *qcs, int urg)
 		LIST_INSERT(&qcc->send_list, &qcs->el_send);
 	}
 	else {
-		/* Cannot send STREAM if already closed. */
-		BUG_ON(qcs_is_close_local(qcs));
-
 		if (!LIST_INLIST(&qcs->el_send))
 			LIST_APPEND(&qcs->qcc->send_list, &qcs->el_send);
 	}
