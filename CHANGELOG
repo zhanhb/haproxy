@@ -1,6 +1,27 @@
 ChangeLog :
 ===========
 
+2025/03/21 : 2.9.15
+    - BUG/MEDIUM: ssl: chosing correct certificate using RSA-PSS with TLSv1.3
+    - BUG/MINOR: spoe: Check the shared waiting queue to shut applets during stopping
+    - BUG/MINOR: spoe: Allow applet creation when closing the last one during stopping
+    - BUG/MEDIUM: spoe: Don't wakeup idle applets in loop during stopping
+    - BUG/MEDIUM: fd: mark FD transferred to another process as FD_CLONED
+    - REGTESTS: Fix truncated.vtc to send 0-CRLF
+    - BUG/MEDIUM: htx: wrong count computation in htx_xfer_blks()
+    - BUG/MEDIUM: thread: use pthread_self() not ha_pthread[tid] in set_affinity
+    - BUG/MEDIUM: filters: Handle filters registered on data with no payload callback
+    - BUG/MINOR: mux-h2: Properly handle full or truncated HTX messages on shut
+    - BUG/MINOR: cli: Fix memory leak on error for _getsocks command
+    - BUG/MINOR: cli: Fix a possible infinite loop in _getsocks()
+    - BUG/MINOR: cfgparse: fix NULL ptr dereference in cfg_parse_peers
+    - BUG/MINOR: sink: add tempo between 2 connection attempts for sft servers
+    - BUG/MINOR: h2: always trim leading and trailing LWS in header values
+    - BUG/MINOR: h3: do not report transfer as aborted on preemptive response
+    - CLEANUP: h3: fix documentation of h3_rcv_buf()
+    - BUG/MEIDUM: startup: return to initial cwd only after check_config_validity()
+    - MINOR: version: Set the EOL of the 2.9 branch
+
 2025/01/29 : 2.9.14
     - BUG/MEDIUM: pattern: prevent uninitialized reads in pat_match_{str,beg}
     - MINOR: quic: notify connection layer on handshake completion
