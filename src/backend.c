@@ -1535,6 +1535,9 @@ skip_reuse:
 				return SF_ERR_RESOURCE;
 			}
 
+			/* copy the target address into the connection */
+			*srv_conn->dst = *s->target_addr;
+
 			srv_conn->hash_node->hash = hash;
 		}
 	}
@@ -1545,9 +1548,6 @@ skip_reuse:
 	/* srv_conn is still NULL only on allocation failure */
 	if (!srv_conn)
 		return SF_ERR_RESOURCE;
-
-	/* copy the target address into the connection */
-	*srv_conn->dst = *s->target_addr;
 
 	/* Copy network namespace from client connection */
 	srv_conn->proxy_netns = cli_conn ? cli_conn->proxy_netns : NULL;
