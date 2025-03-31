@@ -1419,8 +1419,7 @@ static int connect_server(struct stream *s)
 #endif /* USE_OPENSSL */
 
 	/* 3. destination address */
-	if (srv && (!is_addr(&srv->addr) || srv->flags & SRV_F_MAPPORTS))
-		hash_params.dst_addr = s->scb->dst;
+	hash_params.dst_addr = s->scb->dst;
 
 	/* 4. source address */
 	hash_params.src_addr = bind_addr;
@@ -1628,9 +1627,6 @@ skip_reuse:
 			srv_conn->src = bind_addr;
 			bind_addr = NULL;
 
-			/* copy the target address into the connection */
-			*srv_conn->dst = *s->scb->dst;
-
 			if (!sockaddr_alloc(&srv_conn->dst, 0, 0)) {
 				conn_free(srv_conn);
 				return SF_ERR_RESOURCE;
@@ -1646,6 +1642,9 @@ skip_reuse:
 	/* srv_conn is still NULL only on allocation failure */
 	if (!srv_conn)
 		return SF_ERR_RESOURCE;
+
+	/* copy the target address into the connection */
+	*srv_conn->dst = *s->scb->dst;
 
 	/* Copy network namespace from client connection */
 	srv_conn->proxy_netns = cli_conn ? cli_conn->proxy_netns : NULL;
