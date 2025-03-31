@@ -1418,8 +1418,7 @@ static int connect_server(struct stream *s)
 #endif /* USE_OPENSSL */
 
 	/* 3. destination address */
-	if (srv && (!is_addr(&srv->addr) || srv->flags & SRV_F_MAPPORTS))
-		hash_params.dst_addr = s->scb->dst;
+	hash_params.dst_addr = s->scb->dst;
 
 	/* 4. source address */
 	hash_params.src_addr = bind_addr;
