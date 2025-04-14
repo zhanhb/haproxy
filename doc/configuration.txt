@@ -1733,6 +1733,7 @@ The following keywords are supported in the "global" section :
 
  * Debugging
    - anonkey
+   - force-cfg-parser-pause
    - quiet
    - warn-blocked-traffic-after
    - zero-warning
@@ -4604,7 +4605,6 @@ force-cfg-parser-pause <timeout>
     global
         expose-experimental-directives
         force-cfg-parser-pause 10s
-
 
 quick-exit
   This speeds up the old process exit upon reload by skipping the releasing of
