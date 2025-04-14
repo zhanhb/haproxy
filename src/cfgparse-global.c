@@ -982,7 +982,7 @@ static int cfg_parse_global_mode(char **args, int section_type,
 		global.mode |= MODE_ZERO_WARNING;
 
 	} else {
-		BUG_ON(1, "Triggered in cfg_parse_global_mode() by unsupported keyword.\n");
+		BUG_ON(1, "Triggered in cfg_parse_global_mode() by unsupported keyword.");
 		return -1;
 	}
 
@@ -1013,7 +1013,7 @@ static int cfg_parse_global_disable_poller(char **args, int section_type,
 		global.tune.options &= ~GTUNE_USE_POLL;
 
 	} else {
-		BUG_ON(1, "Triggered in cfg_parse_global_disable_poller() by unsupported keyword.\n");
+		BUG_ON(1, "Triggered in cfg_parse_global_disable_poller() by unsupported keyword.");
 		return -1;
 	}
 
@@ -1041,7 +1041,7 @@ static int cfg_parse_global_pidfile(char **args, int section_type,
 		}
 		global.pidfile = strdup(args[1]);
 	} else {
-		BUG_ON(1, "Triggered in cfg_parse_global_pidfile() by unsupported keyword.\n");
+		BUG_ON(1, "Triggered in cfg_parse_global_pidfile() by unsupported keyword.");
 		return -1;
 	}
 
@@ -1061,7 +1061,7 @@ static int cfg_parse_global_non_std_directives(char **args, int section_type,
 	} else if (strcmp(args[0], "expose-experimental-directives") == 0) {
 		experimental_directives_allowed = 1;
 	} else {
-		BUG_ON(1, "Triggered in cfg_parse_global_non_std_directives() by unsupported keyword.\n");
+		BUG_ON(1, "Triggered in cfg_parse_global_non_std_directives() by unsupported keyword.");
 		return -1;
 	}
 
@@ -1337,7 +1337,7 @@ static int cfg_parse_global_tune_opts(char **args, int section_type,
 		}
 	}
 	else {
-		BUG_ON(1, "Triggered in cfg_parse_global_tune_opts() by unsupported keyword.\n");
+		BUG_ON(1, "Triggered in cfg_parse_global_tune_opts() by unsupported keyword.");
 		return -1;
 	}
 
@@ -1370,7 +1370,7 @@ static int cfg_parse_global_tune_forward_opts(char **args, int section_type,
 		global.tune.no_zero_copy_fwd |= NO_ZERO_COPY_FWD;
 	}
 	else {
-		BUG_ON(1, "Triggered in cfg_parse_global_tune_forward_opts() by unsupported keyword.\n");
+		BUG_ON(1, "Triggered in cfg_parse_global_tune_forward_opts() by unsupported keyword.");
 		return -1;
 	}
 
@@ -1390,7 +1390,7 @@ static int cfg_parse_global_unsupported_opts(char **args, int section_type,
 		memprintf(err, "option '%s' is not supported any more (tune.bufsize is used instead).", args[0]);
 	}
 	else {
-		BUG_ON(1, "Triggered in cfg_parse_global_unsupported_opts() by unsupported keyword.\n");
+		BUG_ON(1, "Triggered in cfg_parse_global_unsupported_opts() by unsupported keyword.");
 	}
 
 	return -1;
@@ -1473,7 +1473,7 @@ static int cfg_parse_global_env_opts(char **args, int section_type,
 		}
 	}
 	else {
-		BUG_ON(1, "Triggered in cfg_parse_global_env_opts() by unsupported keyword.\n");
+		BUG_ON(1, "Triggered in cfg_parse_global_env_opts() by unsupported keyword.");
 		return -1;
 	}
 
@@ -1564,7 +1564,7 @@ static int cfg_parse_tune_renice(char **args, int section_type, struct proxy *cu
 		}
 
 	} else {
-		BUG_ON(1, "Triggered in cfg_parse_tune_renice() by unsupported keyword.\n");
+		BUG_ON(1, "Triggered in cfg_parse_tune_renice() by unsupported keyword.");
 	}
 
 	return 0;
