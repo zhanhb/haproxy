@@ -1171,6 +1171,7 @@ The following keywords are supported in the "global" section :
    - nopoll
    - noreuseport
    - nosplice
+   - profiling.memory
    - profiling.tasks
    - server-state-base
    - server-state-file
