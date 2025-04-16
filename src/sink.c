@@ -675,7 +675,7 @@ static struct appctx *sink_forward_session_create(struct sink *sink, struct sink
 	if (appctx_init(appctx) == -1)
 		goto out_free_appctx;
 
-	sft->last_conn = TICK_ETERNITY;
+	sft->last_conn = now_ms;
 	return appctx;
 
 	/* Error unrolling */
