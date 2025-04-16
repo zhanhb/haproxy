@@ -445,6 +445,7 @@ static ssize_t h3_headers_to_htx(struct qcs *qcs, const struct buffer *buf,
 	unsigned int flags = HTX_SL_F_NONE;
 	struct ist meth = IST_NULL, path = IST_NULL;
 	struct ist scheme = IST_NULL, authority = IST_NULL;
+	struct ist v;
 	int hdr_idx, ret;
 	int cookie = -1, last_cookie = -1, i;
 	const char *ctl;
@@ -750,7 +751,15 @@ static ssize_t h3_headers_to_htx(struct qcs *qcs, const struct buffer *buf,
 			goto out;
 		}
 
-		if (!htx_add_header(htx, list[hdr_idx].n, list[hdr_idx].v)) {
+		/* trim leading/trailing LWS */
+		for (v = list[hdr_idx].v; v.len; v.len--) {
+			if (unlikely(HTTP_IS_LWS(*v.ptr)))
+				v.ptr++;
+			else if (!unlikely(HTTP_IS_LWS(v.ptr[v.len - 1])))
+				break;
+		}
+
+		if (!htx_add_header(htx, list[hdr_idx].n, v)) {
 			h3c->err = H3_INTERNAL_ERROR;
 			len = -1;
 			goto out;
