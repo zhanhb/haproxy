@@ -643,6 +643,17 @@ static ssize_t h3_headers_to_htx(struct qcs *qcs, const struct buffer *buf,
 		goto out;
 	}
 
+	/* Ensure that final URI does not contains LWS nor CTL characters. */
+	for (i = 0; i < path.len; i++) {
+		unsigned char c = istptr(path)[i];
+		if (HTTP_IS_LWS(c) || HTTP_IS_CTL(c)) {
+			TRACE_ERROR("invalid character in path", H3_EV_RX_FRAME|H3_EV_RX_HDR, qcs->qcc->conn, qcs);
+			h3c->err = H3_MESSAGE_ERROR;
+			len = -1;
+			goto out;
+		}
+	}
+
 	sl = htx_add_stline(htx, HTX_BLK_REQ_SL, flags, meth, path, ist("HTTP/3.0"));
 	if (!sl) {
 		h3c->err = H3_INTERNAL_ERROR;
