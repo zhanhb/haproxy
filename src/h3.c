@@ -1253,6 +1253,29 @@ static int h3_control_send(struct qcs *qcs, void *ctx)
 	return -1;
 }
 
+/* Encode header field name <n> value <v> into <buf> buffer using QPACK. Strip
+ * any leading/trailing WS in value prior to encoding.
+ *
+ * Returns 0 on success else non zero.
+ */
+static int h3_encode_header(struct buffer *buf,
+                            const struct ist n, const struct ist v)
+{
+	struct ist v_strip;
+	char *ptr;
+
+	/* trim leading/trailing LWS */
+	for (v_strip = v; istlen(v_strip); --v_strip.len) {
+		ptr = istptr(v_strip);
+		if (unlikely(HTTP_IS_LWS(*ptr)))
+			++v_strip.ptr;
+		else if (!unlikely(HTTP_IS_LWS(ptr[istlen(v_strip) - 1])))
+			break;
+	}
+
+	return qpack_encode_header(buf, n, v_strip);
+}
+
 static int h3_resp_headers_send(struct qcs *qcs, struct htx *htx)
 {
 	struct h3s *h3s = qcs->ctx;
@@ -1363,7 +1386,7 @@ static int h3_resp_headers_send(struct qcs *qcs, struct htx *htx)
 			list[hdr].v = ist("trailers");
 		}
 
-		if (qpack_encode_header(&headers_buf, list[hdr].n, list[hdr].v)) {
+		if (h3_encode_header(&headers_buf, list[hdr].n, list[hdr].v)) {
 			h3c->err = H3_INTERNAL_ERROR;
 			goto err;
 		}
