@@ -724,6 +724,7 @@ static ssize_t h3_headers_to_htx(struct qcs *qcs, const struct buffer *buf,
 		else if (isteq(list[hdr_idx].n, ist("connection")) ||
 		         isteq(list[hdr_idx].n, ist("proxy-connection")) ||
 		         isteq(list[hdr_idx].n, ist("keep-alive")) ||
+			 isteq(list[hdr_idx].n, ist("upgrade")) ||
 		         isteq(list[hdr_idx].n, ist("transfer-encoding"))) {
 			/* RFC 9114 4.2. HTTP Fields
 		         *
@@ -1373,6 +1374,7 @@ static int h3_resp_headers_send(struct qcs *qcs, struct htx *htx)
 		if (isteq(list[hdr].n, ist("connection")) ||
 		    isteq(list[hdr].n, ist("proxy-connection")) ||
 		    isteq(list[hdr].n, ist("keep-alive")) ||
+		    isteq(list[hdr].n, ist("upgrade")) ||
 		    isteq(list[hdr].n, ist("transfer-encoding"))) {
 			continue;
 		}
