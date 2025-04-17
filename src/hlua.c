@@ -10782,6 +10782,7 @@ void hlua_applet_tcp_fct(struct appctx *ctx)
 	struct act_rule *rule = ctx->rule;
 	struct proxy *px = strm->be;
 	struct hlua *hlua = tcp_ctx->hlua;
+	int yield = 0;
 
 	if (unlikely(se_fl_test(ctx->sedesc, (SE_FL_EOS|SE_FL_ERROR|SE_FL_SHR|SE_FL_SHW))))
 		goto out;
@@ -10800,6 +10801,7 @@ void hlua_applet_tcp_fct(struct appctx *ctx)
 
 	/* yield. */
 	case HLUA_E_AGAIN:
+		yield = 1;
 		if (hlua->wake_time != TICK_ETERNITY)
 			task_schedule(tcp_ctx->task, hlua->wake_time);
 		break;
@@ -10840,7 +10842,12 @@ void hlua_applet_tcp_fct(struct appctx *ctx)
 	}
 
 out:
-	/* eat the whole request */
+	/* eat the whole request unless yield was requested which means
+	 * we are not done yet
+	 */
+	if (yield)
+		return;
+
 	co_skip(sc_oc(sc), co_data(sc_oc(sc)));
 	return;
 
@@ -10979,6 +10986,7 @@ void hlua_applet_http_fct(struct appctx *ctx)
 	struct proxy *px = strm->be;
 	struct hlua *hlua = http_ctx->hlua;
 	struct htx *req_htx, *res_htx;
+	int yield = 0;
 
 	res_htx = htx_from_buf(&res->buf);
 
@@ -11013,6 +11021,7 @@ void hlua_applet_http_fct(struct appctx *ctx)
 
 		/* yield. */
 		case HLUA_E_AGAIN:
+			yield = 1;
 			if (hlua->wake_time != TICK_ETERNITY)
 				task_schedule(http_ctx->task, hlua->wake_time);
 			goto out;
@@ -11080,7 +11089,13 @@ void hlua_applet_http_fct(struct appctx *ctx)
 
   out:
 	htx_to_buf(res_htx, &res->buf);
-	/* eat the whole request */
+
+	/* eat the whole request unless yield was requested which means
+	 * we are not done yet
+	 */
+	if (yield)
+		return;
+
 	if (co_data(req)) {
 		req_htx = htx_from_buf(&req->buf);
 		co_htx_skip(req, req_htx, co_data(req));
