@@ -1,6 +1,73 @@
 ChangeLog :
 ===========
 
+2025/04/17 : 3.1.7
+    - MINOR: log: support "raw" logformat node typecast
+    - BUG/MINOR: peers: fix expire learned from a peer not converted from ms to ticks
+    - BUG/MEDIUM: peers: prevent learning expiration too far in futur from unsync node
+    - BUG/MEDIUM: mux-quic: fix crash on RS/SS emission if already close local
+    - BUG/MINOR: mux-quic: remove extra BUG_ON() in _qcc_send_stream()
+    - BUG/MINOR: log: fix gcc warn about truncating NUL terminator while init char arrays
+    - BUG/MINOR: config: silence .notice/.warning/.alert in discovery mode
+    - DOC: config: fix two missing "content" in "tcp-request" examples
+    - BUILD: compiler: undefine the CONCAT() macro if already defined
+    - BUG/MINOR: rhttp: fix incorrect dst/dst_port values
+    - BUG/MINOR: backend: do not overwrite srv dst address on reuse
+    - BUG/MEDIUM: backend: fix reuse with set-dst/set-dst-port
+    - BUILD: quic_sock: address a strict-aliasing build warning with gcc 5 and 6
+    - DOC: update INSTALL to reflect the minimum compiler version
+    - BUG/MEDIUM: stream: Fix a possible freeze during a forced shut on a stream
+    - TESTS: Fix build for filltab25.c
+    - MINOR: task: add thread safe notification_new and notification_wake variants
+    - BUG/MINOR: hlua_fcn: fix potential UAF with Queue:pop_wait()
+    - CLEANUP: log: adjust _lf_cbor_encode_byte() comment
+    - BUG/MINOR: log: fix CBOR encoding with LOG_VARTEXT_START() + lf_encode_chunk()
+    - BUG/MEDIUM: sample: fix risk of overflow when replacing multiple regex back-refs
+    - BUG/MINOR: backend: do not use the source port when hashing clientip
+    - BUG/MINOR: hlua: fix invalid errmsg use in hlua_init()
+    - BUG/MINOR: debug: remove the trailing \n from BUG_ON() statements
+    - DOC: config: add the missing "profiling.memory" to the global kw index
+    - DOC: config: add the missing "force-cfg-parser-pause" to the global kw index
+    - BUG/MINOR: http-ana: Properly detect client abort when forwarding the response
+    - BUG/MEDIUM: http-ana: Report 502 from req analyzer only during rsp forwarding
+    - MINOR: quic: remove references to burst in quic-cc-algo parsing
+    - MINOR: quic: allow BBR testing without pacing
+    - MINOR: quic: transform pacing settings into a global option
+    - MINOR: quic: define quic_tune
+    - BUILD: quic: fix overflow in global tune
+    - MINOR: tools: let dump_addr_and_bytes() support dumping before the offset
+    - MINOR: debug: in call traces, dump the 8 bytes before the return address, not after
+    - MINOR: debug: detect call instructions and show the branch target in backtraces
+    - BUG/MEDIUM: h3: trim whitespaces when parsing headers value
+    - BUG/MEDIUM: h3: trim whitespaces in header value prior to QPACK encoding
+    - BUG/MINOR: h3: filter upgrade connection header
+    - BUG/MINOR: h3: reject invalid :path in request
+    - BUG/MINOR: h3: reject request URI with invalid characters
+    - BUG/MEDIUM: hlua: fix hlua_applet_{http,tcp}_fct() yield regression (lost data)
+    - MINOR: compiler: add a __has_builtin() macro to detect features more easily
+    - MINOR: compiler: add a new "ASSUME" macro to help the compiler
+    - MINOR: compiler: also enable __builtin_assume() for ASSUME()
+    - MINOR: compiler: add ASSUME_NONNULL() to tell the compiler a pointer is valid
+    - BUILD: makefile: enable backtrace by default on musl
+    - BUG/MINOR: threads: set threads_idle and threads_harmless even with no threads
+    - BUG/MINOR debug: fix !USE_THREAD_DUMP in ha_thread_dump_fill()
+    - BUG/MINOR: wdt/debug: avoid signal re-entrance between debugger and watchdog
+    - BUG/MINOR: debug: detect and prevent re-entrance in ha_thread_dump_fill()
+    - MINOR: tools: also protect the library name resolution against concurrent accesses
+    - MINOR: tools: protect dladdr() against reentrant calls from the debug handler
+    - MINOR: debug: protect ha_dump_backtrace() against risks of re-entrance
+    - MINOR: tinfo: keep a copy of the pointer to the thread dump buffer
+    - MINOR: debug: always reset the dump pointer when done
+    - MINOR: debug: remove unused case of thr!=tid in ha_thread_dump_one()
+    - MINOR: pass a valid buffer pointer to ha_thread_dump_one()
+    - MEDIUM: wdt: always make the faulty thread report its own warnings
+    - MINOR: debug: make ha_stuck_warning() only work for the current thread
+    - MINOR: debug: make ha_stuck_warning() print the whole message at once
+    - MINOR: compiler: rely on builtin detection for __builtin_unreachable()
+    - BUG/MINOR: mux-h2: prevent past scheduling with idle connections
+    - BUG/MINOR: rhttp: fix reconnect if timeout connect unset
+    - BUG/MINOR: rhttp: ensure GOAWAY can be emitted after reversal
+
 2025/03/20 : 3.1.6
     - BUG/MINOR: cfgparse: fix NULL ptr dereference in cfg_parse_peers
     - BUG/MEDIUM: uxst: fix outgoing abns address family in connect()
