@@ -1636,13 +1636,13 @@ skip_reuse:
 			srv_conn->src = bind_addr;
 			bind_addr = NULL;
 
-			/* copy the target address into the connection */
-			*srv_conn->dst = *s->scb->dst;
-
 			if (!sockaddr_alloc(&srv_conn->dst, 0, 0)) {
 				conn_free(srv_conn);
 				return SF_ERR_RESOURCE;
 			}
+
+			/* copy the target address into the connection */
+			*srv_conn->dst = *s->scb->dst;
 
 			srv_conn->hash_node->node.key = hash;
 		}
