@@ -2893,7 +2893,11 @@ static void quic_free_ncbuf(struct ncbuf *ncbuf)
 	*ncbuf = NCBUF_NULL;
 }
 
-/* Allocate the underlying required memory for <ncbuf> non-contiguous buffer */
+/* Allocate the underlying required memory for <ncbuf> non-contiguous buffer.
+ * Does nothing if buffer is already allocated.
+ *
+ * Returns the buffer instance or NULL on allocation failure.
+ */
 static struct ncbuf *quic_get_ncbuf(struct ncbuf *ncbuf)
 {
 	struct buffer buf = BUF_NULL;
@@ -2901,8 +2905,8 @@ static struct ncbuf *quic_get_ncbuf(struct ncbuf *ncbuf)
 	if (!ncb_is_null(ncbuf))
 		return ncbuf;
 
-	b_alloc(&buf);
-	BUG_ON(b_is_null(&buf));
+	if (!b_alloc(&buf))
+		return NULL;
 
 	*ncbuf = ncb_make(buf.area, buf.size, 0);
 	ncb_init(ncbuf, 0);
