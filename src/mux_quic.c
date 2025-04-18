@@ -2217,6 +2217,17 @@ static int qc_init(struct connection *conn, struct proxy *prx,
  fail_no_tasklet:
 	if (qcc->app_ops && qcc->app_ops->release)
 		qcc->app_ops->release(qcc->ctx);
+
+	/* app-ops layer may have already created qcs instances */
+	if (!eb_is_empty(&qcc->streams_by_id)) {
+		struct eb64_node *node = eb64_first(&qcc->streams_by_id);
+		while (node) {
+			struct qcs *qcs = eb64_entry(node, struct qcs, by_id);
+			node = eb64_next(node);
+			qcs_free(qcs);
+		}
+	}
+
 	pool_free(pool_head_qcc, qcc);
  fail_no_qcc:
 	TRACE_LEAVE(QMUX_EV_QCC_NEW);
