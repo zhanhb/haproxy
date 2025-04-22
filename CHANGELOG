@@ -1,6 +1,55 @@
 ChangeLog :
 ===========
 
+2025/04/22 : 3.0.10
+    - MINOR: log: support "raw" logformat node typecast
+    - BUG/MINOR: peers: fix expire learned from a peer not converted from ms to ticks
+    - BUG/MEDIUM: peers: prevent learning expiration too far in futur from unsync node
+    - BUG/MEDIUM: mux-quic: fix crash on RS/SS emission if already close local
+    - BUG/MINOR: mux-quic: remove extra BUG_ON() in _qcc_send_stream()
+    - BUG/MINOR: log: fix gcc warn about truncating NUL terminator while init char arrays
+    - DOC: config: fix two missing "content" in "tcp-request" examples
+    - BUILD: compiler: undefine the CONCAT() macro if already defined
+    - BUG/MINOR: rhttp: fix incorrect dst/dst_port values
+    - BUG/MINOR: backend: do not overwrite srv dst address on reuse
+    - BUG/MEDIUM: backend: fix reuse with set-dst/set-dst-port
+    - BUG/MEDIUM: stream: Fix a possible freeze during a forced shut on a stream
+    - TESTS: Fix build for filltab25.c
+    - MINOR: task: add thread safe notification_new and notification_wake variants
+    - BUG/MINOR: hlua_fcn: fix potential UAF with Queue:pop_wait()
+    - CLEANUP: log: adjust _lf_cbor_encode_byte() comment
+    - BUG/MINOR: log: fix CBOR encoding with LOG_VARTEXT_START() + lf_encode_chunk()
+    - BUG/MEDIUM: sample: fix risk of overflow when replacing multiple regex back-refs
+    - BUG/MINOR: backend: do not use the source port when hashing clientip
+    - BUG/MINOR: hlua: fix invalid errmsg use in hlua_init()
+    - DOC: config: add the missing "profiling.memory" to the global kw index
+    - BUG/MINOR: http-ana: Properly detect client abort when forwarding the response
+    - BUG/MEDIUM: http-ana: Report 502 from req analyzer only during rsp forwarding
+    - BUG/MINOR: sink: add tempo between 2 connection attempts for sft servers (2)
+    - BUG/MEDIUM: h3: trim whitespaces when parsing headers value
+    - BUG/MEDIUM: h3: trim whitespaces in header value prior to QPACK encoding
+    - BUG/MINOR: h3: filter upgrade connection header
+    - BUG/MINOR: h3: reject invalid :path in request
+    - BUG/MINOR: h3: reject request URI with invalid characters
+    - BUG/MEDIUM: hlua: fix hlua_applet_{http,tcp}_fct() yield regression (lost data)
+    - BUG/MINOR: quic: do not crash on CRYPTO ncbuf alloc failure
+    - DEBUG: stream: Add debug counters to track some client/server aborts
+    - BUG/MINOR: stktable: invalid use of stkctr_set_entry() with mixed table types
+    - BUG/MEDIUM: mux-fcgi: Properly handle read0 on partial records
+    - DEBUG: fd: add a counter of takeovers of an FD since it was last opened
+    - MINOR: fd: add a generation number to file descriptors
+    - MINOR: epoll: permit to mask certain specific events
+    - DEBUG: epoll: store and compare the FD's generation count with reported event
+    - MEDIUM: epoll: skip reports of stale file descriptors
+    - IMPORT: plock: give higher precedence to W than S
+    - IMPORT: plock: lower the slope of the exponential back-off
+    - IMPORT: plock: use cpu_relax() for a shorter time in EBO
+    - BUG/MINOR debug: fix !USE_THREAD_DUMP in ha_thread_dump_fill()
+    - BUG/MINOR: mux-h2: prevent past scheduling with idle connections
+    - BUG/MINOR: rhttp: fix reconnect if timeout connect unset
+    - BUG/MINOR: rhttp: ensure GOAWAY can be emitted after reversal
+    - MINOR: tools: also protect the library name resolution against concurrent accesses
+
 2025/03/20 : 3.0.9
     - BUG/MEDIUM: ssl: chosing correct certificate using RSA-PSS with TLSv1.3
     - BUG/MEDIUM: mux-quic: do not attach on already closed stream
