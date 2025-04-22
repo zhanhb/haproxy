@@ -1528,6 +1528,9 @@ static int spop_conn_send_disconnect(struct spop_conn *spop_conn)
 
 	outbuf.data += p - b_tail(&outbuf);
 
+	if (outbuf.data - 4 > spop_conn->max_frame_size)
+		goto too_big;
+
 	/* update the frame's size now */
 	TRACE_PROTO("SPOP HAPROXY DISCONNECT frame xferred", SPOP_EV_TX_FRAME|SPOP_EV_TX_DISCO, spop_conn->conn, 0, 0, (size_t[]){outbuf.data});
 	spop_set_frame_size(outbuf.area, outbuf.data - 4);
@@ -1540,10 +1543,8 @@ static int spop_conn_send_disconnect(struct spop_conn *spop_conn)
 	return ret;
   full:
 	/* Too large to be encoded. For DISCONNECT frame, it is an error */
-	if (!b_data(mbuf)) {
-		TRACE_ERROR("SPOP HAPROXY DISCO frame too large", SPOP_EV_TX_FRAME|SPOP_EV_TX_DISCO|SPOP_EV_SPOP_CONN_ERR, spop_conn->conn);
-		goto fail;
-	}
+	if (!b_data(mbuf))
+		goto too_big;
 
 	if ((mbuf = br_tail_add(spop_conn->mbuf)) != NULL)
 		goto retry;
@@ -1552,6 +1553,10 @@ static int spop_conn_send_disconnect(struct spop_conn *spop_conn)
 	TRACE_STATE("mbuf ring full", SPOP_EV_TX_FRAME|SPOP_EV_SPOP_CONN_BLK, spop_conn->conn);
 	ret = 0;
 	goto end;
+
+  too_big:
+	TRACE_ERROR("SPOP HAPROXY DISCO frame too large", SPOP_EV_TX_FRAME|SPOP_EV_TX_DISCO|SPOP_EV_SPOP_CONN_ERR, spop_conn->conn);
+
   fail:
 	spop_conn->state = SPOP_CS_CLOSED;
 	TRACE_STATE("switching to CLOSED", SPOP_EV_TX_FRAME|SPOP_EV_TX_DISCO|SPOP_EV_SPOP_CONN_END, spop_conn->conn);
@@ -3133,6 +3138,9 @@ static size_t spop_strm_send_notify(struct spop_strm *spop_strm, struct buffer *
 
 	outbuf.data += p - b_tail(&outbuf);
 
+	if (outbuf.data - 4 > spop_conn->max_frame_size)
+		goto too_big;
+
 	/* update the frame's size now */
 	TRACE_PROTO("SPOP HAPROXY NOTIFY frame xferred", SPOP_EV_TX_FRAME|SPOP_EV_TX_NOTIFY, spop_conn->conn, spop_strm, 0, (size_t[]){outbuf.data});
 	spop_set_frame_size(outbuf.area, outbuf.data - 4);
@@ -3146,11 +3154,8 @@ static size_t spop_strm_send_notify(struct spop_strm *spop_strm, struct buffer *
 	return ret;
   full:
 	/* Too large to be encoded. For NOTIFY frame, it is an error */
-	if (!b_data(mbuf)) {
-		TRACE_ERROR("SPOP HAPROXY NOTIFY frame too large", SPOP_EV_TX_FRAME|SPOP_EV_TX_NOTIFY|SPOP_EV_SPOP_STRM_ERR, spop_conn->conn, spop_strm);
-		spop_strm_error(spop_strm, SPOP_ERR_TOO_BIG);
-		goto fail;
-	}
+	if (!b_data(mbuf))
+		goto too_big;
 
 	if ((mbuf = br_tail_add(spop_conn->mbuf)) != NULL)
 		goto retry;
@@ -3159,6 +3164,11 @@ static size_t spop_strm_send_notify(struct spop_strm *spop_strm, struct buffer *
 	TRACE_STATE("mbuf ring full", SPOP_EV_TX_FRAME|SPOP_EV_TX_NOTIFY|SPOP_EV_SPOP_STRM_BLK, spop_conn->conn, spop_strm);
 	ret = 0;
 	goto end;
+
+  too_big:
+	TRACE_ERROR("SPOP HAPROXY NOTIFY frame too large", SPOP_EV_TX_FRAME|SPOP_EV_TX_NOTIFY|SPOP_EV_SPOP_STRM_ERR, spop_conn->conn, spop_strm);
+	spop_strm_error(spop_strm, SPOP_ERR_TOO_BIG);
+
   fail:
 	TRACE_DEVEL("leaving on error", SPOP_EV_TX_FRAME|SPOP_EV_TX_NOTIFY|SPOP_EV_SPOP_STRM_ERR, spop_conn->conn, spop_strm);
 	return 0;
