@@ -1,6 +1,90 @@
 ChangeLog :
 ===========
 
+2025/04/23 : 2.2.34
+    - BUG/MEDIUM: connection: report connection errors even when no mux is installed
+    - DOC: configuration: clarify ciphersuites usage
+    - DOC: configuration: clarify ciphersuites usage (V2)
+    - BUG/MINOR: log: fix lf_text_len() truncate inconsistency
+    - BUG/MINOR: tools/log: invalid encode_{chunk,string} usage
+    - BUG/MINOR: log: invalid snprintf() usage in sess_build_logline()
+    - BUG/MEDIUM: http-ana: Deliver 502 on keep-alive for fressh server connection
+    - BUG/MEDIUM: stconn: Don't forward channel data if input data must be filtered
+    - BUG/MEDIUM: evports: do not clear returned events list on signal
+    - BUG/MINOR: fd: my_closefrom() on Linux could skip contiguous series of sockets
+    - BUG/MINOR: h1: fix detection of upper bytes in the URI
+    - BUG/MEDIUM: htx: mark htx_sl as packed since it may be realigned
+    - BUG/MEDIUM: fd: prevent memory waste in fdtab array
+    - BUG/MINOR: htpp-ana/stats: Specify that HTX redirect messages have a C-L header
+    - BUG/MINOR: stats: Don't state the 303 redirect response is chunked
+    - BUILD: fd: errno is also needed without poll()
+    - BUG/MINOR: ssl/ocsp: init callback func ptr as NULL
+    - BUG/MINOR: tcpcheck: report correct error in tcp-check rule parser
+    - BUG/MINOR: tools: fix possible null-deref in env_expand() on out-of-memory
+    - CLEANUP: hlua: use hlua_pusherror() where relevant
+    - BUG/MEDIUM: ssl: wrong priority whem limiting ECDSA ciphers in ECDSA+RSA configuration
+    - BUG/MEDIUM: http_ana: ignore NTLM for reuse aggressive/always and no H1
+    - BUG/MINOR: haproxy: only tid 0 must not sleep if got signal
+    - BUG/MINOR: cfgparse: remove the correct option on httpcheck send-state warning
+    - DOC/MINOR: management: add missed -dR and -dv options
+    - DOC: management: rename show stats domain cli "dns" to "resolvers"
+    - DOC: configuration: fix alphabetical order of bind options
+    - SCRIPTS: git-show-backports: do not truncate git-show output
+    - BUG/MINOR: hlua: report proper context upon error in hlua_cli_io_handler_fct()
+    - CI: introduce scripts/build-vtest.sh for installing VTest
+    - CI: scripts: fix build of vtest regarding option -C
+    - BUG/MEDIUM: spoe: Be sure to create a SPOE applet if none on the current thread
+    - BUG/MINOR: cli: Atomically inc the global request counter between CLI commands
+    - BUG/MEDIUM: stream: Prevent mux upgrades if client connection is no longer ready
+    - BUG/MEDIUM: cli: Always release back endpoint between two commands on the mcli
+    - BUG/MINOR: fcgi-app: handle a possible strdup() failure
+    - BUG/MINOR: trace: automatically start in waiting mode with "start <evt>"
+    - REGTESTS: fix random failures with wrong_ip_port_logging.vtc under load
+    - BUG/MINOR: polling: fix time reporting when using busy polling
+    - BUG/MINOR: server: Don't warn fallback IP is used during init-addr resolution
+    - DOC: config: improve the http-keep-alive section
+    - BUG/MINOR: cfgparse-global: fix allowed args number for setenv
+    - BUG/MINOR: mworker: fix mworker-max-reloads parser
+    - BUG/MINOR: ssl: can't load a separated key file with openssl > 3.0
+    - BUG/MEDIUM: mux-h2: Don't send RST_STREAM frame for streams with no ID
+    - BUG/MEDIUM: checks: make sure to always apply offsets to now_ms in expiration
+    - BUG/MINOR: peers: make sure to always apply offsets to now_ms in expiration
+    - BUG/MINOR: http_ana: Report -1 for %Tr for invalid response only
+    - DOC: config: Slightly improve the %Tr documentation
+    - DOC: lua: fix yield-dependent methods expected contexts
+    - BUG/MEDIUM: mux-h2: Increase max number of headers when encoding HEADERS frames
+    - BUG/MEDIUM: mux-h2: Check the number of headers in HEADERS frame after decoding
+    - BUG/MEDIUM: http-ana: Reset request flag about data sent to perform a L7 retry
+    - BUG/MINOR: h1-htx: Use default reason if not set when formatting the response
+    - BUG/MINOR: signal: register default handler for SIGINT in signal_init()
+    - BUG/MINOR: stktable: fix big-endian compatiblity in smp_to_stkey()
+    - BUG/MINOR: ssl: put ssl_sock_load_ca under SSL_NO_GENERATE_CERTIFICATES
+    - BUG/MEDIUM: ssl: chosing correct certificate using RSA-PSS with TLSv1.3
+    - BUG/MINOR: spoe: Check the shared waiting queue to shut applets during stopping
+    - BUG/MINOR: spoe: Allow applet creation when closing the last one during stopping
+    - REGTESTS: Fix truncated.vtc to send 0-CRLF
+    - BUG/MEDIUM: htx: wrong count computation in htx_xfer_blks()
+    - DOC: option redispatch should mention persist options
+    - TESTS: ist: fix wrong array size
+    - BUG/MINOR: cli: Wait for the last ACK when FDs are xferred from the old worker
+    - BUG/MEDIUM: filters: Handle filters registered on data with no payload callback
+    - BUG/MINOR: fcgi: Don't set the status to 302 if it is already set
+    - BUG/MINOR: cli: Fix a possible infinite loop in _getsocks()
+    - BUG/MINOR: stats-json: Define JSON_INT_MAX as a signed integer
+    - BUG/MINOR: cfgparse: fix NULL ptr dereference in cfg_parse_peers
+    - BUG/MINOR: namespace: handle a possible strdup() failure
+    - BUG/MEDIUM: hlua/cli: fix cli applet UAF in hlua_applet_wakeup()
+    - MINOR: cli: export cli_io_handler() to ease symbol resolution
+    - BUG/MINOR: peers: fix expire learned from a peer not converted from ms to ticks
+    - BUG/MEDIUM: peers: prevent learning expiration too far in futur from unsync node
+    - BUG/MEDIUM: sample: fix risk of overflow when replacing multiple regex back-refs
+    - BUILD: makefile: silence deprecated declarations when using OpenSSL
+    - MINOR: version: set the EOL for the 2.2 branch
+    - BUILD: makefile: Redirect stderr to /dev/null when probing options
+    - MINOR: build: force CC to set a return code when probing options
+    - BUILD: config: fix again bugs gcc warnings on calloc [try 2]
+    - BUG/MINOR: h2: always trim leading and trailing LWS in header values
+
 2024/04/05 : 2.2.33
     - DOC: configuration: typo req.ssl_hello_type
     - BUG/MEDIUM: mux-h2: Report too large HEADERS frame only when rxbuf is empty
