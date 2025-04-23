@@ -1146,6 +1146,10 @@ static void qcs_consume(struct qcs *qcs, uint64_t bytes)
 /* Decode the content of STREAM frames already received on the stream instance
  * <qcs>.
  *
+ * It is safe to remove <qcs> from <qcc> recv_list after decoding is done. Even
+ * if an error is returned, caller should consider that no further Rx
+ * processing can be performed for the stream, until new bytes are available.
+ *
  * Returns 0 on success else non-zero.
  */
 static int qcc_decode_qcs(struct qcc *qcc, struct qcs *qcs)
@@ -1156,6 +1160,12 @@ static int qcc_decode_qcs(struct qcc *qcc, struct qcs *qcs)
 	int prev_glitches = qcc->glitches;
 
 	TRACE_ENTER(QMUX_EV_QCS_RECV, qcc->conn, qcs);
+
+	if (qcc->flags & QC_CF_ERRL) {
+		TRACE_DATA("connection on error", QMUX_EV_QCC_RECV, qcc->conn);
+		ret = -1;
+		goto err;
+	}
 
 	b = qcs_b_dup(&qcs->rx.ncbuf);
 
