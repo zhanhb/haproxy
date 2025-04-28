@@ -95,6 +95,9 @@ static inline void __appctx_free(struct appctx *appctx)
 #define appctx_wakeup(ctx) \
 	_task_wakeup((ctx)->t, TASK_WOKEN_OTHER, MK_CALLER(WAKEUP_TYPE_APPCTX_WAKEUP, 0, 0))
 
+#define appctx_schedule(ctx, w) \
+        task_schedule((ctx)->t, w)
+
 /* returns the stream connector the appctx is attached to, via the sedesc */
 static inline struct stconn *appctx_sc(const struct appctx *appctx)
 {
