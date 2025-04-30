@@ -3156,6 +3156,7 @@ static int h1_process(struct h1c * h1c)
 			se_fl_set(h1s->sd, SE_FL_ERROR);
 		h1_alert(h1s);
 		TRACE_DEVEL("waiting to release the SC before releasing the connection", H1_EV_H1C_WAKE);
+		return 0;
 	}
 	else {
 		h1_release(h1c);
