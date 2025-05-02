@@ -1106,7 +1106,8 @@ static int h2_init(struct connection *conn, struct proxy *prx, struct session *s
 			goto fail_stream;
 	}
 
-	proxy_inc_fe_cum_sess_ver_ctr(sess->listener, prx, 2);
+	if (sess && !conn_is_back(conn))
+		proxy_inc_fe_cum_sess_ver_ctr(sess->listener, prx, 2);
 	HA_ATOMIC_INC(&h2c->px_counters->open_conns);
 	HA_ATOMIC_INC(&h2c->px_counters->total_conns);
 
