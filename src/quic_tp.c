@@ -316,9 +316,17 @@ quic_transport_param_decode(struct quic_transport_params *p, int server,
 			return QUIC_TP_DEC_ERR_TRUNC;
 		break;
 	case QUIC_TP_ACK_DELAY_EXPONENT:
-		if (!quic_dec_int(&p->ack_delay_exponent, buf, end) ||
-			p->ack_delay_exponent > QUIC_TP_ACK_DELAY_EXPONENT_LIMIT)
+		if (!quic_dec_int(&p->ack_delay_exponent, buf, end))
 			return QUIC_TP_DEC_ERR_TRUNC;
+
+		/* RFC 9000 18.2. Transport Parameter Definitions
+		 *
+		 * ack_delay_exponent (0x0a): [...]
+		 * Values above 20 are invalid.
+		 */
+		if (p->ack_delay_exponent > QUIC_TP_ACK_DELAY_EXPONENT_LIMIT)
+			return QUIC_TP_DEC_ERR_INVAL;
+
 		break;
 	case QUIC_TP_MAX_ACK_DELAY:
 		if (!quic_dec_int(&p->max_ack_delay, buf, end) ||
