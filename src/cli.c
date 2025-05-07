@@ -776,7 +776,8 @@ static int cli_parse_request(struct appctx *appctx)
 				break;
 			}
 		}
-		*p++ = 0;
+		if (p < end)
+			*p++ = 0;
 
 		/* unescape backslashes (\) */
 		for (j = 0, k = 0; args[i][k]; k++) {
