@@ -3552,7 +3552,7 @@ __LJMP static int hlua_channel_get_data_yield(lua_State *L, int status, lua_KCon
 	struct channel *chn;
 	struct filter *filter;
 	size_t input, output;
-	int offset, len;
+	int offset, len = 0;
 
 	chn = MAY_LJMP(hlua_checkchannel(L, 1));
 
@@ -3569,11 +3569,14 @@ __LJMP static int hlua_channel_get_data_yield(lua_State *L, int status, lua_KCon
 		if (offset < 0)
 			offset = MAX(0, (int)input + offset);
 		offset += output;
-		if (offset < output || offset > input + output) {
+		if (offset < output) {
 			lua_pushfstring(L, "offset out of range.");
 			WILL_LJMP(lua_error(L));
 		}
 	}
+	if (offset >= output+input)
+		goto wait_more_data;
+
 	len = output + input - offset;
 	if (lua_gettop(L) == 3) {
 		len = MAY_LJMP(luaL_checkinteger(L, 3));
@@ -3591,15 +3594,21 @@ __LJMP static int hlua_channel_get_data_yield(lua_State *L, int status, lua_KCon
 	 * is no data or not enough data was received.
 	 */
 	if (!len || offset + len > output + input) {
+	  wait_more_data:
 		if (!HLUA_CANT_YIELD(hlua_gethlua(L)) && !channel_input_closed(chn) && channel_may_recv(chn)) {
 			/* Yield waiting for more data, as requested */
 			MAY_LJMP(hlua_yieldk(L, 0, 0, hlua_channel_get_data_yield, TICK_ETERNITY, 0));
 		}
 
-		/* Return 'nil' if there is no data and the channel can't receive more data */
-		if (!len) {
+		if (!input) {
+			/* Return 'nil' if there is no data and the channel can't receive more data */
 			lua_pushnil(L);
 			return -1;
+		}
+
+		if (!len) {
+			lua_pushstring(L, "");
+			return 1;
 		}
 
 		/* Otherwise, return all data */
@@ -3627,7 +3636,7 @@ __LJMP static int hlua_channel_get_line_yield(lua_State *L, int status, lua_KCon
 	struct channel *chn;
 	struct filter *filter;
 	size_t l, input, output;
-	int offset, len;
+	int offset, len = 0;
 
 	chn = MAY_LJMP(hlua_checkchannel(L, 1));
 	output = co_data(chn);
@@ -3643,11 +3652,13 @@ __LJMP static int hlua_channel_get_line_yield(lua_State *L, int status, lua_KCon
 		if (offset < 0)
 			offset = MAX(0, (int)input + offset);
 		offset += output;
-		if (offset < output || offset > input + output) {
+		if (offset < output) {
 			lua_pushfstring(L, "offset out of range.");
 			WILL_LJMP(lua_error(L));
 		}
 	}
+	if (offset > output + input)
+		goto wait_more_data;
 
 	len = output + input - offset;
 	if (lua_gettop(L) == 3) {
@@ -3675,15 +3686,21 @@ __LJMP static int hlua_channel_get_line_yield(lua_State *L, int status, lua_KCon
 	 * specified or not enough data was received.
 	 */
 	if (lua_gettop(L) != 3 ||  offset + len > output + input) {
+	  wait_more_data:
 		if (!HLUA_CANT_YIELD(hlua_gethlua(L)) && !channel_input_closed(chn) && channel_may_recv(chn)) {
 			/* Yield waiting for more data */
 			MAY_LJMP(hlua_yieldk(L, 0, 0, hlua_channel_get_line_yield, TICK_ETERNITY, 0));
 		}
 
-		/* Return 'nil' if there is no data and the channel can't receive more data */
-		if (!len) {
+		if (!input) {
+			/* Return 'nil' if there is no data and the channel can't receive more data */
 			lua_pushnil(L);
 			return -1;
+		}
+
+		if (!len) {
+			lua_pushstring(L, "");
+			return 1;
 		}
 
 		/* Otherwise, return all data */
