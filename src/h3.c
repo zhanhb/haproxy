@@ -757,6 +757,21 @@ static ssize_t h3_headers_to_htx(struct qcs *qcs, const struct buffer *buf,
 		goto out;
 	}
 
+	/* We're going to concatenate :authority with :path to form a URI. Some
+	 * characters must absolutely be avoided in :authority to make sure not
+	 * to result in a broken concatenation. See the following links for a
+	 * discussion on this topic:
+	 *   https://github.com/httpwg/http2-spec/pull/936
+	 *   https://github.com/haproxy/haproxy/issues/2941
+	 */
+	if (http_authority_has_forbidden_char(authority)) {
+		TRACE_ERROR("invalid character in authority", H3_EV_RX_FRAME|H3_EV_RX_HDR, qcs->qcc->conn, qcs);
+		h3s->err = H3_ERR_MESSAGE_ERROR;
+		qcc_report_glitch(h3c->qcc, 1);
+		len = -1;
+		goto out;
+	}
+
 	/* Ensure that final URI does not contains LWS nor CTL characters. */
 	for (i = 0; i < path.len; i++) {
 		unsigned char c = istptr(path)[i];
