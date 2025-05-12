@@ -3077,6 +3077,8 @@ void run_poll_loop()
 							wake_thread(i);
 					break;
 				}
+#else
+				break;
 #endif
 			}
 		}
