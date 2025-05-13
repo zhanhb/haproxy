@@ -210,7 +210,6 @@ struct trace_source trace_quic = {
 #define TRACE_SOURCE    &trace_quic
 INITCALL1(STG_REGISTER, trace_register_source, TRACE_SOURCE);
 
-static BIO_METHOD *ha_quic_meth;
 
 DECLARE_POOL(pool_head_quic_tx_ring, "quic_tx_ring", QUIC_TX_RING_BUFSZ);
 DECLARE_POOL(pool_head_quic_conn_rxbuf, "quic_conn_rxbuf", QUIC_CONN_RX_BUFSZ);
@@ -8651,18 +8650,6 @@ static struct quic_tx_packet *qc_build_pkt(unsigned char **pos,
 	goto leave;
 }
 
-
-static void __quic_conn_init(void)
-{
-	ha_quic_meth = BIO_meth_new(0x666, "ha QUIC methods");
-}
-INITCALL0(STG_REGISTER, __quic_conn_init);
-
-static void __quic_conn_deinit(void)
-{
-	BIO_meth_free(ha_quic_meth);
-}
-REGISTER_POST_DEINIT(__quic_conn_deinit);
 
 /* Handle a new <dgram> received. Parse each QUIC packets and copied their
  * content to a quic-conn instance. The datagram content can be released after
