@@ -1587,6 +1587,7 @@ static int spop_conn_handle_hello(struct spop_conn *spop_conn)
 
 	/* process full record only */
 	if (b_data(dbuf) < (spop_conn->dfl)) {
+		spop_conn->flags |= SPOP_CF_DEM_SHORT_READ;
 		TRACE_DEVEL("leaving on missing data", SPOP_EV_RX_FRAME|SPOP_EV_RX_HELLO, spop_conn->conn);
 		return 0;
 	}
@@ -1758,6 +1759,7 @@ static int spop_conn_handle_disconnect(struct spop_conn *spop_conn)
 
 	/* process full record only */
 	if (b_data(dbuf) < (spop_conn->dfl)) {
+		spop_conn->flags |= SPOP_CF_DEM_SHORT_READ;
 		TRACE_DEVEL("leaving on missing data", SPOP_EV_RX_FRAME|SPOP_EV_RX_DISCO, spop_conn->conn);
 		return 0;
 	}
@@ -1868,6 +1870,7 @@ static int spop_conn_handle_ack(struct spop_conn *spop_conn, struct spop_strm *s
 
 	/* process full record only */
 	if (b_data(dbuf) < (spop_conn->dfl)) {
+		spop_conn->flags |= SPOP_CF_DEM_SHORT_READ;
 		TRACE_DEVEL("leaving on missing data", SPOP_EV_RX_FRAME|SPOP_EV_RX_DISCO, spop_conn->conn);
 		return 0;
 	}
