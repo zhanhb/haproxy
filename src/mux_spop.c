@@ -2223,6 +2223,13 @@ static void spop_process_demux(struct spop_conn *spop_conn)
 			spop_conn->flags |= SPOP_CF_END_REACHED;
 	}
 
+	if (spop_conn_read0_pending(spop_conn) && (spop_conn->flags & SPOP_CF_DEM_SHORT_READ) && b_data(&spop_conn->dbuf)) {
+		spop_conn_error(spop_conn, SPOP_ERR_INVALID);
+		spop_conn->state = SPOP_CS_CLOSED;
+		TRACE_ERROR("truncated data", SPOP_EV_RX_FRAME|SPOP_EV_RX_FHDR|SPOP_EV_SPOP_CONN_ERR, spop_conn->conn);
+		TRACE_STATE("switching to CLOSED", SPOP_EV_RX_FRAME|SPOP_EV_RX_FHDR|SPOP_EV_SPOP_CONN_ERR, spop_conn->conn);
+	}
+
 	if (spop_strm && spop_strm_sc(spop_strm) &&
 	    (b_data(&spop_strm->rxbuf) ||
 	     spop_conn_read0_pending(spop_conn) ||
