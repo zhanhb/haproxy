@@ -6345,7 +6345,7 @@ static int qc_ssl_sess_init(struct quic_conn *qc, SSL_CTX *ssl_ctx, SSL **ssl,
 	*ssl = SSL_new(ssl_ctx);
 	if (!*ssl) {
 		if (!retry--)
-			goto leave;
+			goto err;
 
 		pool_gc(NULL);
 		goto retry;
@@ -6356,7 +6356,7 @@ static int qc_ssl_sess_init(struct quic_conn *qc, SSL_CTX *ssl_ctx, SSL **ssl,
 		SSL_free(*ssl);
 		*ssl = NULL;
 		if (!retry--)
-			goto leave;
+			goto err;
 
 		pool_gc(NULL);
 		goto retry;
@@ -6366,6 +6366,9 @@ static int qc_ssl_sess_init(struct quic_conn *qc, SSL_CTX *ssl_ctx, SSL **ssl,
  leave:
 	TRACE_LEAVE(QUIC_EV_CONN_NEW, qc);
 	return ret;
+ err:
+	TRACE_DEVEL("leaving on error", QUIC_EV_CONN_NEW, qc);
+	goto leave;
 }
 
 /* Allocate the ssl_sock_ctx from connection <qc>. This creates the tasklet
