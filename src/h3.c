@@ -601,7 +601,12 @@ static ssize_t h3_headers_to_htx(struct qcs *qcs, const struct buffer *buf,
 				goto out;
 			}
 
-			if (!http_validate_scheme(list[hdr_idx].v)) {
+			flags |= HTX_SL_F_HAS_SCHM;
+			if (isteqi(list[hdr_idx].v, ist("http")))
+				flags |= HTX_SL_F_SCHM_HTTP;
+			else if (isteqi(list[hdr_idx].v, ist("https")))
+				flags |= HTX_SL_F_SCHM_HTTPS;
+			else if (!http_validate_scheme(list[hdr_idx].v)) {
 				TRACE_ERROR("invalid scheme pseudo-header", H3_EV_RX_FRAME|H3_EV_RX_HDR, qcs->qcc->conn, qcs);
 				h3s->err = H3_MESSAGE_ERROR;
 				len = -1;
