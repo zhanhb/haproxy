@@ -1,6 +1,78 @@
 ChangeLog :
 ===========
 
+2025/06/02 : 3.1.8
+    - BUG/MINOR: quic: do not crash on CRYPTO ncbuf alloc failure
+    - BUG/MINOR: cli: Issue an error when too many args are passed for a command
+    - BUG/MAJOR: listeners: transfer connection accounting when switching listeners
+    - MINOR: applet: add appctx_schedule() macro
+    - CLEANUP: dns: remove unused dns_stream_server struct member
+    - BUG/MINOR: dns: add tempo between 2 connection attempts for dns servers
+    - BUG/MINOR: dns: prevent ds accumulation within dss
+    - BUG/MINOR: mux-h1: Don't pretend connection was released for TCP>H1>H2 upgrade
+    - BUG/MINOR: mux-h1: Fix trace message in h1_detroy() to not relay on connection
+    - BUG/MEDIUM: connections: Report connection closing in conn_create_mux()
+    - BUG/MINOR: proxy: only use proxy_inc_fe_cum_sess_ver_ctr() with frontends
+    - MINOR: quic: rename min/max fields for congestion window algo
+    - MINOR: quic: extend return value during TP parsing
+    - BUG/MINOR: quic: use proper error code on missing CID in TPs
+    - BUG/MINOR: quic: use proper error code on invalid server TP
+    - BUG/MINOR: quic: reject retry_source_cid TP on server side
+    - BUG/MINOR: quic: use proper error code on invalid received TP value
+    - BUG/MINOR: quic: fix TP reject on invalid max-ack-delay
+    - BUG/MINOR: quic: reject invalid max_udp_payload size
+    - BUG/MEDIUM: peers: hold the refcnt until updating ts->seen
+    - BUG/MINOR: cli: fix too many args detection for commands
+    - BUG/MEDIUM: quic: free stream_desc on all data acked
+    - BUG/MINOR: ssl/ckch: always free() the previous entry during parsing
+    - BUG/MINOR: threads: fix soft-stop without multithreading support
+    - BUG/MINOR: hlua: Fix Channel:data() and Channel:line() to respect documentation
+    - BUG/MINOR: spoe: Don't report error on applet release if filter is in DONE state
+    - BUG/MEDIUM: mux-spop: Respect the negociated max-frame-size value to send frames
+    - BUG/MEDIUM: mux-spop: Wait end of handshake to declare a spop connection ready
+    - BUG/MINOR: mux-spop: Use the right bitwise operator in spop_ctl()
+    - BUG/MINOR: mux-spop: Don't report error for stream if ACK was already received
+    - BUG/MINOR: mux-spop: Make the demux stream ID a signed integer
+    - BUG/MINOR: mux-spop: Don't open new streams for SPOP connection on error
+    - MINOR: mux-spop: Don't set SPOP connection state to FRAME_H after ACK parsing
+    - BUG/MEDIUM: mux-spop: Remove frame parsing states from the SPOP connection state
+    - BUG/MEDIUM: mux-spop: Properly handle CLOSING state
+    - BUG/MEDIUM: spop-conn: Report short read for partial frames payload
+    - BUG/MEDIUM: mux-spop; Don't report a read error if there are pending data
+    - DEBUG: mux-spop: Review some trace messages to adjust the message or the level
+    - BUG/MINOR: sink: detect and warn when using "send-proxy" options with ring servers
+    - BUG/MEDIUM: peers: also limit the number of incoming updates
+    - DOC: ring: refer to newer RFC5424
+    - DOC: config: restore default values for resolvers hold directive
+    - DOC: config: recommend disabling libc-based resolution with resolvers
+    - MEDIUM: stick-tables: Limit the number of old entries we remove
+    - BUG/MINOR: mux-quic: do not decode if conn in error
+    - MINOR: quic: refactor BBR API
+    - BUG/MINOR: quic: ensure cwnd limits are always enforced
+    - BUG/MEDIUM: mux-spop: Properly detect truncated frames on demux to report error
+    - DOC: configuration: explicit multi-choice on bind shards option
+    - BUG/MINOR: h3: don't insert more than one Host header
+    - BUILD: debug: mark ha_crash_now() as attribute(noreturn)
+    - CLEANUP: quic: Useless BIO_METHOD initialization
+    - MINOR: quic: Add useful error traces about qc_ssl_sess_init() failures
+    - BUG/MEDIUM: wdt: always ignore the first watchdog wakeup
+    - MEDIUM: hlua: Add function to change the body length of an HTTP Message
+    - BUG/MEDIUM: stconn: Disable 0-copy forwarding for filters altering the payload
+    - BUG/MEDIUM: server: fix crash after duplicate GUID insertion
+    - BUG/MEDIUM: server: fix potential null-deref after previous fix
+    - BUG/MAJOR: cache: Crash because of wrong cache entry deleted
+    - DOC: configuration: fix the example in crt-store
+    - BUG/MINOR: h3: Set HTX flags corresponding to the scheme found in the request
+    - BUG/MEDIUM: hlua: Properly detect shudowns for TCP applets based on the new API
+    - BUG/MEDIUM: hlua: Fix getline() for TCP applets to work with applet's buffers
+    - REGTESTS: Make the script testing conditional set-var compatible with Vtest2
+    - REGTESTS: Explicitly allow failing shell commands in some scripts
+    - CI: vtest: Rely on VTest2 to run regression tests
+    - CI: vtest: Fix the build script to properly work on MaOS
+    - BUG/MEDIUM: httpclient: Throw an error if an lua httpclient instance is reused
+    - DOC: hlua: Add a note to warn user about httpclient object reuse
+    - DOC: hlua: fix a few typos in HTTPMessage.set_body_len() documentation
+
 2025/04/17 : 3.1.7
     - MINOR: log: support "raw" logformat node typecast
     - BUG/MINOR: peers: fix expire learned from a peer not converted from ms to ticks
