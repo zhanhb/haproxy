@@ -7138,7 +7138,10 @@ static int qc_conn_alloc_ssl_ctx(struct quic_conn *qc)
 	return !ret;
 
  err:
-	pool_free(pool_head_quic_conn_ctx, ctx);
+	if (ctx) {
+		SSL_free(ctx->ssl);
+		pool_free(pool_head_quic_conn_ctx, ctx);
+	}
 	goto leave;
 }
 
