@@ -1,6 +1,19 @@
 ChangeLog :
 ===========
 
+2025/06/11 : 3.2.1
+    - BUILD: tools: properly define ha_dump_backtrace() to avoid a build warning
+    - DOC: config: Fix a typo in 2.7 (Name format for maps and ACLs)
+    - BUG/MAJOR: leastconn: Protect tree_elt with the lbprm lock
+    - BUG/MEDIUM: check: Requeue healthchecks on I/O events to handle check timeout
+    - BUG/MINOR: mux-spop: Fix null-pointer deref on SPOP stream allocation failure
+    - BUG/MEDIUM: cli: Properly parse empty lines and avoid crashed
+    - BUG/MINOR: config: emit warning for empty args only in discovery mode
+    - BUG/MINOR: config: fix arg number reported on empty arg warning
+    - BUG/MINOR: quic: Missing SSL session object freeing
+    - BUG/MEDIUM: fd: Use the provided tgid in fd_insert() to get tgroup_info
+    - BUG/MINIR: h1: Fix doc of 'accept-unsafe-...-request' about URI parsing
+
 2025/05/28 : 3.2.0
     - MINOR: promex: Add agent check status/code/duration metrics
     - MINOR: ssl: support strict-sni in ssl-default-bind-options
