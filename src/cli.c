@@ -1072,14 +1072,15 @@ size_t cli_snd_buf(struct appctx *appctx, struct buffer *buf, size_t count, unsi
  */
 void cli_io_handler(struct appctx *appctx)
 {
-	if (applet_fl_test(appctx, APPCTX_FL_OUTBLK_ALLOC|APPCTX_FL_OUTBLK_FULL) ||
-	    !appctx_get_buf(appctx, &appctx->outbuf)) {
-                applet_wont_consume(appctx);
-		goto out;
-	}
 
 	if (unlikely(applet_fl_test(appctx, APPCTX_FL_EOS|APPCTX_FL_ERROR))) {
 		appctx->st0 = CLI_ST_END;
+		goto out;
+	}
+
+	if (applet_fl_test(appctx, APPCTX_FL_OUTBLK_ALLOC|APPCTX_FL_OUTBLK_FULL) ||
+	    !appctx_get_buf(appctx, &appctx->outbuf)) {
+                applet_wont_consume(appctx);
 		goto out;
 	}
 
