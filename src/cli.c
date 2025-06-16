@@ -1062,10 +1062,9 @@ size_t cli_snd_buf(struct appctx *appctx, struct buffer *buf, size_t count, unsi
  */
 void cli_io_handler(struct appctx *appctx)
 {
-	if (applet_fl_test(appctx, APPCTX_FL_OUTBLK_ALLOC|APPCTX_FL_OUTBLK_FULL))
-		goto out;
-
-	if (!appctx_get_buf(appctx, &appctx->outbuf)) {
+	if (applet_fl_test(appctx, APPCTX_FL_OUTBLK_ALLOC|APPCTX_FL_OUTBLK_FULL) ||
+	    !appctx_get_buf(appctx, &appctx->outbuf)) {
+                applet_wont_consume(appctx);
 		goto out;
 	}
 
@@ -1084,6 +1083,8 @@ void cli_io_handler(struct appctx *appctx)
 			break;
 		}
 		else if (appctx->st0 == CLI_ST_GETREQ) {
+			applet_will_consume(appctx);
+
 			/* Now we close the output if we're not in interactive
 			 * mode and the request buffer is empty. This still
 			 * allows pipelined requests to be sent in
