@@ -13,6 +13,7 @@
 #include <haproxy/stconn.h>
 
 void qcc_set_error(struct qcc *qcc, int err, int app);
+int qcc_fctl_avail_streams(const struct qcc *qcc, int bidi);
 struct qcs *qcc_init_stream_local(struct qcc *qcc, int bidi);
 int qcs_attach_sc(struct qcs *qcs, struct buffer *buf, char fin);
 struct buffer *qcs_get_buf(struct qcs *qcs, struct buffer *bptr);

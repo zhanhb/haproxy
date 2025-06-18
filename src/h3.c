@@ -2144,6 +2144,19 @@ static int h3_finalize(void *ctx)
 	struct h3c *h3c = ctx;
 	struct qcs *qcs;
 
+	/* RFC 9114 6.2. Unidirectional Streams
+	 *
+	 * Each endpoint needs to create at least one unidirectional stream for
+	 * the HTTP control stream. QPACK requires two additional unidirectional
+	 * streams, and other extensions might require further streams.
+	 * Therefore, the transport parameters sent by both clients and servers
+	 * MUST allow the peer to create at least three unidirectional streams.
+	 */
+	if (qcc_fctl_avail_streams(h3c->qcc, 0) < 3) {
+		qcc_set_error(h3c->qcc, H3_GENERAL_PROTOCOL_ERROR, 1);
+		return 1;
+	}
+
 	qcs = qcc_init_stream_local(h3c->qcc, 0);
 	if (!qcs)
 		return 1;
