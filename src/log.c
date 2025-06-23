@@ -4837,8 +4837,13 @@ int sess_build_logline(struct session *sess, struct stream *s, char *dst, size_t
 
 			case LOG_FMT_UNIQUEID: // %ID
 				ret = NULL;
-				if (s)
+				if (s) {
+					/* if unique-id was not generated */
+					if (!isttest(s->unique_id) && !lf_expr_isempty(&sess->fe->format_unique_id)) {
+						stream_generate_unique_id(s, &sess->fe->format_unique_id);
+					}
 					ret = lf_text_len(tmplog, s->unique_id.ptr, s->unique_id.len, maxsize - (tmplog - dst), ctx);
+				}
 				else
 					ret = lf_text_len(tmplog, NULL, 0, maxsize - (tmplog - dst), ctx);
 				if (ret == NULL)
@@ -4933,11 +4938,6 @@ void strm_log(struct stream *s)
 		level = LOG_INFO;
 		if (err && (sess->fe->options2 & PR_O2_LOGERRORS))
 			level = LOG_ERR;
-	}
-
-	/* if unique-id was not generated */
-	if (!isttest(s->unique_id) && !lf_expr_isempty(&sess->fe->format_unique_id)) {
-		stream_generate_unique_id(s, &sess->fe->format_unique_id);
 	}
 
 	if (!lf_expr_isempty(&sess->fe->logformat_sd)) {
