@@ -8176,11 +8176,13 @@ static void qc_build_cc_frm(struct quic_conn *qc, struct quic_enc_level *qel,
 			 * converting to a CONNECTION_CLOSE of type 0x1c.
 			 */
 			out->type = QUIC_FT_CONNECTION_CLOSE;
+			out->connection_close.frame_type = 0;
 			out->connection_close.error_code = QC_ERR_APPLICATION_ERROR;
 			out->connection_close.reason_phrase_len = 0;
 		}
 		else {
 			out->type = QUIC_FT_CONNECTION_CLOSE_APP;
+			out->connection_close.frame_type = 0;
 			out->connection_close_app.error_code = qc->err.code;
 			out->connection_close_app.reason_phrase_len = 0;
 		}
