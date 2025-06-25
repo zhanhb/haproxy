@@ -565,10 +565,7 @@ static int qc_prep_pkts(struct quic_conn *qc, struct buffer *buf,
 			if (!prv_pkt) {
 				/* Leave room for the datagram header */
 				pos += QUIC_DGRAM_HEADLEN;
-				if (cc) {
-					end = pos + QUIC_MIN_CC_PKTSIZE;
-				}
-				else if (!quic_peer_validated_addr(qc) && qc_is_listener(qc)) {
+				if (!quic_peer_validated_addr(qc) && qc_is_listener(qc)) {
 					end = pos + QUIC_MIN(qc->path->mtu, quic_may_send_bytes(qc));
 				}
 				else {
