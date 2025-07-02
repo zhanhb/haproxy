@@ -1,6 +1,34 @@
 ChangeLog :
 ===========
 
+2025/07/02 : 3.2.2
+    - BUG/MINOR: config/server: reject QUIC addresses
+    - BUG/MINOR: http-ana: Properly handle keep-query redirect option if no QS
+    - BUG/MINOR: quic: Fix OSSL_FUNC_SSL_QUIC_TLS_got_transport_params_fn callback (OpenSSL3.5)
+    - BUG/MEDIUM: cli: Don't consume data if outbuf is full or not available
+    - MINOR: cli: handle EOS/ERROR first
+    - BUG/MEDIUM: check: Set SOCKERR by default when a connection error is reported
+    - DOC: config: prefer-last-server: add notes for non-deterministic algorithms
+    - BUG/MINOR: mux-quic/h3: properly handle too low peer fctl initial stream
+    - BUG/MAJOR: fwlc: Count an avoided server as unusable.
+    - MINOR: fwlc: Factorize code.
+    - BUG/MINOR: tools: only reset argument start upon new argument
+    - BUG/MINOR: stream: Avoid recursive evaluation for unique-id based on itself
+    - BUG/MINOR: log: Be able to use %ID alias at anytime of the stream's evaluation
+    - DOC: configuration: add details on prefer-client-ciphers
+    - BUG/MINOR: quic: wrong QUIC_FT_CONNECTION_CLOSE(0x1c) frame encoding
+    - MINOR: quic: Useless TX buffer size reduction in closing state
+    - DOC: config: crt-list clarify default cert + cert-bundle
+    - SCRIPTS: drop the HTML generation from announce-release
+    - BUG/MINOR: tools: use my_unsetenv instead of unsetenv
+    - MINOR: ssl: check TLS1.3 ciphersuites again in clienthello with recent AWS-LC
+    - BUG/MEDIUM: hlua: Forbid any L6/L7 sample fetche functions from lua services
+    - BUG/MEDIUM: mux-h2: Properly handle connection error during preface sending
+    - BUG/MINOR: jwt: Copy input and parameters in dedicated buffers in jwt_verify converter
+    - DOC: Fix 'jwt_verify' converter doc
+    - BUG/MINOR: httpclient: wrongly named httpproxy flag
+    - BUILD: dev/phash: remove the accidentally committed a.out file
+
 2025/06/11 : 3.2.1
     - BUILD: tools: properly define ha_dump_backtrace() to avoid a build warning
     - DOC: config: Fix a typo in 2.7 (Name format for maps and ACLs)
