@@ -403,13 +403,17 @@ int httpclient_req_xfer(struct httpclient *hc, struct ist src, int end)
 	int ret = 0;
 	struct htx *htx;
 
+	if (hc->flags & HTTPCLIENT_FA_DRAIN_REQ) {
+		ret = istlen(src);
+		goto end;
+	}
+
 	if (!b_alloc(&hc->req.buf, DB_CHANNEL))
-		goto error;
+		goto end;
 
 	htx = htx_from_buf(&hc->req.buf);
 	if (!htx)
-		goto error;
-
+		goto end;
 	ret += htx_add_data(htx, src);
 
 	if (ret && hc->appctx)
@@ -425,13 +429,13 @@ int httpclient_req_xfer(struct httpclient *hc, struct ist src, int end)
 		 */
 		if (htx_is_empty(htx)) {
 			if (!htx_add_endof(htx, HTX_BLK_EOT))
-				goto error;
+				goto end;
 		}
 		htx->flags |= HTX_FL_EOM;
 	}
 	htx_to_buf(htx, &hc->req.buf);
 
-error:
+  end:
 
 	return ret;
 }
@@ -751,8 +755,11 @@ void httpclient_applet_io_handler(struct appctx *appctx)
 
 				channel_add_input(req, htx->data);
 
-				if (htx->flags & HTX_FL_EOM) /* check if a body need to be added */
+				if (htx->flags & HTX_FL_EOM) { /* check if a body need to be added */
 					appctx->st0 = HTTPCLIENT_S_RES_STLINE;
+					se_fl_set(appctx->sedesc, SE_FL_EOI);
+					break;
+				}
 				else
 					appctx->st0 = HTTPCLIENT_S_REQ_BODY;
 
@@ -764,6 +771,17 @@ void httpclient_applet_io_handler(struct appctx *appctx)
 				{
 					if (hc->ops.req_payload) {
 						struct htx *hc_htx;
+
+						if (co_data(res)) {
+							/* A response was received but we are still process the request.
+							 * It is unexpected and not really supported with the current API.
+							 * So lets drain the request to avoid any issue.
+							 */
+							b_reset(&hc->req.buf);
+							hc->flags |= HTTPCLIENT_FA_DRAIN_REQ;
+							appctx->st0 = HTTPCLIENT_S_RES_STLINE;
+							break;
+						}
 
 						/* call the request callback */
 						hc->ops.req_payload(hc);
@@ -811,17 +829,17 @@ void httpclient_applet_io_handler(struct appctx *appctx)
 					htx = htxbuf(&req->buf);
 
 					/* if the request contains the HTX_FL_EOM, we finished the request part. */
-					if (htx->flags & HTX_FL_EOM)
+					if (htx->flags & HTX_FL_EOM) {
 						appctx->st0 = HTTPCLIENT_S_RES_STLINE;
+						se_fl_set(appctx->sedesc, SE_FL_EOI);
+						break;
+					}
 
 					goto process_data; /* we need to leave the IO handler once we wrote the request */
 				}
 				break;
 
 			case HTTPCLIENT_S_RES_STLINE:
-				/* Request is finished, report EOI */
-				se_fl_set(appctx->sedesc, SE_FL_EOI);
-
 				/* copy the start line in the hc structure,then remove the htx block */
 				if (!co_data(res))
 					goto out;
@@ -1124,7 +1142,12 @@ int httpclient_applet_init(struct appctx *appctx)
 	/* The request was transferred when the stream was created. So switch
 	 * directly to REQ_BODY or RES_STLINE state
 	 */
-	appctx->st0 = (hc->ops.req_payload ? HTTPCLIENT_S_REQ_BODY : HTTPCLIENT_S_RES_STLINE);
+	if (hc->ops.req_payload)
+		appctx->st0 = HTTPCLIENT_S_REQ_BODY;
+	else {
+		appctx->st0 =  HTTPCLIENT_S_RES_STLINE;
+		se_fl_set(appctx->sedesc, SE_FL_EOI);
+	}
 	return 0;
 
  out_free_addr:
