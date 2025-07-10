@@ -1964,7 +1964,7 @@ static int h3_resp_data_send(struct qcs *qcs, struct htx *htx, size_t count)
 	return -1;
 }
 
-static size_t h3_snd_buf(struct qcs *qcs, struct htx *htx, size_t count)
+static size_t h3_snd_buf(struct qcs *qcs, struct htx *htx, size_t count, char *fin)
 {
 	struct h3s *h3s = qcs->ctx;
 	struct h3c *h3c = h3s->h3c;
@@ -1973,9 +1973,14 @@ static size_t h3_snd_buf(struct qcs *qcs, struct htx *htx, size_t count)
 	struct htx_blk *blk;
 	uint32_t bsize;
 	int32_t idx;
+	char eom;
 	int ret = 0;
 
 	TRACE_ENTER(H3_EV_STRM_SEND, qcs->qcc->conn, qcs);
+
+	*fin = 0;
+	/* EOM is saved here, useful if 0-copy is performed with HTX buf. */
+	eom = htx->flags & HTX_FL_EOM;
 
 	while (count && !htx_is_empty(htx) &&
 	       !(qcs->flags & QC_SF_BLK_MROOM) && !h3c->err) {
@@ -2040,6 +2045,11 @@ static size_t h3_snd_buf(struct qcs *qcs, struct htx *htx, size_t count)
 	}
 
  out:
+	if (eom && htx_is_empty(htx)) {
+		TRACE_USER("transcoding last HTX message", H3_EV_STRM_SEND, qcs->qcc->conn, qcs);
+		*fin = 1;
+	}
+
 	TRACE_LEAVE(H3_EV_STRM_SEND, qcs->qcc->conn, qcs);
 	return total;
 }

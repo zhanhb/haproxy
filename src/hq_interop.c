@@ -92,7 +92,7 @@ static struct buffer *mux_get_buf(struct qcs *qcs)
 }
 
 static size_t hq_interop_snd_buf(struct qcs *qcs, struct htx *htx,
-                                 size_t count)
+                                 size_t count, char *fin)
 {
 	enum htx_blk_type btype;
 	struct htx_blk *blk;
@@ -101,6 +101,7 @@ static size_t hq_interop_snd_buf(struct qcs *qcs, struct htx *htx,
 	struct buffer *res, outbuf;
 	size_t total = 0;
 
+	*fin = 0;
 	res = mux_get_buf(qcs);
 	outbuf = b_make(b_tail(res), b_contig_space(res), 0, 0);
 
@@ -150,6 +151,8 @@ static size_t hq_interop_snd_buf(struct qcs *qcs, struct htx *htx,
 
  end:
 	b_add(res, b_data(&outbuf));
+	if (htx->flags & HTX_FL_EOM && htx_is_empty(htx))
+		*fin = 1;
 
 	return total;
 }
