@@ -599,6 +599,23 @@ static void cmsg_set_saddr(struct msghdr *msg, struct cmsghdr **cmsg,
 	}
 }
 
+/* Return 1 if the source address may be used, 0 if not. */
+static int qc_may_use_saddr(struct quic_conn *qc)
+{
+	/* For QUIC backends, the connection fd is always initialized */
+	/* Not useful for connection using the listener socket */
+	if (qc_test_fd(qc))
+		return 0;
+
+	/* Connection to a listener from here.
+	 * The source address may be used when using listener socket (fd=-1) if
+	 * possible. This is not useful if the listening socket is bound to
+	 * a specific address. It is even prohibited on FreeBSD.
+	 */
+	return (!is_addr(&qc->li->rx.addr) &&
+	        is_addr(&qc->local_addr));
+}
+
 /* Send a datagram stored into <buf> buffer with <sz> as size.
  * The caller must ensure there is at least <sz> bytes in this buffer.
  *
@@ -646,8 +663,10 @@ int qc_snd_buf(struct quic_conn *qc, const struct buffer *buf, size_t sz,
 			msg.msg_iov = &vec;
 			msg.msg_iovlen = 1;
 
-			msg.msg_control = u.bufaddr;
-			cmsg_set_saddr(&msg, &cmsg, &qc->local_addr);
+			if (qc_may_use_saddr(qc)) {
+				msg.msg_control = u.bufaddr;
+				cmsg_set_saddr(&msg, &cmsg, &qc->local_addr);
+			}
 
 			ret = sendmsg(qc->li->rx.fd, &msg,
 			              MSG_DONTWAIT|MSG_NOSIGNAL);
