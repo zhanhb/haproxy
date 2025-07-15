@@ -1632,13 +1632,20 @@ static int h3_resp_headers_send(struct qcs *qcs, struct htx *htx)
 		goto err;
 	}
 
-	/* Buffer allocated just now : must be enough for frame type + length as a max varint size */
-	BUG_ON(b_room(res) < 5);
+	/* Reserve space for frame type + length as a max varint size. */
+	if (unlikely(b_contig_space(res) < 5)) {
+		/* Most of the times, h3_resp_headers_send() is only called one
+		 * time per stream, so buffer will be empty. However, this
+		 * assumption is invalid when handling interim responses, so
+		 * it's important to check out buffer remaining space.
+		 */
+		goto err;
+	}
 
 	b_reset(&outbuf);
 	outbuf = b_make(b_tail(res), b_contig_space(res), 0, 0);
 	/* Start the headers after frame type + length */
-	headers_buf = b_make(b_head(res) + 5, b_size(res) - 5, 0, 0);
+	headers_buf = b_make(b_tail(res) + 5, b_contig_space(res) - 5, 0, 0);
 
 	if (qpack_encode_field_section_line(&headers_buf)) {
 		h3c->err = H3_INTERNAL_ERROR;
