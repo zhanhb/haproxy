@@ -5906,6 +5906,8 @@ __LJMP static int hlua_applet_http_recv_yield(lua_State *L, int status, lua_KCon
 			case HTX_BLK_DATA:
 				v = htx_get_blk_value(htx, blk);
 				luaL_addlstring(&luactx->b, v.ptr, vlen);
+				if (len > 0)
+					len -= vlen;
 				break;
 
 			case HTX_BLK_TLR:
@@ -5919,8 +5921,6 @@ __LJMP static int hlua_applet_http_recv_yield(lua_State *L, int status, lua_KCon
 
 		c_rew(req, vlen);
 		count -= vlen;
-		if (len > 0)
-			len -= vlen;
 		if (sz == vlen)
 			blk = htx_remove_blk(htx, blk);
 		else {
