@@ -1549,6 +1549,7 @@ The following keywords are supported in the "global" section :
    - insecure-setuid-wanted
    - issuers-chain-path
    - key-base
+   - limited-quic
    - localpeer
    - log
    - log-send-hostname
@@ -1558,6 +1559,7 @@ The following keywords are supported in the "global" section :
    - lua-prepend-path
    - mworker-max-reloads
    - nbthread
+   - no-quic
    - node
    - numa-cpu-mapping
    - ocsp-update.disable
@@ -1686,6 +1688,7 @@ The following keywords are supported in the "global" section :
    - tune.pool-low-fd-ratio
    - tune.pt.zero-copy-forwarding
    - tune.quic.cc-hystart
+   - tune.quic.cc.cubic.min-losses
    - tune.quic.disable-udp-gso
    - tune.quic.frontend.glitches-threshold
    - tune.quic.frontend.max-idle-timeout
