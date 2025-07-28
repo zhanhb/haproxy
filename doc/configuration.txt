@@ -1141,6 +1141,7 @@ The following keywords are supported in the "global" section :
    - insecure-fork-wanted
    - insecure-setuid-wanted
    - issuers-chain-path
+   - limited-quic
    - localpeer
    - log
    - log-send-hostname
@@ -1150,6 +1151,7 @@ The following keywords are supported in the "global" section :
    - lua-prepend-path
    - mworker-max-reloads
    - nbthread
+   - no-quic
    - node
    - numa-cpu-mapping
    - pidfile
