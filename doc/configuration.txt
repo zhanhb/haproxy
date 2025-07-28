@@ -1333,6 +1333,7 @@ The following keywords are supported in the "global" section :
    - insecure-setuid-wanted
    - issuers-chain-path
    - key-base
+   - limited-quic
    - localpeer
    - log
    - log-send-hostname
@@ -1342,6 +1343,7 @@ The following keywords are supported in the "global" section :
    - lua-prepend-path
    - mworker-max-reloads
    - nbthread
+   - no-quic
    - node
    - numa-cpu-mapping
    - ocsp-update.disable
