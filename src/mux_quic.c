@@ -1200,6 +1200,14 @@ int qcc_recv(struct qcc *qcc, uint64_t id, uint64_t len, uint64_t offset,
 		offset = qcs->rx.offset;
 	}
 
+	if (len && (qcc->flags & QC_CF_WAIT_HS)) {
+		if (!(qcc->conn->flags & CO_FL_EARLY_DATA)) {
+			/* Ensure 'Early-data: 1' will be set on the request. */
+			TRACE_PROTO("received early data", QMUX_EV_QCC_RECV|QMUX_EV_QCS_RECV, qcc->conn, qcs);
+			qcc->conn->flags |= CO_FL_EARLY_DATA;
+		}
+	}
+
 	if (len) {
 		ret = ncb_add(&qcs->rx.ncbuf, offset - qcs->rx.offset, data, len, NCB_ADD_COMPARE);
 		switch (ret) {
