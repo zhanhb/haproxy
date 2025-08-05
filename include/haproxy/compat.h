@@ -101,6 +101,11 @@ typedef struct { } empty_t;
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 #endif
 
+/* always set a _POSIX_VERSION if there isn't any, in order to ease compares */
+#ifndef _POSIX_VERSION
+# define _POSIX_VERSION 0
+#endif
+
 /* this is for libc5 for example */
 #ifndef TCP_NODELAY
 #define TCP_NODELAY     1
