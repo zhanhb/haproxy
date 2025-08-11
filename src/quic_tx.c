@@ -537,6 +537,7 @@ static int qc_prep_pkts(struct quic_conn *qc, struct buffer *buf,
 			int err, probe, must_ack;
 			enum quic_pkt_type pkt_type;
 			struct quic_tx_packet *cur_pkt;
+			int final_packet = 0;
 
 			TRACE_PROTO("TX prep pkts", QUIC_EV_CONN_PHPKTS, qc, qel);
 			probe = 0;
@@ -599,10 +600,19 @@ static int qc_prep_pkts(struct quic_conn *qc, struct buffer *buf,
 				padding = 1;
 			}
 
+
+			/* TODO currently it's not possible to emit an ACK and probing data simultaneously (see qc_do_build_pkt()).
+			 * As a side-effect, this could cause coalescing of two packets of the same type which should be avoided.
+			 * To implement this, a new datagram is forced by invokation of qc_txb_store(). This must then be checked
+			 * if padding is required as in this case this will be the last packet of the current datagram.
+			 */
+			if (probe && (must_ack || (qel->pktns->flags & QUIC_FL_PKTNS_ACK_REQUIRED)))
+				final_packet = 1;
+
 			pkt_type = quic_enc_level_pkt_type(qc, qel);
 			cur_pkt = qc_build_pkt(&pos, end, qel, tls_ctx, frms,
 			                       qc, ver, dglen, pkt_type, must_ack,
-			                       padding && !next_qel,
+			                       padding && (!next_qel || final_packet),
 			                       probe, cc, &err);
 			switch (err) {
 				case -3:
@@ -653,7 +663,7 @@ static int qc_prep_pkts(struct quic_conn *qc, struct buffer *buf,
 			 * the same datagram, except if <qel> is the Application data
 			 * encryption level which cannot be selected to do that.
 			 */
-			if (LIST_ISEMPTY(frms) && next_qel) {
+			if (LIST_ISEMPTY(frms) && next_qel && !final_packet) {
 				prv_pkt = cur_pkt;
 			}
 			else {
