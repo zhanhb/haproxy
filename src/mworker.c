@@ -489,7 +489,7 @@ void mworker_catch_sigterm(struct sig_handler *sh)
  * Performs some routines for the worker process, which has failed the reload,
  * updates the global load_status.
  */
-static void mworker_on_new_child_failure()
+static void mworker_on_new_child_failure(int exitpid, int status)
 {
 	struct mworker_proc *child;
 
@@ -503,7 +503,7 @@ static void mworker_on_new_child_failure()
 
 	usermsgs_clr(NULL);
 	load_status = 0;
-	ha_warning("Failed to load worker!\n");
+	ha_warning("Failed to load worker (%d) exited with code %d (%s)\n", exitpid, status, (status >= 128) ? strsignal(status - 128): "Exit");
 	/* the sd_notify API is not able to send a reload failure signal. So
 	 * the READY=1 signal still need to be sent */
 	if (global.tune.options & GTUNE_USE_SYSTEMD)
@@ -553,7 +553,7 @@ restart_wait:
 			/* We didn't find the PID in the list, that shouldn't happen but we can emit a warning */
 			ha_warning("Process %d exited with code %d (%s)\n", exitpid, status, (status >= 128) ? strsignal(status - 128) : "Exit");
 		} else if (child->options & PROC_O_INIT) {
-			mworker_on_new_child_failure();
+			mworker_on_new_child_failure(exitpid, status);
 
 			/* Detach all listeners */
 			for (curproxy = proxies_list; curproxy; curproxy = curproxy->next) {
