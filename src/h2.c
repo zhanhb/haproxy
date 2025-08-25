@@ -148,13 +148,17 @@ static struct htx_sl *h2_prepare_htx_reqline(uint32_t fields, struct ist *phdr, 
 
 		*msgf |= H2_MSGF_BODY_TUNNEL;
 	}
-	else if ((fields & (H2_PHDR_FND_METH|H2_PHDR_FND_SCHM|H2_PHDR_FND_PATH)) !=
+	else if ((fields & (H2_PHDR_FND_METH|H2_PHDR_FND_SCHM|H2_PHDR_FND_PATH|H2_PHDR_FND_PROT)) !=
 	         (H2_PHDR_FND_METH|H2_PHDR_FND_SCHM|H2_PHDR_FND_PATH)) {
 		/* RFC 7540 #8.1.2.3 : all requests MUST include exactly one
 		 * valid value for the ":method", ":scheme" and ":path" phdr
-		 * unless it is a CONNECT request.
+		 * and no ":protocol" phdr unless it is a CONNECT request.
 		 */
-		if (!(fields & H2_PHDR_FND_METH)) {
+		if (fields & H2_PHDR_FND_PROT) {
+			/* protocol present */
+			goto fail;
+		}
+		else if (!(fields & H2_PHDR_FND_METH)) {
 			/* missing method */
 			goto fail;
 		}
