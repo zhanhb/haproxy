@@ -1444,7 +1444,7 @@ static int qc_build_frms(struct list *outlist, struct list *inlist,
 			TRACE_DEVEL("          New CRYPTO frame build (room, len)",
 			            QUIC_EV_CONN_BCFRMS, qc, &room, len);
 			/* Compute the length of this CRYPTO frame header */
-			hlen = 1 + quic_int_getsize(cf->crypto.offset);
+			hlen = 1 + quic_int_getsize(cf->crypto.offset_node.key);
 			/* Compute the data length of this CRYPTO frame. */
 			dlen = max_stream_data_size(room, hlen, cf->crypto.len);
 			TRACE_DEVEL(" CRYPTO data length (hlen, crypto.len, dlen)",
@@ -1476,7 +1476,7 @@ static int qc_build_frms(struct list *outlist, struct list *inlist,
 				}
 
 				new_cf->crypto.len = dlen;
-				new_cf->crypto.offset = cf->crypto.offset;
+				new_cf->crypto.offset_node.key = cf->crypto.offset_node.key;
 				new_cf->crypto.qel = qel;
 				TRACE_DEVEL("split frame", QUIC_EV_CONN_PRSAFRM, qc, new_cf);
 				if (cf->origin) {
@@ -1491,7 +1491,7 @@ static int qc_build_frms(struct list *outlist, struct list *inlist,
 				LIST_APPEND(outlist, &new_cf->list);
 				/* Consume <dlen> bytes of the current frame. */
 				cf->crypto.len -= dlen;
-				cf->crypto.offset += dlen;
+				cf->crypto.offset_node.key += dlen;
 			}
 			break;
 
