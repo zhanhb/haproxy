@@ -4252,6 +4252,11 @@ Example:
   master. Leaving processes are only accessible with the PID as relative process
   number are only usable with the current processes.
 
+  Bugs: the sockpair@ protocol used to implement communication between the
+  master and the worker is known to not be reliable on macOS because of an
+  issue in the macOS sendmsg(2) implementation. A command might end up without
+  response because of that.
+
   Examples:
 
     $ socat /var/run/haproxy-master.sock readline
