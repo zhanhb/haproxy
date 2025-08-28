@@ -3767,6 +3767,7 @@ int main(int argc, char **argv)
 		int sock_pair[2];
 		char *msg = NULL;
 		char c;
+		int r __maybe_unused;
 
 		if (socketpair(PF_UNIX, SOCK_STREAM, 0, sock_pair) == -1) {
 			ha_alert("[%s.main()] Cannot create socketpair to update the new worker state\n",
@@ -3802,8 +3803,8 @@ int main(int argc, char **argv)
 		 * after confirming receipt of the "\n" from the CLI applet, so
 		 * we make sure that the fd is received correctly.
 		 */
-                shutdown(sock_pair[1], SHUT_WR);
-		read(sock_pair[1], &c, 1);
+		shutdown(sock_pair[1], SHUT_WR);
+		r = read(sock_pair[1], &c, 1);
 		close(sock_pair[1]);
 		close(sock_pair[0]);
 		ha_free(&msg);
