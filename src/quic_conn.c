@@ -3887,7 +3887,7 @@ static int qc_prep_pkts(struct quic_conn *qc, struct buffer *buf,
 		 * Ensure that no ack-eliciting packets are sent into too small datagrams
 		 */
 		if (pkt_type == QUIC_PACKET_TYPE_INITIAL && !LIST_ISEMPTY(tel_frms)) {
-			if (end - pos < QUIC_INITIAL_PACKET_MINLEN) {
+			if (end - pos + dglen < QUIC_INITIAL_PACKET_MINLEN) {
 				TRACE_PROTO("No more enough room to build an Initial packet",
 				            QUIC_EV_CONN_PHPKTS, qc);
 				goto out;
