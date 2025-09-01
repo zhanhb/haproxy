@@ -3055,9 +3055,6 @@ static size_t qmux_strm_snd_buf(struct stconn *sc, struct buffer *buf,
 
 	TRACE_ENTER(QMUX_EV_STRM_SEND, qcs->qcc->conn, qcs);
 
-	/* Stream must not be woken up if already waiting for conn buffer. */
-	BUG_ON(LIST_INLIST(&qcs->el_buf));
-
 	/* Sending forbidden if QCS is locally closed (FIN or RESET_STREAM sent). */
 	BUG_ON(qcs_is_close_local(qcs) || (qcs->flags & QC_SF_TO_RESET));
 
@@ -3068,6 +3065,11 @@ static size_t qmux_strm_snd_buf(struct stconn *sc, struct buffer *buf,
 	if (qcs->qcc->flags & (QC_CF_ERR_CONN|QC_CF_ERRL)) {
 		se_fl_set(qcs->sd, SE_FL_ERROR);
 		TRACE_DEVEL("connection in error", QMUX_EV_STRM_SEND, qcs->qcc->conn, qcs);
+		goto end;
+	}
+
+	if (LIST_INLIST(&qcs->el_buf)) {
+		TRACE_DEVEL("leaving on no buf avail", QMUX_EV_STRM_SEND, qcs->qcc->conn, qcs);
 		goto end;
 	}
 
@@ -3119,9 +3121,6 @@ static size_t qmux_strm_nego_ff(struct stconn *sc, struct buffer *input,
 
 	TRACE_ENTER(QMUX_EV_STRM_SEND, qcs->qcc->conn, qcs);
 
-	/* Stream must not be woken up if already waiting for conn buffer. */
-	BUG_ON(LIST_INLIST(&qcs->el_buf));
-
 	/* Sending forbidden if QCS is locally closed (FIN or RESET_STREAM sent). */
 	BUG_ON(qcs_is_close_local(qcs) || (qcs->flags & QC_SF_TO_RESET));
 
@@ -3140,6 +3139,12 @@ static size_t qmux_strm_nego_ff(struct stconn *sc, struct buffer *input,
 		 */
 		TRACE_DEVEL("connection in error", QMUX_EV_STRM_SEND, qcs->qcc->conn, qcs);
 		qcs->sd->iobuf.flags |= IOBUF_FL_NO_FF;
+		goto end;
+	}
+
+	if (LIST_INLIST(&qcs->el_buf)) {
+		TRACE_DEVEL("leaving on no buf avail", QMUX_EV_STRM_SEND, qcs->qcc->conn, qcs);
+		qcs->sd->iobuf.flags |= IOBUF_FL_FF_BLOCKED;
 		goto end;
 	}
 
