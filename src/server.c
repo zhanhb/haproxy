@@ -2264,6 +2264,10 @@ void srv_set_ssl(struct server *s, int use_ssl)
 		s->xprt = xprt_get(XPRT_SSL);
 	else
 		s->xprt = xprt_get(XPRT_RAW);
+
+	/* Check if we must rely on the server XPRT for the health-check */
+	if (!s->check.port && !is_addr(&s->check.addr) && !s->check.use_ssl)
+		s->check.xprt = s->xprt;
 }
 
 #endif /* USE_OPENSSL */
@@ -3451,6 +3455,10 @@ out:
 			s->check.addr = sk;
 		if (port)
 			s->check.port = new_port;
+
+		/* Fallback to raw XPRT for the health-check */
+		if (!s->check.use_ssl)
+			s->check.xprt = xprt_get(XPRT_RAW);
 	}
 	return NULL;
 }
