@@ -378,6 +378,8 @@ int add_to_logformat_list(char *start, char *end, int type, struct list *list_fo
 		struct logformat_node *node = calloc(1, sizeof(*node));
 		str = calloc(1, end - start + 1);
 		if (unlikely(!node || !str)) {
+			free(node);
+			free(str);
 			memprintf(err, "out of memory error");
 			return 0;
 		}
