@@ -2585,7 +2585,8 @@ long long int read_int64(const char **s, const char *end)
 int strl2ic(const char *s, int len)
 {
 	int i = 0;
-	int j, k;
+	unsigned j;
+	int k;
 
 	if (len > 0) {
 		if (*s != '-') {
@@ -2633,7 +2634,7 @@ int strl2irc(const char *s, int len, int *ret)
 		/* positive number */
 		while (len-- > 0) {
 			j = (*s++) - '0';
-			if (j > 9)            return 1; /* invalid char */
+			if ((unsigned)j > 9)            return 1; /* invalid char */
 			if (i > INT_MAX / 10) return 1; /* check for multiply overflow */
 			i = i * 10;
 			if (i + j < i)        return 1; /* check for addition overflow */
@@ -2644,7 +2645,7 @@ int strl2irc(const char *s, int len, int *ret)
 		s++;
 		while (--len > 0) {
 			j = (*s++) - '0';
-			if (j > 9)             return 1; /* invalid char */
+			if ((unsigned)j > 9)             return 1; /* invalid char */
 			if (i < INT_MIN / 10)  return 1; /* check for multiply overflow */
 			i = i * 10;
 			if (i - j > i)         return 1; /* check for subtract overflow */
@@ -2677,7 +2678,7 @@ int strl2llrc(const char *s, int len, long long *ret)
 		/* positive number */
 		while (len-- > 0) {
 			j = (*s++) - '0';
-			if (j > 9)              return 1; /* invalid char */
+			if ((unsigned)j > 9)              return 1; /* invalid char */
 			if (i > LLONG_MAX / 10LL) return 1; /* check for multiply overflow */
 			i = i * 10LL;
 			if (i + j < i)          return 1; /* check for addition overflow */
@@ -2688,7 +2689,7 @@ int strl2llrc(const char *s, int len, long long *ret)
 		s++;
 		while (--len > 0) {
 			j = (*s++) - '0';
-			if (j > 9)              return 1; /* invalid char */
+			if ((unsigned)j > 9)              return 1; /* invalid char */
 			if (i < LLONG_MIN / 10LL) return 1; /* check for multiply overflow */
 			i = i * 10LL;
 			if (i - j > i)          return 1; /* check for subtract overflow */
