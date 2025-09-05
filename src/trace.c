@@ -819,15 +819,6 @@ int trace_parse_cmd(const char *arg_src, char **errmsg)
 	char *arg, *oarg;
 	char *saveptr;
 
-	if (arg_src) {
-		/* keep a copy of the ptr for strtok */
-		oarg = arg = strdup(arg_src);
-		if (!arg) {
-			memprintf(errmsg, "Can't allocate !");
-			return 1;
-		}
-	}
-
 	if (!arg_src) {
 		/* No trace specification, activate all sources on error level. */
 		struct trace_source *src = NULL;
@@ -835,6 +826,13 @@ int trace_parse_cmd(const char *arg_src, char **errmsg)
 		list_for_each_entry(src, &trace_sources, source_link)
 			_trace_parse_cmd(src, -1, -1);
 		return 0;
+	}
+
+	/* keep a copy of the ptr for strtok */
+	oarg = arg = strdup(arg_src);
+	if (!arg) {
+		memprintf(errmsg, "Can't allocate trace source!");
+		return -2;
 	}
 
 	while ((str = strtok_r(arg, ",", &saveptr))) {
