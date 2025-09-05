@@ -2584,7 +2584,8 @@ long long int read_int64(const char **s, const char *end)
 int strl2ic(const char *s, int len)
 {
 	int i = 0;
-	int j, k;
+	unsigned j;
+	int k;
 
 	if (len > 0) {
 		if (*s != '-') {
