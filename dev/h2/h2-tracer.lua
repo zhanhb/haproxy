@@ -56,14 +56,12 @@ function Dec:new()
     local dec = {}
 
     setmetatable(dec, Dec)
-    dec.do_hex = false
-    if (Dec.args[1] == "hex") then
-        dec.do_hex = true
-    end
+    dec.do_hex = (Dec.args[1] == "hex")
 
     Dec.cid = Dec.cid+1
     -- mix the thread number when multithreading.
     dec.cid = Dec.cid + 64 * core.thread
+    dec.scid = string.format("[%03x] ", dec.cid % 4096)
 
     -- state per dir. [1]=req [2]=res
     dec.st = {
@@ -91,18 +89,18 @@ end
 
 function Dec:start_analyze(txn, chn)
     if chn:is_resp() then
-        io.write(string.format("[%03x] ", self.cid % 4096) .. res_pfx .. "### res start\n")
+        io.write(self.scid .. res_pfx .. "### res start\n")
     else
-        io.write(string.format("[%03x] ", self.cid % 4096) .. "### req start\n")
+        io.write(self.scid .. "### req start\n")
     end
     filter.register_data_filter(self, chn)
 end
 
 function Dec:end_analyze(txn, chn)
     if chn:is_resp() then
-        io.write(string.format("[%03x] ", self.cid % 4096) .. res_pfx .. "### res end: " .. self.st[2].tot .. " bytes total\n")
+        io.write(self.scid .. res_pfx .. "### res end: " .. self.st[2].tot .. " bytes total\n")
     else
-        io.write(string.format("[%03x] ", self.cid % 4096) .. "### req end: " ..self.st[1].tot.. " bytes total\n")
+        io.write(self.scid .. "### req end: " ..self.st[1].tot.. " bytes total\n")
     end
 end
 
@@ -120,7 +118,7 @@ function Dec:tcp_payload(txn, chn)
         dir = 2
     end
 
-    pfx = string.format("[%03x] ", self.cid % 4096) .. pfx
+    pfx = self.scid .. pfx
 
     -- stream offset before processing
     sofs = self.st[dir].tot
@@ -130,11 +128,11 @@ function Dec:tcp_payload(txn, chn)
         self.st[dir].tot = self.st[dir].tot + chn:input()
     end
 
-    if (chn:input() > 0 and self.do_hex ~= false) then
+    if (chn:input() > 0 and self.do_hex) then
         io.write("\n" .. pfx .. "Hex:\n")
         for i = 1, #data do
             if ((i & 7) == 1) then io.write(pfx) end
-            io.write(string.format("0x%02x ", data:sub(i, i):byte()))
+            io.write(string.format("%02x ", data:sub(i, i):byte()))
             if ((i & 7) == 0 or i == #data) then io.write("\n") end
         end
     end
