@@ -2103,8 +2103,8 @@ static int qc_do_build_pkt(unsigned char *pos, const unsigned char *end,
 	 * Note that from here, <len> includes <*pn_len>, the total frame lenghts,
 	 * and QUIC_TLS_TAG_LEN(16).
 	 */
-	if (len < QUIC_PACKET_PN_MAXLEN + QUIC_TLS_TAG_LEN) {
-		padding_len = QUIC_PACKET_PN_MAXLEN + QUIC_TLS_TAG_LEN - len;
+	if (len < QUIC_PACKET_PN_MAXLEN + QUIC_HP_SAMPLE_LEN) {
+		padding_len = QUIC_PACKET_PN_MAXLEN + QUIC_HP_SAMPLE_LEN - len;
 		len += padding_len;
 	}
 
