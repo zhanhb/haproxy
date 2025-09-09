@@ -198,6 +198,11 @@ syslog S1 -level info {
     expect ~ "^.* uri: GET http://hostname/ HTTP/1.1; host: {hostname}$"
     barrier b1 sync
 
+    # C36-OPTIONS
+    recv
+    expect ~ "^.* uri: OPTIONS http://hostname HTTP/1.1; host: {hostname}$"
+    barrier b1 sync
+
     # C37
     recv
     expect ~ "^.* uri: GET http://hostname/ HTTP/1.1; host: {hostname}$"
@@ -810,6 +815,19 @@ barrier b1 sync
 client c36 -connect ${h1_fe_sock} {
     txreq \
       -req "GET" \
+      -url "http://hostname" \
+      -hdr "host: hostname"
+
+    rxresp
+    expect resp.status == 200
+} -run
+
+# Wait matching on log message
+barrier b1 sync
+
+client c36-OPTIONS -connect ${h1_fe_sock} {
+    txreq \
+      -req "OPTIONS" \
       -url "http://hostname" \
       -hdr "host: hostname"
 
