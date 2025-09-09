@@ -109,14 +109,14 @@ int h1_parse_xfer_enc_header(struct h1m *h1m, struct ist value)
 }
 
 /* Validate the authority and the host header value for CONNECT method. If there
- * is hast header, its value is normalized. 0 is returned on success, -1 if the
+ * is host header, its value is normalized. 0 is returned on success, -1 if the
  * authority is invalid and -2 if the host is invalid.
  */
-static int h1_validate_connect_authority(struct ist scheme, struct ist authority, struct ist *host_hdr)
+static int h1_validate_connect_authority(struct ist authority, struct ist *host_hdr)
 {
 	struct ist uri_host, uri_port, host, host_port;
 
-	if (isttest(scheme) || !isttest(authority))
+	if (!istlen(authority) || http_authority_has_forbidden_char(authority))
 		goto invalid_authority;
 	uri_host = authority;
 	uri_port = http_get_host_port(authority);
@@ -1045,7 +1045,8 @@ int h1_headers_to_hdr_list(char *start, const char *stop,
 			goto restart;
 
 
-		if (!(h1m->flags & (H1_MF_HDRS_ONLY|H1_MF_RESP))) {
+		if (h1m->flags & (H1_MF_HDRS_ONLY|H1_MF_RESP)) {
+		} else if (sl.rq.meth != HTTP_METH_CONNECT) {
 			struct http_uri_parser parser = http_uri_parser_init(sl.rq.u);
 			struct ist scheme, authority = IST_NULL;
 			int ret;
@@ -1065,47 +1066,16 @@ int h1_headers_to_hdr_list(char *start, const char *stop,
 				break;
 
 			case URI_PARSER_FORMAT_ABSPATH:
-				if (sl.rq.meth == HTTP_METH_CONNECT) {
-					ptr = sl.rq.u.ptr; /* Set ptr on the error */
-					goto http_msg_invalid;
-				}
 				break;
 
 			case URI_PARSER_FORMAT_ABSURI_OR_AUTHORITY:
 				scheme = http_parse_scheme(&parser);
-				if (!isttest(scheme)) { /* scheme not found: MUST be an authority */
-					struct ist *host = NULL;
-
-					if (sl.rq.meth != HTTP_METH_CONNECT) {
-						ptr = sl.rq.u.ptr; /* Set ptr on the error */
-						goto http_msg_invalid;
-					}
-					if (host_idx != -1)
-						host = &hdr[host_idx].v;
-					authority = http_parse_authority(&parser, 1);
-					ret = h1_validate_connect_authority(scheme, authority, host);
-					if (ret < 0) {
-						if (h1m->err_pos < -1) {
-							state = H1_MSG_LAST_LF;
-							/* WT: gcc seems to see a path where sl.rq.u.ptr was used
-							 * uninitialized, but it doesn't know that the function is
-							 * called with initial states making this impossible.
-							 */
-							ALREADY_CHECKED(sl.rq.u.ptr);
-							ptr = ((ret == -1) ? sl.rq.u.ptr : host->ptr); /* Set ptr on the error */
-							goto http_msg_invalid;
-						}
-						if (h1m->err_pos == -1) /* capture the error pointer */
-							h1m->err_pos = ((ret == -1) ? sl.rq.u.ptr : host->ptr) - start + skip; /* >= 0 now */
-					}
+				if (!isttest(scheme)) { /* scheme not found */
+					ptr = sl.rq.u.ptr; /* Set ptr on the error */
+					goto http_msg_invalid;
 				}
 				else { /* Scheme found:  MUST be an absolute-URI */
 					struct ist host = IST_NULL;
-
-					if (sl.rq.meth == HTTP_METH_CONNECT) {
-						ptr = sl.rq.u.ptr; /* Set ptr on the error */
-						goto http_msg_invalid;
-					}
 
 					if (host_idx != -1)
 						host = hdr[host_idx].v;
@@ -1129,6 +1099,29 @@ int h1_headers_to_hdr_list(char *start, const char *stop,
 			default:
 				ptr = sl.rq.u.ptr; /* Set ptr on the error */
 				goto http_msg_invalid;
+			}
+		} else {
+			struct ist authority;
+			struct ist *host = NULL;
+			int ret;
+
+			if (host_idx != -1)
+				host = &hdr[host_idx].v;
+			authority = sl.rq.u;
+			ret = h1_validate_connect_authority(authority, host);
+			if (ret < 0) {
+				if (h1m->err_pos < -1) {
+					state = H1_MSG_LAST_LF;
+					/* WT: gcc seems to see a path where sl.rq.u.ptr was used
+					 * uninitialized, but it doesn't know that the function is
+					 * called with initial states making this impossible.
+					 */
+					ALREADY_CHECKED(authority.ptr);
+					ptr = ((ret == -1) ? authority.ptr : host->ptr); /* Set ptr on the error */
+					goto http_msg_invalid;
+				}
+				if (h1m->err_pos == -1) /* capture the error pointer */
+					h1m->err_pos = ((ret == -1) ? authority.ptr : host->ptr) - start + skip; /* >= 0 now */
 			}
 		}
 
