@@ -4925,9 +4925,12 @@ int sess_build_logline_orig(struct session *sess, struct stream *s,
 				if (!txn || !txn->uri || nspaces == 0) {
 					chunk.area = "<BADREQ>";
 					chunk.data = strlen("<BADREQ>");
-				} else {
+				} else if (path.len) {
 					chunk.area = path.ptr;
 					chunk.data = path.len;
+				} else {
+					chunk.area = "*";
+					chunk.data = 1;
 				}
 
 				ret = lf_encode_chunk(tmplog, dst + maxsize, '#', url_encode_map, &chunk, ctx);
