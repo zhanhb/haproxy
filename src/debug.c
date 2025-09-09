@@ -768,7 +768,8 @@ void ha_panic()
 		return;
 	}
 
-	chunk_printf(&trash, "Thread %u is about to kill the process.\n", tid + 1);
+	chunk_printf(&trash, "Thread %u is about to kill the process (pid %d).\n", tid + 1, pid);
+
 	DISGUISE(write(2, trash.area, trash.data));
 
 	for (thr = 0; thr < global.nbthread; thr++) {
@@ -895,7 +896,7 @@ void ha_stuck_warning(void)
 			     "          'global' section of your configuration to avoid this in the future.\n");
 	}
 
-	chunk_appendf(&buf, " => Trying to gracefully recover now.\n");
+	chunk_appendf(&buf, " => Trying to gracefully recover now (pid %d).\n", pid);
 
 	/* Note: it's important to dump the whole buffer at once to avoid
 	 * interleaved outputs from multiple threads dumping in parallel.
