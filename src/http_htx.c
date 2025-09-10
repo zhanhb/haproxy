@@ -1842,6 +1842,7 @@ int http_scheme_based_normalize(struct htx *htx)
 	struct ist uri, scheme, authority, host, port, path;
 	struct http_uri_parser parser;
 	int normalize = 0;
+	int insert_slash = 0;
 
 	sl = http_get_stline(htx);
 
@@ -1867,9 +1868,14 @@ int http_scheme_based_normalize(struct htx *htx)
 		normalize = 1;
 	}
 
-	if (!isttest(path) && sl->info.req.meth != HTTP_METH_OPTIONS) {
-		path = ist("/");
+	if (!istlen(path)) {
+		if (sl->info.req.meth != HTTP_METH_OPTIONS) {
+			path = ist("/");
+			normalize = 1;
+		}
+	} else if (*istptr(path) != '/') {
 		normalize = 1;
+		insert_slash = 1;
 	}
 
 	if (normalize) {
@@ -1888,11 +1894,12 @@ int http_scheme_based_normalize(struct htx *htx)
 		/* reconstruct uri without port */
 		chunk_memcat(temp, uri.ptr, authority.ptr - uri.ptr);
 		chunk_istcat(temp, host);
+		if (insert_slash) chunk_memcat(temp, "/", 1);
 		chunk_istcat(temp, path);
 
 		/* update host and uri to point on temp chunk*/
 		host = ist2(temp->area + meth.len + vsn.len + (authority.ptr - uri.ptr), host.len);
-		uri  = ist2(temp->area + meth.len + vsn.len, host.len + path.len + authority.ptr - uri.ptr);
+		uri  = ist2(temp->area + meth.len + vsn.len, host.len + insert_slash + path.len + authority.ptr - uri.ptr);
 
 
 		http_replace_stline(htx, meth, uri, vsn);
