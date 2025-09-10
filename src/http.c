@@ -682,9 +682,23 @@ struct ist http_parse_authority(struct http_uri_parser *parser, int no_userinfo)
 	ptr = start = istptr(parser->uri);
 	end = istend(parser->uri);
 
-	while (ptr < end && *ptr != '/' && *ptr != '?' && *ptr != '#') {
-		if (*ptr++ == '@' && no_userinfo)
-			start = ptr;
+	while (ptr < end) {
+		switch (*ptr) {
+		case '@':
+			if (no_userinfo) {
+				start = ++ptr;
+				continue;
+			}
+			__fallthrough;
+		default:
+			++ptr;
+			continue;
+		case '/':
+		case '?':
+		case '#':
+			break;
+		}
+		break;
 	}
 
 	/* OK, ptr point on the '/', the '?', the '#' or the end */
