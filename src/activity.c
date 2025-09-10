@@ -1329,7 +1329,7 @@ static int cli_io_handler_show_tasks(struct appctx *appctx)
 			t = eb32_entry(rqnode, struct task, rq);
 			entry = sched_activity_entry(tmp_activity, t->process, NULL);
 			if (t->wake_date) {
-				lat = now_ns - t->wake_date;
+				lat = (uint32_t)now_ns - t->wake_date;
 				if ((int64_t)lat > 0)
 					entry->lat_time += lat;
 			}
@@ -1346,7 +1346,7 @@ static int cli_io_handler_show_tasks(struct appctx *appctx)
 			t = eb32_entry(rqnode, struct task, rq);
 			entry = sched_activity_entry(tmp_activity, t->process, NULL);
 			if (t->wake_date) {
-				lat = now_ns - t->wake_date;
+				lat = (uint32_t)now_ns - t->wake_date;
 				if ((int64_t)lat > 0)
 					entry->lat_time += lat;
 			}
@@ -1359,7 +1359,7 @@ static int cli_io_handler_show_tasks(struct appctx *appctx)
 			t = (const struct task *)tl;
 			entry = sched_activity_entry(tmp_activity, t->process, NULL);
 			if (!TASK_IS_TASKLET(t) && t->wake_date) {
-				lat = now_ns - t->wake_date;
+				lat = (uint32_t)now_ns - t->wake_date;
 				if ((int64_t)lat > 0)
 					entry->lat_time += lat;
 			}
@@ -1372,7 +1372,7 @@ static int cli_io_handler_show_tasks(struct appctx *appctx)
 				t = (const struct task *)tl;
 				entry = sched_activity_entry(tmp_activity, t->process, NULL);
 				if (!TASK_IS_TASKLET(t) && t->wake_date) {
-					lat = now_ns - t->wake_date;
+					lat = (uint32_t)now_ns - t->wake_date;
 					if ((int64_t)lat > 0)
 						entry->lat_time += lat;
 				}
