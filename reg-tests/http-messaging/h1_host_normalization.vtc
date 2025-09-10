@@ -235,12 +235,12 @@ syslog S1 -level info {
 
     # C44
     recv
-    expect ~ "^.* uri: GET http://hostname\\?a=b HTTP/1.1; host: {hostname}$"
+    expect ~ "^.* uri: GET http://hostname/\\?a=b HTTP/1.1; host: {hostname}$"
     barrier b1 sync
 
     # C45
     recv
-    expect ~ "^.* uri: GET http://hostname\\?c=d HTTP/1.1; host: {hostname}$"
+    expect ~ "^.* uri: GET http://hostname/\\?c=d HTTP/1.1; host: {hostname}$"
 
 } -start
 
