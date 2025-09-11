@@ -16145,12 +16145,13 @@ set-header <name> <fmt>
   Usable in:  QUIC Ini|    TCP RqCon| RqSes| RqCnt| RsCnt|    HTTP Req| Res| Aft
                     - |          -  |   -  |   -  |   -  |          X |  X |  X
 
-  This does the same as the "add-header" action except that the header is first
-  removed if it existed. This is useful when passing security information to
-  the server, where the header must not be manipulated by external users, or to
-  force certain response headers such as "Server" to hide external information.
-  Note that the new value is computed before the removal so it is possible to
-  concatenate a value to an existing header.
+  This does the same as the "add-header" action if the header does not exist,
+  otherwise it replaces the first occurrence of the header with the specified
+  value and removes all remaining occurrences. This is useful when passing
+  security information to the server, where the header must not be manipulated
+  by external users, or to force certain response headers such as "Server" to
+  hide external information. Note that the new value is computed before the
+  removal so it is possible to concatenate a value to an existing header.
 
   Example:
         http-request set-header X-Haproxy-Current-Date %T

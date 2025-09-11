@@ -1441,10 +1441,15 @@ static enum act_return http_action_set_header(struct act_rule *rule, struct prox
 	v = ist2(replace->area, replace->data);
 
 	if (rule->action == 0) { // set-header
-		/* remove all occurrences of the header */
 		ctx.blk = NULL;
-		while (http_find_header(htx, n, &ctx, 1))
-			http_remove_header(htx, &ctx);
+		if (http_find_header(htx, n, &ctx, 1)) {
+			if (!http_replace_header_value(htx, &ctx, v))
+				goto fail_rewrite;
+			/* remove remain occurrences of the header */
+			while (http_find_header(htx, n, &ctx, 1))
+				http_remove_header(htx, &ctx);
+			goto leave;
+		}
 	}
 
 	/* Now add header */
