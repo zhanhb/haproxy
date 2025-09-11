@@ -1781,6 +1781,8 @@ void sc_conn_sync_send(struct stconn *sc)
 		return;
 
 	sc_conn_send(sc);
+	if (oc->flags & CF_WRITE_EVENT)
+		oc->flags |= CF_WAKE_ONCE;
 }
 
 /* Called by I/O handlers after completion.. It propagates
@@ -2282,6 +2284,8 @@ void sc_applet_sync_send(struct stconn *sc)
 		return;
 
 	sc_applet_send(sc);
+	if (oc->flags & CF_WRITE_EVENT)
+		oc->flags |= CF_WAKE_ONCE;
 }
 
 /* Callback to be used by applet handlers upon completion. It updates the stream
