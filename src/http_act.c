@@ -1276,15 +1276,23 @@ static enum act_return http_action_auth(struct act_rule *rule, struct proxy *px,
 	if (http_reply_to_htx(s, htx, reply) == -1)
 		goto fail;
 
-	/* Remove all existing occurrences of the XXX-Authenticate header */
+	/* Replace XXX-Authenticate header */
 	ctx.blk = NULL;
-	while (http_find_header(htx, hdr, &ctx, 1))
-		http_remove_header(htx, &ctx);
+	if (http_find_header(htx, hdr, &ctx, 1)) {
+		if (!http_replace_header_value(htx, &ctx, ist2(b_orig(&trash), b_data(&trash)), 0))
+			goto fail;
+		/* Remove remain occurrences of the XXX-Authenticate header */
+		while (http_find_header(htx, hdr, &ctx, 1)) {
+			http_remove_header(htx, &ctx);
+		}
+		goto done;
+	}
 
 	/* Now a the right XXX-Authenticate header */
 	if (!http_add_header(htx, hdr, ist2(b_orig(&trash), b_data(&trash)), 0))
 		goto fail;
 
+  done:
 	/* Finally forward the reply */
 	htx_to_buf(htx, &res->buf);
 	if (!http_forward_proxy_resp(s, 1))
@@ -1443,10 +1451,15 @@ static enum act_return http_action_set_header(struct act_rule *rule, struct prox
 	v = ist2(replace->area, replace->data);
 
 	if (rule->action == 0) { // set-header
-		/* remove all occurrences of the header */
 		ctx.blk = NULL;
-		while (http_find_header(htx, n, &ctx, 1))
-			http_remove_header(htx, &ctx);
+		if (http_find_header(htx, n, &ctx, 1)) {
+			if (!http_replace_header_value(htx, &ctx, v, 1))
+				goto fail_rewrite;
+			/* remove remain occurrences of the header */
+			while (http_find_header(htx, n, &ctx, 1))
+				http_remove_header(htx, &ctx);
+			goto leave;
+		}
 	}
 
 	/* Now add header */
