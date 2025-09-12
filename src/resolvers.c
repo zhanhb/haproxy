@@ -1937,7 +1937,7 @@ static struct resolv_resolution *resolv_pick_resolution(struct resolvers *resolv
 	struct resolv_resolution *res = NULL;
 
 	if (!*hostname_dn)
-		goto from_pool;
+		goto err;
 
 	/* Search for same hostname and query type in resolutions.curr */
 	list_for_each_entry(res, &resolvers->resolutions.curr, list) {
@@ -1975,11 +1975,9 @@ static struct resolv_resolution *resolv_pick_resolution(struct resolvers *resolv
 
 		res->prefered_query_type = query_type;
 		res->query_type          = query_type;
-		if (*hostname_dn) {
-			res->hostname_dn         = strdup(*hostname_dn);
-			if (res->hostname_dn == NULL)
-				goto err;
-		}
+		res->hostname_dn         = strdup(*hostname_dn);
+		if (res->hostname_dn == NULL)
+			goto err;
 		res->hostname_dn_len     = hostname_dn_len;
 
 		++resolution_uuid;
