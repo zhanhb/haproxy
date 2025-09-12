@@ -1921,10 +1921,10 @@ static struct resolv_resolution *resolv_pick_resolution(struct resolvers *resolv
 							char **hostname_dn, int hostname_dn_len,
 							int query_type)
 {
-	struct resolv_resolution *res;
+	struct resolv_resolution *res = NULL;
 
 	if (!*hostname_dn)
-		goto from_pool;
+		goto err;
 
 	/* Search for same hostname and query type in resolutions.curr */
 	list_for_each_entry(res, &resolvers->resolutions.curr, list) {
@@ -1962,7 +1962,9 @@ static struct resolv_resolution *resolv_pick_resolution(struct resolvers *resolv
 
 		res->prefered_query_type = query_type;
 		res->query_type          = query_type;
-		res->hostname_dn         = *hostname_dn;
+		res->hostname_dn         = strdup(*hostname_dn);
+		if (res->hostname_dn == NULL)
+			goto err;
 		res->hostname_dn_len     = hostname_dn_len;
 
 		++resolution_uuid;
@@ -1971,6 +1973,10 @@ static struct resolv_resolution *resolv_pick_resolution(struct resolvers *resolv
 		LIST_APPEND(&resolvers->resolutions.wait, &res->list);
 	}
 	return res;
+  err:
+	if (res)
+		resolv_free_resolution(res);
+	return NULL;
 }
 
 /* deletes and frees all answer_items from the resolution's answer_list */
@@ -1997,7 +2003,7 @@ static void resolv_free_resolution(struct resolv_resolution *resolution)
 
 	/* clean up configuration */
 	resolv_reset_resolution(resolution);
-	resolution->hostname_dn = NULL;
+	ha_free(&resolution->hostname_dn);
 	resolution->hostname_dn_len = 0;
 
 	list_for_each_entry_safe(req, reqback, &resolution->requesters, list) {
@@ -2168,7 +2174,6 @@ void resolv_detach_from_resolution_answer_items(struct resolv_resolution *res,  
 static void _resolv_unlink_resolution(struct resolv_requester *requester)
 {
 	struct resolv_resolution *res;
-	struct resolv_requester  *req;
 
 	/* Nothing to do */
 	if (!requester || !requester->resolution)
@@ -2183,9 +2188,7 @@ static void _resolv_unlink_resolution(struct resolv_requester *requester)
 	resolv_detach_from_resolution_answer_items(res,  requester);
 
 	/* We need to find another requester linked on this resolution */
-	if (!LIST_ISEMPTY(&res->requesters))
-		req = LIST_NEXT(&res->requesters, struct resolv_requester *, list);
-	else {
+	if (LIST_ISEMPTY(&res->requesters)) {
 		/* If the last requester was a stream and the resolution was a
 		 * success, keep it to use it as a cache for <hold.valid>
 		 * milliseconds.
@@ -2200,26 +2203,6 @@ static void _resolv_unlink_resolution(struct resolv_requester *requester)
 			resolv_update_resolvers_timeout(res->resolvers);
 		}
 		return;
-	}
-
-	/* Move hostname_dn related pointers to the next requester */
-	switch (obj_type(req->owner)) {
-		case OBJ_TYPE_SERVER:
-			res->hostname_dn     = __objt_server(req->owner)->hostname_dn;
-			res->hostname_dn_len = __objt_server(req->owner)->hostname_dn_len;
-			break;
-		case OBJ_TYPE_SRVRQ:
-			res->hostname_dn     = __objt_resolv_srvrq(req->owner)->hostname_dn;
-			res->hostname_dn_len = __objt_resolv_srvrq(req->owner)->hostname_dn_len;
-			break;
-		case OBJ_TYPE_STREAM:
-			res->hostname_dn     = __objt_stream(req->owner)->resolv_ctx.hostname_dn;
-			res->hostname_dn_len = __objt_stream(req->owner)->resolv_ctx.hostname_dn_len;
-			break;
-		default:
-			res->hostname_dn     = NULL;
-			res->hostname_dn_len = 0;
-			break;
 	}
 }
 
