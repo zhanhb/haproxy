@@ -1797,13 +1797,15 @@ static int pat_ref_set_from_node(struct pat_ref *ref, struct ebmb_node *node, co
 		char *tmp_err = NULL;
 
 		elt = ebmb_entry(node, struct pat_ref_elt, node);
+		node = ebmb_next_dup(node);
+
 		if (first)
 			gen = elt->gen_id;
 		else if (elt->gen_id != gen) {
 			/* only consider duplicate elements from the same gen! */
 			continue;
 		}
-		node = ebmb_next_dup(node);
+
 		if (!pat_ref_set_elt(ref, elt, value, &tmp_err)) {
 			if (err)
 				*err = tmp_err;
