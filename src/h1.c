@@ -955,8 +955,8 @@ int h1_headers_to_hdr_list(char *start, const char *stop,
 			ALREADY_CHECKED(sl.rq.u.ptr);
 			switch (parser.format) {
 			case URI_PARSER_FORMAT_ASTERISK:
-				/* We must take care "PRI * HTTP/2.0" is supported here. check for OTHER methods here is enough */
-				if ((sl.rq.meth != HTTP_METH_OTHER && sl.rq.meth != HTTP_METH_OPTIONS) || istlen(sl.rq.u) != 1) {
+				/* We must take care "PRI * HTTP/2.0" is supported here. */
+				if (((sl.rq.meth != HTTP_METH_OTHER || !isteq(sl.rq.m, ist("PRI")) || !isteq(sl.rq.v, ist("HTTP/2.0"))) && sl.rq.meth != HTTP_METH_OPTIONS) || istlen(sl.rq.u) != 1) {
 					ptr = sl.rq.u.ptr; /* Set ptr on the error */
 					goto http_msg_invalid;
 				}
