@@ -479,20 +479,19 @@ const char *http_get_reason(unsigned int status)
 	case 450: return "Blocked by Windows Parental Controls";
 	case 451: return "Unavailable For Legal Reasons";
 	case 456: return "Unrecoverable Error";
-	case 499: return "client has closed connection";
 	case 500: return "Internal Server Error";
 	case 501: return "Not Implemented";
 	case 502: return "Bad Gateway";
 	case 503: return "Service Unavailable";
 	case 504: return "Gateway Timeout";
 	case 505: return "HTTP Version Not Supported";
-	case 506: return "Variant also negotiate";
-	case 507: return "Insufficient storage";
-	case 508: return "Loop detected";
+	case 506: return "Variant Also Negotiates";
+	case 507: return "Insufficient Storage";
+	case 508: return "Loop Detected";
 	case 509: return "Bandwidth Limit Exceeded";
-	case 510: return "Not extended";
-	case 511: return "Network authentication required";
-	case 520: return "Web server is returning an unknown error";
+	case 510: return "Not Extended";
+	case 511: return "Network Authentication Required";
+	case 520: return "Web Server Returned an Unknown Error";
 	default:
 		switch (status) {
 		case 100 ... 199: return "Informational";
