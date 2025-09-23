@@ -2256,20 +2256,26 @@ static int h2c_send_settings(struct h2c *h2c)
 	       "\x00\x00\x00\x00", /* stream ID : 0 */
 	       9);
 
+	if (h2_settings_header_table_size != 4096) {
+		char str[6] = "\x00\x01"; /* header_table_size */
+
+		write_n32(str + 2, h2_settings_header_table_size);
+		chunk_memcat(&buf, str, 6);
+	}
+
 	if (h2c->flags & H2_CF_IS_BACK) {
 		/* send settings_enable_push=0 */
 		chunk_memcat(&buf, "\x00\x02\x00\x00\x00\x00", 6);
 	}
 
-	/* rfc 8441 #3 SETTINGS_ENABLE_CONNECT_PROTOCOL=1,
-	 * sent automatically unless disabled in the global config */
-	if (!(global.tune.options & GTUNE_DISABLE_H2_WEBSOCKET))
-		chunk_memcat(&buf, "\x00\x08\x00\x00\x00\x01", 6);
+	mcs = h2c_max_concurrent_streams(h2c);
+	if (mcs != 0) {
+		char str[6] = "\x00\x03"; /* max_concurrent_streams */
 
-	if (h2_settings_header_table_size != 4096) {
-		char str[6] = "\x00\x01"; /* header_table_size */
-
-		write_n32(str + 2, h2_settings_header_table_size);
+		/* Note: 0 means "unlimited" for haproxy's config but not for
+		 * the protocol, so never send this value!
+		 */
+		write_n32(str + 2, mcs);
 		chunk_memcat(&buf, str, 6);
 	}
 
@@ -2282,17 +2288,6 @@ static int h2c_send_settings(struct h2c *h2c)
 		char str[6] = "\x00\x04"; /* initial_window_size */
 
 		write_n32(str + 2, iws);
-		chunk_memcat(&buf, str, 6);
-	}
-
-	mcs = h2c_max_concurrent_streams(h2c);
-	if (mcs != 0) {
-		char str[6] = "\x00\x03"; /* max_concurrent_streams */
-
-		/* Note: 0 means "unlimited" for haproxy's config but not for
-		 * the protocol, so never send this value!
-		 */
-		write_n32(str + 2, mcs);
 		chunk_memcat(&buf, str, 6);
 	}
 
@@ -2313,6 +2308,11 @@ static int h2c_send_settings(struct h2c *h2c)
 		write_n32(str + 2, mfs);
 		chunk_memcat(&buf, str, 6);
 	}
+
+	/* rfc 8441 #3 SETTINGS_ENABLE_CONNECT_PROTOCOL=1,
+	 * sent automatically unless disabled in the global config */
+	if (!(global.tune.options & GTUNE_DISABLE_H2_WEBSOCKET))
+		chunk_memcat(&buf, "\x00\x08\x00\x00\x00\x01", 6);
 
 	h2_set_frame_size(buf.area, buf.data - 9);
 
