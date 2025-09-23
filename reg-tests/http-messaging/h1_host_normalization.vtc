@@ -53,55 +53,10 @@ syslog S1 -level info {
     expect ~ "^.* uri: CONNECT hostname:8443 HTTP/1.1; host: {hostname:8443}$"
     barrier b1 sync
 
-    # C8
-    recv
-    expect ~ "^.* uri: <BADREQ>; host: $"
-    barrier b1 sync
-
-    # C9
-    recv
-    expect ~ "^.* uri: <BADREQ>; host: $"
-    barrier b1 sync
-
-    # C10
-    recv
-    expect ~ "^.* uri: <BADREQ>; host: $"
-    barrier b1 sync
-
-    # C11
-    recv
-    expect ~ "^.* uri: <BADREQ>; host: $"
-    barrier b1 sync
-
-    # C12
-    recv
-    expect ~ "^.* uri: <BADREQ>; host: $"
-    barrier b1 sync
-
-    # C13
-    recv
-    expect ~ "^.* uri: <BADREQ>; host: $"
-    barrier b1 sync
-
     # C14
     recv
     expect ~ "^.* uri: <BADREQ>; host: $"
     barrier b1 sync
-
-    # C15
-    recv
-    expect ~ "^.* uri: <BADREQ>; host: $"
-    barrier b1 sync
-
-    # C16
-    recv
-    expect ~ "^.* uri: <BADREQ>; host: $"
-    barrier b1 sync
-
-    # C17
-    recv
-    barrier b1 sync
-    expect ~ "^.* uri: <BADREQ>; host: $"
 
     # C18
     recv
@@ -414,139 +369,11 @@ client c7 -connect ${h1_fe_sock} {
 # Wait matching on log message
 barrier b1 sync
 
-# host miss-match => error
-client c8 -connect ${h1_fe_sock} {
-    txreq \
-      -req "GET" \
-      -url "http://hostname1/" \
-      -hdr "host: hostname2"
-
-    rxresp
-    expect resp.status == 400
-} -run
-
-# Wait matching on log message
-barrier b1 sync
-
-# port miss-match => error
-client c9 -connect ${h1_fe_sock} {
-    txreq \
-      -req "GET" \
-      -url "http://hostname:80/" \
-      -hdr "host: hostname:81"
-
-    rxresp
-    expect resp.status == 400
-} -run
-
-# Wait matching on log message
-barrier b1 sync
-
-# no host port with a non-default port in abs-uri  => error
-client c10 -connect ${h1_fe_sock} {
-    txreq \
-      -req "GET" \
-      -url "http://hostname:8080/" \
-      -hdr "host: hostname"
-
-    rxresp
-    expect resp.status == 400
-} -run
-
-# Wait matching on log message
-barrier b1 sync
-
-# non-default host port with a default in abs-uri  => error
-client c11 -connect ${h1_fe_sock} {
-    txreq \
-      -req "GET" \
-      -url "http://hostname/" \
-      -hdr "host: hostname:81"
-
-    rxresp
-    expect resp.status == 400
-} -run
-
-# Wait matching on log message
-barrier b1 sync
-
-# miss-match between host headers => error
-client c12 -connect ${h1_fe_sock} {
-    txreq \
-      -req "GET" \
-      -url "http://hostname1/" \
-      -hdr "host: hostname1" \
-      -hdr "host: hostname2"
-
-    rxresp
-    expect resp.status == 400
-} -run
-
-# Wait matching on log message
-barrier b1 sync
-
-# miss-match between host headers but with a normalization => error
-client c13 -connect ${h1_fe_sock} {
-    txreq \
-      -req "GET" \
-      -url "http://hostname1/" \
-      -hdr "host: hostname1:80" \
-      -hdr "host: hostname1"
-
-    rxresp
-    expect resp.status == 400
-} -run
-
-# Wait matching on log message
-barrier b1 sync
-
 # CONNECT authoriy without port => error
 client c14 -connect ${h1_fe_sock} {
     txreq \
       -req "CONNECT" \
       -url "hostname" \
-      -hdr "host: hostname"
-
-    rxresp
-    expect resp.status == 400
-} -run
-
-# Wait matching on log message
-barrier b1 sync
-
-# host miss-match with CONNECT => error
-client c15 -connect ${h1_fe_sock} {
-    txreq \
-      -req "CONNECT" \
-      -url "hostname1:80" \
-      -hdr "host: hostname2:80"
-
-    rxresp
-    expect resp.status == 400
-} -run
-
-# Wait matching on log message
-barrier b1 sync
-
-# port miss-match with CONNECT => error
-client c16 -connect ${h1_fe_sock} {
-    txreq \
-      -req "CONNECT" \
-      -url "hostname:80" \
-      -hdr "host: hostname:443"
-
-    rxresp
-    expect resp.status == 400
-} -run
-
-# Wait matching on log message
-barrier b1 sync
-
-# no host port with non-default port in CONNECT authority => error
-client c17 -connect ${h1_fe_sock} {
-    txreq \
-      -req "CONNECT" \
-      -url "hostname:8080" \
       -hdr "host: hostname"
 
     rxresp

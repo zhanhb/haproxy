@@ -108,108 +108,6 @@ int h1_parse_xfer_enc_header(struct h1m *h1m, struct ist value)
 	return ret;
 }
 
-/* Validate the authority and the host header value for CONNECT method. If there
- * is host header, its value is normalized. 0 is returned on success, -1 if the
- * authority is invalid and -2 if the host is invalid.
- */
-static int h1_validate_connect_authority(struct ist authority, struct ist *host_hdr)
-{
-	struct ist uri_host, uri_port, host, host_port;
-
-	if (!istlen(authority) || http_authority_has_forbidden_char(authority))
-		goto invalid_authority;
-	uri_host = authority;
-	uri_port = http_get_host_port(authority);
-	if (!istlen(uri_port))
-		goto invalid_authority;
-	uri_host.len -= (istlen(uri_port) + 1);
-
-	if (!host_hdr || !isttest(*host_hdr))
-		goto end;
-
-	/* Get the port of the host header value, if any */
-	host = *host_hdr;
-	host_port = http_get_host_port(*host_hdr);
-	if (isttest(host_port))
-		host.len -= (istlen(host_port) + 1);
-
-	if (istlen(host_port)) {
-		if (!isteqi(host, uri_host) || !isteq(host_port, uri_port))
-			goto invalid_host;
-		if (http_is_default_port(IST_NULL, uri_port))
-			*host_hdr = host; /* normalize */
-	}
-	else {
-		if (!http_is_default_port(IST_NULL, uri_port) || !isteqi(host, uri_host))
-			goto invalid_host;
-	}
-
-  end:
-	return 0;
-
-  invalid_authority:
-	return -1;
-
-  invalid_host:
-	return -2;
-}
-
-
-/* Validate the authority and the host header value for non-CONNECT method, when
- * an absolute-URI is detected but when it does not exactly match the host
- * value. The idea is to detect default port (http or https). authority and host
- * are defined here. 0 is returned on success, -1 if the host is does not match
- * the authority.
- */
-static int h1_validate_mismatch_authority(struct ist scheme, struct ist authority, struct ist host_hdr)
-{
-	struct ist uri_host, uri_port, host, host_port;
-
-	if (!isttest(scheme))
-		goto mismatch;
-
-	uri_host = authority;
-	uri_port = http_get_host_port(authority);
-	if (isttest(uri_port))
-		uri_host.len -= (istlen(uri_port) + 1);
-
-	host = host_hdr;
-	host_port = http_get_host_port(host_hdr);
-	if (isttest(host_port))
-	    host.len -= (istlen(host_port) + 1);
-
-	if (!isttest(uri_port) && !isttest(host_port)) {
-		/* No port on both: we already know the authority does not match
-		 * the host value
-		 */
-		goto mismatch;
-	}
-	else if (isttest(uri_port) && !http_is_default_port(scheme, uri_port)) {
-		/* here there is no port for the host value and the port for the
-		 * authority is not the default one
-		 */
-		goto mismatch;
-	}
-	else if (isttest(host_port) && !http_is_default_port(scheme, host_port)) {
-		/* here there is no port for the authority and the port for the
-		 * host value is not the default one
-		 */
-		goto mismatch;
-	}
-	else {
-		/* the authority or the host value contain a default port and
-		 * there is no port on the other value
-		 */
-		if (!isteqi(uri_host, host))
-			goto mismatch;
-	}
-
-	return 0;
-
-  mismatch:
-	return -1;
-}
-
 
 /* Parse the Connection: header of an HTTP/1 request, looking for "close",
  * "keep-alive", and "upgrade" values, and updating h1m->flags according to
@@ -1048,8 +946,7 @@ int h1_headers_to_hdr_list(char *start, const char *stop,
 		if (h1m->flags & (H1_MF_HDRS_ONLY|H1_MF_RESP)) {
 		} else if (sl.rq.meth != HTTP_METH_CONNECT) {
 			struct http_uri_parser parser = http_uri_parser_init(sl.rq.u);
-			struct ist scheme, authority = IST_NULL;
-			int ret;
+			struct ist scheme;
 
 			/* WT: gcc seems to see a path where sl.rq.u.ptr was used
 			 * uninitialized, but it doesn't know that the function is
@@ -1074,26 +971,6 @@ int h1_headers_to_hdr_list(char *start, const char *stop,
 					ptr = sl.rq.u.ptr; /* Set ptr on the error */
 					goto http_msg_invalid;
 				}
-				else { /* Scheme found:  MUST be an absolute-URI */
-					struct ist host = IST_NULL;
-
-					if (host_idx != -1)
-						host = hdr[host_idx].v;
-					authority = http_parse_authority(&parser, 1);
-					/* For non-CONNECT method, the authority must match the host header value */
-					if (isttest(host) && !isteqi(authority, host)) {
-						ret = h1_validate_mismatch_authority(scheme, authority, host);
-						if (ret < 0) {
-							if (h1m->err_pos < -1) {
-								state = H1_MSG_LAST_LF;
-								ptr = host.ptr; /* Set ptr on the error */
-								goto http_msg_invalid;
-							}
-							if (h1m->err_pos == -1) /* capture the error pointer */
-								h1m->err_pos = v.ptr - start + skip; /* >= 0 now */
-						}
-					}
-				}
 				break;
 
 			default:
@@ -1102,14 +979,20 @@ int h1_headers_to_hdr_list(char *start, const char *stop,
 			}
 		} else {
 			struct ist authority;
-			struct ist *host = NULL;
-			int ret;
 
-			if (host_idx != -1)
-				host = &hdr[host_idx].v;
+			if (host_idx != -1) {
+				struct ist *host_hdr;
+				host_hdr = &hdr[host_idx].v;
+				if (isttest(*host_hdr)) {
+					struct ist host_port;
+					host_port = http_get_host_port(*host_hdr);
+					if (istlen(host_port) && http_is_default_port(IST_NULL, host_port))
+						host_hdr->len -= istlen(host_port) + 1; /* normalize */
+				}
+			}
+
 			authority = sl.rq.u;
-			ret = h1_validate_connect_authority(authority, host);
-			if (ret < 0) {
+			if (!istlen(authority) || http_authority_has_forbidden_char(authority) || !istlen(http_get_host_port(authority))) {
 				if (h1m->err_pos < -1) {
 					state = H1_MSG_LAST_LF;
 					/* WT: gcc seems to see a path where sl.rq.u.ptr was used
@@ -1117,11 +1000,11 @@ int h1_headers_to_hdr_list(char *start, const char *stop,
 					 * called with initial states making this impossible.
 					 */
 					ALREADY_CHECKED(authority.ptr);
-					ptr = ((ret == -1) ? authority.ptr : host->ptr); /* Set ptr on the error */
+					ptr = authority.ptr; /* Set ptr on the error */
 					goto http_msg_invalid;
 				}
 				if (h1m->err_pos == -1) /* capture the error pointer */
-					h1m->err_pos = ((ret == -1) ? authority.ptr : host->ptr) - start + skip; /* >= 0 now */
+					h1m->err_pos = authority.ptr - start + skip; /* >= 0 now */
 			}
 		}
 
