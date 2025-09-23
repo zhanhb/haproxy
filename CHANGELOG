@@ -1,6 +1,101 @@
 ChangeLog :
 ===========
 
+2025/09/23 : 3.2.5
+    - BUG/MEDIUM: stconn: Fix conditions to know an applet can get data from stream
+    - BUG/MEDIUM: Remove sync sends from streams to applets
+    - MINOR: quic: implement qc_ssl_do_hanshake()
+    - BUG/MEDIUM: quic: listener connection stuck during handshakes (OpenSSL 3.5)
+    - BUG/MINOR: mux-h1: fix wrong lock label
+    - MEDIUM: dns: don't call connect to dest socket for AF_INET*
+    - BUG/MINOR: spoe: Properly detect and skip empty NOTIFY frames
+    - BUG/MEDIUM: cli: Report inbuf is no longer full when a line is consumed
+    - BUG/MEDIUM: mworker: more verbose error upon loading failure
+    - BUG/MEDIUM: mux-h2: fix crash on idle-ping due to unwanted ABORT_NOW
+    - BUG/MEDIUM: ssl: apply ssl-f-use on every "ssl" bind
+    - MINOR: dns: dns_connect_nameserver: fix fd leak at error path
+    - BUG/MEDIUM: quic: reset padding when building GSO datagrams
+    - BUG/MINOR: quic: do not emit probe data if CONNECTION_CLOSE requested
+    - BUG/MAJOR: quic: fix INITIAL padding with probing packet only
+    - BUG/MINOR: quic: don't coalesce probing and ACK packet of same type
+    - MINOR: quic: centralize padding for HP sampling on packet building
+    - MINOR: http_ana: fix typo in http_res_get_intercept_rule
+    - BUG/MEDIUM: mux-spop: Reject connection attempts from a non-spop frontend
+    - BUG/MEDIUM: http_ana: handle yield for "stats http-request" evaluation
+    - BUG/MEDIUM: spoe: Improve error detection in SPOE applet on client abort
+    - MINOR: sample: Add le2dec (little endian to decimal) sample fetch
+    - MINOR: sample: Add base2 converter
+    - BUG/MINOR: quic: reorder fragmented RX CRYPTO frames by their offsets
+    - MINOR: ssl: diagnostic warning when both 'default-crt' and 'strict-sni' are used
+    - DOC: configuration: clarify 'default-crt' and implicit default certificates
+    - MINOR: quic: remove ->offset qf_crypto struct field
+    - BUG/MINOR: mux-quic: trace with non initialized qcc
+    - BUG/MINOR: acl: set arg_list->kw to aclkw->kw string literal if aclkw is found
+    - BUG/MEDIUM: mworker: fix startup and reload on macOS
+    - BUG/MINOR: connection: rearrange union list members
+    - BUG/MINOR: connection: remove extra session_unown_conn() on reverse
+    - BUG/MINOR: server: decrement session idle_conns on del server
+    - BUILD: mworker: fix ignoring return value of ‘read’
+    - DOC: unreliable sockpair@ on macOS
+    - DOC: configuration: confuse "strict-mode" with "zero-warning"
+    - MINOR: doc: add missing statistics column
+    - MINOR: doc: add missing statistics column
+    - CLEANUP: quic: remove a useless CRYPTO frame variable assignment
+    - BUG/MEDIUM: quic: CRYPTO frame freeing without eb_delete()
+    - BUG/MAJOR: mux-quic: fix crash on reload during emission
+    - REG-TESTS: map_redirect: Don't use hdr_dom in ACLs with "-m end" matching method
+    - BUG/MEDIUM: server: Duplicate healthcheck's alpn inherited from default server
+    - BUG/MINOR: halog: Add OOM checks for calloc() in filter_count_srv_status() and filter_count_url()
+    - BUG/MINOR: log: Add OOM checks for calloc() and malloc() in logformat parser and dup_logger()
+    - BUG/MINOR: acl: Add OOM check for calloc() in smp_fetch_acl_parse()
+    - BUG/MINOR: cfgparse: Add OOM check for calloc() in cfg_parse_listen()
+    - BUG/MINOR: compression: Add OOM check for calloc() in parse_compression_options()
+    - BUG/MINOR: tools: Add OOM check for malloc() in indent_msg()
+    - BUG/MINOR: quic: ignore AGAIN ncbuf err when parsing CRYPTO frames
+    - BUG/MINOR: quic: fix room check if padding requested
+    - BUG/MINOR: quic: fix padding issue on INITIAL retransmit
+    - BUG/MINOR: haproxy: be sure not to quit too early on soft stop
+    - BUILD: acl: silence a possible null deref warning in parse_acl_expr()
+    - MINOR: quic: Add more information about RX packets
+    - BUG/MEDIUM: stick-tables: don't leave the expire loop with elements deleted
+    - BUG/MINOR: stick-tables: never leave used entries without expiration
+    - BUG/MEDIUM: peers: don't fail twice to grab the update lock
+    - BUG/MINOR: check: ensure check-reuse is compatible with SSL
+    - BUG/MINOR: check: fix dst address when reusing a connection
+    - REGTESTS: explicitly use "balance roundrobin" where RR is needed
+    - BUG/MEDIUM: conn: fix UAF on connection after reversal on edge
+    - BUG/MINOR: connection: streamline conn detach from lists
+    - BUG/MINOR: log: fix potential memory leak upon error in add_to_logformat_list()
+    - BUILD: trace: silence a bogus build warning at -Og
+    - BUG/MINOR: cpu_topo: work around a small bug in musl's CPU_ISSET()
+    - CLEANUP: quic: fix typo in quic_tx trace
+    - BUG/MEDIUM: mux-h2: Reset MUX blocking flags when a send error is caught
+    - BUG/MEDIUM: mux-h2; Don't block reveives in H2_CS_ERROR and H2_CS_ERROR2 states
+    - BUG/MEDIUM: mux-h2: Restart reading when mbuf ring is no longer full
+    - BUG/MINOR: mux-h2: Remove H2_CF_DEM_DFULL flags when the demux buffer is reset
+    - BUG/MEDIUM: mux-h2: Report RST/error to app-layer stream during 0-copy fwding
+    - BUG/MEDIUM: mux-h2: Reinforce conditions to report an error to app-layer stream
+    - OPTIM: check: do not delay MUX for ALPN if SSL not active
+    - BUG/MEDIUM: checks: fix ALPN inheritance from server
+    - BUG/MEDIUM: h1: Allow reception if we have early data
+    - BUG/MEDIUM: ssl: create the mux immediately on early data
+    - BUG/MINOR: activity: fix reporting of task latency
+    - BUG/MEDIUM: stick-tables: don't loop on non-expirable entries
+    - BUG/MINOR: stick-table: make sure never to miss a process_table_expire update
+    - BUG/MAJOR: stream: Remove READ/WRITE events on channels after analysers eval
+    - BUG/MAJOR: stream: Force channel analysis on successful synchronous send
+    - BUG/MINOR: acme: null pointer dereference upon allocation failure
+    - BUG/MEDIUM: jws: return size_t in JWS functions
+    - BUG/MINOR: ssl: Potential NULL deref in trace macro
+    - BUG/MINOR: ssl: Fix potential NULL deref in trace callback
+    - BUG/MINOR: ocsp: prototype inconsistency
+    - BUG/MEDIUM: http_ana: fix potential NULL deref in http_process_req_common()
+    - BUG/MINOR: ocsp: Crash when updating CA during ocsp updates
+    - BUG/MINOR: resolvers: always normalize FQDN from response
+    - BUG/MEDIUM: ring: invert the length check to avoid an int overflow
+    - DEBUG: stick-tables: export stktable_add_pend_updates() for better reporting
+    - BUG/MEDIUM: pattern: fix possible infinite loops on deletion (try 2)
+
 2025/08/13 : 3.2.4
     - DOC: deviceatlas build clarifications
     - BUG/MEDIUM: ssl/clienthello: ECDSA with ssl-max-ver TLSv1.2 and no ECDSA ciphers
