@@ -4891,8 +4891,9 @@ int http_reply_to_htx(struct stream *s, struct htx *htx, struct http_reply *repl
 			free_trash_chunk(value);
 		}
 
-		if (!htx_add_header(htx, ist("content-length"), ist(clen)) ||
+		if (
 		    (body && b_data(body) && ctype && !htx_add_header(htx, ist("content-type"), ist(ctype))) ||
+		    !htx_add_header(htx, ist("content-length"), ist(clen)) ||
 		    !htx_add_endof(htx, HTX_BLK_EOH) ||
 		    (body && b_data(body) && !htx_add_data_atonce(htx, ist2(b_head(body), b_data(body)))))
 			goto fail;
