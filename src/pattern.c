@@ -2429,6 +2429,8 @@ int pattern_read_from_file(struct pattern_head *head, unsigned int refflags,
 					return 0;
 			}
 		}
+		else if ((ref->flags & PAT_REF_ID) && load_smp)
+			ref->flags |= PAT_REF_SMP;
 	}
 	else {
 		/* The reference already exists, check the map compatibility. */
