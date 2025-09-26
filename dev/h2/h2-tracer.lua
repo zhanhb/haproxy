@@ -56,14 +56,12 @@ function Dec:new()
     local dec = {}
 
     setmetatable(dec, Dec)
-    dec.do_hex = false
-    if (Dec.args[1] == "hex") then
-        dec.do_hex = true
-    end
+    dec.do_hex = (Dec.args[1] == "hex")
 
     Dec.cid = Dec.cid+1
     -- mix the thread number when multithreading.
     dec.cid = Dec.cid + 64 * core.thread
+    dec.scid = string.format("[%03x] ", dec.cid % 4096)
 
     -- state per dir. [1]=req [2]=res
     dec.st = {
@@ -91,62 +89,58 @@ end
 
 function Dec:start_analyze(txn, chn)
     if chn:is_resp() then
-        io.write(string.format("[%03x] ", self.cid % 4096) .. res_pfx .. "### res start\n")
+        io.write(self.scid .. res_pfx .. "### res start\n")
     else
-        io.write(string.format("[%03x] ", self.cid % 4096) .. "### req start\n")
+        io.write(self.scid .. "### req start\n")
     end
     filter.register_data_filter(self, chn)
 end
 
 function Dec:end_analyze(txn, chn)
     if chn:is_resp() then
-        io.write(string.format("[%03x] ", self.cid % 4096) .. res_pfx .. "### res end: " .. self.st[2].tot .. " bytes total\n")
+        io.write(self.scid .. res_pfx .. "### res end: " .. self.st[2].tot .. " bytes total\n")
     else
-        io.write(string.format("[%03x] ", self.cid % 4096) .. "### req end: " ..self.st[1].tot.. " bytes total\n")
+        io.write(self.scid .. "### req end: " ..self.st[1].tot.. " bytes total\n")
     end
 end
 
 function Dec:tcp_payload(txn, chn)
     local data = { }
-    local dofs = 1
     local pfx = ""
     local dir = 1
-    local sofs = 0
-    local ft = ""
-    local ff = ""
 
     if chn:is_resp() then
         pfx = res_pfx
         dir = 2
     end
 
-    pfx = string.format("[%03x] ", self.cid % 4096) .. pfx
+    pfx = self.scid .. pfx
 
     -- stream offset before processing
-    sofs = self.st[dir].tot
+    local sofs = self.st[dir].tot
 
-    if (chn:input() > 0) then
+    if chn:input() > 0 then
         data = chn:data()
         self.st[dir].tot = self.st[dir].tot + chn:input()
     end
 
-    if (chn:input() > 0 and self.do_hex ~= false) then
+    if chn:input() > 0 and self.do_hex then
         io.write("\n" .. pfx .. "Hex:\n")
         for i = 1, #data do
-            if ((i & 7) == 1) then io.write(pfx) end
-            io.write(string.format("0x%02x ", data:sub(i, i):byte()))
-            if ((i & 7) == 0 or i == #data) then io.write("\n") end
+            if (i & 7) == 1 then io.write(pfx) end
+            io.write(string.format("%02x ", data:sub(i, i):byte()))
+            if (i & 7) == 0 or i == #data then io.write("\n") end
         end
     end
 
     -- start at byte 1 in the <data> string
-    dofs = 1
+    local dofs = 1
 
     -- the first 24 bytes are expected to be an H2 preface on the request
-    if (dir == 1 and sofs < 24) then
+    if dir == 1 and sofs < 24 then
         -- let's not check it for now
         local bytes = self.st[dir].tot - sofs
-        if (sofs + self.st[dir].tot >= 24) then
+        if sofs + self.st[dir].tot >= 24 then
             -- skip what was missing from the preface
             dofs = dofs + 24 - sofs
             sofs = 24
@@ -163,9 +157,9 @@ function Dec:tcp_payload(txn, chn)
     while true do
         -- check if we need to consume data from the current frame
         -- flen is the number of bytes left before the frame's end.
-        if (self.st[dir].flen > 0) then
+        if self.st[dir].flen > 0 then
             if dofs > #data then return end -- missing data
-            if (#data - dofs + 1 < self.st[dir].flen) then
+            if #data - dofs + 1 < self.st[dir].flen then
                 -- insufficient data
                 self.st[dir].flen = self.st[dir].flen - (#data - dofs + 1)
                 io.write(pfx .. string.format("%32s\n", "... -" .. (#data - dofs + 1) .. " = " .. self.st[dir].flen))
@@ -173,7 +167,7 @@ function Dec:tcp_payload(txn, chn)
                 return
             else
                 -- enough data to finish
-                if (dofs == 1) then
+                if dofs == 1 then
                     -- only print a partial size if the frame was interrupted
                     io.write(pfx .. string.format("%32s\n", "... -" .. self.st[dir].flen .. " = 0"))
                 end
@@ -193,7 +187,7 @@ function Dec:tcp_payload(txn, chn)
         end
 
         -- we have a full frame header here
-        if (self.do_hex ~= false) then
+        if self.do_hex then
             io.write("\n" .. pfx .. string.format("hdr=%02x %02x %02x %02x %02x %02x %02x %02x %02x\n",
                      self.st[dir].hdr[1], self.st[dir].hdr[2], self.st[dir].hdr[3],
                      self.st[dir].hdr[4], self.st[dir].hdr[5], self.st[dir].hdr[6],
@@ -214,6 +208,7 @@ function Dec:tcp_payload(txn, chn)
         self.st[dir].fofs = 0
 
         -- decode frame type
+        local ft
         if self.st[dir].ftyp <= 9 then
             ft = h2ft[self.st[dir].ftyp]
         else
@@ -221,9 +216,9 @@ function Dec:tcp_payload(txn, chn)
         end
 
         -- decode frame flags for frame type <ftyp>
-        ff = ""
+        local ff = ""
         for i = 7, 0, -1 do
-            if (((self.st[dir].fflg >> i) & 1) ~= 0) then
+            if ((self.st[dir].fflg >> i) & 1) ~= 0 then
                 if self.st[dir].ftyp <= 9 and h2ff[self.st[dir].ftyp][i] ~= nil then
                     ff = ff .. ((ff == "") and "" or "+")
                     ff = ff .. h2ff[self.st[dir].ftyp][i]
