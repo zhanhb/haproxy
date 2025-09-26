@@ -2015,13 +2015,7 @@ enum http_parser_status http_trailers_to_htx(struct http_hdr *list, struct htx *
 		 *   field-name     = token
 		 */
 		for (i = 0; i < list[idx].n.len; i++) {
-			if (!(flags & HTTP_PF_UPCASE_OK) &&
-			    (uint8_t)(list[idx].n.ptr[i] - 'A') <= 'Z' - 'A') {
-				ret = HTTP_PRS_INV_HNAME;
-				goto fail;
-			}
-
-			if (!HTTP_IS_TOKEN(list[idx].n.ptr[i])) {
+			if ((flags & HTTP_PF_UPCASE_OK) ? !HTTP_IS_TOKEN(list[idx].n.ptr[i]) : !HTTP_IS_LOW_TOKEN(list[idx].n.ptr[i])) {
 				ret = HTTP_PRS_INV_HNAME;
 				goto fail;
 			}
