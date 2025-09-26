@@ -353,7 +353,7 @@ int h2_make_htx_request(struct http_hdr *list, struct htx *htx, unsigned int *ms
 			phdr = h2_str_to_phdr(list[idx].n);
 
 			for (i = !!phdr; i < list[idx].n.len; i++)
-				if ((uint8_t)(list[idx].n.ptr[i] - 'A') <= 'Z' - 'A' || !HTTP_IS_TOKEN(list[idx].n.ptr[i]))
+				if (!HTTP_IS_LOW_TOKEN(list[idx].n.ptr[i]))
 					goto fail;
 		}
 
@@ -677,7 +677,7 @@ int h2_make_htx_response(struct http_hdr *list, struct htx *htx, unsigned int *m
 			phdr = h2_str_to_phdr(list[idx].n);
 
 			for (i = !!phdr; i < list[idx].n.len; i++)
-				if ((uint8_t)(list[idx].n.ptr[i] - 'A') <= 'Z' - 'A' || !HTTP_IS_TOKEN(list[idx].n.ptr[i]))
+				if (!HTTP_IS_LOW_TOKEN(list[idx].n.ptr[i]))
 					goto fail;
 		}
 
