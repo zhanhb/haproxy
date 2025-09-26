@@ -47,7 +47,7 @@
 #define HTTP_FLG_CRLF 0x10
 #define HTTP_FLG_TOK  0x20
 #define HTTP_FLG_VER  0x40
-#define HTTP_FLG_DIG  0x80
+#define HTTP_FLG_LTOK 0x80
 
 #define HTTP_IS_CTL(x)       (http_char_classes[(uint8_t)(x)] & HTTP_FLG_CTL)
 #define HTTP_IS_SEP(x)       (http_char_classes[(uint8_t)(x)] & HTTP_FLG_SEP)
@@ -56,7 +56,8 @@
 #define HTTP_IS_CRLF(x)      (http_char_classes[(uint8_t)(x)] & HTTP_FLG_CRLF)
 #define HTTP_IS_TOKEN(x)     (http_char_classes[(uint8_t)(x)] & HTTP_FLG_TOK)
 #define HTTP_IS_VER_TOKEN(x) (http_char_classes[(uint8_t)(x)] & HTTP_FLG_VER)
-#define HTTP_IS_DIGIT(x)     (http_char_classes[(uint8_t)(x)] & HTTP_FLG_DIG)
+#define HTTP_IS_LOW_TOKEN(x) (http_char_classes[(uint8_t)(x)] & HTTP_FLG_LTOK)
+#define HTTP_IS_DIGIT(x)     ((uint8_t)((uint8_t)(x) - '0') <= 9)
 
 /* Known HTTP methods */
 enum http_meth_t {
