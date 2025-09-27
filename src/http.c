@@ -413,7 +413,7 @@ int http_get_status_idx(unsigned int status)
 	uint hash = ((status * 406) >> 5) % 32;
 	uint ret  = codes[hash];
 
-	if (http_err_codes[ret] == status)
+	if (likely(http_err_codes[ret] == status))
 		return ret;
 	return HTTP_ERR_500;
 }
