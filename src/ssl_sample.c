@@ -1742,6 +1742,7 @@ smp_fetch_ssl_fc_session_key(const struct arg *args, struct sample *smp, const c
 }
 #endif
 
+/* ssl_fc_sni and ssl_bc_sni */
 static int
 smp_fetch_ssl_fc_sni(const struct arg *args, struct sample *smp, const char *kw, void *private)
 {
@@ -1752,7 +1753,12 @@ smp_fetch_ssl_fc_sni(const struct arg *args, struct sample *smp, const char *kw,
 	smp->flags = SMP_F_VOL_SESS | SMP_F_CONST;
 	smp->data.type = SMP_T_STR;
 
-	conn = objt_conn(smp->sess->origin);
+	if (obj_type(smp->sess->origin) == OBJ_TYPE_CHECK)
+		conn = (kw[4] == 'b') ? sc_conn(__objt_check(smp->sess->origin)->sc) : NULL;
+	else
+		conn = (kw[4] != 'b') ? objt_conn(smp->sess->origin) :
+			smp->strm ? sc_conn(smp->strm->scb) : NULL;
+
 	ssl = ssl_sock_get_ssl_object(conn);
 	if (!ssl)
 		return 0;
@@ -2330,6 +2336,7 @@ static struct sample_fetch_kw_list sample_fetch_keywords = {ILH, {
 #endif
 	{ "ssl_bc_err",             smp_fetch_ssl_fc_err,         0,                   NULL,    SMP_T_SINT, SMP_USE_L5SRV },
 	{ "ssl_bc_err_str",         smp_fetch_ssl_fc_err_str,     0,                   NULL,    SMP_T_STR,  SMP_USE_L5SRV },
+	{ "ssl_bc_sni",             smp_fetch_ssl_fc_sni,         0,                   NULL,    SMP_T_STR,  SMP_USE_L5SRV },
 	{ "ssl_c_ca_err",           smp_fetch_ssl_c_ca_err,       0,                   NULL,    SMP_T_SINT, SMP_USE_L5CLI },
 	{ "ssl_c_ca_err_depth",     smp_fetch_ssl_c_ca_err_depth, 0,                   NULL,    SMP_T_SINT, SMP_USE_L5CLI },
 	{ "ssl_c_der",              smp_fetch_ssl_x_der,          0,                   NULL,    SMP_T_BIN,  SMP_USE_L5CLI },
