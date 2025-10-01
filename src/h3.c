@@ -684,8 +684,7 @@ static ssize_t h3_headers_to_htx(struct qcs *qcs, const struct buffer *buf,
 	 */
 	if (http_authority_has_forbidden_char(authority)) {
 		TRACE_ERROR("invalid character in authority", H3_EV_RX_FRAME|H3_EV_RX_HDR, qcs->qcc->conn, qcs);
-		h3s->err = H3_ERR_MESSAGE_ERROR;
-		qcc_report_glitch(h3c->qcc, 1);
+		h3s->err = H3_MESSAGE_ERROR;
 		len = -1;
 		goto out;
 	}
@@ -768,7 +767,7 @@ static ssize_t h3_headers_to_htx(struct qcs *qcs, const struct buffer *buf,
 
 			if (http_authority_has_forbidden_char(list[hdr_idx].v) ||
 			    h3_set_authority(qcs, &authority, list[hdr_idx].v)) {
-				h3s->err = H3_ERR_MESSAGE_ERROR;
+				h3s->err = H3_MESSAGE_ERROR;
 				len = -1;
 				goto out;
 			}
