@@ -5822,6 +5822,12 @@ static int init_srv_requeue(struct server *srv)
 	srv->requeue_tasklet = t;
 	t->process = server_requeue;
 	t->context = srv;
+	/*
+	 * Run the tasklet once, in the very unlikely event the server
+	 * failed to queue itself when brought up, which could happen if
+	 * a memory allocation failed.
+	 */
+	tasklet_wakeup(t);
 	return ERR_NONE;
 }
 REGISTER_POST_SERVER_CHECK(init_srv_requeue);
