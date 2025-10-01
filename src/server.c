@@ -2859,14 +2859,6 @@ static int _srv_parse_init(struct server **srv, char **args, int *cur_arg,
 			goto out;
 		}
 
-#ifdef USE_QUIC
-		if (newsrv->addr_type.proto_type == PROTO_TYPE_DGRAM &&
-		    newsrv->addr_type.xprt_type == PROTO_TYPE_STREAM) {
-			ha_alert("QUIC protocol is unsupported on the backend side.\n");
-			goto out;
-		}
-#endif
-
 		if (!port1 || !port2) {
 			/* no port specified, +offset, -offset */
 			newsrv->flags |= SRV_F_MAPPORTS;
