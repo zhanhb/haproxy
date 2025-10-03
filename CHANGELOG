@@ -1,6 +1,15 @@
 ChangeLog :
 ===========
 
+2025/10/03 : 2.4.30
+    - DOC: config: clarify some known limitations of the json_query() converter
+    - BUG/CRITICAL: mjson: fix possible DoS when parsing numbers
+    - BUILD: compiler: add a macro to detect if another one is set and equals 1
+    - BUILD: compiler: fix __equals_1() on older compilers
+    - BUILD: compiler: add a default definition for __has_attribute()
+    - MINOR: compiler: add __nonstring macro
+    - BUG/MINOR: h2: forbid 'Z' as well in header field names checks
+
 2025/04/22 : 2.4.29
     - BUG/MINOR: ssl: can't load a separated key file with openssl > 3.0
     - BUG/MINOR: cli: don't show sockpairs in HAPROXY_CLI and HAPROXY_MASTER_CLI
