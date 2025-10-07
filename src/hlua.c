@@ -5771,20 +5771,17 @@ __LJMP static int hlua_applet_http_recv_yield(lua_State *L, int status, lua_KCon
 		uint32_t vlen;
 
 		vlen = sz;
-		if (len > 0 && vlen > len)
-			vlen = len;
-		if (vlen > count) {
-			if (type != HTX_BLK_DATA)
-				break;
-			vlen = count;
-		}
-
 		switch (type) {
 			case HTX_BLK_UNUSED:
 				break;
 
 			case HTX_BLK_DATA:
 				v = htx_get_blk_value(htx, blk);
+				vlen = v.len;
+				if (len > 0 && vlen > len)
+					vlen = len;
+				if (vlen > count)
+					vlen = count;
 				luaL_addlstring(&luactx->b, v.ptr, vlen);
 				if (len > 0)
 					len -= vlen;
