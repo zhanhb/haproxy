@@ -2289,6 +2289,7 @@ error:
 	ha_free(&ckch_conf);
 	ssl_sock_free_ssl_conf(ssl_conf);
 	ha_free(&ssl_conf);
+	ha_free(&cfg_crt_node->filename);
 	ha_free(&cfg_crt_node);
 	return -1;
 }
@@ -2344,6 +2345,7 @@ static int post_section_frontend_crt_init()
 		LIST_DELETE(&n->list);
 		/* n->ssl_conf is reused so we don't free them here */
 		free(n->ckch_conf);
+		free(n->filename);
 		free(n);
 	}
 
