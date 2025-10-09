@@ -2367,7 +2367,8 @@ static int post_section_frontend_crt_init()
 		}
 	}
 
-	return err_code;
+	goto end;
+
 error:
 
 	if (err)
@@ -2383,9 +2384,11 @@ error:
 		ha_free(&n);
 	}
 
-	ha_free(&crtlist_name);
 	crtlist_entry_free(entry);
 	crtlist_free(newlist);
+
+end:
+	ha_free(&crtlist_name);
 	return err_code;
 }
 
