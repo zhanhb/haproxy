@@ -467,7 +467,8 @@ struct stksess *stksess_new(struct stktable *t, struct stktable_key *key)
 			stksess_setkey(t, ts, key);
 			stksess_setkey_shard(t, ts, key);
 		}
-	}
+	} else
+		HA_ATOMIC_DEC(&t->current);
 
 	return ts;
 }
