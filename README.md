@@ -1,11 +1,11 @@
 # HAProxy
 
-[![alpine/musl](https://github.com/haproxy/haproxy/actions/workflows/musl.yml/badge.svg)](https://github.com/haproxy/haproxy/actions/workflows/musl.yml)
-[![AWS-LC](https://github.com/haproxy/haproxy/actions/workflows/aws-lc.yml/badge.svg)](https://github.com/haproxy/haproxy/actions/workflows/aws-lc.yml)
-[![Illumos](https://github.com/haproxy/haproxy/actions/workflows/illumos.yml/badge.svg)](https://github.com/haproxy/haproxy/actions/workflows/illumos.yml)
-[![NetBSD](https://github.com/haproxy/haproxy/actions/workflows/netbsd.yml/badge.svg)](https://github.com/haproxy/haproxy/actions/workflows/netbsd.yml)
-[![FreeBSD](https://api.cirrus-ci.com/github/haproxy/haproxy.svg?task=FreeBSD)](https://cirrus-ci.com/github/haproxy/haproxy/)
-[![VTest](https://github.com/haproxy/haproxy/actions/workflows/vtest.yml/badge.svg)](https://github.com/haproxy/haproxy/actions/workflows/vtest.yml)
+[![alpine/musl](https://github.com/zhanhb/haproxy/actions/workflows/musl.yml/badge.svg)](https://github.com/zhanhb/haproxy/actions/workflows/musl.yml)
+[![AWS-LC](https://github.com/zhanhb/haproxy/actions/workflows/aws-lc.yml/badge.svg)](https://github.com/zhanhb/haproxy/actions/workflows/aws-lc.yml)
+[![Illumos](https://github.com/zhanhb/haproxy/actions/workflows/illumos.yml/badge.svg)](https://github.com/zhanhb/haproxy/actions/workflows/illumos.yml)
+[![NetBSD](https://github.com/zhanhb/haproxy/actions/workflows/netbsd.yml/badge.svg)](https://github.com/zhanhb/haproxy/actions/workflows/netbsd.yml)
+[![FreeBSD](https://api.cirrus-ci.com/github/zhanhb/haproxy.svg?task=FreeBSD)](https://cirrus-ci.com/github/zhanhb/haproxy/)
+[![VTest](https://github.com/zhanhb/haproxy/actions/workflows/vtest.yml/badge.svg)](https://github.com/zhanhb/haproxy/actions/workflows/vtest.yml)
 
 ![HAProxy logo](doc/HAProxyCommunityEdition_60px.png)
 
