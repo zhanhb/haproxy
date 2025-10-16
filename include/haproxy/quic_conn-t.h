@@ -33,6 +33,7 @@
 
 #include <haproxy/openssl-compat.h>
 #include <haproxy/mux_quic-t.h>
+#include <haproxy/ncbmbuf-t.h>
 #include <haproxy/quic_cc-t.h>
 #include <haproxy/quic_frame-t.h>
 #include <haproxy/quic_loss-t.h>
@@ -497,7 +498,7 @@ struct quic_crypto_buf {
 struct quic_cstream {
 	struct {
 		uint64_t offset;       /* absolute current base offset of ncbuf */
-		struct ncbuf ncbuf;    /* receive buffer - can handle out-of-order offset frames */
+		struct ncbmbuf ncbuf;  /* receive buffer - can handle out-of-order offset frames */
 	} rx;
 	struct {
 		uint64_t offset;      /* last offset of data ready to be sent */

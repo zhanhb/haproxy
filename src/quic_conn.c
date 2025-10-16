@@ -2463,7 +2463,7 @@ static inline int qc_provide_cdata(struct quic_enc_level *el,
 	int ssl_err, state;
 	struct quic_conn *qc;
 	int ret = 0;
-	struct ncbuf *ncbuf = &el->cstream->rx.ncbuf;
+	struct ncbmbuf *ncbuf = &el->cstream->rx.ncbuf;
 
 	ssl_err = SSL_ERROR_NONE;
 	qc = ctx->qc;
@@ -2593,17 +2593,12 @@ static inline int qc_provide_cdata(struct quic_enc_level *el,
 	/* The CRYPTO data are consumed even in case of an error to release
 	 * the memory asap.
 	 */
-	if (!ncb_is_null(ncbuf)) {
+	if (!ncbmb_is_null(ncbuf)) {
 #ifdef DEBUG_STRICT
-		ncb_ret = ncb_advance(ncbuf, len);
-		/* ncb_advance() must always succeed. This is guaranteed as
-		 * this is only done inside a data block. If false, this will
-		 * lead to handshake failure with quic_enc_level offset shifted
-		 * from buffer data.
-		 */
+		ncb_ret = ncbmb_advance(ncbuf, len);
 		BUG_ON(ncb_ret != NCB_RET_OK);
 #else
-		ncb_advance(ncbuf, len);
+		ncbmb_advance(ncbuf, len);
 #endif
 	}
 
@@ -2970,18 +2965,18 @@ static int qc_h3_request_reject(struct quic_conn *qc, uint64_t id)
 }
 
 /* Release the underlying memory use by <ncbuf> non-contiguous buffer */
-static void quic_free_ncbuf(struct ncbuf *ncbuf)
+static void quic_free_ncbuf(struct ncbmbuf *ncbuf)
 {
 	struct buffer buf;
 
-	if (ncb_is_null(ncbuf))
+	if (ncbmb_is_null(ncbuf))
 		return;
 
 	buf = b_make(ncbuf->area, ncbuf->size, 0, 0);
 	b_free(&buf);
 	offer_buffers(NULL, 1);
 
-	*ncbuf = NCBUF_NULL;
+	*ncbuf = NCBMBUF_NULL;
 }
 
 /* Allocate the underlying required memory for <ncbuf> non-contiguous buffer.
@@ -2989,18 +2984,18 @@ static void quic_free_ncbuf(struct ncbuf *ncbuf)
  *
  * Returns the buffer instance or NULL on allocation failure.
  */
-static struct ncbuf *quic_get_ncbuf(struct ncbuf *ncbuf)
+static struct ncbmbuf *quic_get_ncbuf(struct ncbmbuf *ncbuf)
 {
 	struct buffer buf = BUF_NULL;
 
-	if (!ncb_is_null(ncbuf))
+	if (!ncbmb_is_null(ncbuf))
 		return ncbuf;
 
 	if (!b_alloc(&buf))
 		return NULL;
 
-	*ncbuf = ncb_make(buf.area, buf.size, 0);
-	ncb_init(ncbuf, 0);
+	*ncbuf = ncbmb_make(buf.area, buf.size, 0);
+	ncbmb_init(ncbuf, 0);
 
 	return ncbuf;
 }
@@ -3027,7 +3022,7 @@ static enum quic_rx_ret_frm qc_handle_crypto_frm(struct quic_conn *qc,
 		.len = crypto_frm->len,
 	};
 	struct quic_cstream *cstream = qel->cstream;
-	struct ncbuf *ncbuf = &qel->cstream->rx.ncbuf;
+	struct ncbmbuf *ncbuf = &qel->cstream->rx.ncbuf;
 	uint64_t off_rel;
 
 	TRACE_ENTER(QUIC_EV_CONN_PRSHPKT, qc);
@@ -3057,7 +3052,7 @@ static enum quic_rx_ret_frm qc_handle_crypto_frm(struct quic_conn *qc,
 		crypto_frm->offset_node.key = cstream->rx.offset;
 	}
 
-	if (crypto_frm->offset_node.key == cstream->rx.offset && ncb_is_empty(ncbuf)) {
+	if (crypto_frm->offset_node.key == cstream->rx.offset && ncbmb_is_empty(ncbuf)) {
 		if (!qc_provide_cdata(qel, qc->xprt_ctx, crypto_frm->data, crypto_frm->len,
 		                      pkt, &cfdebug)) {
 			// trace already emitted by function above
@@ -3070,7 +3065,7 @@ static enum quic_rx_ret_frm qc_handle_crypto_frm(struct quic_conn *qc,
 	}
 
 	if (!quic_get_ncbuf(ncbuf) ||
-	    ncb_is_null(ncbuf)) {
+	    ncbmb_is_null(ncbuf)) {
 		TRACE_ERROR("CRYPTO ncbuf allocation failed", QUIC_EV_CONN_PRSHPKT, qc);
 		goto err;
 	}
@@ -3086,28 +3081,15 @@ static enum quic_rx_ret_frm qc_handle_crypto_frm(struct quic_conn *qc,
 	 * handshake. If an endpoint does not expand its buffer, it MUST close
 	 * the connection with a CRYPTO_BUFFER_EXCEEDED error code.
 	 */
-	if (off_rel + crypto_frm->len > ncb_size(ncbuf)) {
+	if (off_rel + crypto_frm->len > ncbmb_size(ncbuf)) {
 		TRACE_ERROR("CRYPTO frame too large", QUIC_EV_CONN_PRSHPKT, qc);
 		quic_set_connection_close(qc, quic_err_transport(QC_ERR_CRYPTO_BUFFER_EXCEEDED));
 		goto err;
 	}
 
-	ncb_ret = ncb_add(ncbuf, off_rel, (const char *)crypto_frm->data,
-			  crypto_frm->len, NCB_ADD_COMPARE);
-	if (ncb_ret != NCB_RET_OK) {
-		if (ncb_ret == NCB_RET_DATA_REJ) {
-			TRACE_ERROR("overlapping data rejected", QUIC_EV_CONN_PRSHPKT, qc);
-			quic_set_connection_close(qc, quic_err_transport(QC_ERR_PROTOCOL_VIOLATION));
-			qc_notify_err(qc);
-			goto err;
-		}
-		else if (ncb_ret == NCB_RET_GAP_SIZE) {
-			TRACE_DATA("cannot bufferize frame due to gap size limit",
-				   QUIC_EV_CONN_PRSHPKT, qc);
-			ret = QUIC_RX_RET_FRM_AGAIN;
-			goto done;
-		}
-	}
+	ncb_ret = ncbmb_add(ncbuf, off_rel, (const char *)crypto_frm->data,
+	                    crypto_frm->len, NCB_ADD_OVERWRT);
+	BUG_ON(ncb_ret != NCB_RET_OK);
 
  done:
 	TRACE_LEAVE(QUIC_EV_CONN_PRSHPKT, qc);
@@ -4727,7 +4709,7 @@ static inline int qc_treat_rx_crypto_frms(struct quic_conn *qc,
                                           struct ssl_sock_ctx *ctx)
 {
 	int ret = 0;
-	struct ncbuf *ncbuf;
+	struct ncbmbuf *ncbuf;
 	struct quic_cstream *cstream = el->cstream;
 	ncb_sz_t data;
 
@@ -4735,12 +4717,12 @@ static inline int qc_treat_rx_crypto_frms(struct quic_conn *qc,
 
 	BUG_ON(!cstream);
 	ncbuf = &cstream->rx.ncbuf;
-	if (ncb_is_null(ncbuf))
+	if (ncbmb_is_null(ncbuf))
 		goto done;
 
 	/* TODO not working if buffer is wrapping */
-	while ((data = ncb_data(ncbuf, 0))) {
-		const unsigned char *cdata = (const unsigned char *)ncb_head(ncbuf);
+	while ((data = ncbmb_data(ncbuf, 0))) {
+		const unsigned char *cdata = (const unsigned char *)ncbmb_head(ncbuf);
 
 		if (!qc_provide_cdata(el, ctx, cdata, data, NULL, NULL))
 			goto leave;
@@ -4753,7 +4735,7 @@ static inline int qc_treat_rx_crypto_frms(struct quic_conn *qc,
  done:
 	ret = 1;
  leave:
-	if (!ncb_is_null(ncbuf) && ncb_is_empty(ncbuf)) {
+	if (!ncbmb_is_null(ncbuf) && ncbmb_is_empty(ncbuf)) {
 		TRACE_DEVEL("freeing crypto buf", QUIC_EV_CONN_PHPKTS, qc, el);
 		quic_free_ncbuf(ncbuf);
 	}
@@ -5500,7 +5482,7 @@ struct quic_cstream *quic_cstream_new(struct quic_conn *qc)
 	}
 
 	cs->rx.offset = 0;
-	cs->rx.ncbuf = NCBUF_NULL;
+	cs->rx.ncbuf = NCBMBUF_NULL;
 	cs->rx.offset = 0;
 
 	cs->tx.offset = 0;

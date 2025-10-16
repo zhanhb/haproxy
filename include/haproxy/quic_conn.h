@@ -32,7 +32,7 @@
 
 #include <haproxy/buf.h>
 #include <haproxy/chunk.h>
-#include <haproxy/ncbuf-t.h>
+#include <haproxy/ncbmbuf.h>
 #include <haproxy/net_helper.h>
 #include <haproxy/openssl-compat.h>
 #include <haproxy/ticks.h>
