@@ -1,5 +1,5 @@
 #include <haproxy/errors.h>
-#include <haproxy/ncbuf.h>
+#include <haproxy/ncbmbuf.h>
 #include <haproxy/proxy.h>
 #include <haproxy/quic_conn.h>
 #include <haproxy/quic_sock.h>
@@ -513,7 +513,7 @@ static forceinline void qc_ssl_dump_errors(struct connection *conn)
  * Remaining parameter are there for debugging purposes.
  * Return 1 if succeeded, 0 if not.
  */
-static int qc_ssl_provide_quic_data(struct ncbuf *ncbuf,
+static int qc_ssl_provide_quic_data(struct ncbmbuf *ncbuf,
                                     enum ssl_encryption_level_t level,
                                     struct ssl_sock_ctx *ctx,
                                     const unsigned char *data, size_t len)
@@ -666,17 +666,12 @@ static int qc_ssl_provide_quic_data(struct ncbuf *ncbuf,
 	/* The CRYPTO data are consumed even in case of an error to release
 	 * the memory asap.
 	 */
-	if (!ncb_is_null(ncbuf)) {
+	if (!ncbmb_is_null(ncbuf)) {
 #ifdef DEBUG_STRICT
-		ncb_ret = ncb_advance(ncbuf, len);
-		/* ncb_advance() must always succeed. This is guaranteed as
-		 * this is only done inside a data block. If false, this will
-		 * lead to handshake failure with quic_enc_level offset shifted
-		 * from buffer data.
-		 */
+		ncb_ret = ncbmb_advance(ncbuf, len);
 		BUG_ON(ncb_ret != NCB_RET_OK);
 #else
-		ncb_advance(ncbuf, len);
+		ncbmb_advance(ncbuf, len);
 #endif
 	}
 
@@ -691,7 +686,7 @@ int qc_ssl_provide_all_quic_data(struct quic_conn *qc, struct ssl_sock_ctx *ctx)
 {
 	int ret = 0;
 	struct quic_enc_level *qel;
-	struct ncbuf *ncbuf;
+	struct ncbmbuf *ncbuf;
 	ncb_sz_t data;
 
 	TRACE_ENTER(QUIC_EV_CONN_PHPKTS, qc);
@@ -702,12 +697,12 @@ int qc_ssl_provide_all_quic_data(struct quic_conn *qc, struct ssl_sock_ctx *ctx)
 			continue;
 
 		ncbuf = &cstream->rx.ncbuf;
-		if (ncb_is_null(ncbuf))
+		if (ncbmb_is_null(ncbuf))
 			continue;
 
 		/* TODO not working if buffer is wrapping */
-		while ((data = ncb_data(ncbuf, 0))) {
-			const unsigned char *cdata = (const unsigned char *)ncb_head(ncbuf);
+		while ((data = ncbmb_data(ncbuf, 0))) {
+			const unsigned char *cdata = (const unsigned char *)ncbmb_head(ncbuf);
 
 			if (!qc_ssl_provide_quic_data(&qel->cstream->rx.ncbuf, qel->level,
 			                              ctx, cdata, data))
@@ -718,7 +713,7 @@ int qc_ssl_provide_all_quic_data(struct quic_conn *qc, struct ssl_sock_ctx *ctx)
 			            QUIC_EV_CONN_PHPKTS, qc, qel);
 		}
 
-		if (!ncb_is_null(ncbuf) && ncb_is_empty(ncbuf)) {
+		if (!ncbmb_is_null(ncbuf) && ncbmb_is_empty(ncbuf)) {
 			TRACE_DEVEL("freeing crypto buf", QUIC_EV_CONN_PHPKTS, qc, qel);
 			quic_free_ncbuf(ncbuf);
 		}
