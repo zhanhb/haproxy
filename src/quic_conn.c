@@ -754,6 +754,7 @@ static struct quic_conn_closed *qc_new_cc_conn(struct quic_conn *qc)
 	cc_qc->idle_timer_task->context = cc_qc;
 	cc_qc->idle_expire = qc->idle_expire;
 
+	cc_qc->cntrs = qc->cntrs;
 	cc_qc->conn = qc->conn;
 	qc->conn = NULL;
 
