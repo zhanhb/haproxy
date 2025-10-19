@@ -1,6 +1,87 @@
 ChangeLog :
 ===========
 
+2025/12/17 : 3.0.13
+    - MINOR: ssl: diagnostic warning when both 'default-crt' and 'strict-sni' are used
+    - BUG/MINOr: hlua: Fix receive from HTTP applet by properly accounting data
+    - BUG/MEDIUM: ssl: take care of second client hello
+    - BUG/MINOR: ssl: always clear the remains of the first hello for the second one
+    - BUILD: makefile: disable tail calls optimizations with memory profiling
+    - BUG/MEDIUM: apppet: Improve spinning loop detection with the new API
+    - MINOR: sink: Remove useless test on SE_FL_SHR/SHW flags
+    - BUG/MINOR: sink: retry attempt for sft server may never occur
+    - BUG/MINOR: ssl: Free global_ssl structure contents during deinit
+    - BUG/MINOR: ssl: Free key_base from global_ssl structure during deinit
+    - BUG/MAJOR: lb-chash: fix key calculation when using default hash-key id
+    - BUILD: ssl: can't build when using -DLISTEN_DEFAULT_CIPHERS
+    - BUG/MINOR: quic: too short PADDING frame for too short packets
+    - MINOR: quic: restore QUIC_HP_SAMPLE_LEN constant
+    - BUG/MEDIUM: h3: do not overwrite interim with final response
+    - BUG/MINOR: h3: ensure that invalid status code are not encoded (FE side)
+    - MINOR: qmux: change API for snd_buf FIN transmission
+    - BUG/MEDIUM: h3: handle interim response properly on FE side
+    - BUG/MINOR: quic: don't coalesce probing and ACK packet of same type
+    - BUG/MINOR mux-quic: apply correctly timeout on output pending data
+    - BUG/MEDIUM: stick-tables: Don't forget to dec count on failure.
+    - BUG/MINOR: quic: check applet_putchk() for 'show quic' first line
+    - BUG/MAJOR: quic: uninitialized quic_conn_closed struct members
+    - BUG/MEDIUM: h3: properly encode response after interim one in same buf
+    - MINOR: ncbuf: extract common types
+    - MINOR: ncbmbuf: define new ncbmbuf type
+    - MINOR: ncbmbuf: implement add
+    - MINOR: ncbmbuf: implement iterator bitmap utilities functions
+    - MINOR: ncbmbuf: implement ncbmb_data()
+    - MINOR: ncbmbuf: implement advance operation
+    - MINOR: ncbmbuf: add tests as standalone mode
+    - BUG/MAJOR: quic: use ncbmbuf for CRYPTO handling
+    - BUG/MEDIUM: build: limit excessive and counter-productive gcc-15 vectorization
+    - BUG/MEDIUM: applet: Improve again spinning loops detection with the new API
+    - BUG/MINOR: stick-tables: properly index string-type keys
+    - MINOR: applet: do not put SE_FL_WANT_ROOM on rcv_buf() if the channel is empty
+    - MINOR: cli: create cli_raw_rcv_buf() from the generic applet_raw_rcv_buf()
+    - BUG/MEDIUM: cli: do not return ACKs one char at a time
+    - BUG/MEDIUM: mworker/listener: ambiguous use of RX_F_INHERITED with shards
+    - BUG/MEDIUM: ssl: Crash because of dangling ckch_store reference in a ckch instance
+    - DOC: config: slightly clarify the ssl_fc_has_early() behavior
+    - MINOR: http: fix 405,431,501 default errorfile
+    - BUG/MINOR: init: Do not close previously created fd in stdio_quiet
+    - BUG/MINOR: ssl: returns when SSL_CTX_new failed during init
+    - BUG/MEDIUM: mux-h2: make sure not to move a dead connection to idle
+    - BUG/MEDIUM: connection: do not reinsert a purgeable conn in idle list
+    - BUG/MEDIUM: connection/ssl: also fix the ssl_sock_io_cb() regarding idle list
+    - BUG/MINOR: config: Limit "tune.maxpollevents" parameter to 1000000
+    - BUG/MINOR: quic: close connection on CID alloc failure
+    - DOC: configuration: add missing ssllib_name_startswith()
+    - DOC: configuration: add missing openssl_version predicates
+    - BUG/MEDIUM: stick-tables: Always return the good stksess from stktable_set_entry
+    - BUG/MINOR: stick-tables: Fix return value for __stksess_kill()
+    - MINOR: h1: h1_release() should return if it destroyed the connection
+    - BUG/MEDIUM: h1: prevent a crash on HTTP/2 upgrade
+    - BUG/MINOR: ssl: remove dead code in ssl_sock_from_buf()
+    - DOC: http: document 413 response code
+    - MEDIUM: dns: bind the nameserver sockets to the initiating thread
+    - MEDIUM: resolvers: make the process_resolvers() task single-threaded
+    - MINOR: mux-quic: refactor wait-for-handshake support
+    - BUG/MEDIUM: mux-quic: ensure Early-data header is set
+    - BUG/MINOR: mux-quic: ensure close-spread-time is properly applied
+    - BUG/MEDIUM: mux-quic: adjust wakeup behavior
+    - BUG/MEDIUM: h1-htx: Don't set HTX_FL_EOM flag on 1xx informational messages
+    - BUG/MINOR: http-ana: Reset analyse_exp date after 'wait-for-body' action
+    - BUG/MEDIUM: applet: Fix conditions to detect spinning loop with the new API
+    - BUG/MEDIUM: cli: State the cli have no more data to deliver if it yields
+    - BUG/MINOR: jwt: Missing "case" in switch statement
+    - BUG/MEDIUM: connection: fix "bc_settings_streams_limit" typo
+    - DOC: config: mention clearer that the cache's total-max-size is mandatory
+    - DOC: config: reorder the cache section's keywords
+    - MINOR: quic: Add useful debugging traces in qc_idle_timer_do_rearm()
+    - BUG/MINOR: ssl: Don't allow to set NULL sni
+    - BUG/MEDIUM: http-ana: Don't close server connection on read0 in TUNNEL mode
+    - BUG/MINOR: quic: do not set first the default QUIC curves
+    - MINOR: ssl: change visibility of ssl_stats_module
+    - BUG/MINOR: quic: SSL counters not handled
+    - BUG/MINOR: cfgparse-listen: update err_code for fatal error on proxy directive
+    - BUG/MEDIUM: quic: Don't try to use hystart if not implemented
+
 2025/10/03 : 3.0.12
     - BUG/MEDIUM: peers: also limit the number of incoming updates
     - BUG/MINOR: mux-quic: do not decode if conn in error
