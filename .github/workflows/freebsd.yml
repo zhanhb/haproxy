@@ -10,7 +10,7 @@ permissions:
 jobs:
   clang:
     runs-on: ubuntu-latest
-    if: ${{ github.repository_owner == 'haproxy' || github.event_name == 'workflow_dispatch' }}
+    if: ${{ github.repository_owner == 'zhanhb' || github.event_name == 'workflow_dispatch' }}
     env:
       FREEBSD_RELEASE: "14.4"
       FREEBSD_ARCH: "x86_64"

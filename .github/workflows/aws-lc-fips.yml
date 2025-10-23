@@ -27,7 +27,7 @@ jobs:
             ssl: AWS_LC_VERSION=latest
             os: *runner
       fail-fast: false
-    if: ${{ github.repository_owner == 'haproxy' || github.event_name == 'workflow_dispatch' }}
+    if: ${{ github.repository_owner == 'zhanhb' || github.event_name == 'workflow_dispatch' }}
     steps:
       - uses: actions/checkout@v6
       - name: Determine AWS-LC sources for ${{ matrix.name }}
