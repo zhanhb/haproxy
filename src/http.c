@@ -190,13 +190,13 @@ const char *http_err_msgs[HTTP_ERR_SIZE] = {
 	"<html><body><h1>200 OK</h1>\nService ready.\n</body></html>\n",
 
 	[HTTP_ERR_400] =
-	"HTTP/1.1 400 Bad request\r\n"
+	"HTTP/1.1 400 Bad Request\r\n"
 	"Content-Length: 90\r\n"
 	"Cache-Control: no-cache\r\n"
 	"Connection: close\r\n"
 	"Content-Type: text/html\r\n"
 	"\r\n"
-	"<html><body><h1>400 Bad request</h1>\nYour browser sent an invalid request.\n</body></html>\n",
+	"<html><body><h1>400 Bad Request</h1>\nYour browser sent an invalid request.\n</body></html>\n",
 
 	[HTTP_ERR_401] =
 	"HTTP/1.1 401 Unauthorized\r\n"
@@ -231,21 +231,21 @@ const char *http_err_msgs[HTTP_ERR_SIZE] = {
 	"<html><body><h1>405 Method Not Allowed</h1>\nA request was made of a resource using a request method not supported by that resource.\n</body></html>\n",
 
 	[HTTP_ERR_407] =
-	"HTTP/1.1 407 Unauthorized\r\n"
-	"Content-Length: 112\r\n"
+	"HTTP/1.1 407 Proxy Authentication Required\r\n"
+	"Content-Length: 129\r\n"
 	"Cache-Control: no-cache\r\n"
 	"Content-Type: text/html\r\n"
 	"\r\n"
-	"<html><body><h1>407 Unauthorized</h1>\nYou need a valid user and password to access this content.\n</body></html>\n",
+	"<html><body><h1>407 Proxy Authentication Required</h1>\nYou need a valid user and password to access this content.\n</body></html>\n",
 
 	[HTTP_ERR_408] =
-	"HTTP/1.1 408 Request Time-out\r\n"
-	"Content-Length: 110\r\n"
+	"HTTP/1.1 408 Request Timeout\r\n"
+	"Content-Length: 109\r\n"
 	"Cache-Control: no-cache\r\n"
 	"Connection: close\r\n"
 	"Content-Type: text/html\r\n"
 	"\r\n"
-	"<html><body><h1>408 Request Time-out</h1>\nYour browser didn't send a complete request in time.\n</body></html>\n",
+	"<html><body><h1>408 Request Timeout</h1>\nYour browser didn't send a complete request in time.\n</body></html>\n",
 
 	[HTTP_ERR_410] =
 	"HTTP/1.1 410 Gone\r\n"
@@ -256,12 +256,12 @@ const char *http_err_msgs[HTTP_ERR_SIZE] = {
 	"<html><body><h1>410 Gone</h1>\nThe resource is no longer available and will not be available again.\n</body></html>\n",
 
 	[HTTP_ERR_413] =
-	"HTTP/1.1 413 Payload Too Large\r\n"
+	"HTTP/1.1 413 Content Too Large\r\n"
 	"Content-Length: 106\r\n"
 	"Cache-Control: no-cache\r\n"
 	"Content-Type: text/html\r\n"
 	"\r\n"
-	"<html><body><h1>413 Payload Too Large</h1>\nThe request entity exceeds the maximum allowed.\n</body></html>\n",
+	"<html><body><h1>413 Content Too Large</h1>\nThe request entity exceeds the maximum allowed.\n</body></html>\n",
 
 	[HTTP_ERR_414] =
 	"HTTP/1.1 414 URI Too Long\r\n"
@@ -344,12 +344,12 @@ const char *http_err_msgs[HTTP_ERR_SIZE] = {
 	"<html><body><h1>503 Service Unavailable</h1>\nNo server is available to handle this request.\n</body></html>\n",
 
 	[HTTP_ERR_504] =
-	"HTTP/1.1 504 Gateway Time-out\r\n"
-	"Content-Length: 92\r\n"
+	"HTTP/1.1 504 Gateway Timeout\r\n"
+	"Content-Length: 91\r\n"
 	"Cache-Control: no-cache\r\n"
 	"Content-Type: text/html\r\n"
 	"\r\n"
-	"<html><body><h1>504 Gateway Time-out</h1>\nThe server didn't respond in time.\n</body></html>\n",
+	"<html><body><h1>504 Gateway Timeout</h1>\nThe server didn't respond in time.\n</body></html>\n",
 };
 
 const struct ist http_known_methods[HTTP_METH_OTHER] = {
@@ -427,6 +427,8 @@ const char *http_get_reason(unsigned int status)
 	case 100: return "Continue";
 	case 101: return "Switching Protocols";
 	case 102: return "Processing";
+	case 103: return "Early Hints";
+	case 104: return "Upload Resumption Supported";
 	case 200: return "OK";
 	case 201: return "Created";
 	case 202: return "Accepted";
@@ -435,7 +437,7 @@ const char *http_get_reason(unsigned int status)
 	case 205: return "Reset Content";
 	case 206: return "Partial Content";
 	case 207: return "Multi-Status";
-	case 210: return "Content Different";
+	case 208: return "Already Reported";
 	case 226: return "IM Used";
 	case 300: return "Multiple Choices";
 	case 301: return "Moved Permanently";
@@ -445,7 +447,6 @@ const char *http_get_reason(unsigned int status)
 	case 305: return "Use Proxy";
 	case 307: return "Temporary Redirect";
 	case 308: return "Permanent Redirect";
-	case 310: return "Too many Redirects";
 	case 400: return "Bad Request";
 	case 401: return "Unauthorized";
 	case 402: return "Payment Required";
@@ -454,21 +455,21 @@ const char *http_get_reason(unsigned int status)
 	case 405: return "Method Not Allowed";
 	case 406: return "Not Acceptable";
 	case 407: return "Proxy Authentication Required";
-	case 408: return "Request Time-out";
+	case 408: return "Request Timeout";
 	case 409: return "Conflict";
 	case 410: return "Gone";
 	case 411: return "Length Required";
 	case 412: return "Precondition Failed";
-	case 413: return "Request Entity Too Large";
-	case 414: return "Request-URI Too Long";
+	case 413: return "Content Too Large";
+	case 414: return "URI Too Long";
 	case 415: return "Unsupported Media Type";
-	case 416: return "Requested range unsatisfiable";
-	case 417: return "Expectation failed";
+	case 416: return "Range Not Satisfiable";
+	case 417: return "Expectation Failed";
 	case 418: return "I'm a teapot";
 	case 421: return "Misdirected Request";
 	case 422: return "Unprocessable Content";
 	case 423: return "Locked";
-	case 424: return "Method failure";
+	case 424: return "Failed Dependency";
 	case 425: return "Too Early";
 	case 426: return "Upgrade Required";
 	case 428: return "Precondition Required";
@@ -477,21 +478,18 @@ const char *http_get_reason(unsigned int status)
 	case 449: return "Retry With";
 	case 450: return "Blocked by Windows Parental Controls";
 	case 451: return "Unavailable For Legal Reasons";
-	case 456: return "Unrecoverable Error";
-	case 499: return "client has closed connection";
 	case 500: return "Internal Server Error";
 	case 501: return "Not Implemented";
-	case 502: return "Bad Gateway or Proxy Error";
+	case 502: return "Bad Gateway";
 	case 503: return "Service Unavailable";
-	case 504: return "Gateway Time-out";
-	case 505: return "HTTP Version not supported";
-	case 506: return "Variant also negotiate";
-	case 507: return "Insufficient storage";
-	case 508: return "Loop detected";
+	case 504: return "Gateway Timeout";
+	case 505: return "HTTP Version Not Supported";
+	case 506: return "Variant Also Negotiates";
+	case 507: return "Insufficient Storage";
+	case 508: return "Loop Detected";
 	case 509: return "Bandwidth Limit Exceeded";
-	case 510: return "Not extended";
-	case 511: return "Network authentication required";
-	case 520: return "Web server is returning an unknown error";
+	case 510: return "Not Extended";
+	case 511: return "Network Authentication Required";
 	default:
 		switch (status) {
 		case 100 ... 199: return "Informational";
