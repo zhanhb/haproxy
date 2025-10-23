@@ -19,7 +19,7 @@ jobs:
             command: "from matrix import determine_latest_aws_lc; print(determine_latest_aws_lc(''))"
           - name: AWS-LC (FIPS)
             command: "from matrix import determine_latest_aws_lc_fips; print(determine_latest_aws_lc_fips(''))"
-    if: ${{ github.repository_owner == 'haproxy' || github.event_name == 'workflow_dispatch' }}
+    if: ${{ github.repository_owner == 'zhanhb' || github.event_name == 'workflow_dispatch' }}
     steps:
       - uses: actions/checkout@v6
       - name: Determine latest AWS-LC release
