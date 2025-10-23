@@ -1,6 +1,56 @@
 ChangeLog :
 ===========
 
+2025/10/23 : 3.2.7
+    - BUG/MINOR: acme: avoid overflow when diff > notAfter
+    - BUG/MINOr: hlua: Fix receive from HTTP applet by properly accounting data
+    - BUG/MEDIUM: ssl: take care of second client hello
+    - BUG/MINOR: ssl: always clear the remains of the first hello for the second one
+    - BUG/MINOR: ssl: leak in ssl-f-use
+    - BUG/MINOR: ssl: leak crtlist_name in ssl-f-use
+    - BUILD: makefile: disable tail calls optimizations with memory profiling
+    - BUG/MEDIUM: apppet: Improve spinning loop detection with the new API
+    - BUG/MINOR: sink: retry attempt for sft server may never occur
+    - MINOR: debug: add distro name and version in postmortem
+    - BUG/MINOR: ssl: Free global_ssl structure contents during deinit
+    - BUG/MINOR: ssl: Free key_base from global_ssl structure during deinit
+    - BUG/MINOR: ssl: Potential NULL deref in trace macro
+    - TESTS: quic: useless param for b_quic_dec_int()
+    - BUG/MEDIUM: pools: fix crash on filtered "show pools" output
+    - BUG/MINOR: pools: don't report "limited to the first X entries" by default
+    - BUG/MAJOR: lb-chash: fix key calculation when using default hash-key id
+    - BUILD: ssl: can't build when using -DLISTEN_DEFAULT_CIPHERS
+    - BUG/MINOR: quic: too short PADDING frame for too short packets
+    - MINOR: quic: restore QUIC_HP_SAMPLE_LEN constant
+    - BUG/MEDIUM: stick-tables: Don't forget to dec count on failure.
+    - BUG/MINOR: quic: check applet_putchk() for 'show quic' first line
+    - DOC: clarify the experimental status for certain features
+    - BUG/MEDIUM: threads/config: drop absent threads from thread groups
+    - BUG/MEDIUM: mt_list: Make sure not to unlock the element twice
+    - BUG/MEDIUM: cli: also free the trash chunk on the error path
+    - BUG/MINOR: quic: SSL counters not handled
+    - BUG/MAJOR: quic: uninitialized quic_conn_closed struct members
+    - BUG/MEDIUM: h3: properly encode response after interim one in same buf
+    - MINOR: ncbuf: extract common types
+    - MINOR: ncbmbuf: define new ncbmbuf type
+    - MINOR: ncbmbuf: implement add
+    - MINOR: ncbmbuf: implement iterator bitmap utilities functions
+    - MINOR: ncbmbuf: implement ncbmb_data()
+    - MINOR: ncbmbuf: implement advance operation
+    - MINOR: ncbmbuf: add tests as standalone mode
+    - BUG/MAJOR: quic: use ncbmbuf for CRYPTO handling
+    - BUG/MEDIUM: build: limit excessive and counter-productive gcc-15 vectorization
+    - MINOR: acme: acme-vars allow to pass data to the dpapi sink
+    - MINOR: acme: check acme-vars allocation during escaping
+    - CLEANUP: acme: acme_will_expire() uses acme_schedule_date()
+    - MINOR: acme: provider-name for dpapi sink
+    - BUILD: acme: fix false positive null pointer dereference
+    - MINOR: acme: implement "reuse-key" option
+    - MEDIUM: acme: don't insert acme account key in ckchs_tree
+    - BUG/MINOR: acme: memory leak from the config parser
+    - MINOR: acme: add the dns-01-record field to the sink
+    - MINOR: acme: display the complete challenge_ready command in the logs
+
 2025/10/03 : 3.2.6
     - MINOR: stick-tables: limit the number of visited nodes during expiration
     - OPTIM: stick-tables: exit expiry faster when the update lock is held
