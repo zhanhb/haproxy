@@ -2030,7 +2030,7 @@ static size_t h1_handle_headers(struct h1s *h1s, struct h1m *h1m, struct htx *ht
 	 * accept_payload_with_any_method global option is set.
 	 *There is a payload if the c-l is not null or the the payload is
 	 * chunk-encoded.  A parsing error is reported but a A
-	 * 413-Payload-Too-Large is returned instead of a 400-Bad-Request.
+	 * 413-Content-Too-Large is returned instead of a 400-Bad-Request.
 	 */
 	if (!accept_payload_with_any_method &&
 	    !(h1m->flags & (H1_MF_RESP|H1_MF_VER_11)) &&
