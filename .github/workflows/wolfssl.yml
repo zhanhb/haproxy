@@ -18,7 +18,7 @@ jobs:
         # Keep normal build flags at debug=0; enable WolfSSL debugging and ASan at debug=1.
         debug: [0, 1]
     runs-on: ubuntu-latest
-    if: ${{ github.repository_owner == 'haproxy' || github.event_name == 'workflow_dispatch' }}
+    if: ${{ github.repository_owner == 'zhanhb' || github.event_name == 'workflow_dispatch' }}
     steps:
       - uses: actions/checkout@v6
       - name: Install apt dependencies
