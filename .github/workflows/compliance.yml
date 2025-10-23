@@ -12,7 +12,7 @@ jobs:
   h2spec:
     name: h2spec
     runs-on: ubuntu-latest
-    if: ${{ github.repository_owner == 'haproxy' || github.event_name == 'workflow_dispatch' }}
+    if: ${{ github.repository_owner == 'zhanhb' || github.event_name == 'workflow_dispatch' }}
     steps:
     - uses: actions/checkout@v5
     - name: Install h2spec
