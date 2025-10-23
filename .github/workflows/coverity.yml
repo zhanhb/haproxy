@@ -15,7 +15,7 @@ permissions:
 jobs:
   scan:
     runs-on: ubuntu-latest
-    if: ${{ github.repository_owner == 'haproxy' || github.event_name == 'workflow_dispatch' }}
+    if: ${{ github.repository_owner == 'zhanhb' || github.event_name == 'workflow_dispatch' }}
     steps:
     - uses: actions/checkout@v5
     - name: Install apt dependencies
@@ -30,7 +30,7 @@ jobs:
         QUICTLS_VERSION=OpenSSL_1_1_1w-quic1 scripts/build-ssl.sh
     - name: Download Coverity build tool
       run: |
-        wget -c -N https://scan.coverity.com/download/linux64 --post-data "token=${{ secrets.COVERITY_SCAN_TOKEN }}&project=Haproxy" -O coverity_tool.tar.gz
+        wget -c -N https://scan.coverity.com/download/linux64 --post-data "token=${{ secrets.COVERITY_SCAN_TOKEN }}&project=zhanhb/haproxy" -O coverity_tool.tar.gz
         mkdir coverity_tool
         tar xzf coverity_tool.tar.gz --strip 1 -C coverity_tool
     - name: Build WURFL
@@ -47,4 +47,4 @@ jobs:
           --form file=@cov.tar.gz \
           --form version="Commit $GITHUB_SHA" \
           --form description="Build submitted via CI" \
-          https://scan.coverity.com/builds?project=Haproxy
+          https://scan.coverity.com/builds?project=zhanhb/haproxy
