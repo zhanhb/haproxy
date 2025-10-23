@@ -2712,7 +2712,7 @@ HTTPClient class
 
  response = {
     status  = 400,
-    reason  = "Bad request",
+    reason  = "Bad Request",
     headers = {
         ["content-type"]  = { "text/html" },
         ["cache-control"] = { "no-cache", "no-store" },
@@ -2957,7 +2957,7 @@ TXN class
 
   local reply = txn:reply{
       status  = 400,
-      reason  = "Bad request",
+      reason  = "Bad Request",
       headers = {
           ["content-type"]  = { "text/html" },
           ["cache-control"] = {"no-cache", "no-store" }
@@ -2993,7 +2993,7 @@ TXN class
 .. code-block:: lua
 
   local reply = txn:reply()
-  reply:set_status(400, "Bad request")
+  reply:set_status(400, "Bad Request")
   reply:add_header("content-type", "text/html")
   reply:add_header("cache-control", "no-cache")
   reply:add_header("cache-control", "no-store")
@@ -3005,7 +3005,7 @@ TXN class
 
    txn:done{
        status  = 400,
-       reason  = "Bad request",
+       reason  = "Bad Request",
        headers = {
            ["content-type"]  = { "text/html" },
            ["cache-control"] = { "no-cache", "no-store" },
