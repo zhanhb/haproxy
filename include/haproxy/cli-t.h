@@ -46,6 +46,7 @@
 #define APPCTX_CLI_ST1_NOLF    (1 << 2)
 #define APPCTX_CLI_ST1_TIMED   (1 << 3)
 #define APPCTX_CLI_ST1_LASTCMD (1 << 4)
+#define APPCTX_CLI_ST1_YIELD   (1 << 6) /* forced yield between commands */
 
 #define CLI_PREFIX_KW_NB 5
 #define CLI_MAX_MATCHES 5
