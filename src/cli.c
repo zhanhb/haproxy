@@ -3901,11 +3901,16 @@ error:
 	return -1;
 }
 
+size_t cli_raw_rcv_buf(struct appctx *appctx, struct buffer *buf, size_t count, unsigned int flags)
+{
+	return b_xfer(buf, &appctx->outbuf, MIN(count, b_data(&appctx->outbuf)));
+}
+
 static struct applet cli_applet = {
 	.obj_type = OBJ_TYPE_APPLET,
 	.name = "<CLI>", /* used for logging */
 	.fct = cli_io_handler,
-	.rcv_buf = appctx_raw_rcv_buf,
+	.rcv_buf = cli_raw_rcv_buf,
 	.snd_buf = appctx_raw_snd_buf,
 	.release = cli_release_handler,
 };
@@ -3915,7 +3920,7 @@ static struct applet mcli_applet = {
 	.obj_type = OBJ_TYPE_APPLET,
 	.name = "<MCLI>", /* used for logging */
 	.fct = cli_io_handler,
-	.rcv_buf = appctx_raw_rcv_buf,
+	.rcv_buf = cli_raw_rcv_buf,
 	.snd_buf = appctx_raw_snd_buf,
 	.release = cli_release_handler,
 };
