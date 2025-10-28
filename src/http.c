@@ -222,11 +222,11 @@ const char *http_err_msgs[HTTP_ERR_SIZE] = {
 
 	[HTTP_ERR_405] =
 	"HTTP/1.1 405 Method Not Allowed\r\n"
-	"Content-length: 146\r\n"
+	"Content-length: 147\r\n"
 	"Cache-Control: no-cache\r\n"
 	"Content-Type: text/html\r\n"
 	"\r\n"
-	"<html><body><h1>405 Method Not Allowed</h1>\nA request was made of a resource using a request method not supported by that resource\n</body></html>\n",
+	"<html><body><h1>405 Method Not Allowed</h1>\nA request was made of a resource using a request method not supported by that resource.\n</body></html>\n",
 
 	[HTTP_ERR_407] =
 	"HTTP/1.1 407 Unauthorized\r\n"
@@ -303,11 +303,11 @@ const char *http_err_msgs[HTTP_ERR_SIZE] = {
 
 	[HTTP_ERR_501] =
 	"HTTP/1.1 501 Not Implemented\r\n"
-	"Content-length: 136\r\n"
+	"Content-length: 135\r\n"
 	"Cache-Control: no-cache\r\n"
 	"Content-Type: text/html\r\n"
 	"\r\n"
-	"<html><body><h1>501 Not Implemented</h1>\n.The server does not support the functionality required to fulfill the request.\n</body></html>\n",
+	"<html><body><h1>501 Not Implemented</h1>\nThe server does not support the functionality required to fulfill the request.\n</body></html>\n",
 
 	[HTTP_ERR_502] =
 	"HTTP/1.1 502 Bad Gateway\r\n"
