@@ -1255,8 +1255,11 @@ enum tcpcheck_eval_ret tcpcheck_eval_connect(struct check *check, struct tcpchec
 	struct xprt_ops *xprt;
 	struct tcpcheck_rule *next;
 	int status, port;
+	int check_type;
 
 	TRACE_ENTER(CHK_EV_TCPCHK_CONN, check);
+
+	check_type = check->tcpcheck_rules->flags & TCPCHK_RULES_PROTO_CHK;
 
 	next = get_next_tcpcheck_rule(check->tcpcheck_rules, rule);
 
@@ -1282,7 +1285,8 @@ enum tcpcheck_eval_ret tcpcheck_eval_connect(struct check *check, struct tcpchec
 	check_release_buf(check, &check->bi);
 	check_release_buf(check, &check->bo);
 
-	if (!(check->state & CHK_ST_AGENT) && check->reuse_pool &&
+	/* For http-check rulesets connection reuse may be used (check-reuse-pool). */
+	if (check_type == TCPCHK_RULES_HTTP_CHK && check->reuse_pool &&
 	    !tcpcheck_use_nondefault_connect(check, connect) &&
 	    !srv_is_transparent(s)) {
 		struct ist pool_conn_name = IST_NULL;
