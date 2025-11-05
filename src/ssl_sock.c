@@ -5862,7 +5862,7 @@ struct task *ssl_sock_io_cb(struct task *t, void *context, unsigned int state)
 		conn = ctx->conn;
 		conn_in_list = conn->flags & CO_FL_LIST_MASK;
 		if (conn_in_list)
-			conn_delete_from_tree(conn);
+			conn_delete_from_tree(conn, 0);
 		HA_SPIN_UNLOCK(IDLE_CONNS_LOCK, &idle_conns[tid].idle_conns_lock);
 	} else {
 		ctx = context;
