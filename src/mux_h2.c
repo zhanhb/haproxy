@@ -5353,7 +5353,7 @@ static void h2_detach(struct sedesc *sd)
 
 	h2s_destroy(h2s);
 
-	if (h2c->flags & H2_CF_IS_BACK) {
+	if (h2c->flags & H2_CF_IS_BACK && !h2c_is_dead(h2c)) {
 		if (!(h2c->flags & (H2_CF_RCVD_SHUT|H2_CF_ERR_PENDING|H2_CF_ERROR))) {
 			if (h2c->conn->flags & CO_FL_PRIVATE) {
 				/* Add the connection in the session server list, if not already done */
