@@ -211,6 +211,8 @@ int cfg_parse_global(const char *file, int linenum, char **args, int kwm)
 
 	}
 	else if (strcmp(args[0], "tune.maxpollevents") == 0) {
+		long max;
+
 		if (alertif_too_many_args(1, file, linenum, args, &err_code))
 			goto out;
 		if (global.tune.maxpollevents != 0) {
@@ -223,7 +225,13 @@ int cfg_parse_global(const char *file, int linenum, char **args, int kwm)
 			err_code |= ERR_ALERT | ERR_FATAL;
 			goto out;
 		}
-		global.tune.maxpollevents = atol(args[1]);
+		max = atol(args[1]);
+		if (max > 1000000) {
+			ha_alert("parsing [%s:%d] : '%s' expects an integer value lower than or equal to 1000000.", file, linenum, args[0]);
+			err_code |= ERR_ALERT | ERR_FATAL;
+			goto out;
+		}
+		global.tune.maxpollevents = max;
 	}
 	else if (strcmp(args[0], "tune.maxaccept") == 0) {
 		long max;
