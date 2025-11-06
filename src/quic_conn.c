@@ -1117,6 +1117,13 @@ struct quic_conn *qc_new_conn(const struct quic_version *qv, int ipv4,
 	/* Required to safely call quic_conn_prx_cntrs_update() from quic_conn_release(). */
 	qc->prx_counters = NULL;
 
+	qc->cids = pool_alloc(pool_head_quic_cids);
+	if (!qc->cids) {
+		TRACE_ERROR("Could not allocate a new CID tree", QUIC_EV_CONN_INIT, qc);
+		goto err;
+	}
+	*qc->cids = EB_ROOT;
+
 	/* QUIC Server (or listener). */
 	if (server) {
 		cc_algo = l->bind_conf->quic_cc_algo;
@@ -1164,13 +1171,6 @@ struct quic_conn *qc_new_conn(const struct quic_version *qv, int ipv4,
 		TRACE_ERROR("Could not allocate a new RX buffer", QUIC_EV_CONN_INIT, qc);
 		goto err;
 	}
-
-	qc->cids = pool_alloc(pool_head_quic_cids);
-	if (!qc->cids) {
-		TRACE_ERROR("Could not allocate a new CID tree", QUIC_EV_CONN_INIT, qc);
-		goto err;
-	}
-	*qc->cids = EB_ROOT;
 
 	conn_id->qc = qc;
 
