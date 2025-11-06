@@ -3204,6 +3204,8 @@ static void _srv_detach(struct server *srv)
 		if (prev)
 			prev->next = srv->next;
 	}
+	/* reset the proxy's ready_srv if it was this one */
+	HA_ATOMIC_CAS(&be->ready_srv, &srv, NULL);
 }
 
 /* Remove a server <srv> from a tracking list if <srv> is tracking another
