@@ -520,10 +520,17 @@ int quic_build_post_handshake_frames(struct quic_conn *qc)
 			goto err;
 		}
 
-		conn_id = new_quic_cid(qc->cids, qc, NULL, NULL);
+		conn_id = quic_cid_alloc(qc);
 		if (!conn_id) {
 			qc_frm_free(qc, &frm);
 			TRACE_ERROR("CID allocation error", QUIC_EV_CONN_IO_CB, qc);
+			goto err;
+		}
+
+		if (quic_cid_generate(conn_id)) {
+			qc_frm_free(qc, &frm);
+			pool_free(pool_head_quic_connection_id, conn_id);
+			TRACE_ERROR("error on CID generation", QUIC_EV_CONN_IO_CB, qc);
 			goto err;
 		}
 
@@ -532,6 +539,7 @@ int quic_build_post_handshake_frames(struct quic_conn *qc)
 		 */
 		_quic_cid_insert(conn_id);
 
+		quic_cid_register_seq_num(conn_id);
 		quic_connection_id_to_frm_cpy(frm, conn_id);
 		LIST_APPEND(&frm_list, &frm->list);
 	}
@@ -1132,6 +1140,7 @@ struct quic_conn *qc_new_conn(const struct quic_version *qv, int ipv4,
 		goto err;
 	}
 	*qc->cids = EB_ROOT;
+	qc->next_cid_seq_num = 0;
 
 	/* QUIC Server (or listener). */
 	if (server) {
@@ -1181,9 +1190,7 @@ struct quic_conn *qc_new_conn(const struct quic_version *qv, int ipv4,
 		goto err;
 	}
 
-	conn_id->qc = qc;
-
-	if (HA_ATOMIC_LOAD(&l->rx.quic_mode) == QUIC_SOCK_MODE_CONN &&
+	if (l && HA_ATOMIC_LOAD(&l->rx.quic_mode) == QUIC_SOCK_MODE_CONN &&
 	    (quic_tune.options & QUIC_TUNE_SOCK_PER_CONN) &&
 	    is_addr(local_addr)) {
 		TRACE_USER("Allocate a socket for QUIC connection", QUIC_EV_CONN_INIT, qc);
