@@ -534,10 +534,12 @@ int quic_build_post_handshake_frames(struct quic_conn *qc)
 			goto err;
 		}
 
-		/* TODO To prevent CID tree locking, all CIDs created here
-		 * could be allocated at the same time as the first one.
-		 */
-		_quic_cid_insert(conn_id);
+		if (quic_cid_insert(conn_id, NULL)) {
+			TRACE_STATE("collision during CID generation on post-handshake", QUIC_EV_CONN_IO_CB, qc);
+			pool_free(pool_head_quic_connection_id, conn_id);
+			qc_frm_free(qc, &frm);
+			continue;
+		}
 
 		quic_cid_register_seq_num(conn_id);
 		quic_connection_id_to_frm_cpy(frm, conn_id);
