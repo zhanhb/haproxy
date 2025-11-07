@@ -304,7 +304,7 @@ struct error_snapshot {
 struct proxy_per_tgroup {
 	struct queue queue;
 	struct lbprm_per_tgrp lbprm;
-} THREAD_ALIGNED(64);
+};
 
 struct proxy {
 	enum obj_type obj_type;                 /* object type == OBJ_TYPE_PROXY */
