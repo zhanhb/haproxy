@@ -1,6 +1,32 @@
 ChangeLog :
 ===========
 
+2025/11/07 : 3.2.8
+    - BUG/MEDIUM: mt_lists: Avoid el->prev = el->next = el
+    - BUG/MEDIUM: applet: Improve again spinning loops detection with the new API
+    - BUG/MINOR: stick-tables: properly index string-type keys
+    - BUG/MEDIUM: mt_list: Use atomic operations to prevent compiler optims
+    - MINOR: applet: do not put SE_FL_WANT_ROOM on rcv_buf() if the channel is empty
+    - MINOR: cli: create cli_raw_rcv_buf() from the generic applet_raw_rcv_buf()
+    - BUG/MEDIUM: cli: do not return ACKs one char at a time
+    - MINOR: backend: srv_queue helper
+    - MINOR: backend: srv_is_up converter
+    - BUG/MEDIUM: ssl: Crash because of dangling ckch_store reference in a ckch instance
+    - DOC: config: slightly clarify the ssl_fc_has_early() behavior
+    - MINOR: ssl-sample: add ssl_fc_early_rcvd() to detect use of early data
+    - MINOR: http: fix 405,431,501 default errorfile
+    - BUG/MINOR: init: Do not close previously created fd in stdio_quiet
+    - BUG/MINOR: resolvers: Apply dns-accept-family setting on additional records
+    - BUG/MINOR: ssl: returns when SSL_CTX_new failed during init
+    - BUG/MINOR: resolvers: ensure fair round robin iteration
+    - OPTIM: backend: skip conn reuse for incompatible proxies
+    - SCRIPTS: build-ssl: fix rpath in AWS-LC install for openssl and bssl bin
+    - BUG/MEDIUM: mux-h1: fix 414 / 431 status code reporting
+    - BUG/MEDIUM: mux-h2: make sure not to move a dead connection to idle
+    - BUG/MEDIUM: connections: permit to permanently remove an idle conn
+    - BUG/MEDIUM: server: close a race around ready_srv when deleting a server
+    - BUG/MINOR: acme: wrong dns-01 challenge in the log
+
 2025/10/23 : 3.2.7
     - BUG/MINOR: acme: avoid overflow when diff > notAfter
     - BUG/MINOr: hlua: Fix receive from HTTP applet by properly accounting data
