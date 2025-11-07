@@ -1,6 +1,53 @@
 ChangeLog :
 ===========
 
+2025/11/07 : 3.1.10
+    - MINOR: ssl: diagnostic warning when both 'default-crt' and 'strict-sni' are used
+    - BUG/MINOr: hlua: Fix receive from HTTP applet by properly accounting data
+    - BUG/MEDIUM: ssl: take care of second client hello
+    - BUG/MINOR: ssl: always clear the remains of the first hello for the second one
+    - BUILD: makefile: disable tail calls optimizations with memory profiling
+    - BUG/MEDIUM: apppet: Improve spinning loop detection with the new API
+    - BUG/MINOR: sink: retry attempt for sft server may never occur
+    - MINOR: debug: add distro name and version in postmortem
+    - BUG/MINOR: ssl: Free global_ssl structure contents during deinit
+    - BUG/MINOR: ssl: Free key_base from global_ssl structure during deinit
+    - BUG/MAJOR: lb-chash: fix key calculation when using default hash-key id
+    - BUILD: ssl: can't build when using -DLISTEN_DEFAULT_CIPHERS
+    - BUG/MINOR: quic: too short PADDING frame for too short packets
+    - MINOR: quic: restore QUIC_HP_SAMPLE_LEN constant
+    - BUG/MEDIUM: stick-tables: Don't forget to dec count on failure.
+    - BUG/MINOR: quic: check applet_putchk() for 'show quic' first line
+    - DOC: clarify the experimental status for certain features
+    - BUG/MEDIUM: threads/config: drop absent threads from thread groups
+    - BUG/MEDIUM: mt_list: Make sure not to unlock the element twice
+    - BUG/MAJOR: quic: uninitialized quic_conn_closed struct members
+    - BUG/MEDIUM: h3: properly encode response after interim one in same buf
+    - MINOR: ncbuf: extract common types
+    - MINOR: ncbmbuf: define new ncbmbuf type
+    - MINOR: ncbmbuf: implement add
+    - MINOR: ncbmbuf: implement iterator bitmap utilities functions
+    - MINOR: ncbmbuf: implement ncbmb_data()
+    - MINOR: ncbmbuf: implement advance operation
+    - MINOR: ncbmbuf: add tests as standalone mode
+    - BUG/MAJOR: quic: use ncbmbuf for CRYPTO handling
+    - BUG/MEDIUM: build: limit excessive and counter-productive gcc-15 vectorization
+    - BUG/MEDIUM: mt_lists: Avoid el->prev = el->next = el
+    - BUG/MEDIUM: applet: Improve again spinning loops detection with the new API
+    - BUG/MINOR: stick-tables: properly index string-type keys
+    - BUG/MEDIUM: mt_list: Use atomic operations to prevent compiler optims
+    - MINOR: applet: do not put SE_FL_WANT_ROOM on rcv_buf() if the channel is empty
+    - MINOR: cli: create cli_raw_rcv_buf() from the generic applet_raw_rcv_buf()
+    - BUG/MEDIUM: cli: do not return ACKs one char at a time
+    - BUG/MEDIUM: ssl: Crash because of dangling ckch_store reference in a ckch instance
+    - DOC: config: slightly clarify the ssl_fc_has_early() behavior
+    - MINOR: http: fix 405,431,501 default errorfile
+    - BUG/MINOR: init: Do not close previously created fd in stdio_quiet
+    - BUG/MINOR: ssl: returns when SSL_CTX_new failed during init
+    - BUG/MEDIUM: mux-h1: fix 414 / 431 status code reporting
+    - BUG/MEDIUM: mux-h2: make sure not to move a dead connection to idle
+    - BUG/MEDIUM: connections: permit to permanently remove an idle conn
+
 2025/10/03 : 3.1.9
     - MINOR: http: add a function to validate characters of :authority
     - BUG/MEDIUM: h2/h3: reject some forbidden chars in :authority before reassembly
