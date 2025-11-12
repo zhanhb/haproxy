@@ -3063,7 +3063,7 @@ struct task *fcgi_io_cb(struct task *t, void *ctx, unsigned int state)
 
 		conn_in_list = conn->flags & CO_FL_LIST_MASK;
 		if (conn_in_list)
-			conn_delete_from_tree(conn, 0);
+			conn_delete_from_tree(conn);
 
 		HA_SPIN_UNLOCK(IDLE_CONNS_LOCK, &idle_conns[tid].idle_conns_lock);
 	} else {
@@ -3303,7 +3303,7 @@ struct task *fcgi_timeout_task(struct task *t, void *context, unsigned int state
 		 * to steal it from us.
 		 */
 		if (fconn->conn->flags & CO_FL_LIST_MASK)
-			conn_delete_from_tree(fconn->conn, 0);
+			conn_delete_from_tree(fconn->conn);
 
 		HA_SPIN_UNLOCK(IDLE_CONNS_LOCK, &idle_conns[tid].idle_conns_lock);
 
