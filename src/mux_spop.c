@@ -2499,9 +2499,17 @@ static struct task *spop_io_cb(struct task *t, void *ctx, unsigned int state)
 		conn = spop_conn->conn;
 		TRACE_POINT(SPOP_EV_SPOP_CONN_WAKE, conn);
 
-		conn_in_list = conn->flags & CO_FL_LIST_MASK;
-		if (conn_in_list)
+		/* Remove the connection from the list, to be sure nobody attempts
+		 * to use it while we handle the I/O events
+		 */
+		if (LIST_INLIST(&conn->idle_list)) {
+			conn_in_list = 1;
+			BUG_ON(!(conn->flags & CO_FL_LIST_MASK));
 			conn_delete_from_tree(conn);
+		}
+		else {
+			conn_in_list = 0;
+		}
 
 		HA_SPIN_UNLOCK(IDLE_CONNS_LOCK, &idle_conns[tid].idle_conns_lock);
 	} else {
@@ -2530,7 +2538,7 @@ static struct task *spop_io_cb(struct task *t, void *ctx, unsigned int state)
 		struct server *srv = objt_server(conn->target);
 
 		HA_SPIN_LOCK(IDLE_CONNS_LOCK, &idle_conns[tid].idle_conns_lock);
-		_srv_add_idle(srv, conn, conn_in_list == CO_FL_SAFE_LIST);
+		_srv_add_idle(srv, conn, (conn->flags & CO_FL_LIST_MASK) == CO_FL_SAFE_LIST);
 		HA_SPIN_UNLOCK(IDLE_CONNS_LOCK, &idle_conns[tid].idle_conns_lock);
 	}
 	return t;
