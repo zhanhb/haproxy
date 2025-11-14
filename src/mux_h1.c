@@ -337,7 +337,7 @@ DECLARE_STATIC_POOL(pool_head_h1s, "h1s", sizeof(struct h1s));
 static int h1_recv(struct h1c *h1c);
 static int h1_send(struct h1c *h1c);
 static int h1_process(struct h1c *h1c);
-static void h1_release(struct h1c *h1c);
+static int h1_release(struct h1c *h1c);
 
 /* h1_io_cb is exported to see it resolved in "show fd" */
 struct task *h1_io_cb(struct task *t, void *ctx, unsigned int state);
@@ -1338,8 +1338,10 @@ static int h1_init(struct connection *conn, struct proxy *proxy, struct session 
 
 /* release function. This one should be called to free all resources allocated
  * to the mux.
+ * Returns 0 if everything was destroyed, -1 if an upgrade to h2 happened
+ * and the connection is still alive.
  */
-static void h1_release(struct h1c *h1c)
+static int h1_release(struct h1c *h1c)
 {
 	struct connection *conn = NULL;
 
@@ -1358,7 +1360,7 @@ static void h1_release(struct h1c *h1c)
 		if (conn_upgrade_mux_fe(conn, NULL, &h1c->ibuf, ist("h2"), PROTO_MODE_HTTP) != -1) {
 			/* connection successfully upgraded to H2, this
 			 * mux was already released */
-			return;
+			return -1;
 		}
 		TRACE_ERROR("h2 upgrade failed", H1_EV_H1C_END|H1_EV_H1C_ERR, conn);
 		sess_log(conn->owner); /* Log if the upgrade failed */
@@ -1404,6 +1406,7 @@ static void h1_release(struct h1c *h1c)
 			conn->destroy_cb(conn);
 		conn_free(conn);
 	}
+	return 0;
 }
 
 /******************************************************/
