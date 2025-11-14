@@ -639,10 +639,9 @@ struct stksess *stktable_set_entry(struct stktable *table, struct stksess *nts)
 		HA_RWLOCK_RDUNLOCK(STK_TABLE_LOCK, &table->lock);
 		return ts;
 	}
-	ts = nts;
 
 	/* let's increment it before switching to exclusive */
-	HA_ATOMIC_INC(&ts->ref_cnt);
+	HA_ATOMIC_INC(&nts->ref_cnt);
 
 	if (HA_RWLOCK_TRYRDTOSK(STK_TABLE_LOCK, &table->lock) != 0) {
 		/* upgrade to seek lock failed, let's drop and take */
@@ -654,10 +653,15 @@ struct stksess *stktable_set_entry(struct stktable *table, struct stksess *nts)
 
 	/* now we're write-locked */
 
-	__stktable_store(table, ts);
+	ts = __stktable_store(table, nts);
+	if (ts != nts) {
+		HA_ATOMIC_DEC(&nts->ref_cnt);
+		HA_ATOMIC_INC(&ts->ref_cnt);
+	}
 	HA_RWLOCK_WRUNLOCK(STK_TABLE_LOCK, &table->lock);
 
-	stktable_requeue_exp(table, ts);
+	if (ts == nts)
+		stktable_requeue_exp(table, ts);
 	return ts;
 }
 
