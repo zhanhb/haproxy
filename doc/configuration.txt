@@ -2845,7 +2845,7 @@ limited-quic
   layer supports most of the necessary TLS operations, albeit without QUIC
   0-RTT capability.
 
-  This feature is primarily targetted for OpenSSL prior to version 3.5.2, where
+  This feature is primarily targeted for OpenSSL prior to version 3.5.2, where
   QUIC API was not implemented or only partially. The compatibility layer can
   still be activated for version 3.5.2 and above, but this is probably
   unnecessary.
@@ -18827,7 +18827,7 @@ proto <name>
 
 quic-cc-algo { cubic | newreno | bbr | nocc }[(<args,...>)]
   This is a QUIC specific setting to select the congestion control algorithm
-  for any connection targetting this server. They are similar to those used by
+  for any connection targeting this server. They are similar to those used by
   TCP. See the bind option with a similar name for a complete description of
   all customization options.
 
@@ -30452,9 +30452,9 @@ user <username> [password|insecure-password <password>]
   slower than their glibc counterparts when calculating hashes, so you might
   want to consider this aspect too.
 
-  All passwords are considered normal arguments and are therefor subject to
+  All passwords are considered normal arguments and are therefore subject to
   regular section 2.2 Quoting and escaping. Single quoting passwords is
-  therefor recommended.
+  therefore recommended.
 
   Example:
         userlist L1
