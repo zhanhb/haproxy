@@ -1012,9 +1012,8 @@ endif
 
 HATERM_OBJS += $(OBJS) src/haterm_init.o
 
-# Used only for forced dependency checking. May be cleared during development.
-INCLUDES = $(wildcard include/*/*.h)
-DEP = $(INCLUDES) .build_opts
+-include $(sort $(OPTIONS_OBJS:.o=.d) $(HATERM_OBJS:.o=.d))
+DEP = .build_opts
 
 help:
 	@sed -ne "/^[^#]*$$/q;s/^# \{0,1\}\(.*\)/\1/;p" Makefile
@@ -1066,7 +1065,7 @@ objsize: haproxy
 	$(Q)objdump -t $^|grep ' g '|grep -F '.text'|awk '{print $$5 FS $$6}'|sort
 
 %.o:	%.c $(DEP)
-	$(cmd_CC) $(COPTS) -c -o $@ $<
+	$(cmd_CC) $(COPTS) -MMD -MT $@ -MF $*.d -c -o $@ $<
 
 admin/halog/halog: admin/halog/halog.o admin/halog/fgets2.o src/ebtree.o src/eb32tree.o src/eb64tree.o src/ebmbtree.o src/ebsttree.o src/ebistree.o src/ebimtree.o
 	$(cmd_LD) $(ARCH_FLAGS) $(LDFLAGS) -o $@ $^ $(LDOPTS)
@@ -1108,7 +1107,7 @@ dev/term_events/term_events: dev/term_events/term_events.o
 .PHONY: src/version.c dev/ncpu/ncpu dev/poll/poll dev/tcploop/tcploop
 
 src/calltrace.o: src/calltrace.c $(DEP)
-	$(cmd_CC) $(TRACE_COPTS) -c -o $@ $<
+	$(cmd_CC) $(TRACE_COPTS) -MMD -MT $@ -MF src/calltrace.d -c -o $@ $<
 
 src/version.o:	src/version.c $(DEP)
 	$(cmd_CC) $(COPTS) \
@@ -1118,7 +1117,7 @@ src/version.o:	src/version.c $(DEP)
 	      -DBUILD_OPTIONS='"$(strip $(BUILD_OPTIONS))"' \
 	      -DBUILD_DEBUG='"$(strip $(DEBUG))"' \
 	      -DBUILD_FEATURES='"$(strip $(build_features))"' \
-	       -c -o $@ $<
+	      -MMD -MT $@ -MF src/version.d -c -o $@ $<
 
 install-man:
 	$(Q)$(INSTALL) -d "$(DESTDIR)$(MANDIR)"/man1
@@ -1159,18 +1158,18 @@ uninstall:
 	$(Q)rm -f "$(DESTDIR)$(SBINDIR)"/haproxy
 
 clean:
-	$(Q)rm -f *.[oas] src/*.[oas] haproxy test .build_opts .build_opts.new
+	$(Q)rm -f *.[oasd] src/*.[oasd] haproxy test .build_opts .build_opts.new
 	$(Q)for dir in . src dev/* admin/* addons/* include/* doc; do rm -f $$dir/*~ $$dir/*.rej $$dir/core; done
 	$(Q)rm -f haproxy-$(VERSION).tar.gz haproxy-$(VERSION)$(SUBVERS)$(EXTRAVERSION).tar.gz
 	$(Q)rm -f haproxy-$(VERSION) haproxy-$(VERSION)$(SUBVERS)$(EXTRAVERSION) nohup.out gmon.out
-	$(Q)rm -f addons/promex/*.[oas]
-	$(Q)rm -f addons/51degrees/*.[oas] addons/51degrees/dummy/*.[oas] addons/51degrees/dummy/*/*.[oas]
-	$(Q)rm -f addons/deviceatlas/*.[oas] addons/deviceatlas/dummy/*.[oas] addons/deviceatlas/dummy/*.o
+	$(Q)rm -f addons/promex/*.[oasd]
+	$(Q)rm -f addons/51degrees/*.[oasd] addons/51degrees/dummy/*.[oasd] addons/51degrees/dummy/*/*.[oasd]
+	$(Q)rm -f addons/deviceatlas/*.[oasd] addons/deviceatlas/dummy/*.[oasd] addons/deviceatlas/dummy/*.o
 	$(Q)rm -f addons/deviceatlas/dummy/Os/*.o
-	$(Q)rm -f addons/ot/src/*.[oas]
-	$(Q)rm -f addons/wurfl/*.[oas] addons/wurfl/dummy/*.[oas]
-	$(Q)rm -f admin/*/*.[oas] admin/*/*/*.[oas]
-	$(Q)rm -f dev/*/*.[oas]
+	$(Q)rm -f addons/ot/src/*.[oasd]
+	$(Q)rm -f addons/wurfl/*.[oasd] addons/wurfl/dummy/*.[oasd]
+	$(Q)rm -f admin/*/*.[oasd] admin/*/*/*.[oasd]
+	$(Q)rm -f dev/*/*.[oasd]
 	$(Q)rm -f dev/flags/flags
 
 distclean: clean
