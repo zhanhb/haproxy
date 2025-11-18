@@ -31280,9 +31280,9 @@ user <username> [password|insecure-password <password>]
   slower than their glibc counterparts when calculating hashes, so you might
   want to consider this aspect too.
 
-  All passwords are considered normal arguments and are therefor subject to
+  All passwords are considered normal arguments and are therefore subject to
   regular section 2.2 Quoting and escaping. Single quoting passwords is
-  therefor recommended.
+  therefore recommended.
 
   Example:
         userlist L1

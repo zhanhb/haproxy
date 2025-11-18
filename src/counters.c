@@ -71,7 +71,7 @@ void counters_be_shared_drop(struct be_counters_shared *counters)
 /* prepare shared counters pointers for a given <shared> parent
  * pointer and for <guid> object
  * <is_be> hint is expected to be set to 1 when the guid refers to be_shared
- * struct, else fe_shared stuct is assumed.
+ * struct, else fe_shared struct is assumed.
  *
  * if <guid> is not set, then sharing is disabled
  * Returns the pointer on success or NULL on failure, in which case
