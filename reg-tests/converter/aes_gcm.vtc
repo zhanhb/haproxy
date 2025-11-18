@@ -34,21 +34,21 @@ haproxy h1 -conf {
         http-request set-var(txn.nonce) str("MTIzNDU2Nzg5MDEy")
         http-request set-var(txn.key) str("Zm9vb2Zvb29mb29vb29vbw==")
 
-        # AES-GCM enc wth vars + dec with strings
+        # AES-GCM enc with vars + dec with strings
         http-request set-var(txn.encrypted1) var(txn.plain),aes_gcm_enc(128,txn.nonce,txn.key,txn.aead_tag1),base64
         http-after-response set-header X-Encrypted1 %[var(txn.encrypted1)]
         http-after-response set-header X-AEAD-Tag1 %[var(txn.aead_tag1)]
         http-request set-var(txn.decrypted1) var(txn.encrypted1),b64dec,aes_gcm_dec(128,"MTIzNDU2Nzg5MDEy","Zm9vb2Zvb29mb29vb29vbw==",txn.aead_tag1)
         http-after-response set-header X-Decrypted1 %[var(txn.decrypted1)]
 
-        # AES-GCM enc wth strings + dec with vars
+        # AES-GCM enc with strings + dec with vars
         http-request set-var(txn.encrypted2) var(txn.plain),aes_gcm_enc(128,"MTIzNDU2Nzg5MDEy","Zm9vb2Zvb29mb29vb29vbw==",txn.aead_tag2),base64
         http-after-response set-header X-Encrypted2 %[var(txn.encrypted2)]
         http-after-response set-header X-AEAD-Tag2 %[var(txn.aead_tag2)]
         http-request set-var(txn.decrypted2) var(txn.encrypted2),b64dec,aes_gcm_dec(128,txn.nonce,txn.key,txn.aead_tag2)
         http-after-response set-header X-Decrypted2 %[var(txn.decrypted2)]
 
-        # AES-GCM + AAD enc wth vars + dec with strings
+        # AES-GCM + AAD enc with vars + dec with strings
         http-request set-var(txn.aad) str("dGVzdAo=")
         http-request set-var(txn.encrypted3) var(txn.plain),aes_gcm_enc(128,txn.nonce,txn.key,txn.aead_tag3,txn.aad),base64
         http-after-response set-header X-Encrypted3 %[var(txn.encrypted3)]
@@ -56,7 +56,7 @@ haproxy h1 -conf {
         http-request set-var(txn.decrypted3) var(txn.encrypted3),b64dec,aes_gcm_dec(128,"MTIzNDU2Nzg5MDEy","Zm9vb2Zvb29mb29vb29vbw==",txn.aead_tag3,"dGVzdAo=")
         http-after-response set-header X-Decrypted3 %[var(txn.decrypted3)]
 
-        # AES-GCM + AAD enc wth strings + enc with strings
+        # AES-GCM + AAD enc with strings + enc with strings
         http-request set-var(txn.encrypted4) var(txn.plain),aes_gcm_enc(128,"MTIzNDU2Nzg5MDEy","Zm9vb2Zvb29mb29vb29vbw==",txn.aead_tag4,"dGVzdAo="),base64
         http-after-response set-header X-Encrypted4 %[var(txn.encrypted4)]
         http-after-response set-header X-AEAD-Tag4 %[var(txn.aead_tag4)]
