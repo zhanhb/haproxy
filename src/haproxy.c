@@ -2481,10 +2481,17 @@ static void step_init_3(void)
 {
 	struct rlimit limit;
 
-	signal_register_fct(SIGQUIT, dump, SIGQUIT);
-	signal_register_fct(SIGUSR1, sig_soft_stop, SIGUSR1);
-	signal_register_fct(SIGHUP, sig_dump_state, SIGHUP);
-	signal_register_fct(SIGUSR2, NULL, 0);
+	if (master) {
+		signal_register_fct(SIGQUIT, NULL, 0);
+		signal_register_fct(SIGUSR1, NULL, 0);
+		signal_register_fct(SIGHUP, NULL, 0);
+		signal_register_fct(SIGUSR2, NULL, 0);
+	} else {
+		signal_register_fct(SIGQUIT, dump, SIGQUIT);
+		signal_register_fct(SIGUSR1, sig_soft_stop, SIGUSR1);
+		signal_register_fct(SIGHUP, sig_dump_state, SIGHUP);
+		signal_register_fct(SIGUSR2, NULL, 0);
+	}
 
 	/* Always catch SIGPIPE even on platforms which define MSG_NOSIGNAL.
 	 * Some recent FreeBSD setups report broken pipes, and MSG_NOSIGNAL
