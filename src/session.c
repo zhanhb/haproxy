@@ -737,7 +737,7 @@ int session_reinsert_idle_conn(struct session *sess, struct connection *conn)
  * target server will be incremented.
  *
  * Returns 0 if the connection is kept, else non-zero if the connection was
- * explicitely removed from session.
+ * explicitly removed from session.
  */
 int session_check_idle_conn(struct session *sess, struct connection *conn)
 {
