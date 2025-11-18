@@ -1,4 +1,4 @@
-# This teg-test verifies that automatic SNI selection for server conncetions and
+# This teg-test verifies that automatic SNI selection for server connections and
 # health checks.
 
 varnishtest "Test the bind 'alpn' setting"
