@@ -1,6 +1,45 @@
 ChangeLog :
 ===========
 
+2025/11/21 : 3.2.9
+    - MINOR: ssl/sample: expose ssl_*c_curve for AWS-LC
+    - Revert "BUG/MEDIUM: connections: permit to permanently remove an idle conn"
+    - BUG/MEDIUM: connection: do not reinsert a purgeable conn in idle list
+    - BUG/MEDIUM: connection/ssl: also fix the ssl_sock_io_cb() regarding idle list
+    - BUG/MINOR: config: Limit "tune.maxpollevents" parameter to 1000000
+    - BUG/MEDIUM: stick-tables: Make sure updates are seen as local
+    - BUG/MINOR: quic: close connection on CID alloc failure
+    - BUG/MINOR: acme: more explicit error when BIO_new_file()
+    - BUG/MEDIUM: acme: move from mt_list to a rwlock + ebmbtree
+    - BUG/MINOR: acme: can't override the default resolver
+    - BUG/MINOR: check: fix reuse-pool if MUX inherited from server
+    - DOC: configuration: add missing ssllib_name_startswith()
+    - DOC: configuration: add missing openssl_version predicates
+    - BUG/MEDIUM: stick-tables: Always return the good stksess from stktable_set_entry
+    - BUG/MINOR: stick-tables: Fix return value for __stksess_kill()
+    - MINOR: h1: h1_release() should return if it destroyed the connection
+    - BUG/MEDIUM: h1: prevent a crash on HTTP/2 upgrade
+    - BUG/MINOR: quic-be: backend SSL session reuse fix (OpenSSL 3.5)
+    - BUG/MEDIUM: mworker: signals inconsistencies during startup and reload
+    - BUG/MINOR: mworker: wrong signals during startup
+    - BUG/MINOR: ssl: remove dead code in ssl_sock_from_buf()
+    - BUG/MINOR: acme: alert when the map doesn't exist at startup
+    - DOC: acme: add details about the DNS-01 support
+    - DOC: acme: explain how to dump the certificates
+    - DOC: acme: configuring acme needs a crt file
+    - BUG/MEDIUM: queues: Don't forget to unlock the queue before exiting
+    - MINOR: muxes: Support an optional ALPN string when defining mux protocols
+    - MINOR: config: Do proto detection for listeners before checks about ALPN
+    - BUG/MEDIUM: config: Use the mux protocol ALPN by default for listeners if forced
+    - BUG/MEDIUM: proxy: do not align proxy_per_tgroup beyond allocator's capabilities
+    - ADMIN: haproxy-dump-certs: implement a certificate dumper
+    - ADMIN: dump-certs: don't update the file if it's up to date
+    - ADMIN: dump-certs: create files in a tmpdir
+    - ADMIN: dump-certs: fix lack of / in -p
+    - ADMIN: dump-certs: use same error format as haproxy
+    - ADMIN: dump-certs: let dry-run compare certificates
+    - DOC: http: document 413 response code
+
 2025/11/07 : 3.2.8
     - BUG/MEDIUM: mt_lists: Avoid el->prev = el->next = el
     - BUG/MEDIUM: applet: Improve again spinning loops detection with the new API
