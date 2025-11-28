@@ -116,6 +116,9 @@ static void quic_trace(enum trace_level level, uint64_t mask, const struct trace
 
 		chunk_appendf(&trace_buf, " : qc@%p idle_timer_task@%p flags=0x%x",
 		              qc, qc->idle_timer_task, qc->flags);
+		if (qc->conn)
+			chunk_appendf(&trace_buf, " conn@%p(err_code=%d flags=0x%llx)",
+		              qc->conn, qc->conn->err_code, (ull)qc->conn->flags);
 		if (mask & QUIC_EV_CONN_INIT) {
 			chunk_appendf(&trace_buf, "\n  odcid");
 			quic_cid_dump(&trace_buf, &qc->odcid);
