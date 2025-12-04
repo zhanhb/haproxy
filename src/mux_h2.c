@@ -4819,7 +4819,7 @@ struct task *h2_io_cb(struct task *t, void *ctx, unsigned int state)
 		 */
 		conn_in_list = conn->flags & CO_FL_LIST_MASK;
 		if (conn_in_list)
-			conn_delete_from_tree(conn, 0);
+			conn_delete_from_tree(conn);
 
 		HA_SPIN_UNLOCK(IDLE_CONNS_LOCK, &idle_conns[tid].idle_conns_lock);
 	} else {
@@ -4970,7 +4970,7 @@ static int h2_process(struct h2c *h2c)
 		/* connections in error must be removed from the idle lists */
 		if (conn->flags & CO_FL_LIST_MASK) {
 			HA_SPIN_LOCK(IDLE_CONNS_LOCK, &idle_conns[tid].idle_conns_lock);
-			conn_delete_from_tree(conn, 1);
+			conn_delete_from_tree(conn);
 			HA_SPIN_UNLOCK(IDLE_CONNS_LOCK, &idle_conns[tid].idle_conns_lock);
 		}
 	}
@@ -4978,7 +4978,7 @@ static int h2_process(struct h2c *h2c)
 		/* connections in error must be removed from the idle lists */
 		if (conn->flags & CO_FL_LIST_MASK) {
 			HA_SPIN_LOCK(IDLE_CONNS_LOCK, &idle_conns[tid].idle_conns_lock);
-			conn_delete_from_tree(conn, 1);
+			conn_delete_from_tree(conn);
 			HA_SPIN_UNLOCK(IDLE_CONNS_LOCK, &idle_conns[tid].idle_conns_lock);
 		}
 	}
@@ -5071,7 +5071,7 @@ struct task *h2_timeout_task(struct task *t, void *context, unsigned int state)
 		 * to steal it from us.
 		 */
 		if (h2c->conn->flags & CO_FL_LIST_MASK)
-			conn_delete_from_tree(h2c->conn, 1);
+			conn_delete_from_tree(h2c->conn);
 
 		HA_SPIN_UNLOCK(IDLE_CONNS_LOCK, &idle_conns[tid].idle_conns_lock);
 
@@ -5143,7 +5143,7 @@ do_leave:
 	/* in any case this connection must not be considered idle anymore */
 	if (h2c->conn->flags & CO_FL_LIST_MASK) {
 		HA_SPIN_LOCK(IDLE_CONNS_LOCK, &idle_conns[tid].idle_conns_lock);
-		conn_delete_from_tree(h2c->conn, 1);
+		conn_delete_from_tree(h2c->conn);
 		HA_SPIN_UNLOCK(IDLE_CONNS_LOCK, &idle_conns[tid].idle_conns_lock);
 	}
 
