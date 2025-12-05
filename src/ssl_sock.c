@@ -3635,7 +3635,6 @@ static int ssl_sess_new_srv_cb(SSL *ssl, SSL_SESSION *sess)
 		int len;
 		unsigned char *ptr;
 		const char *sni;
-		uint64_t sni_hash;
 
 		/* determine the required len to store this new session */
 		len = i2d_SSL_SESSION(sess, NULL);
@@ -3677,11 +3676,10 @@ static int ssl_sess_new_srv_cb(SSL *ssl, SSL_SESSION *sess)
 		else if (s->ssl_ctx.reused_sess[tid].ptr && !old_tid)
 			HA_ATOMIC_CAS(&s->ssl_ctx.last_ssl_sess_tid, &old_tid, tid + 1);
 
-		sni_hash = (sni ? ssl_sock_sni_hash(ist(sni)) : 0);
-		if (s->ssl_ctx.reused_sess[tid].sni_hash != sni_hash) {
-			/* if the new sni hash isn' t the same as the old one */
-			s->ssl_ctx.reused_sess[tid].sni_hash = sni_hash;
+		if (s->ssl_ctx.reused_sess[tid].sni_hash != conn->sni_hash) {
+			/* if the new sni hash or isn' t the same as the old one */
 			ha_free(&s->ssl_ctx.reused_sess[tid].sni);
+			s->ssl_ctx.reused_sess[tid].sni_hash = conn->sni_hash;
 			if (sni)
 				s->ssl_ctx.reused_sess[tid].sni = strdup(sni);
 		}
