@@ -3635,6 +3635,7 @@ static int ssl_sess_new_srv_cb(SSL *ssl, SSL_SESSION *sess)
 		int len;
 		unsigned char *ptr;
 		const char *sni;
+		uint64_t sni_hash;
 
 		/* determine the required len to store this new session */
 		len = i2d_SSL_SESSION(sess, NULL);
@@ -3676,20 +3677,13 @@ static int ssl_sess_new_srv_cb(SSL *ssl, SSL_SESSION *sess)
 		else if (s->ssl_ctx.reused_sess[tid].ptr && !old_tid)
 			HA_ATOMIC_CAS(&s->ssl_ctx.last_ssl_sess_tid, &old_tid, tid + 1);
 
-		if (s->ssl_ctx.reused_sess[tid].sni) {
-			/* if the new sni is empty or isn' t the same as the old one */
-			if ((!sni) || strcmp(s->ssl_ctx.reused_sess[tid].sni, sni) != 0) {
-				ha_free(&s->ssl_ctx.reused_sess[tid].sni);
-				s->ssl_ctx.reused_sess[tid].sni_hash = 0;
-				if (sni) {
-					s->ssl_ctx.reused_sess[tid].sni = strdup(sni);
-					s->ssl_ctx.reused_sess[tid].sni_hash = ssl_sock_sni_hash(ist(sni));
-				}
-			}
-		} else if (sni) {
-			/* if there wasn't an old sni but there is a new one */
-			s->ssl_ctx.reused_sess[tid].sni = strdup(sni);
-			s->ssl_ctx.reused_sess[tid].sni_hash = ssl_sock_sni_hash(ist(sni));
+		sni_hash = (sni ? ssl_sock_sni_hash(ist(sni)) : 0);
+		if (s->ssl_ctx.reused_sess[tid].sni_hash != sni_hash) {
+			/* if the new sni hash isn' t the same as the old one */
+			s->ssl_ctx.reused_sess[tid].sni_hash = sni_hash;
+			ha_free(&s->ssl_ctx.reused_sess[tid].sni);
+			if (sni)
+				s->ssl_ctx.reused_sess[tid].sni = strdup(sni);
 		}
 		HA_RWLOCK_WRUNLOCK(SSL_SERVER_LOCK, &s->ssl_ctx.reused_sess[tid].sess_lock);
 		HA_RWLOCK_RDUNLOCK(SSL_SERVER_LOCK, &s->ssl_ctx.lock);
