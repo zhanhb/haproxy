@@ -1059,6 +1059,9 @@ enum tcpcheck_eval_ret tcpcheck_eval_connect(struct check *check, struct tcpchec
 	struct xprt_ops *xprt;
 	struct tcpcheck_rule *next;
 	int status, port;
+#ifdef USE_OPENSSL
+	struct ist sni = IST_NULL;
+#endif
 
 	TRACE_ENTER(CHK_EV_TCPCHK_CONN, check);
 
@@ -1200,9 +1203,14 @@ enum tcpcheck_eval_ret tcpcheck_eval_connect(struct check *check, struct tcpchec
 
 #ifdef USE_OPENSSL
 	if (connect->sni)
-		ssl_sock_set_servername(conn, connect->sni);
+		sni = ist(connect->sni);
 	else if ((connect->options & TCPCHK_OPT_DEFAULT_CONNECT) && s && s->check.sni)
-		ssl_sock_set_servername(conn, s->check.sni);
+		sni = ist(s->check.sni);
+
+	if (isttest(sni)) {
+		conn->sni_hash = ssl_sock_sni_hash(sni);
+		ssl_sock_set_servername(conn, istptr(sni));
+	}
 
 	if (connect->alpn)
 		ssl_sock_set_alpn(conn, (unsigned char *)connect->alpn, connect->alpn_len);
