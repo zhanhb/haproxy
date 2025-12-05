@@ -102,6 +102,7 @@
 int nb_engines = 0;
 
 static struct eb_root cert_issuer_tree = EB_ROOT; /* issuers tree from "issuers-chain-path" */
+static uint64_t sni_hash_seed = 0; /* Seed used to compute hash of SNIs */
 
 struct global_ssl global_ssl = {
 #ifdef LISTEN_DEFAULT_CIPHERS
@@ -364,7 +365,11 @@ static int ssl_locking_init(void)
 
 __decl_thread(HA_SPINLOCK_T ckch_lock);
 
-
+/* Returns the hash corresponding to <sni> */
+uint64_t ssl_sock_sni_hash(const struct ist sni)
+{
+	return XXH3(istptr(sni), istlen(sni), sni_hash_seed);
+}
 
 /* mimic what X509_STORE_load_locations do with store_ctx */
 static int ssl_set_cert_crl_file(X509_STORE *store_ctx, char *path)
@@ -7151,6 +7156,8 @@ static void __ssl_sock_init(void)
 	HA_SPIN_INIT(&ckch_lock);
 
 	HA_SPIN_INIT(&ocsp_tree_lock);
+
+	sni_hash_seed = ha_random64();
 
 	/* Try to register dedicated SSL/TLS protocol message callbacks for
 	 * heartbleed attack (CVE-2014-0160) and clienthello.
