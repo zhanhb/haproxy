@@ -5739,14 +5739,23 @@ static int ssl_sock_init(struct connection *conn, void **xprt_ctx)
 		SSL_set_connect_state(ctx->ssl);
 		HA_RWLOCK_RDLOCK(SSL_SERVER_LOCK, &srv->ssl_ctx.lock);
 		if (srv->ssl_ctx.reused_sess[tid].ptr) {
+			const unsigned char *ptr;
+			SSL_SESSION *sess;
+
+			/* The sni of the cached SSL session does not
+			 * match the one of the new connection, don't reuse the SSL session
+			 */
+			if (srv->ssl_ctx.reused_sess[tid].sni_hash != conn->sni_hash)
+				goto skip_resume_locked;
+
 			/* let's recreate a session from (ptr,size) and assign
 			 * it to ctx->ssl. Its refcount will be updated by the
 			 * creation and by the assignment, so after assigning
 			 * it or failing to, we must always free it to decrement
 			 * the refcount.
 			 */
-			const unsigned char *ptr = srv->ssl_ctx.reused_sess[tid].ptr;
-			SSL_SESSION *sess = d2i_SSL_SESSION(NULL, &ptr, srv->ssl_ctx.reused_sess[tid].size);
+			ptr = srv->ssl_ctx.reused_sess[tid].ptr;
+			sess = d2i_SSL_SESSION(NULL, &ptr, srv->ssl_ctx.reused_sess[tid].size);
 
 			if (sess && !SSL_set_session(ctx->ssl, sess)) {
 				uint old_tid = HA_ATOMIC_LOAD(&srv->ssl_ctx.last_ssl_sess_tid); // 0=none, >0 = tid + 1
@@ -5781,6 +5790,14 @@ static int ssl_sock_init(struct connection *conn, void **xprt_ctx)
 			if (old_tid) {
 				HA_RWLOCK_RDLOCK(SSL_SERVER_LOCK, &srv->ssl_ctx.reused_sess[old_tid-1].sess_lock);
 
+				/* The sni of the cached SSL session does not
+				 * match the one of the new connection, don't reuse the SSL session
+				 */
+				if (srv->ssl_ctx.reused_sess[old_tid-1].sni_hash != conn->sni_hash) {
+					HA_RWLOCK_RDUNLOCK(SSL_SERVER_LOCK, &srv->ssl_ctx.reused_sess[old_tid-1].sess_lock);
+					goto skip_resume_locked;
+				}
+
 				ptr = srv->ssl_ctx.reused_sess[old_tid-1].ptr;
 				if (ptr) {
 					sess = d2i_SSL_SESSION(NULL, &ptr, srv->ssl_ctx.reused_sess[old_tid-1].size);
@@ -5797,6 +5814,7 @@ static int ssl_sock_init(struct connection *conn, void **xprt_ctx)
 				HA_RWLOCK_RDUNLOCK(SSL_SERVER_LOCK, &srv->ssl_ctx.reused_sess[old_tid-1].sess_lock);
 			}
 		}
+	  skip_resume_locked:
 		HA_RWLOCK_RDUNLOCK(SSL_SERVER_LOCK, &srv->ssl_ctx.lock);
 
 		/* leave init state and start handshake */
