@@ -3631,7 +3631,8 @@ static int ssl_sess_new_srv_cb(SSL *ssl, SSL_SESSION *sess)
 	 * or releasing it.
 	 */
 
-	if (!(s->ssl_ctx.options & SRV_SSL_O_NO_REUSE)) {
+	if (!(conn->flags & CO_FL_SSL_NO_CACHED_INFO) &&
+	    !(s->ssl_ctx.options & SRV_SSL_O_NO_REUSE)) {
 		int len;
 		unsigned char *ptr;
 
@@ -5100,6 +5101,13 @@ static int ssl_sock_init(struct connection *conn, void **xprt_ctx)
 			goto err;
 
 		SSL_set_connect_state(ctx->ssl);
+
+		/*
+		 * Always fail for check connections
+		 */
+		if (conn->flags & CO_FL_SSL_NO_CACHED_INFO)
+			goto skip_resume;
+
 		HA_RWLOCK_RDLOCK(SSL_SERVER_LOCK, &srv->ssl_ctx.lock);
 		if (srv->ssl_ctx.reused_sess[tid].ptr) {
 			const unsigned char *ptr;
@@ -5169,7 +5177,7 @@ static int ssl_sock_init(struct connection *conn, void **xprt_ctx)
 		}
 	  skip_resume_locked:
 		HA_RWLOCK_RDUNLOCK(SSL_SERVER_LOCK, &srv->ssl_ctx.lock);
-
+	  skip_resume:
 		/* leave init state and start handshake */
 		conn->flags |= CO_FL_SSL_WAIT_HS | CO_FL_WAIT_L6_CONN;
 
