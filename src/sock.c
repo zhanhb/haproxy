@@ -372,7 +372,7 @@ void sock_unbind(struct receiver *rx)
 		return;
 
 	if (!stopping && master &&
-	    rx->flags & RX_F_INHERITED)
+	    rx->flags & RX_F_INHERITED_FD)
 		return;
 
 	rx->flags &= ~RX_F_BOUND;
