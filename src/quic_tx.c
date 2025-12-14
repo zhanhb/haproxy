@@ -372,7 +372,8 @@ static int qc_send_ppkts(struct buffer *buf, struct ssl_sock_ctx *ctx)
 			}
 			qc->path->in_flight += pkt->in_flight_len;
 			pkt->pktns->tx.in_flight += pkt->in_flight_len;
-			if ((global.tune.options & GTUNE_QUIC_CC_HYSTART) && pkt->pktns == qc->apktns)
+			if ((global.tune.options & GTUNE_QUIC_CC_HYSTART) && pkt->pktns == qc->apktns &&
+			    cc->algo->hystart_start_round != NULL)
 				cc->algo->hystart_start_round(cc, pkt->pn_node.key);
 			if (pkt->in_flight_len)
 				qc_set_timer(qc);
