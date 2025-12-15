@@ -227,6 +227,14 @@ DECLARE_STATIC_POOL(pool_head_quic_cstream, "quic_cstream", sizeof(struct quic_c
 DECLARE_POOL(pool_head_quic_frame, "quic_frame", sizeof(struct quic_frame));
 DECLARE_STATIC_POOL(pool_head_quic_arng, "quic_arng", sizeof(struct quic_arng_node));
 
+const char *default_quic_ciphersuites = "TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384"
+                           ":TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_CCM_SHA256";
+#ifdef HAVE_OPENSSL_QUIC
+const char *default_quic_curves = "X25519:P-256:P-384:P-521:X25519MLKEM768";
+#else
+const char *default_quic_curves = "X25519:P-256:P-384:P-521";
+#endif
+
 static struct quic_connection_id *new_quic_cid(struct eb_root *root,
                                                struct quic_conn *qc,
                                                const struct quic_cid *odcid,
@@ -1455,8 +1463,11 @@ static SSL_QUIC_METHOD ha_quic_method = {
  */
 int ssl_quic_initial_ctx(struct bind_conf *bind_conf)
 {
-	struct ssl_bind_conf __maybe_unused *ssl_conf_cur;
 	int cfgerr = 0;
+	const char *ciphersuites = bind_conf->ssl_conf.ciphersuites ?
+		bind_conf->ssl_conf.ciphersuites : default_quic_ciphersuites;
+	const char *curves = bind_conf->ssl_conf.curves ?
+		bind_conf->ssl_conf.curves : default_quic_curves;
 
 	long options =
 		(SSL_OP_ALL & ~SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS) |
@@ -1471,6 +1482,24 @@ int ssl_quic_initial_ctx(struct bind_conf *bind_conf)
 	SSL_CTX_set_mode(ctx, SSL_MODE_RELEASE_BUFFERS);
 	SSL_CTX_set_min_proto_version(ctx, TLS1_3_VERSION);
 	SSL_CTX_set_max_proto_version(ctx, TLS1_3_VERSION);
+
+	if (SSL_CTX_set_ciphersuites(ctx, ciphersuites) != 1) {
+		ha_warning("Binding [%s:%d] for %s %s: default QUIC cipher"
+			   " suites setting failed.\n",
+			   bind_conf->file, bind_conf->line,
+			   proxy_type_str(bind_conf->frontend),
+			   bind_conf->frontend->id);
+		cfgerr++;
+	}
+
+	if (SSL_CTX_set1_curves_list(ctx, curves) != 1) {
+		ha_warning("Binding [%s:%d] for %s %s: default QUIC cipher"
+			   " curves setting failed.\n",
+			   bind_conf->file, bind_conf->line,
+			   proxy_type_str(bind_conf->frontend),
+			   bind_conf->frontend->id);
+		cfgerr++;
+	}
 
 #ifdef SSL_CTRL_SET_TLSEXT_HOSTNAME
 # if defined(HAVE_SSL_CLIENT_HELLO_CB)
