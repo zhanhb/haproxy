@@ -8,6 +8,7 @@
 #include <haproxy/quic_tp.h>
 #include <haproxy/quic_trace.h>
 #include <haproxy/ssl_sock.h>
+#include <haproxy/stats.h>
 #include <haproxy/trace.h>
 
 DECLARE_POOL(pool_head_quic_ssl_sock_ctx, "quic_ssl_sock_ctx", sizeof(struct ssl_sock_ctx));
@@ -555,11 +556,17 @@ static int qc_ssl_provide_quic_data(struct ncbmbuf *ncbuf,
 	int ssl_err, state;
 	struct quic_conn *qc;
 	int ret = 0;
+	struct ssl_counters *counters = NULL;
+	struct ssl_counters *counters_px = NULL;
 
 	ssl_err = SSL_ERROR_NONE;
 	qc = ctx->qc;
 
 	TRACE_ENTER(QUIC_EV_CONN_SSLDATA, qc);
+
+	counters = EXTRA_COUNTERS_GET(qc->li->extra_counters, &ssl_stats_module);
+	counters_px = EXTRA_COUNTERS_GET(qc->li->bind_conf->frontend->extra_counters_fe,
+	                                 &ssl_stats_module);
 
 	if (SSL_provide_quic_data(ctx->ssl, level, data, len) != 1) {
 		TRACE_ERROR("SSL_provide_quic_data() error",
@@ -636,6 +643,7 @@ static int qc_ssl_provide_quic_data(struct ncbmbuf *ncbuf,
 #endif
 
 		TRACE_PROTO("SSL handshake OK", QUIC_EV_CONN_IO_CB, qc, &state);
+		ssl_sock_update_counters(ctx->ssl, counters, counters_px, 0);
 
 		/* Check the alpn could be negotiated */
 		if (!qc->app_ops) {
