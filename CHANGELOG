@@ -1,6 +1,62 @@
 ChangeLog :
 ===========
 
+2025/12/17 : 3.1.11
+    - Revert "BUG/MEDIUM: connections: permit to permanently remove an idle conn"
+    - BUG/MEDIUM: connection: do not reinsert a purgeable conn in idle list
+    - BUG/MEDIUM: connection/ssl: also fix the ssl_sock_io_cb() regarding idle list
+    - BUG/MINOR: config: Limit "tune.maxpollevents" parameter to 1000000
+    - BUG/MINOR: quic: close connection on CID alloc failure
+    - DOC: configuration: add missing ssllib_name_startswith()
+    - DOC: configuration: add missing openssl_version predicates
+    - BUG/MEDIUM: stick-tables: Always return the good stksess from stktable_set_entry
+    - BUG/MINOR: stick-tables: Fix return value for __stksess_kill()
+    - MINOR: h1: h1_release() should return if it destroyed the connection
+    - BUG/MEDIUM: h1: prevent a crash on HTTP/2 upgrade
+    - BUG/MEDIUM: mworker: signals inconsistencies during startup and reload
+    - BUG/MINOR: mworker: wrong signals during startup
+    - BUG/MINOR: ssl: remove dead code in ssl_sock_from_buf()
+    - MINOR: muxes: Support an optional ALPN string when defining mux protocols
+    - MINOR: config: Do proto detection for listeners before checks about ALPN
+    - BUG/MEDIUM: config: Use the mux protocol ALPN by default for listeners if forced
+    - DOC: http: document 413 response code
+    - BUG/MEDIUM: mworker/listener: ambiguous use of RX_F_INHERITED with shards
+    - BUG/MEDIUM: resolvers: Properly cache do-resolv resolution
+    - BUG/MINOR: resolvers: Restore round-robin selection on records in DNS answers
+    - BUG/MEDIUM: resolvers: Test for empty tree when getting a record from DNS answer
+    - BUG/MEDIUM: resolvers: Make resolution owns its hostname_dn value
+    - BUG/MEDIUM: resolvers: Accept to create resolution without hostname
+    - BUG/MEDIUM: resolvers: Wake resolver task up whne unlinking a stream requester
+    - MEDIUM: dns: bind the nameserver sockets to the initiating thread
+    - MEDIUM: resolvers: make the process_resolvers() task single-threaded
+    - BUG/MEDIUM: mux-quic: ensure Early-data header is set
+    - BUG/MINOR: mux-quic: ensure close-spread-time is properly applied
+    - BUG/MEDIUM: mux-quic: adjust wakeup behavior
+    - BUG/MEDIUM: h1-htx: Don't set HTX_FL_EOM flag on 1xx informational messages
+    - BUG/MINOR: http-ana: Reset analyse_exp date after 'wait-for-body' action
+    - BUG/MEDIUM: applet: Fix conditions to detect spinning loop with the new API
+    - BUG/MEDIUM: cli: State the cli have no more data to deliver if it yields
+    - BUG/MINOR: jwt: Missing "case" in switch statement
+    - BUG/MEDIUM: connection: fix "bc_settings_streams_limit" typo
+    - DOC: config: mention clearer that the cache's total-max-size is mandatory
+    - DOC: config: reorder the cache section's keywords
+    - MINOR: quic: Add useful debugging traces in qc_idle_timer_do_rearm()
+    - BUG/MINOR: ssl: Don't allow to set NULL sni
+    - BUG/MEDIUM: http-ana: Don't close server connection on read0 in TUNNEL mode
+    - DOC: config: Fix description of the spop mode
+    - DOC: config: Improve spop mode documentation
+    - BUG/MINOR: quic: do not set first the default QUIC curves
+    - BUG/MEDIUM: mux-h2: Reset MUX blocking flags when a send error is caught
+    - BUG/MEDIUM: resolvers: break an infinite loop in resolv_get_ip_from_response()
+    - BUG/MINOR: resolvers: ensure fair round robin iteration
+    - MINOR: ssl: change visibility of ssl_stats_module
+    - BUG/MINOR: quic: SSL counters not handled
+    - BUG/MINOR: cfgparse-listen: update err_code for fatal error on proxy directive
+    - MINOR: quic: adjust CID conn tree alloc in qc_new_conn()
+    - MINOR: quic: split CID alloc/generation function
+    - BUG/MEDIUM: quic: handle collision on CID generation
+    - BUG/MEDIUM: quic: Don't try to use hystart if not implemented
+
 2025/11/07 : 3.1.10
     - MINOR: ssl: diagnostic warning when both 'default-crt' and 'strict-sni' are used
     - BUG/MINOr: hlua: Fix receive from HTTP applet by properly accounting data
