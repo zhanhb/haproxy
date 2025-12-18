@@ -1,6 +1,42 @@
 ChangeLog :
 ===========
 
+2025/12/18 : 3.2.10
+    - BUG/MEDIUM: mworker/listener: ambiguous use of RX_F_INHERITED with shards
+    - BUG/MEDIUM: h1-htx: Don't set HTX_FL_EOM flag on 1xx informational messages
+    - BUG/MINOR: http-ana: Reset analyse_exp date after 'wait-for-body' action
+    - BUG/MEDIUM: applet: Fix conditions to detect spinning loop with the new API
+    - BUG/MEDIUM: cli: State the cli have no more data to deliver if it yields
+    - BUG/MINOR: acme: handle multiple auth with the same name
+    - BUG/MINOR: acme: prevent creating map entries with dns-01
+    - BUG/MINOR: acme: better challenge_ready processing
+    - BUG/MINOR: acme: warning ‘ctx’ may be used uninitialized
+    - BUG/MINOR: acme: fix ha_alert() call
+    - BUG/MINOR: jwt: Missing "case" in switch statement
+    - BUG/MEDIUM: connection: fix "bc_settings_streams_limit" typo
+    - DOC: config: mention clearer that the cache's total-max-size is mandatory
+    - DOC: config: reorder the cache section's keywords
+    - BUG/MINOR: quic/ssl: crash in ClientHello callback ssl traces
+    - MINOR: quic: Add useful debugging traces in qc_idle_timer_do_rearm()
+    - BUG/MINOR: ssl: Don't allow to set NULL sni
+    - BUG/MEDIUM: http-ana: Don't close server connection on read0 in TUNNEL mode
+    - DOC: config: Fix description of the spop mode
+    - DOC: config: Improve spop mode documentation
+    - MINOR: h2/trace: emit a trace of the received RST_STREAM type
+    - MINOR: hlua: emit a log instead of an alert for aborted actions due to unavailable yield
+    - BUG/MEDIUM: quic: support some ciphersuites and curves related options
+    - BUG/MINOR: cfgparse-listen: update err_code for fatal error on proxy directive
+    - MEDIUM: h1: Immediately try to read data for frontend
+    - MEDIUM: mux-h2: do not needlessly refrain from sending data early
+    - MINOR: mux-h2: extract the code to send preface+settings into its own function
+    - BUG/MINOR: mux-h2: send the preface along with the first request if needed
+    - MINOR: cfgdiag: adjust diag on servers
+    - BUG/MINOR: check: only try connection reuse for http-check rulesets
+    - MINOR: quic: adjust CID conn tree alloc in qc_new_conn()
+    - MINOR: quic: split CID alloc/generation function
+    - BUG/MEDIUM: quic: handle collision on CID generation
+    - BUG/MEDIUM: quic: Don't try to use hystart if not implemented
+
 2025/11/21 : 3.2.9
     - MINOR: ssl/sample: expose ssl_*c_curve for AWS-LC
     - Revert "BUG/MEDIUM: connections: permit to permanently remove an idle conn"
