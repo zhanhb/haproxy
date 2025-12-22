@@ -1,6 +1,9 @@
 ChangeLog :
 ===========
 
+2025/12/22 : 3.1.12
+    - Revert "BUG/MEDIUM: cli: State the cli have no more data to deliver if it yields"
+
 2025/12/17 : 3.1.11
     - Revert "BUG/MEDIUM: connections: permit to permanently remove an idle conn"
     - BUG/MEDIUM: connection: do not reinsert a purgeable conn in idle list
