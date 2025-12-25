@@ -1,6 +1,9 @@
 ChangeLog :
 ===========
 
+2025/12/25 : 2.8.18
+    - Revert "BUG/MEDIUM: mux-h2: make sure not to move a dead connection to idle"
+
 2025/12/19 : 2.8.17
     - BUG/MINOr: hlua: Fix receive from HTTP applet by properly accounting data
     - BUG/MEDIUM: ssl: take care of second client hello
