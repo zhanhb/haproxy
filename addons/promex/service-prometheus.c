@@ -82,6 +82,7 @@ struct promex_ctx {
 	unsigned field_num;        /* current field number (ST_I_PX_* etc) */
 	unsigned mod_field_num;    /* first field number of the current module (ST_I_PX_* etc) */
 	int obj_state;             /* current state among PROMEX_{FRONT|BACK|SRV|LI}_STATE_* */
+	struct watcher srv_watch;  /* watcher to automatically update next pointer */
 	struct list modules;       /* list of promex modules to export */
 	struct eb_root filters;    /* list of filters to apply on metrics name */
 };
@@ -1367,8 +1368,10 @@ static int promex_dump_srv_metrics(struct appctx *appctx, struct htx *htx)
 			if ((px->flags & PR_FL_DISABLED) || px->uuid <= 0 || !(px->cap & PR_CAP_BE))
 				goto next_px;
 
-			if (!sv)
+			if (!sv) {
+				watcher_attach(&ctx->srv_watch, px->srv);
 				sv = px->srv;
+			}
 
 			while (sv) {
 				labels[lb_idx].name  = ist("server");
@@ -1488,10 +1491,11 @@ static int promex_dump_srv_metrics(struct appctx *appctx, struct htx *htx)
 						    &val, labels, &out, max))
 					goto full;
 			  next_sv:
-				sv = sv->next;
+				sv = watcher_next(&ctx->srv_watch, sv->next);
 			}
 
 		  next_px:
+			watcher_detach(&ctx->srv_watch);
 			px = px->next;
 		}
 		ctx->flags |= PROMEX_FL_METRIC_HDR;
@@ -1542,8 +1546,10 @@ static int promex_dump_srv_metrics(struct appctx *appctx, struct htx *htx)
 				if ((px->flags & PR_FL_DISABLED) || px->uuid <= 0 || !(px->cap & PR_CAP_BE))
 					goto next_px2;
 
-				if (!sv)
+				if (!sv) {
+					watcher_attach(&ctx->srv_watch, px->srv);
 					sv = px->srv;
+				}
 
 				while (sv) {
 					labels[lb_idx].name  = ist("server");
@@ -1568,10 +1574,11 @@ static int promex_dump_srv_metrics(struct appctx *appctx, struct htx *htx)
 						goto full;
 
 				  next_sv2:
-					sv = sv->next;
+					sv = watcher_next(&ctx->srv_watch, sv->next);
 				}
 
 			  next_px2:
+				watcher_detach(&ctx->srv_watch);
 				px = px->next;
 			}
 			ctx->flags |= PROMEX_FL_METRIC_HDR;
@@ -1591,11 +1598,6 @@ static int promex_dump_srv_metrics(struct appctx *appctx, struct htx *htx)
 			return -1; /* Unexpected and unrecoverable error */
 		channel_add_input(chn, out.len);
 	}
-
-	/* Decrement server refcount if it was saved through ctx.p[1]. */
-	srv_drop(ctx->p[1]);
-	if (sv)
-		srv_take(sv);
 
 	/* Save pointers (0=current proxy, 1=current server, 2=current stats module) of the current context */
 	ctx->p[0] = px;
@@ -2129,6 +2131,7 @@ static int promex_appctx_init(struct appctx *appctx)
 	LIST_INIT(&ctx->modules);
 	ctx->filters = EB_ROOT;
 	appctx->st0 = PROMEX_ST_INIT;
+	watcher_init(&ctx->srv_watch, &ctx->p[1], offsetof(struct server, watcher_list));
 	return 0;
 }
 
@@ -2142,10 +2145,8 @@ static void promex_appctx_release(struct appctx *appctx)
 	struct promex_metric_filter *flt;
         struct eb32_node *node, *next;
 
-	if (appctx->st1 == PROMEX_DUMPER_SRV) {
-		struct server *srv = objt_server(ctx->p[1]);
-		srv_drop(srv);
-	}
+	if (appctx->st1 == PROMEX_DUMPER_SRV)
+		watcher_detach(&ctx->srv_watch);
 
 	list_for_each_entry_safe(ref, back, &ctx->modules, list) {
 		LIST_DELETE(&ref->list);
