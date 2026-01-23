@@ -271,6 +271,7 @@ static const char *hlua_tostring_safe(lua_State *L, int index)
 			break;
 		default:
 			/* error was caught */
+			lua_pop(L, 1); // consume the lua object pushed on the stack since we ignore it
 			return NULL;
 	}
 	return str;
@@ -321,6 +322,7 @@ static const char *hlua_pushvfstring_safe(lua_State *L, const char *fmt, va_list
 			break;
 		default:
 			/* error was caught */
+			lua_pop(L, 1); // consume the lua object pushed on the stack since we ignore it
 			dst = NULL;
 	}
 	va_end(cpy_argp);
@@ -902,6 +904,7 @@ const char *hlua_traceback(lua_State *L, const char* sep)
 			case LUA_OK:
 				break;
 			default:
+				lua_pop(L, 1); // consume the lua object pushed on the stack since we ignore it
 				goto end; // abort
 		}
 
@@ -1000,6 +1003,7 @@ static int hlua_pusherror(lua_State *L, const char *fmt, ...)
 		case LUA_OK:
 			break;
 		default:
+			lua_pop(L, 1); // consume the lua object pushed on the stack since we ignore it
 			ret = 0;
 	}
 
@@ -10346,6 +10350,7 @@ static int hlua_new_event_sub_safe(lua_State *L, struct event_hdl_sub *sub)
 			return 1;
 		default:
 			/* error was caught */
+			lua_pop(L, 1); // consume the lua object pushed on the stack since we ignore it
 			return 0;
 	}
 }
