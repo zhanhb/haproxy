@@ -313,6 +313,8 @@ struct global_ssl {
 		int disable;
 	} ocsp_update;
 #endif
+
+	unsigned int certificate_compression:1; /* allow to explicitely disable certificate compression */
 };
 
 /* The order here matters for picking a default context,
