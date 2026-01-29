@@ -1,6 +1,58 @@
 ChangeLog :
 ===========
 
+2026/01/29 : 3.2.11
+    - BUG/MEDIUM: http-ana: Properly detect client abort when forwarding response (v2)
+    - BUG/MEDIUM: stconn: Don't report abort from SC if read0 was already received
+    - BUG/MINOR: sock-inet: ignore conntrack for transparent sockets on Linux
+    - MINOR: ssl: Add a function to hash SNIs
+    - MINOR: ssl: Store hash of the SNI for cached TLS sessions
+    - MINOR: ssl: Compare hashes instead of SNIs when a session is cached
+    - MINOR: connection/ssl: Store the SNI hash value in the connection itself
+    - MEDIUM: tcpcheck/backend: Get the connection SNI before initializing SSL ctx
+    - BUG/MEDIUM: ssl: Don't reuse TLS session if the connection's SNI differs
+    - MEDIUM: ssl/server: No longer store the SNI of cached TLS sessions
+    - MINOR: connections: Add a new CO_FL_SSL_NO_CACHED_INFO flag
+    - BUG/MEDIUM: ssl: Don't resume session for check connections
+    - BUG/MINOR: backend: fix the conn_retries check for TFO
+    - BUG/MINOR: backend: inspect request not response buffer to check for TFO
+    - DOC: config: fix the length attribute name for stick tables of type binary / string
+    - BUG/MEDIUM: mworker: can't use signals after a failed reload
+    - BUILD: ssl: strchr definition changed in C23
+    - BUILD: tools: memchr definition changed in C23
+    - BUG/MINOR: cfgparse: wrong section name upon error
+    - BUILD: sockpair: fix build issue on macOS related to variable-length arrays
+    - BUG/MINOR: cli/stick-tables: argument to "show table" is optional
+    - REGTESTS: ssl: Fix reg-tests curve check
+    - MINOR: cfgparse: remove duplicate "force-persist" in common kw list
+    - BUG/MINOR: hlua_fcn: fix broken yield for Patref:add_bulk()
+    - BUG/MINOR: hlua_fcn: ensure Patref:add_bulk() is given a table object before using it
+    - BUG/MEDIUM: quic: fix ACK ECN frame parsing
+    - BUG/MINOR: http_act: fix deinit performed on uninitialized lf_expr in release_http_map()
+    - BUG/MINOR: proxy: free persist_rules
+    - BUG/MINOR: cfgparse: fix "default" prefix parsing
+    - BUG/MEDIUM: promex: server iteration may rely on stale server
+    - BUG/MEDIUM: log: parsing log-forward options may result in segfault
+    - BUG/MEDIUM: ssl: fix error path on generate-certificates
+    - BUG/MEDIUM: ssl: fix generate-certificates option when SNI greater than 64bytes
+    - BUG/MEDIUM: mux-quic: prevent BUG_ON() on aborted uni stream close
+    - REGTESTS: ssl: fix generate-certificates w/ LibreSSL
+    - BUG/MINOR: proxy: fix deinit crash on defaults with duplicate name
+    - BUG/MEDIUM: hlua: fix invalid lua_pcall() usage in hlua_traceback()
+    - BUG/MINOR: hlua: consume error object if ignored after a failing lua_pcall()
+    - BUG/MINOR: promex: Detach promex from the server on error dump its metrics dump
+    - BUG/MEDIUM: mux-h1: Skip UNUSED htx block when formating the start line
+    - MINOR: ssl: allow to disable certificate compression
+    - BUG/MINOR: ssl: fix error message of tune.ssl.certificate-compression
+    - CLEANUP: mworker/cli: remove useless variable
+    - BUG/MINOR: mworker/cli: 'show proc' is limited by buffer size
+    - BUG/MINOR: mworker/cli: fix show proc pagination using reload counter
+    - BUG/MEDIUM: mux-h2: synchronize all conditions to create a new backend stream
+    - MINOR: hlua: Add support for lua 5.5
+    - DOC: reg-tests: update VTest upstream link in the starting guide
+    - BUG/MINOR: config: check capture pool creations for failures
+    - BUG/MEDIUM: debug: only dump Lua state when panicking
+
 2025/12/18 : 3.2.10
     - BUG/MEDIUM: mworker/listener: ambiguous use of RX_F_INHERITED with shards
     - BUG/MEDIUM: h1-htx: Don't set HTX_FL_EOM flag on 1xx informational messages
