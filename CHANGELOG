@@ -1,6 +1,52 @@
 ChangeLog :
 ===========
 
+2026/01/29 : 3.0.15
+    - BUG/MEDIUM: http-ana: Properly detect client abort when forwarding response (v2)
+    - BUG/MEDIUM: stconn: Don't report abort from SC if read0 was already received
+    - BUG/MEDIUM: resolvers: Properly cache do-resolv resolution
+    - BUG/MINOR: resolvers: Restore round-robin selection on records in DNS answers
+    - BUG/MEDIUM: resolvers: Test for empty tree when getting a record from DNS answer
+    - BUG/MEDIUM: resolvers: Make resolution owns its hostname_dn value
+    - BUG/MEDIUM: resolvers: Accept to create resolution without hostname
+    - BUG/MEDIUM: resolvers: Wake resolver task up whne unlinking a stream requester
+    - MINOR: muxes: Support an optional ALPN string when defining mux protocols
+    - MINOR: config: Do proto detection for listeners before checks about ALPN
+    - BUG/MEDIUM: config: Use the mux protocol ALPN by default for listeners if forced
+    - BUG/MEDIUM: resolvers: break an infinite loop in resolv_get_ip_from_response()
+    - BUG/MINOR: resolvers: ensure fair round robin iteration
+    - MEDIUM: h1: Immediately try to read data for frontend
+    - BUG/MINOR: backend: fix the conn_retries check for TFO
+    - BUG/MINOR: backend: inspect request not response buffer to check for TFO
+    - BUILD: ssl: strchr definition changed in C23
+    - BUG/MINOR: cfgparse: wrong section name upon error
+    - BUG/MINOR: cli/stick-tables: argument to "show table" is optional
+    - REGTESTS: ssl: Fix reg-tests curve check
+    - MINOR: cfgparse: remove duplicate "force-persist" in common kw list
+    - BUG/MEDIUM: quic: fix ACK ECN frame parsing
+    - BUG/MINOR: http_act: fix deinit performed on uninitialized lf_expr in release_http_map()
+    - BUG/MINOR: proxy: free persist_rules
+    - BUG/MINOR: cfgparse: fix "default" prefix parsing
+    - BUG/MEDIUM: promex: server iteration may rely on stale server
+    - BUG/MEDIUM: ssl: fix error path on generate-certificates
+    - BUG/MEDIUM: ssl: fix generate-certificates option when SNI greater than 64bytes
+    - REGTESTS: ssl: fix generate-certificates w/ LibreSSL
+    - BUG/MEDIUM: hlua: fix invalid lua_pcall() usage in hlua_traceback()
+    - BUG/MINOR: hlua: consume error object if ignored after a failing lua_pcall()
+    - BUG/MINOR: promex: Detach promex from the server on error dump its metrics dump
+    - BUG/MEDIUM: mux-h1: Skip UNUSED htx block when formating the start line
+    - MINOR: ssl: allow to disable certificate compression
+    - BUG/MINOR: ssl: fix error message of tune.ssl.certificate-compression
+    - CLEANUP: mworker/cli: remove useless variable
+    - MINOR: mworker/cli: add 'debug' to 'show proc'
+    - MINOR: mworker/cli: remove comment line for program when useless
+    - MINOR: mworker/cli: 'show proc debug' for old workers
+    - BUG/MINOR: mworker/cli: 'show proc' is limited by buffer size
+    - BUG/MINOR: mworker/cli: fix show proc pagination using reload counter
+    - DOC: reg-tests: update VTest upstream link in the starting guide
+    - BUG/MINOR: config: check capture pool creations for failures
+    - BUG/MEDIUM: debug: only dump Lua state when panicking
+
 2025/12/22 : 3.0.14
     - Revert "BUG/MEDIUM: cli: State the cli have no more data to deliver if it yields"
 
