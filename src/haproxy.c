@@ -2340,7 +2340,8 @@ static void init(int argc, char **argv)
 	ha_random_boot(argv); // the argv pointer brings some kernel-fed entropy
 
 	/* now we know the buffer size, we can initialize the channels and buffers */
-	init_buffer();
+	if (!init_buffer())
+		exit(1); // error already reported
 
 	list_for_each_entry(pcf, &post_check_list, list) {
 		err_code |= pcf->fct();
