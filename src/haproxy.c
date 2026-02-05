@@ -1434,7 +1434,7 @@ static void init_early(int argc, char **argv)
 	len = strlen(progname);
 	progname = strdup(progname);
 	if (!progname) {
-		ha_alert("Cannot allocate memory for log_tag.\n");
+		ha_alert("Cannot allocate memory for progname.\n");
 		exit(EXIT_FAILURE);
 	}
 
