@@ -794,7 +794,8 @@ void pool_put_to_cache(struct pool_head *pool, void *ptr, const void *caller)
 	if (unlikely(pool_cache_bytes > global.tune.pool_cache_size * 3 / 4)) {
 		uint64_t mem_wait_start = 0;
 
-		if (unlikely(th_ctx->flags & TH_FL_TASK_PROFILING))
+		if (unlikely((th_ctx->flags & (TH_FL_TASK_PROFILING|TH_FL_TASK_PROFILING_M)) ==
+		             (TH_FL_TASK_PROFILING|TH_FL_TASK_PROFILING_M)))
 			mem_wait_start = now_mono_time();
 
 		if (ph->count >= 16 + pool_cache_count / 8 + CONFIG_HAP_POOL_CLUSTER_SIZE)
@@ -957,7 +958,8 @@ void pool_gc(struct pool_head *pool_ctx)
 	uint64_t mem_wait_start = 0;
 	int isolated = thread_isolated();
 
-	if (unlikely(th_ctx->flags & TH_FL_TASK_PROFILING))
+	if (unlikely((th_ctx->flags & (TH_FL_TASK_PROFILING|TH_FL_TASK_PROFILING_M)) ==
+	             (TH_FL_TASK_PROFILING|TH_FL_TASK_PROFILING_M)))
 		mem_wait_start = now_mono_time();
 
 	if (!isolated)
@@ -1019,7 +1021,8 @@ void *__pool_alloc(struct pool_head *pool, unsigned int flags)
 		/* count allocation time only for cache misses */
 		uint64_t mem_wait_start = 0;
 
-		if (unlikely(th_ctx->flags & TH_FL_TASK_PROFILING))
+		if (unlikely((th_ctx->flags & (TH_FL_TASK_PROFILING|TH_FL_TASK_PROFILING_M)) ==
+	                     (TH_FL_TASK_PROFILING|TH_FL_TASK_PROFILING_M)))
 			mem_wait_start = now_mono_time();
 
 		p = pool_alloc_nocache(pool, caller);
@@ -1097,7 +1100,8 @@ void __pool_free(struct pool_head *pool, void *ptr)
 		     global.tune.pool_cache_size < pool->size)) {
 		uint64_t mem_wait_start = 0;
 
-		if (unlikely(th_ctx->flags & TH_FL_TASK_PROFILING))
+		if (unlikely((th_ctx->flags & (TH_FL_TASK_PROFILING|TH_FL_TASK_PROFILING_M)) ==
+	                     (TH_FL_TASK_PROFILING|TH_FL_TASK_PROFILING_M)))
 			mem_wait_start = now_mono_time();
 
 		pool_free_nocache(pool, ptr);
