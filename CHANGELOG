@@ -1,6 +1,26 @@
 ChangeLog :
 ===========
 
+2026/02/12 : 3.0.16
+    - MINOR: ssl: Add a function to hash SNIs
+    - MINOR: ssl: Store hash of the SNI for cached TLS sessions
+    - MINOR: ssl: Compare hashes instead of SNIs when a session is cached
+    - MINOR: connection/ssl: Store the SNI hash value in the connection itself
+    - MEDIUM: tcpcheck/backend: Get the connection SNI before initializing SSL ctx
+    - BUG/MEDIUM: ssl: Don't reuse TLS session if the connection's SNI differs
+    - MEDIUM: ssl/server: No longer store the SNI of cached TLS sessions
+    - MINOR: connections: Add a new CO_FL_SSL_NO_CACHED_INFO flag
+    - BUG/MEDIUM: ssl: Don't resume session for check connections
+    - BUG/MINOR: sock-inet: ignore conntrack for transparent sockets on Linux
+    - BUG/MEDIUM: mux-h2: synchronize all conditions to create a new backend stream
+    - BUG/MAJOR: applet: Don't call I/O handler if the applet was shut
+    - BUG/MEDIUM: applet: Fix test on shut flags for legacy applets
+    - BUG/MEDIUM: threads: Atomically set TH_FL_SLEEPING and clr FL_NOTIFIED
+    - CLEANUP: haproxy: fix bad line wrapping in run_poll_loop()
+    - BUG/MEDIUM: lb-chash: always properly initialize lb_nodes with dynamic servers
+    - DOC: config: mention the limitation on server id range for consistent hash
+    - BUG/MAJOR: quic: reject invalid token
+
 2026/01/29 : 3.0.15
     - BUG/MEDIUM: http-ana: Properly detect client abort when forwarding response (v2)
     - BUG/MEDIUM: stconn: Don't report abort from SC if read0 was already received
