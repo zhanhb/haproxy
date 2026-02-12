@@ -1,6 +1,29 @@
 ChangeLog :
 ===========
 
+2026/02/12 : 3.3.3
+    - MEDIUM: h1: strictly verify quoting in chunk extensions
+    - DOC: internals: cleanup few typos in master-worker documentation
+    - BUG/MEDIUM: applet: Fix test on shut flags for legacy applets
+    - BUG/MEDIUM: threads: Atomically set TH_FL_SLEEPING and clr FL_NOTIFIED
+    - CLEANUP: haproxy: fix bad line wrapping in run_poll_loop()
+    - BUG/MINOR: cpu-topo: count cores not cpus to distinguish core types
+    - CLEANUP: lb-chash: free lb_nodes from chash's deinit(), not global
+    - BUG/MEDIUM: lb-chash: always properly initialize lb_nodes with dynamic servers
+    - DOC: config: mention the limitation on server id range for consistent hash
+    - MEDIUM: backend: make "balance random" consider req rate when loads are equal
+    - BUG/MINOR: config: Fix setting of alt_proto
+    - BUG/MINOR: startup: fix allocation error message of progname string
+    - BUG/MINOR: startup: handle a possible strdup() failure
+    - MINOR: activity: support setting/clearing lock/memory watching for task profiling
+    - MEDIUM: activity: apply and use new finegrained task profiling settings
+    - MINOR: activity: allow to switch per-task lock/memory profiling at runtime
+    - BUG/MINOR: ssl: SSL_CERT_DIR environment variable doesn't affect haproxy
+    - BUG/MINOR: quic: ensure handshake speed up is only run once per conn
+    - BUG/MINOR: backend: fix access on shared counters array
+    - BUG/MAJOR: quic: reject invalid token
+    - BUG/MAJOR: quic: fix parsing frame type
+
 2026/01/29 : 3.3.2
     - MINOR: mux-h2: add missing glitch count for non-decodable H2 headers
     - MINOR: mux-h2: perform a graceful close at 75% glitches threshold
