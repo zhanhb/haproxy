@@ -1,6 +1,23 @@
 ChangeLog :
 ===========
 
+2026/02/12 : 3.2.12
+    - MINOR: rawsock: introduce CO_RFL_TRY_HARDER to detect closures on complete reads
+    - MEDIUM: ssl: don't always process pending handshakes on closed connections
+    - BUG/MAJOR: applet: Don't call I/O handler if the applet was shut
+    - BUG/MEDIUM: applet: Fix test on shut flags for legacy applets
+    - DOC: internals: cleanup few typos in master-worker documentation
+    - BUG/MEDIUM: threads: Atomically set TH_FL_SLEEPING and clr FL_NOTIFIED
+    - CLEANUP: haproxy: fix bad line wrapping in run_poll_loop()
+    - BUG/MINOR: cpu-topo: count cores not cpus to distinguish core types
+    - BUG/MEDIUM: lb-chash: always properly initialize lb_nodes with dynamic servers
+    - DOC: config: mention the limitation on server id range for consistent hash
+    - BUG/MINOR: config: Fix setting of alt_proto
+    - BUG/MINOR: startup: fix allocation error message of progname string
+    - BUG/MINOR: startup: handle a possible strdup() failure
+    - BUG/MAJOR: quic: reject invalid token
+    - BUG/MAJOR: quic: fix parsing frame type
+
 2026/01/29 : 3.2.11
     - BUG/MEDIUM: http-ana: Properly detect client abort when forwarding response (v2)
     - BUG/MEDIUM: stconn: Don't report abort from SC if read0 was already received
