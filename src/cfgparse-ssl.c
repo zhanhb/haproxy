@@ -2369,8 +2369,11 @@ static int post_section_frontend_crt_init()
 		entry->ssl_conf = crtlist_dup_ssl_conf(n->ssl_conf);
 
 		err_code |= crtlist_load_crt(n->ckch_conf->crt, n->ckch_conf, newlist, entry, n->filename, n->linenum, &err);
-		if (err_code & ERR_CODE)
+		if (err_code & ERR_CODE) {
+			ha_alert("parsing [%s:%d] : %s", n->filename, n->linenum, err);
+			ha_free(&err);
 			goto error;
+		}
 
 		LIST_DELETE(&n->list);
 		/* n->ssl_conf is reused so we don't free them here */
@@ -2382,7 +2385,8 @@ static int post_section_frontend_crt_init()
 	if (newlist) {
 
 		if (ebst_insert(&crtlists_tree, &newlist->node) != &newlist->node) {
-			memprintf(&err, "Couldn't create the crt-list '%s', this name is already used by another crt-list!", crtlist_name);
+			memprintf(&err, "parsing [%s:%d] : Couldn't create the crt-list '%s', this name is already used by another crt-list!",
+			          curproxy->conf.file, curproxy->conf.line, crtlist_name);
 			err_code |= ERR_ALERT | ERR_FATAL;
 			goto error;
 		}
@@ -2402,7 +2406,7 @@ static int post_section_frontend_crt_init()
 error:
 
 	if (err)
-		ha_alert("%s.\n", err);
+		ha_alert("%s", err);
 	free(err);
 
 	list_for_each_entry_safe(n, r, &cur_crtlist, list) {
