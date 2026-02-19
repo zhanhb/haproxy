@@ -1,0 +1,15 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -303,7 +303,11 @@
+ elseif(CMAKE_C_COMPILER_ID MATCHES "GNU")
+   set(GCC 1)
+ endif()
+-
++if(APPLE)
++    set(CMAKE_INSTALL_RPATH "@executable_path/../${CMAKE_INSTALL_LIBDIR}")
++else()
++    set(CMAKE_INSTALL_RPATH "$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
++endif()
+ install(DIRECTORY include/openssl
+         DESTINATION ${AWSLC_INSTALL_INCLUDEDIR}
+         COMPONENT Development
