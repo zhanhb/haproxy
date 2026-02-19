@@ -1,0 +1,15 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -218,7 +218,11 @@
+   set(CMAKE_INSTALL_INCLUDEDIR "include")
+   set(CMAKE_INSTALL_BINDIR "bin")
+ endif()
+-
++if(APPLE)
++    set(CMAKE_INSTALL_RPATH "@executable_path/../${CMAKE_INSTALL_LIBDIR}")
++else()
++    set(CMAKE_INSTALL_RPATH "$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
++endif()
+ install(DIRECTORY include/openssl
+         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+         COMPONENT Development
