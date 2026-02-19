@@ -151,13 +151,14 @@ build_aws_lc () {
     if [ "$(cat ${BUILDSSL_DESTDIR}/.aws_lc-version)" != "${AWS_LC_VERSION}" ]; then
         mkdir -p "${BUILDSSL_TMPDIR}/aws-lc-${AWS_LC_VERSION}/"
         tar zxf "${BUILDSSL_TMPDIR}/aws-lc-${AWS_LC_VERSION}.tar.gz" -C "${BUILDSSL_TMPDIR}/aws-lc-${AWS_LC_VERSION}/" --strip-components=1
+        patch -f "${BUILDSSL_TMPDIR}/aws-lc-${AWS_LC_VERSION}/CMakeLists.txt" "${0%/*}/awslc-rpath.diff"
         (
            cd "${BUILDSSL_TMPDIR}/aws-lc-${AWS_LC_VERSION}/"
            mkdir -p build
            cd build
            cmake -version
            cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_SHARED_LIBS=1 -DDISABLE_GO=1 -DDISABLE_PERL=1 \
-                 -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON -DCMAKE_INSTALL_RPATH=${BUILDSSL_DESTDIR}/lib \
+                 -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON \
                  -DBUILD_TESTING=0 -DCMAKE_INSTALL_PREFIX=${BUILDSSL_DESTDIR} ..
            make -j$(nproc)
            make install
