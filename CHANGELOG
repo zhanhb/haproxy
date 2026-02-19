@@ -1,6 +1,40 @@
 ChangeLog :
 ===========
 
+2026/02/19 : 3.3.4
+    - DOC: internals: addd mworker V3 internals
+    - DOC: proxy-proto: underline the packed attribute for struct pp2_tlv_ssl
+    - BUG/MINOR: deviceatlas: add missing return on error in config parsers
+    - BUG/MINOR: deviceatlas: add NULL checks on strdup() results in config parsers
+    - BUG/MEDIUM: deviceatlas: fix resource leaks on init error paths
+    - BUG/MINOR: deviceatlas: fix off-by-one in da_haproxy_conv()
+    - BUG/MINOR: deviceatlas: fix cookie vlen using wrong length after extraction
+    - BUG/MINOR: deviceatlas: fix double-checked locking race in checkinst
+    - BUG/MINOR: deviceatlas: fix resource leak on hot-reload compile failure
+    - BUG/MINOR: deviceatlas: fix deinit to only finalize when initialized
+    - BUG/MINOR: deviceatlas: set cache_size on hot-reloaded atlas instance
+    - BUG/MINOR: ssl: lack crtlist_dup_ssl_conf() declaration
+    - BUG/MINOR: ssl: double-free on error path w/ ssl-f-use parser
+    - BUG/MINOR: ssl: fix leak in ssl-f-use parser upon error
+    - BUG/MINOR: ssl: clarify ssl-f-use errors in post-section parsing
+    - BUG/MINOR: ssl: error with ssl-f-use when no "crt"
+    - BUG/MAJOR: Revert "MEDIUM: mux-quic: add BUG_ON if sending on locally closed QCS"
+    - BUG/MEDIUM: h3: reject frontend CONNECT as currently not implemented
+    - BUG/MEDIUM: mux-h2/quic: Stop sending via fast-forward if stream is closed
+    - BUG/MEDIUM: mux-h1: Stop sending vi fast-forward for unexpected states
+    - BUG/MEDIUM: applet: Fix test on shut flags for legacy applets (v2)
+    - DEV: term-events: Fix hanshake events decoding
+    - BUG/MINOR: flt-trace: Properly compute length of the first DATA block
+    - CLEANUP: compression: Remove unused static buffers
+    - BUG/MINOR: http-ana: Stop to wait for body on client error/abort
+    - MINOR: stconn: Add missing SC_FL_NO_FASTFWD flag in sc_show_flags
+    - CI: vtest: move the vtest2 URL to vinyl-cache.org
+    - CI: github: disable windows.yml by default on unofficials repo
+    - BUG/MEDIUM: ssl: SSL backend sessions used after free
+    - CLEANUP: mux-h1: Remove unneeded null check
+    - BUG/MINOR: acme: fix X509_NAME leak when X509_set_issuer_name() fails
+    - BUG/MINOR: backend: check delay MUX before conn_prepare()
+
 2026/02/12 : 3.3.3
     - MEDIUM: h1: strictly verify quoting in chunk extensions
     - DOC: internals: cleanup few typos in master-worker documentation
