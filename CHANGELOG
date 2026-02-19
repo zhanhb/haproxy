@@ -1,6 +1,29 @@
 ChangeLog :
 ===========
 
+2026/02/19 : 3.1.15
+    - DOC: internals: addd mworker V3 internals
+    - DOC: proxy-proto: underline the packed attribute for struct pp2_tlv_ssl
+    - BUG/MINOR: deviceatlas: add missing return on error in config parsers
+    - BUG/MINOR: deviceatlas: add NULL checks on strdup() results in config parsers
+    - BUG/MEDIUM: deviceatlas: fix resource leaks on init error paths
+    - BUG/MINOR: deviceatlas: fix off-by-one in da_haproxy_conv()
+    - BUG/MINOR: deviceatlas: fix cookie vlen using wrong length after extraction
+    - BUG/MINOR: deviceatlas: fix double-checked locking race in checkinst
+    - BUG/MINOR: deviceatlas: fix resource leak on hot-reload compile failure
+    - BUG/MINOR: deviceatlas: fix deinit to only finalize when initialized
+    - BUG/MINOR: deviceatlas: set cache_size on hot-reloaded atlas instance
+    - BUG/MAJOR: Revert "MEDIUM: mux-quic: add BUG_ON if sending on locally closed QCS"
+    - BUG/MEDIUM: h3: reject frontend CONNECT as currently not implemented
+    - BUG/MEDIUM: mux-h2/quic: Stop sending via fast-forward if stream is closed
+    - BUG/MEDIUM: mux-h1: Stop sending vi fast-forward for unexpected states
+    - BUG/MEDIUM: applet: Fix test on shut flags for legacy applets (v2)
+    - BUG/MINOR: flt-trace: Properly compute length of the first DATA block
+    - BUG/MINOR: http-ana: Stop to wait for body on client error/abort
+    - MINOR: stconn: Add missing SC_FL_NO_FASTFWD flag in sc_show_flags
+    - CI: vtest: move the vtest2 URL to vinyl-cache.org
+    - CI: github: disable windows.yml by default on unofficials repo
+
 2026/02/12 : 3.1.14
     - BUG/MAJOR: applet: Don't call I/O handler if the applet was shut
     - BUG/MEDIUM: applet: Fix test on shut flags for legacy applets
