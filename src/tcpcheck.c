@@ -3116,7 +3116,7 @@ struct tcpcheck_rule *parse_tcpcheck_expect(char **args, int cur_arg, struct pro
 		}
 		else if (strcmp(args[cur_arg], "string") == 0 || strcmp(args[cur_arg], "rstring") == 0) {
 			if (type != TCPCHK_EXPECT_UNDEF) {
-				memprintf(errmsg, "only on pattern expected");
+				memprintf(errmsg, "only one pattern expected");
 				goto error;
 			}
 			if (proto != TCPCHK_RULES_HTTP_CHK)
@@ -3135,7 +3135,7 @@ struct tcpcheck_rule *parse_tcpcheck_expect(char **args, int cur_arg, struct pro
 			if (proto == TCPCHK_RULES_HTTP_CHK)
 				goto bad_http_kw;
 			if (type != TCPCHK_EXPECT_UNDEF) {
-				memprintf(errmsg, "only on pattern expected");
+				memprintf(errmsg, "only one pattern expected");
 				goto error;
 			}
 			type = ((*(args[cur_arg]) == 'b') ?  TCPCHK_EXPECT_BINARY : TCPCHK_EXPECT_BINARY_REGEX);
@@ -3149,7 +3149,7 @@ struct tcpcheck_rule *parse_tcpcheck_expect(char **args, int cur_arg, struct pro
 		}
 		else if (strcmp(args[cur_arg], "string-lf") == 0 || strcmp(args[cur_arg], "binary-lf") == 0) {
 			if (type != TCPCHK_EXPECT_UNDEF) {
-				memprintf(errmsg, "only on pattern expected");
+				memprintf(errmsg, "only one pattern expected");
 				goto error;
 			}
 			if (proto != TCPCHK_RULES_HTTP_CHK)
@@ -3171,7 +3171,7 @@ struct tcpcheck_rule *parse_tcpcheck_expect(char **args, int cur_arg, struct pro
 			if (proto != TCPCHK_RULES_HTTP_CHK)
 				goto bad_tcp_kw;
 			if (type != TCPCHK_EXPECT_UNDEF) {
-				memprintf(errmsg, "only on pattern expected");
+				memprintf(errmsg, "only one pattern expected");
 				goto error;
 			}
 			type = ((*(args[cur_arg]) == 's') ? TCPCHK_EXPECT_HTTP_STATUS : TCPCHK_EXPECT_HTTP_STATUS_REGEX);
@@ -3189,7 +3189,7 @@ struct tcpcheck_rule *parse_tcpcheck_expect(char **args, int cur_arg, struct pro
 				goto error;
 			}
 			if (type != TCPCHK_EXPECT_UNDEF) {
-				memprintf(errmsg, "only on pattern expected");
+				memprintf(errmsg, "only one pattern expected");
 				goto error;
 			}
 			type = TCPCHK_EXPECT_CUSTOM;
@@ -3200,7 +3200,7 @@ struct tcpcheck_rule *parse_tcpcheck_expect(char **args, int cur_arg, struct pro
 			if (proto != TCPCHK_RULES_HTTP_CHK)
 				goto bad_tcp_kw;
 			if (type != TCPCHK_EXPECT_UNDEF) {
-				memprintf(errmsg, "only on pattern expected");
+				memprintf(errmsg, "only one pattern expected");
 				goto error;
 			}
 			type = TCPCHK_EXPECT_HTTP_HEADER;
