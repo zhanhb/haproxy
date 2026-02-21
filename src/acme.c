@@ -1305,7 +1305,6 @@ int acme_res_chkorder(struct task *task, struct acme_ctx *ctx, char **errmsg)
 		goto error;
 	};
 
-out:
 	ret = 0;
 
 error:
@@ -1358,11 +1357,11 @@ int acme_req_finalize(struct task *task, struct acme_ctx *ctx, char **errmsg)
 	if (acme_http_req(task, ctx, ctx->finalize, HTTP_METH_POST, hdrs, ist2(req_out->area, req_out->data)))
 		goto error;
 
-
 	ret = 0;
+	goto out;
 error:
 	memprintf(errmsg, "couldn't request the finalize URL");
-
+out:
 	free_trash_chunk(req_in);
 	free_trash_chunk(req_out);
 	free_trash_chunk(csr);
@@ -1414,7 +1413,7 @@ int acme_res_finalize(struct task *task, struct acme_ctx *ctx, char **errmsg)
 			memprintf(errmsg, "invalid HTTP status code %d when getting Finalize URL", hc->res.status);
 		goto error;
 	}
-out:
+
 	ret = 0;
 
 error:
@@ -1457,9 +1456,10 @@ int acme_req_challenge(struct task *task, struct acme_ctx *ctx, struct acme_auth
 		goto error;
 
 	ret = 0;
+	goto out;
 error:
 	memprintf(errmsg, "couldn't generate the Challenge request");
-
+out:
 	free_trash_chunk(req_in);
 	free_trash_chunk(req_out);
 
@@ -1574,6 +1574,8 @@ int acme_post_as_get(struct task *task, struct acme_ctx *ctx, struct ist url, ch
 		goto error_http;
 
 	ret = 0;
+
+	goto end;
 
 error_jws:
 	memprintf(errmsg, "couldn't generate the JWS token: %s", errmsg ? *errmsg : "");
@@ -1763,7 +1765,6 @@ int acme_res_auth(struct task *task, struct acme_ctx *ctx, struct acme_auth *aut
 		break;
 	}
 
-out:
 	ret = 0;
 
 error:
@@ -1815,9 +1816,10 @@ int acme_req_neworder(struct task *task, struct acme_ctx *ctx, char **errmsg)
 		goto error;
 
 	ret = 0;
+	goto out;
 error:
 	memprintf(errmsg, "couldn't generate the newOrder request");
-
+out:
 	free_trash_chunk(req_in);
 	free_trash_chunk(req_out);
 
@@ -1925,7 +1927,6 @@ int acme_res_neworder(struct task *task, struct acme_ctx *ctx, char **errmsg)
 		goto error;
 	}
 
-out:
 	ret = 0;
 
 error:
@@ -1977,9 +1978,10 @@ int acme_req_account(struct task *task, struct acme_ctx *ctx, int newaccount, ch
 		goto error;
 
 	ret = 0;
+	goto out;
 error:
 	memprintf(errmsg, "couldn't generate the newAccount request");
-
+out:
 	free_trash_chunk(req_in);
 	free_trash_chunk(req_out);
 
