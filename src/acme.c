@@ -392,7 +392,7 @@ static int cfg_parse_acme_kws(char **args, int section_type, struct proxy *curpx
 			err_code |= ERR_ALERT | ERR_FATAL;
 			goto out;
 		}
-		if (alertif_too_many_args(2, file, linenum, args, &err_code))
+		if (alertif_too_many_args(1, file, linenum, args, &err_code))
 			goto out;
 
 		ha_free(&cur_acme->account.file);
@@ -409,7 +409,7 @@ static int cfg_parse_acme_kws(char **args, int section_type, struct proxy *curpx
 			goto out;
 		}
 
-		if (alertif_too_many_args(2, file, linenum, args, &err_code))
+		if (alertif_too_many_args(1, file, linenum, args, &err_code))
 			goto out;
 
 		ha_free(&cur_acme->challenge);
