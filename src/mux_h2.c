@@ -466,6 +466,12 @@ struct pool_head *pool_head_h2_rx_bufs __read_mostly = NULL;
 /* maximum amount of data we're OK with re-aligning for buffer optimizations */
 #define MAX_DATA_REALIGN 1024
 
+enum {
+	H2_ERR_LOG_ERR_NONE,
+	H2_ERR_LOG_ERR_CONN,
+	H2_ERR_LOG_ERR_STRM,
+};
+
 /* a few settings from the global section */
 static int h2_settings_header_table_size      =  4096; /* initial value */
 static int h2_settings_initial_window_size    =     0; /* default initial value: bufsize */
@@ -479,6 +485,7 @@ static unsigned int h2_settings_max_concurrent_streams    = 100; /* default valu
 static unsigned int h2_be_settings_max_concurrent_streams =   0; /* backend value */
 static unsigned int h2_fe_settings_max_concurrent_streams =   0; /* frontend value */
 static int h2_settings_max_frame_size         = 0;     /* unset */
+static int h2_settings_log_errors             = H2_ERR_LOG_ERR_STRM;
 
 /* other non-protocol settings */
 static unsigned int h2_fe_max_total_streams =   0;      /* frontend value */
@@ -839,6 +846,18 @@ static inline int h2s_may_append_to_rxbuf(const struct h2s *h2s)
 
 	htx = htxbuf(rxbuf);
 	return !!htx_free_data_space(htx);
+}
+
+void h2_sess_log_conn(struct session *sess)
+{
+	if (h2_settings_log_errors >= H2_ERR_LOG_ERR_CONN)
+		sess_log(sess);
+}
+
+void h2_sess_log_strm(struct session *sess)
+{
+	if (h2_settings_log_errors >= H2_ERR_LOG_ERR_STRM)
+		sess_log(sess);
 }
 
 /* update h2c timeout if needed */
@@ -2131,7 +2150,7 @@ static struct h2s *h2c_frt_stream_new(struct h2c *h2c, int id, struct buffer *in
  out_alloc:
 	TRACE_ERROR("Failed to allocate a new stream", H2_EV_H2S_NEW|H2_EV_RX_FRAME|H2_EV_RX_HDR, h2c->conn);
  out:
-	sess_log(sess);
+	h2_sess_log_strm(sess);
 	TRACE_LEAVE(H2_EV_H2S_NEW|H2_EV_H2S_ERR|H2_EV_H2S_END, h2c->conn);
 	return NULL;
 }
@@ -2883,7 +2902,7 @@ static int h2c_handle_settings(struct h2c *h2c)
 	return 1;
  fail:
 	if (!(h2c->flags & H2_CF_IS_BACK))
-		sess_log(h2c->conn->owner);
+		h2_sess_log_conn(h2c->conn->owner);
 	h2c_error(h2c, error);
  out0:
 	TRACE_DEVEL("leaving with missing data or error", H2_EV_RX_FRAME|H2_EV_RX_SETTINGS, h2c->conn);
@@ -3466,7 +3485,7 @@ static struct h2s *h2c_frt_handle_headers(struct h2c *h2c, struct h2s *h2s)
 			/* unrecoverable error ? */
 			if (h2c->st0 >= H2_CS_ERROR) {
 				TRACE_USER("Unrecoverable error decoding H2 trailers", H2_EV_RX_FRAME|H2_EV_RX_HDR|H2_EV_STRM_NEW|H2_EV_STRM_END, h2c->conn, 0, h2s_rxbuf_tail(h2s));
-				sess_log(h2c->conn->owner);
+				h2_sess_log_conn(h2c->conn->owner);
 				goto out;
 			}
 
@@ -3483,7 +3502,7 @@ static struct h2s *h2c_frt_handle_headers(struct h2c *h2c, struct h2s *h2s)
 				/* Failed to decode this frame (e.g. too large request)
 				 * but the HPACK decompressor is still synchronized.
 				 */
-				sess_log(h2c->conn->owner);
+				h2_sess_log_strm(h2c->conn->owner);
 				h2s_error(h2s, H2_ERR_INTERNAL_ERROR);
 				TRACE_USER("Stream error decoding H2 trailers", H2_EV_RX_FRAME|H2_EV_RX_HDR|H2_EV_STRM_NEW|H2_EV_STRM_END, h2c->conn, 0, h2s_rxbuf_tail(h2s));
 				h2c->st0 = H2_CS_FRAME_E;
@@ -3495,7 +3514,7 @@ static struct h2s *h2c_frt_handle_headers(struct h2c *h2c, struct h2s *h2s)
 		 * the data and send another RST.
 		 */
 		error = h2c_dec_hdrs(h2c, &rxbuf, &flags, &body_len, NULL);
-		sess_log(h2c->conn->owner);
+		h2_sess_log_strm(h2c->conn->owner);
 		h2s = (struct h2s*)h2_error_stream;
 		h2c_report_glitch(h2c, 1, "rcvd H2 trailers on closed stream");
 		TRACE_USER("rcvd H2 trailers on closed stream", H2_EV_RX_FRAME|H2_EV_RX_HDR|H2_EV_STRM_NEW|H2_EV_STRM_END, h2c->conn, h2s, &rxbuf);
@@ -3507,7 +3526,7 @@ static struct h2s *h2c_frt_handle_headers(struct h2c *h2c, struct h2s *h2s)
 		h2c_report_glitch(h2c, 1, "HEADERS on invalid stream ID");
 		TRACE_ERROR("HEADERS on invalid stream ID", H2_EV_RX_FRAME|H2_EV_RX_HDR, h2c->conn);
 		HA_ATOMIC_INC(&h2c->px_counters->conn_proto_err);
-		sess_log(h2c->conn->owner);
+		h2_sess_log_conn(h2c->conn->owner);
 		session_inc_http_req_ctr(h2c->conn->owner);
 		session_inc_http_err_ctr(h2c->conn->owner);
 		goto conn_err;
@@ -3525,7 +3544,7 @@ static struct h2s *h2c_frt_handle_headers(struct h2c *h2c, struct h2s *h2s)
 		h2c_report_glitch(h2c, 1, "Stream limit violated");
 		TRACE_STATE("Stream limit violated", H2_EV_STRM_SHUT, h2c->conn);
 		HA_ATOMIC_INC(&h2c->px_counters->conn_proto_err);
-		sess_log(h2c->conn->owner);
+		h2_sess_log_conn(h2c->conn->owner);
 		session_inc_http_req_ctr(h2c->conn->owner);
 		session_inc_http_err_ctr(h2c->conn->owner);
 		goto conn_err;
@@ -3558,16 +3577,17 @@ static struct h2s *h2c_frt_handle_headers(struct h2c *h2c, struct h2s *h2s)
 		 * error code in the connection and counted it in the relevant
 		 * stats. We still count a req error in both cases.
 		 */
-		sess_log(h2c->conn->owner);
 		session_inc_http_req_ctr(h2c->conn->owner);
 		session_inc_http_err_ctr(h2c->conn->owner);
 
 		if (h2c->st0 >= H2_CS_ERROR) {
+			h2_sess_log_conn(h2c->conn->owner);
 			TRACE_USER("Unrecoverable error decoding H2 request", H2_EV_RX_FRAME|H2_EV_RX_HDR|H2_EV_STRM_NEW|H2_EV_STRM_END, h2c->conn, 0, &rxbuf);
 			goto out;
 		}
 
 		/* recoverable stream error (e.g. too large request) */
+		h2_sess_log_strm(h2c->conn->owner);
 		TRACE_USER("rcvd unparsable H2 request", H2_EV_RX_FRAME|H2_EV_RX_HDR|H2_EV_STRM_NEW|H2_EV_STRM_END, h2c->conn, h2s, &rxbuf);
 		goto strm_err;
 	}
@@ -3923,7 +3943,7 @@ static int h2_frame_check_vs_state(struct h2c *h2c, struct h2s *h2s)
 		h2c_error(h2c, H2_ERR_PROTOCOL_ERROR);
 		if (!h2c->nb_streams && !(h2c->flags & H2_CF_IS_BACK)) {
 			/* only log if no other stream can report the error */
-			sess_log(h2c->conn->owner);
+			h2_sess_log_conn(h2c->conn->owner);
 		}
 		HA_ATOMIC_INC(&h2c->px_counters->conn_proto_err);
 		TRACE_DEVEL("leaving in error (idle&!hdrs&!prio)", H2_EV_RX_FRAME|H2_EV_RX_FHDR|H2_EV_PROTO_ERR, h2c->conn, h2s);
@@ -4193,7 +4213,7 @@ static void h2_process_demux(struct h2c *h2c)
 					h2c->st0 = H2_CS_ERROR2;
 					if (b_data(&h2c->dbuf) ||
 					    !(((const struct session *)h2c->conn->owner)->fe->options & (PR_O_NULLNOLOG|PR_O_IGNORE_PRB)))
-						sess_log(h2c->conn->owner);
+						h2_sess_log_conn(h2c->conn->owner);
 				}
 				goto done;
 			}
@@ -4217,7 +4237,7 @@ static void h2_process_demux(struct h2c *h2c)
 					TRACE_ERROR("failed to receive settings", H2_EV_RX_FRAME|H2_EV_RX_FHDR|H2_EV_RX_SETTINGS|H2_EV_PROTO_ERR, h2c->conn);
 					h2c->st0 = H2_CS_ERROR2;
 					if (!(h2c->flags & H2_CF_IS_BACK))
-						sess_log(h2c->conn->owner);
+						h2_sess_log_conn(h2c->conn->owner);
 				}
 				goto done;
 			}
@@ -4229,7 +4249,7 @@ static void h2_process_demux(struct h2c *h2c)
 				h2c_error(h2c, H2_ERR_PROTOCOL_ERROR);
 				h2c->st0 = H2_CS_ERROR2;
 				if (!(h2c->flags & H2_CF_IS_BACK))
-					sess_log(h2c->conn->owner);
+					h2_sess_log_conn(h2c->conn->owner);
 				HA_ATOMIC_INC(&h2c->px_counters->conn_proto_err);
 				goto done;
 			}
@@ -4241,7 +4261,7 @@ static void h2_process_demux(struct h2c *h2c)
 				h2c_error(h2c, H2_ERR_FRAME_SIZE_ERROR);
 				h2c->st0 = H2_CS_ERROR2;
 				if (!(h2c->flags & H2_CF_IS_BACK))
-					sess_log(h2c->conn->owner);
+					h2_sess_log_conn(h2c->conn->owner);
 				goto done;
 			}
 
@@ -4287,7 +4307,7 @@ static void h2_process_demux(struct h2c *h2c)
 				h2c_error(h2c, H2_ERR_FRAME_SIZE_ERROR);
 				if (!h2c->nb_streams && !(h2c->flags & H2_CF_IS_BACK)) {
 					/* only log if no other stream can report the error */
-					sess_log(h2c->conn->owner);
+					h2_sess_log_conn(h2c->conn->owner);
 				}
 				HA_ATOMIC_INC(&h2c->px_counters->conn_proto_err);
 				break;
@@ -4317,7 +4337,7 @@ static void h2_process_demux(struct h2c *h2c)
 					TRACE_ERROR("invalid H2 padded frame length", H2_EV_RX_FRAME|H2_EV_RX_FHDR|H2_EV_PROTO_ERR, h2c->conn);
 					h2c_error(h2c, H2_ERR_FRAME_SIZE_ERROR);
 					if (!(h2c->flags & H2_CF_IS_BACK))
-						sess_log(h2c->conn->owner);
+						h2_sess_log_conn(h2c->conn->owner);
 					HA_ATOMIC_INC(&h2c->px_counters->conn_proto_err);
 					goto done;
 				}
@@ -4338,7 +4358,7 @@ static void h2_process_demux(struct h2c *h2c)
 					 */
 					h2c_error(h2c, H2_ERR_PROTOCOL_ERROR);
 					if (!(h2c->flags & H2_CF_IS_BACK))
-						sess_log(h2c->conn->owner);
+						h2_sess_log_conn(h2c->conn->owner);
 					HA_ATOMIC_INC(&h2c->px_counters->conn_proto_err);
 					goto done;
 				}
@@ -4368,7 +4388,7 @@ static void h2_process_demux(struct h2c *h2c)
 				TRACE_ERROR("received invalid H2 frame header", H2_EV_RX_FRAME|H2_EV_RX_FHDR|H2_EV_PROTO_ERR, h2c->conn);
 				h2c_error(h2c, ret);
 				if (!(h2c->flags & H2_CF_IS_BACK))
-					sess_log(h2c->conn->owner);
+					h2_sess_log_conn(h2c->conn->owner);
 				HA_ATOMIC_INC(&h2c->px_counters->conn_proto_err);
 				goto done;
 			}
@@ -4461,7 +4481,7 @@ static void h2_process_demux(struct h2c *h2c)
 			TRACE_ERROR("received unexpected H2 CONTINUATION frame", H2_EV_RX_FRAME|H2_EV_RX_CONT|H2_EV_H2C_ERR, h2c->conn, h2s);
 			h2c_error(h2c, H2_ERR_PROTOCOL_ERROR);
 			if (!(h2c->flags & H2_CF_IS_BACK))
-				sess_log(h2c->conn->owner);
+				h2_sess_log_conn(h2c->conn->owner);
 			HA_ATOMIC_INC(&h2c->px_counters->conn_proto_err);
 			goto done;
 
@@ -8600,6 +8620,31 @@ static int h2_parse_initial_window_size(char **args, int section_type, struct pr
 	return 0;
 }
 
+/* config parser for global "tune.h2.log-errors" */
+static int h2_parse_log_errors(char **args, int section_type, struct proxy *curpx,
+                                        const struct proxy *defpx, const char *file, int line,
+                                        char **err)
+{
+	int *vptr;
+
+	if (too_many_args(1, args, err, NULL))
+		return -1;
+
+	/* backend/frontend/default */
+	vptr = &h2_settings_log_errors;
+	if (strcmp(args[1], "none"))
+		*vptr = H2_ERR_LOG_ERR_NONE;
+	else if (strcmp(args[1], "connection"))
+		*vptr = H2_ERR_LOG_ERR_CONN;
+	else if (strcmp(args[1], "stream"))
+		*vptr = H2_ERR_LOG_ERR_STRM;
+	else {
+		memprintf(err, "'%s' expects 'none', 'connection', or 'stream'", args[0]);
+		return -1;
+	}
+	return 0;
+}
+
 /* config parser for global "tune.h2.{be.,fe.,}max-concurrent-streams" */
 static int h2_parse_max_concurrent_streams(char **args, int section_type, struct proxy *curpx,
                                            const struct proxy *defpx, const char *file, int line,
@@ -8750,6 +8795,7 @@ static struct cfg_kw_list cfg_kws = {ILH, {
 	{ CFG_GLOBAL, "tune.h2.fe.rxbuf",               h2_parse_rxbuf                  },
 	{ CFG_GLOBAL, "tune.h2.header-table-size",      h2_parse_header_table_size      },
 	{ CFG_GLOBAL, "tune.h2.initial-window-size",    h2_parse_initial_window_size    },
+	{ CFG_GLOBAL, "tune.h2.log-errors",             h2_parse_log_errors             },
 	{ CFG_GLOBAL, "tune.h2.max-concurrent-streams", h2_parse_max_concurrent_streams },
 	{ CFG_GLOBAL, "tune.h2.max-frame-size",         h2_parse_max_frame_size         },
 	{ CFG_GLOBAL, "tune.h2.zero-copy-fwd-send",     h2_parse_zero_copy_fwd_snd },
