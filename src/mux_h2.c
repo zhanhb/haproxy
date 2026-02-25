@@ -6788,8 +6788,11 @@ static size_t h2_rcv_buf(struct stconn *sc, struct buffer *buf, size_t count, in
 	ret -= h2s_htx->data;
 
   end:
-	if (b_data(&h2s->rxbuf))
+	if (b_data(&h2s->rxbuf)) {
 		se_fl_set(h2s->sd, SE_FL_RCV_MORE | SE_FL_WANT_ROOM);
+		if (h2s_htx && h2s_htx->flags & HTX_FL_PARSING_ERROR)
+			h2s_propagate_term_flags(h2c, h2s);
+	}
 	else {
 		if (!(h2c->flags & H2_CF_IS_BACK) && (h2s->flags & (H2_SF_BODY_TUNNEL|H2_SF_ES_RCVD))) {
 			/* If request ES is reported to the upper layer, it means the
