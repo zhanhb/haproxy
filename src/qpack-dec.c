@@ -65,6 +65,9 @@ static uint64_t qpack_get_varint(const unsigned char **buf, uint64_t *len_in, in
 	const uint8_t *raw = *buf;
 	uint8_t shift = 0;
 
+	if (len == 0)
+		goto too_short;
+
 	len--;
 	ret = *raw++ & ((1ULL << b) - 1);
 	if (ret != (uint64_t)((1ULL << b) - 1))
@@ -220,6 +223,13 @@ static int qpack_decode_fs_pfx(uint64_t *enc_ric, uint64_t *db, int *sign_bit,
 	if (*len == (uint64_t)-1)
 		return -QPACK_ERR_RIC;
 
+	/* Ensure at least one byte remains for the sign bit
+	 * and the start of the Delta Base varint.
+	 */
+	if (!*len)
+		return -QPACK_ERR_TRUNCATED;
+
+	/* Safe access to the sign bit thanks to the check above */
 	*sign_bit = **raw & 0x8;
 	*db = qpack_get_varint(raw, len, 7);
 	if (*len == (uint64_t)-1)
@@ -423,7 +433,7 @@ int qpack_decode_fs(const unsigned char *raw, uint64_t len, struct buffer *tmp,
 
 			if (len < length) {
 				qpack_debug_printf(stderr, "##ERR@%d\n", __LINE__);
-				ret = -QPACK_RET_TRUNCATED;
+				ret = -QPACK_ERR_TRUNCATED;
 				goto out;
 			}
 
