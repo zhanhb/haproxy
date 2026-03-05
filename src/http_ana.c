@@ -4718,6 +4718,7 @@ int http_forward_proxy_resp(struct stream *s, int final)
 	data = htx->data - co_data(res);
 	c_adv(res, data);
 	htx->first = -1;
+	s->scf->bytes_out += data;
 	return 1;
 }
 
