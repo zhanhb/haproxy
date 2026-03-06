@@ -2863,7 +2863,8 @@ static enum rule_result http_req_get_intercept_rule(struct proxy *px, struct lis
 				s->waiting_entity.ptr  = NULL;
 			}
 
-			switch (rule->action_ptr(rule, px, sess, s, act_opts)) {
+			switch (EXEC_CTX_WITH_RET(rule->exec_ctx,
+			                          rule->action_ptr(rule, px, sess, s, act_opts))) {
 				case ACT_RET_CONT:
 					break;
 				case ACT_RET_STOP:
@@ -3055,7 +3056,8 @@ resume_execution:
 				s->waiting_entity.ptr  = NULL;
 			}
 
-			switch (rule->action_ptr(rule, px, sess, s, act_opts)) {
+			switch (EXEC_CTX_WITH_RET(rule->exec_ctx,
+			                          rule->action_ptr(rule, px, sess, s, act_opts))) {
 				case ACT_RET_CONT:
 					break;
 				case ACT_RET_STOP:
