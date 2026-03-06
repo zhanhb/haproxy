@@ -2144,7 +2144,7 @@ int connect_server(struct stream *s)
 	 */
 	if (init_mux) {
 		const struct mux_ops *alt_mux =
-		  likely(!(s->flags & SF_WEBSOCKET)) ? NULL : srv_get_ws_proto(srv);
+		  likely(!(s->flags & SF_WEBSOCKET) || !srv) ? NULL : srv_get_ws_proto(srv);
 		if (conn_install_mux_be(srv_conn, s->scb, s->sess, alt_mux) < 0) {
 			conn_full_close(srv_conn);
 			return SF_ERR_INTERNAL;
