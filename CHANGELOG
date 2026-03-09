@@ -1,6 +1,51 @@
 ChangeLog :
 ===========
 
+2026/03/09 : 2.8.19
+    - BUG/MEDIUM: http-ana: Properly detect client abort when forwarding response (v2)
+    - BUG/MEDIUM: stconn: Don't report abort from SC if read0 was already received
+    - MINOR: muxes: Support an optional ALPN string when defining mux protocols
+    - MINOR: config: Do proto detection for listeners before checks about ALPN
+    - BUG/MEDIUM: config: Use the mux protocol ALPN by default for listeners if forced
+    - BUG/MINOR: backend: fix the conn_retries check for TFO
+    - BUG/MINOR: backend: inspect request not response buffer to check for TFO
+    - BUILD: ssl: strchr definition changed in C23
+    - BUG/MINOR: cfgparse: wrong section name upon error
+    - BUG/MINOR: cli/stick-tables: argument to "show table" is optional
+    - REGTESTS: ssl: Fix reg-tests curve check
+    - MINOR: cfgparse: remove duplicate "force-persist" in common kw list
+    - BUG/MEDIUM: quic: fix ACK ECN frame parsing
+    - BUG/MINOR: http_act: fix deinit performed on uninitialized lf_expr in release_http_map()
+    - BUG/MINOR: proxy: free persist_rules
+    - BUG/MINOR: cfgparse: fix "default" prefix parsing
+    - BUG/MEDIUM: ssl: fix error path on generate-certificates
+    - BUG/MEDIUM: ssl: fix generate-certificates option when SNI greater than 64bytes
+    - REGTESTS: ssl: fix generate-certificates w/ LibreSSL
+    - BUG/MEDIUM: hlua: fix invalid lua_pcall() usage in hlua_traceback()
+    - BUG/MINOR: hlua: consume error object if ignored after a failing lua_pcall()
+    - BUG/MINOR: promex: Detach promex from the server on error dump its metrics dump
+    - MINOR: ssl: allow to disable certificate compression
+    - BUG/MINOR: ssl: fix error message of tune.ssl.certificate-compression
+    - DOC: reg-tests: update VTest upstream link in the starting guide
+    - BUG/MINOR: sock-inet: ignore conntrack for transparent sockets on Linux
+    - BUG/MEDIUM: debug: only dump Lua state when panicking
+    - BUG/MEDIUM: mux-h2: synchronize all conditions to create a new backend stream
+    - CI: vtest: move the vtest2 URL to vinyl-cache.org
+    - CI: github: disable windows.yml by default on unofficials repo
+    - BUG/MEDIUM: mux-h2: make sure to always report pending errors to the stream
+    - BUG/MEDIUM: hpack: correctly deal with too large decoded numbers
+    - BUG/MAJOR: qpack: unchecked length passed to huffman decoder
+    - BUG/MINOR: qpack: fix 1-byte OOB read in qpack_decode_fs_pfx()
+    - BUG/MEDIUM: qpack: correctly deal with too large decoded numbers
+    - BUG/MINOR: h1-htx: Be sure that H1 response version starts by "HTTP/"
+    - BUG/MAJOR: fcgi: Fix param decoding by properly checking its size
+    - BUG/MAJOR: resolvers: Properly lowered the names found in DNS response
+    - BUG/MEDIUM: mux-fcgi: Use a safe loop to resume each stream eligible for sending
+    - BUG/MINOR: ssl-sample: Fix sample_conv_sha2() by checking EVP_Digest* failures
+    - BUG/MINOR: backend: Don't get proto to use for webscoket if there is no server
+    - SCRIPTS: git-show-backports: hide the common ancestor warning in quiet mode
+    - SCRIPTS: git-show-backports: add a restart-from-last option
+
 2025/12/25 : 2.8.18
     - Revert "BUG/MEDIUM: mux-h2: make sure not to move a dead connection to idle"
 
