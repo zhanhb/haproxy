@@ -1,6 +1,27 @@
 ChangeLog :
 ===========
 
+2026/03/09 : 3.2.14
+    - MINOR: mux-h2: also count glitches on invalid trailers
+    - MINOR: mux-h2: add a new setting, "tune.h2.log-errors" to tweak error logging
+    - BUG/MEDIUM: mux-h2: make sure to always report pending errors to the stream
+    - BUG/MINOR: promex: fix server iteration when last server is deleted
+    - BUG/MEDIUM: stream: Handle TASK_WOKEN_RES as a stream event
+    - BUG/MEDIUM: hpack: correctly deal with too large decoded numbers
+    - BUG/MAJOR: qpack: unchecked length passed to huffman decoder
+    - BUG/MINOR: qpack: fix 1-byte OOB read in qpack_decode_fs_pfx()
+    - BUG/MEDIUM: qpack: correctly deal with too large decoded numbers
+    - BUG/MINOR: h1-htx: Be sure that H1 response version starts by "HTTP/"
+    - DEBUG: stream: Display the currently running rule in stream dump
+    - MINOR: filters: Set last_entity when a filter fails on stream_start callback
+    - BUG/MAJOR: fcgi: Fix param decoding by properly checking its size
+    - BUG/MAJOR: resolvers: Properly lowered the names found in DNS response
+    - BUG/MEDIUM: mux-fcgi: Use a safe loop to resume each stream eligible for sending
+    - BUG/MINOR: ssl-sample: Fix sample_conv_sha2() by checking EVP_Digest* failures
+    - BUG/MINOR: backend: Don't get proto to use for webscoket if there is no server
+    - SCRIPTS: git-show-backports: hide the common ancestor warning in quiet mode
+    - SCRIPTS: git-show-backports: add a restart-from-last option
+
 2026/02/19 : 3.2.13
     - DOC: internals: addd mworker V3 internals
     - DOC: proxy-proto: underline the packed attribute for struct pp2_tlv_ssl
