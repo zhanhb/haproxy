@@ -1,6 +1,27 @@
 ChangeLog :
 ===========
 
+2026/03/09 : 2.6.24
+    - BUG/MEDIUM: ssl: take care of second client hello
+    - BUG/MINOR: ssl: always clear the remains of the first hello for the second one
+    - BUILD: makefile: disable tail calls optimizations with memory profiling
+    - BUG/MINOR: sink: retry attempt for sft server may never occur
+    - CI: vtest: move the vtest2 URL to vinyl-cache.org
+    - CI: github: disable windows.yml by default on unofficials repo
+    - BUG/MEDIUM: hpack: correctly deal with too large decoded numbers
+    - BUG/MAJOR: qpack: unchecked length passed to huffman decoder
+    - BUG/MINOR: qpack: fix 1-byte OOB read in qpack_decode_fs_pfx()
+    - BUG/MEDIUM: qpack: correctly deal with too large decoded numbers
+    - BUG/MINOR: h1-htx: Be sure that H1 response version starts by "HTTP/"
+    - BUG/MAJOR: fcgi: Fix param decoding by properly checking its size
+    - BUG/MINOR: resolvers: always normalize FQDN from response
+    - BUG/MAJOR: resolvers: Properly lowered the names found in DNS response
+    - BUG/MEDIUM: mux-fcgi: Use a safe loop to resume each stream eligible for sending
+    - BUG/MINOR: ssl-sample: Fix sample_conv_sha2() by checking EVP_Digest* failures
+    - BUG/MINOR: backend: Don't get proto to use for webscoket if there is no server
+    - SCRIPTS: git-show-backports: hide the common ancestor warning in quiet mode
+    - SCRIPTS: git-show-backports: add a restart-from-last option
+
 2025/10/03 : 2.6.23
     - BUG/MINOR: cli: Issue an error when too many args are passed for a command
     - MINOR: applet: add appctx_schedule() macro
