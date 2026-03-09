@@ -1,6 +1,23 @@
 ChangeLog :
 ===========
 
+2026/03/09 : 2.4.31
+    - BUG/MEDIUM: ssl: take care of second client hello
+    - BUG/MINOR: ssl: always clear the remains of the first hello for the second one
+    - BUILD: makefile: disable tail calls optimizations with memory profiling
+    - REGTESTS: Explicitly allow failing shell commands in some scripts
+    - CI: vtest: move the vtest2 URL to vinyl-cache.org
+    - CI: github: disable windows.yml by default on unofficials repo
+    - BUG/MEDIUM: hpack: correctly deal with too large decoded numbers
+    - BUG/MINOR: h1-htx: Be sure that H1 response version starts by "HTTP/"
+    - BUG/MAJOR: fcgi: Fix param decoding by properly checking its size
+    - BUG/MINOR: resolvers: always normalize FQDN from response
+    - BUG/MAJOR: resolvers: Properly lowered the names found in DNS response
+    - BUG/MEDIUM: mux-fcgi: Use a safe loop to resume each stream eligible for sending
+    - BUG/MINOR: backend: Don't get proto to use for webscoket if there is no server
+    - SCRIPTS: git-show-backports: hide the common ancestor warning in quiet mode
+    - SCRIPTS: git-show-backports: add a restart-from-last option
+
 2025/10/03 : 2.4.30
     - DOC: config: clarify some known limitations of the json_query() converter
     - BUG/CRITICAL: mjson: fix possible DoS when parsing numbers
