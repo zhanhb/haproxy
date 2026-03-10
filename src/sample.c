@@ -4747,9 +4747,10 @@ static int sample_conv_jwt_member_query(const struct arg *args, struct sample *s
 	int retval = 0;
 	int ret;
 
-	jwt_tokenize(&smp->data.u.str, items, &item_num);
-
-	if (item_num < member + 1)
+	/* We don't need to extract all the parts from the token, we only need a
+	 * specific one.
+	 */
+	if (jwt_tokenize(&smp->data.u.str, items, item_num) < 0)
 		goto end;
 
 	ret = base64urldec(items[member].start, items[member].length,
