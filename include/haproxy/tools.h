@@ -1534,4 +1534,6 @@ int path_base(const char *path, const char *base, char *dst, char **err);
 
 void ha_freearray(char ***array);
 
+void chunk_append_thread_ctx(struct buffer *output, const struct thread_exec_ctx *ctx, const char *pfx, const char *sfx);
+
 #endif /* _HAPROXY_TOOLS_H */
