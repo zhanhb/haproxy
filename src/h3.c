@@ -1112,6 +1112,7 @@ static ssize_t h3_resp_headers_to_htx(struct qcs *qcs, const struct buffer *buf,
 	struct buffer *tmp = get_trash_chunk();
 	struct htx *htx = NULL;
 	struct htx_sl *sl;
+	struct htx_blk *tailblk = NULL;
 	struct http_hdr list[global.tune.max_http_hdr * 2];
 	unsigned int flags = HTX_SL_F_NONE;
 	struct ist status = IST_NULL;
@@ -1162,7 +1163,7 @@ static ssize_t h3_resp_headers_to_htx(struct qcs *qcs, const struct buffer *buf,
 	}
 	BUG_ON(!b_size(appbuf)); /* TODO */
 	htx = htx_from_buf(appbuf);
-
+	tailblk = htx_get_tail_blk(htx);
 	/* Only handle one HEADERS frame at a time. Thus if HTX buffer is too
 	 * small, it happens solely from a single frame and the only option is
 	 * to close the stream.
@@ -1352,8 +1353,11 @@ static ssize_t h3_resp_headers_to_htx(struct qcs *qcs, const struct buffer *buf,
 	}
 
  out:
-	if (appbuf)
+	if (appbuf) {
+		if ((ssize_t)len < 0)
+			htx_truncate_blk(htx, tailblk);
 		htx_to_buf(htx, appbuf);
+	}
 
 	TRACE_LEAVE(H3_EV_RX_FRAME|H3_EV_RX_HDR, qcs->qcc->conn, qcs);
 	return len;
@@ -1377,6 +1381,7 @@ static ssize_t h3_trailers_to_htx(struct qcs *qcs, const struct buffer *buf,
 	struct buffer *appbuf = NULL;
 	struct htx *htx = NULL;
 	struct htx_sl *sl;
+	struct htx_blk *tailblk = NULL;
 	struct http_hdr list[global.tune.max_http_hdr * 2];
 	int hdr_idx, ret;
 	const char *ctl;
@@ -1407,6 +1412,7 @@ static ssize_t h3_trailers_to_htx(struct qcs *qcs, const struct buffer *buf,
 	}
 	BUG_ON(!b_size(appbuf)); /* TODO */
 	htx = htx_from_buf(appbuf);
+	tailblk = htx_get_tail_blk(htx);
 
 	if (!h3s->data_len) {
 		/* Notify that no body is present. This can only happens if
@@ -1522,8 +1528,11 @@ static ssize_t h3_trailers_to_htx(struct qcs *qcs, const struct buffer *buf,
 
  out:
 	/* HTX may be non NULL if error before previous htx_to_buf(). */
-	if (appbuf)
+	if (appbuf) {
+		if ((ssize_t)len < 0)
+			htx_truncate_blk(htx, tailblk);
 		htx_to_buf(htx, appbuf);
+	}
 
 	TRACE_LEAVE(H3_EV_RX_FRAME|H3_EV_RX_HDR, qcs->qcc->conn, qcs);
 	return len;
