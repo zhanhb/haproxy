@@ -2940,6 +2940,9 @@ init_proxies_list_stage1:
 				cfgerr += check_action_rules(&curproxy->defpx->http_req_rules, curproxy->defpx, &err_code);
 				cfgerr += check_action_rules(&curproxy->defpx->http_res_rules, curproxy->defpx, &err_code);
 				cfgerr += check_action_rules(&curproxy->defpx->http_after_res_rules, curproxy->defpx, &err_code);
+#ifdef USE_QUIC
+				cfgerr += check_action_rules(&curproxy->defpx->quic_init_rules, curproxy->defpx, &err_code);
+#endif
 
 				err = NULL;
 				i = smp_resolve_args(curproxy->defpx, &err);
@@ -3460,6 +3463,9 @@ init_proxies_list_stage1:
 		cfgerr += check_action_rules(&curproxy->http_req_rules, curproxy, &err_code);
 		cfgerr += check_action_rules(&curproxy->http_res_rules, curproxy, &err_code);
 		cfgerr += check_action_rules(&curproxy->http_after_res_rules, curproxy, &err_code);
+#ifdef USE_QUIC
+		cfgerr += check_action_rules(&curproxy->quic_init_rules, curproxy, &err_code);
+#endif
 
 		/* Warn is a switch-mode http is used on a TCP listener with servers but no backend */
 		if (!curproxy->defbe.name && LIST_ISEMPTY(&curproxy->switching_rules) && curproxy->srv) {
