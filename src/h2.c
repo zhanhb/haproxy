@@ -314,6 +314,7 @@ static struct htx_sl *h2_prepare_htx_reqline(uint32_t fields, struct ist *phdr, 
  */
 int h2_make_htx_request(struct http_hdr *list, struct htx *htx, unsigned int *msgf, unsigned long long *body_len, int relaxed)
 {
+	struct htx_blk *tailblk = htx_get_tail_blk(htx);
 	struct ist phdr_val[H2_PHDR_NUM_ENTRIES];
 	uint32_t fields; /* bit mask of H2_PHDR_FND_* */
 	uint32_t idx;
@@ -528,6 +529,7 @@ int h2_make_htx_request(struct http_hdr *list, struct htx *htx, unsigned int *ms
 	return ret;
 
  fail:
+	htx_truncate_blk(htx, tailblk);
 	return -1;
 }
 
@@ -631,6 +633,7 @@ static struct htx_sl *h2_prepare_htx_stsline(uint32_t fields, struct ist *phdr, 
  */
 int h2_make_htx_response(struct http_hdr *list, struct htx *htx, unsigned int *msgf, unsigned long long *body_len, char *upgrade_protocol)
 {
+	struct htx_blk *tailblk = htx_get_tail_blk(htx);
 	struct ist phdr_val[H2_PHDR_NUM_ENTRIES];
 	uint32_t fields; /* bit mask of H2_PHDR_FND_* */
 	uint32_t idx;
@@ -787,6 +790,7 @@ int h2_make_htx_response(struct http_hdr *list, struct htx *htx, unsigned int *m
 	return ret;
 
  fail:
+	htx_truncate_blk(htx, tailblk);
 	return -1;
 }
 
@@ -806,6 +810,7 @@ int h2_make_htx_response(struct http_hdr *list, struct htx *htx, unsigned int *m
  */
 int h2_make_htx_trailers(struct http_hdr *list, struct htx *htx)
 {
+	struct htx_blk *tailblk = htx_get_tail_blk(htx);
 	const char *ctl;
 	struct ist v;
 	uint32_t idx;
@@ -865,5 +870,6 @@ int h2_make_htx_trailers(struct http_hdr *list, struct htx *htx)
 	return 1;
 
  fail:
+	htx_truncate_blk(htx, tailblk);
 	return -1;
 }
