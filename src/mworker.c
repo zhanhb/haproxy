@@ -118,7 +118,7 @@ void mworker_proc_list_to_env()
 			type = 'm';
 		else if (child->options & PROC_O_TYPE_PROG)
 			type = 'e';
-		else if (child->options &= PROC_O_TYPE_WORKER)
+		else if (child->options & PROC_O_TYPE_WORKER)
 			type = 'w';
 
 		if (child->pid > -1)
