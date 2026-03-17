@@ -3586,7 +3586,7 @@ static int stats_dump_full_strm_to_buffer(struct stconn *sc, struct stream *strm
 
 		if (strm->current_rule_list && strm->current_rule) {
 			const struct act_rule *rule = strm->current_rule;
-			chunk_appendf(&trash, "  current_rule=\"%s\" [%s:%d]\n", rule->kw->kw, rule->conf.file, rule->conf.line);
+			chunk_appendf(&trash, "  current_rule=\"%s\" [%s:%d]\n", rule->kw ? rule->kw->kw : "?", rule->conf.file, rule->conf.line);
 		}
 
 		if (applet_putchk(appctx, &trash) == -1)
