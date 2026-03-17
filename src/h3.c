@@ -476,7 +476,7 @@ static ssize_t h3_headers_to_htx(struct qcs *qcs, const struct buffer *buf,
 	/* TODO support trailer parsing in this function */
 
 	/* TODO support buffer wrapping */
-	BUG_ON(b_head(buf) + len >= b_wrap(buf));
+	BUG_ON(b_head(buf) + len > b_wrap(buf));
 	ret = qpack_decode_fs((const unsigned char *)b_head(buf), len, tmp,
 	                    list, sizeof(list) / sizeof(list[0]));
 	if (ret < 0) {
@@ -1130,10 +1130,11 @@ static ssize_t h3_decode_qcs(struct qcs *qcs, struct buffer *b, int fin)
 		flen = h3s->demux_frame_len;
 		ftype = h3s->demux_frame_type;
 
-		/* Do not demux incomplete frames except H3 DATA which can be
-		 * fragmented in multiple HTX blocks.
+		/* Current HTTP/3 parser can currently only parse fully
+		 * received and aligned frames. The only exception is for DATA
+		 * frames as they can frequently be larger than bufsize.
 		 */
-		if (flen > b_data(b) && ftype != H3_FT_DATA) {
+		if (ftype != H3_FT_DATA) {
 			/* Reject frames bigger than bufsize.
 			 *
 			 * TODO HEADERS should in complement be limited with H3
@@ -1144,7 +1145,18 @@ static ssize_t h3_decode_qcs(struct qcs *qcs, struct buffer *b, int fin)
 				qcc_emit_cc_app(qcs->qcc, H3_EXCESSIVE_LOAD, 1);
 				return -1;
 			}
-			break;
+
+			/* TODO extend parser to support the realignment of a frame. */
+			if (b_head(b) + b_data(b) > b_wrap(b)) {
+				qcc_emit_cc_app(qcs->qcc, H3_EXCESSIVE_LOAD, 1);
+				return -1;
+			}
+
+			/* Only parse full HTTP/3 frames. */
+			if (flen > b_data(b)) {
+				TRACE_PROTO("pause parsing on incomplete payload", H3_EV_RX_FRAME, qcs->qcc->conn, qcs);
+				break;
+			}
 		}
 
 		last_stream_frame = (fin && flen == b_data(b));
