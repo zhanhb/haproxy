@@ -3558,7 +3558,7 @@ void strm_dump_to_buffer(struct buffer *buf, const struct stream *strm, const ch
 
 	if (strm->current_rule_list && strm->current_rule) {
 		const struct act_rule *rule = strm->current_rule;
-		chunk_appendf(buf, "%s  current_rule=\"%s\" [%s:%d]\n", pfx, rule->kw->kw, rule->conf.file, rule->conf.line);
+		chunk_appendf(buf, "%s  current_rule=\"%s\" [%s:%d]\n", pfx, rule->kw ? rule->kw->kw : "?", rule->conf.file, rule->conf.line);
 	}
 }
 
