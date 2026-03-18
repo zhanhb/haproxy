@@ -1109,8 +1109,6 @@ static int spoe_process_event(struct stream *s, struct spoe_context *ctx,
 				 agent->counters.nb_errors, agent->counters.nb_processed);
 	}
 	else if (ret == 0) {
-		struct channel *chn = (dir == SMP_OPT_DIR_REQ) ? &s->req : &s->res;
-
 		if ((s->scf->flags & SC_FL_ERROR) ||
 		    ((s->scf->flags & (SC_FL_EOS|SC_FL_ABRT_DONE)) &&
 		     (s->be->options & PR_O_ABRT_CLOSE))) {
