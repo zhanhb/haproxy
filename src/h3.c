@@ -1317,6 +1317,14 @@ static ssize_t h3_decode_qcs(struct qcs *qcs, struct buffer *b, int fin)
 		struct htx *htx;
 
 		TRACE_PROTO("received FIN without data", H3_EV_RX_FRAME, qcs->qcc->conn, qcs);
+
+		/* FIN received, ensure body length is conform to any content-length header. */
+		if ((h3s->flags & H3_SF_HAVE_CLEN) && h3_check_body_size(qcs, 1)) {
+			qcc_abort_stream_read(qcs);
+			qcc_reset_stream(qcs, h3s->err);
+			goto done;
+		}
+
 		if (!(appbuf = qcs_get_buf(qcs, &qcs->rx.app_buf))) {
 			TRACE_ERROR("data buffer alloc failure", H3_EV_RX_FRAME, qcs->qcc->conn, qcs);
 			h3c->err = H3_INTERNAL_ERROR;
