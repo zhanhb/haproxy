@@ -1082,6 +1082,12 @@ static ssize_t h3_decode_qcs(struct qcs *qcs, struct buffer *b, int fin)
 	}
 
 	if (!b_data(b) && fin && quic_stream_is_bidi(qcs->id)) {
+		/* FIN received, ensure body length is conform to any content-length header. */
+		if ((h3s->flags & H3_SF_HAVE_CLEN) && h3_check_body_size(qcs, 1)) {
+			qcc_emit_cc_app(qcs->qcc, h3c->err, 1);
+			return -1;
+		}
+
 		qcs_http_handle_standalone_fin(qcs);
 		return 0;
 	}
