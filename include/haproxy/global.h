@@ -55,6 +55,10 @@ extern const char *old_unixsocket;
 extern int daemon_fd[2];
 extern int devnullfd;
 
+/* storage for collected libs */
+extern void *lib_storage;
+extern size_t lib_size;
+
 struct proxy;
 struct server;
 int main(int argc, char **argv);
