@@ -58,12 +58,13 @@ def get_asan_flags(cc):
         'CPU_CFLAGS.generic="-O1"',
     ]
 
+is_stable = "haproxy-" in ref_name or re.match(r'^v\d+\.\d+\.\d+$', ref_name)
 
 matrix = []
 
 # Ubuntu
 
-os = "ubuntu-latest" if "haproxy-" not in ref_name else "ubuntu-22.04"
+os = "ubuntu-latest" if not is_stable else "ubuntu-22.04"
 TARGET = "linux-glibc"
 for CC in ["gcc", "clang"]:
     matrix.append(
@@ -156,7 +157,7 @@ for CC in ["gcc", "clang"]:
         "OPENSSL_VERSION=1.1.1s",
         "QUICTLS=yes",
 #        "BORINGSSL=yes",
-    ] + (["OPENSSL_VERSION=latest", "LIBRESSL_VERSION=latest"] if "haproxy-" not in ref_name else []):
+    ] + (["OPENSSL_VERSION=latest", "LIBRESSL_VERSION=latest"] if not is_stable else []):
         flags = ["USE_OPENSSL=1"]
         if ssl == "BORINGSSL=yes" or ssl == "QUICTLS=yes" or "LIBRESSL" in ssl:
             flags.append("USE_QUIC=1")
@@ -181,7 +182,7 @@ for CC in ["gcc", "clang"]:
 
 # macOS
 
-os = "macos-latest" if "haproxy-" not in ref_name else "macos-12"
+os = "macos-latest" if not is_stable else "macos-12"
 TARGET = "osx"
 for CC in ["clang"]:
     matrix.append(
