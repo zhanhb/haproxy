@@ -2209,6 +2209,11 @@ static inline int peer_treat_definemsg(struct appctx *appctx, struct peer *p,
 		goto malformed_exit;
 	}
 
+	if (table_type < 0 || table_type >= PEER_KT_TYPES) {
+		TRACE_PROTO("ignore table definition message: unknown table type", PEERS_EV_DEFMSG, appctx, p);
+		goto ignore_msg;
+	}
+
 	table_keylen = intdecode(msg_cur, msg_end);
 	if (!*msg_cur) {
 		TRACE_PROTO("malformed message", PEERS_EV_DEFMSG, NULL, p);
