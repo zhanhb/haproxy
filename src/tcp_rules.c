@@ -1228,7 +1228,8 @@ static int tcp_parse_tcp_req(char **args, int section_type, struct proxy *curpx,
 		}
 
 		/* the following function directly emits the warning */
-		warnif_misplaced_tcp_cont(curpx, file, line, args[0]);
+		if (warnif_misplaced_tcp_cont(curpx, file, line, args[0]))
+			warn++;
 		LIST_APPEND(&curpx->tcp_req.inspect_rules, &rule->list);
 	}
 	else if (strcmp(args[1], "connection") == 0) {
@@ -1273,7 +1274,8 @@ static int tcp_parse_tcp_req(char **args, int section_type, struct proxy *curpx,
 		}
 
 		/* the following function directly emits the warning */
-		warnif_misplaced_tcp_conn(curpx, file, line, args[0]);
+		if (warnif_misplaced_tcp_conn(curpx, file, line, args[0]))
+			warn++;
 		LIST_APPEND(&curpx->tcp_req.l4_rules, &rule->list);
 	}
 	else if (strcmp(args[1], "session") == 0) {
@@ -1317,7 +1319,8 @@ static int tcp_parse_tcp_req(char **args, int section_type, struct proxy *curpx,
 		}
 
 		/* the following function directly emits the warning */
-		warnif_misplaced_tcp_sess(curpx, file, line, args[0]);
+		if (warnif_misplaced_tcp_sess(curpx, file, line, args[0]))
+			warn++;
 		LIST_APPEND(&curpx->tcp_req.l5_rules, &rule->list);
 	}
 	else {
