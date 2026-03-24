@@ -1390,7 +1390,8 @@ int cfg_parse_listen(const char *file, int linenum, char **args, int kwm)
 			goto out;
 		}
 
-		err_code |= warnif_misplaced_http_req(curproxy, file, linenum, args[0], NULL);
+		if (warnif_misplaced_http_req(curproxy, file, linenum, args[0], NULL))
+			err_code |= ERR_WARN;
 
 		if (curproxy->cap & PR_CAP_FE)
 			where |= SMP_VAL_FE_HRQ_HDR;
@@ -1508,7 +1509,8 @@ int cfg_parse_listen(const char *file, int linenum, char **args, int kwm)
 		}
 
 		LIST_APPEND(&curproxy->redirect_rules, &rule->list);
-		err_code |= warnif_misplaced_redirect(curproxy, file, linenum, args[0], NULL);
+		if (warnif_misplaced_redirect(curproxy, file, linenum, args[0], NULL))
+			err_code |= ERR_WARN;
 
 		if (curproxy->cap & PR_CAP_FE)
 			where |= SMP_VAL_FE_HRQ_HDR;
@@ -2560,7 +2562,8 @@ stats_error_parsing:
 				goto out;
 			}
 
-			err_code |= warnif_misplaced_monitor(curproxy, file, linenum, args[0], args[1]);
+			if (warnif_misplaced_monitor(curproxy, file, linenum, args[0], args[1]))
+				err_code |= ERR_WARN;
 			if ((cond = build_acl_cond(file, linenum, &curproxy->acl, curproxy, (const char **)args + 2, &errmsg)) == NULL) {
 				ha_alert("parsing [%s:%d] : error detected while parsing a '%s %s' condition : %s.\n",
 					 file, linenum, args[0], args[1], errmsg);
