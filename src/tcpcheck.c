@@ -2442,7 +2442,7 @@ struct tcpcheck_rule *parse_tcpcheck_connect(char **args, int cur_arg, struct pr
 			if (p != end) {
 				int idx = 0;
 
-				px->conf.args.ctx = ARGC_SRV;
+				px->conf.args.ctx = ARGC_TCK;
 				port_expr = sample_parse_expr((char *[]){args[cur_arg], NULL}, &idx,
 							      file, line, errmsg, &px->conf.args, NULL);
 
@@ -2653,7 +2653,7 @@ struct tcpcheck_rule *parse_tcpcheck_send(char **args, int cur_arg, struct proxy
 	case TCPCHK_SEND_STRING_LF:
 	case TCPCHK_SEND_BINARY_LF:
 		lf_expr_init(&chk->send.fmt);
-		px->conf.args.ctx = ARGC_SRV;
+		px->conf.args.ctx = ARGC_TCK;
 		if (!parse_logformat_string(data, px, &chk->send.fmt, 0, SMP_VAL_BE_CHK_RUL, errmsg)) {
 			memprintf(errmsg, "'%s' invalid log-format string (%s).\n", data, *errmsg);
 			goto error;
@@ -2794,7 +2794,7 @@ struct tcpcheck_rule *parse_tcpcheck_send_http(char **args, int cur_arg, struct 
 	if (uri) {
 		if (chk->send.http.flags & TCPCHK_SND_HTTP_FL_URI_FMT) {
 			lf_expr_init(&chk->send.http.uri_fmt);
-			px->conf.args.ctx = ARGC_SRV;
+			px->conf.args.ctx = ARGC_TCK;
 			if (!parse_logformat_string(uri, px, &chk->send.http.uri_fmt, 0, SMP_VAL_BE_CHK_RUL, errmsg)) {
 				memprintf(errmsg, "'%s' invalid log-format string (%s).\n", uri, *errmsg);
 				goto error;
@@ -2838,7 +2838,7 @@ struct tcpcheck_rule *parse_tcpcheck_send_http(char **args, int cur_arg, struct 
 	if (body) {
 		if (chk->send.http.flags & TCPCHK_SND_HTTP_FL_BODY_FMT) {
 			lf_expr_init(&chk->send.http.body_fmt);
-			px->conf.args.ctx = ARGC_SRV;
+			px->conf.args.ctx = ARGC_TCK;
 			if (!parse_logformat_string(body, px, &chk->send.http.body_fmt, 0, SMP_VAL_BE_CHK_RUL, errmsg)) {
 				memprintf(errmsg, "'%s' invalid log-format string (%s).\n", body, *errmsg);
 				goto error;
@@ -3243,7 +3243,7 @@ struct tcpcheck_rule *parse_tcpcheck_expect(char **args, int cur_arg, struct pro
 
 			cur_arg++;
 			release_sample_expr(status_expr);
-			px->conf.args.ctx = ARGC_SRV;
+			px->conf.args.ctx = ARGC_TCK;
 			status_expr = sample_parse_expr((char *[]){args[cur_arg], NULL}, &idx,
 							file, line, errmsg, &px->conf.args, NULL);
 			if (!status_expr) {
@@ -3315,14 +3315,14 @@ struct tcpcheck_rule *parse_tcpcheck_expect(char **args, int cur_arg, struct pro
 	chk->expect.status_expr = status_expr; status_expr = NULL;
 
 	if (on_success_msg) {
-		px->conf.args.ctx = ARGC_SRV;
+		px->conf.args.ctx = ARGC_TCK;
 		if (!parse_logformat_string(on_success_msg, px, &chk->expect.onsuccess_fmt, 0, SMP_VAL_BE_CHK_RUL, errmsg)) {
 			memprintf(errmsg, "'%s' invalid log-format string (%s).\n", on_success_msg, *errmsg);
 			goto error;
 		}
 	}
 	if (on_error_msg) {
-		px->conf.args.ctx = ARGC_SRV;
+		px->conf.args.ctx = ARGC_TCK;
 		if (!parse_logformat_string(on_error_msg, px, &chk->expect.onerror_fmt, 0, SMP_VAL_BE_CHK_RUL, errmsg)) {
 			memprintf(errmsg, "'%s' invalid log-format string (%s).\n", on_error_msg, *errmsg);
 			goto error;
@@ -3398,7 +3398,7 @@ struct tcpcheck_rule *parse_tcpcheck_expect(char **args, int cur_arg, struct pro
 	case TCPCHK_EXPECT_BINARY_LF:
 	case TCPCHK_EXPECT_HTTP_BODY_LF:
 		lf_expr_init(&chk->expect.fmt);
-		px->conf.args.ctx = ARGC_SRV;
+		px->conf.args.ctx = ARGC_TCK;
 		if (!parse_logformat_string(pattern, px, &chk->expect.fmt, 0, SMP_VAL_BE_CHK_RUL, errmsg)) {
 			memprintf(errmsg, "'%s' invalid log-format string (%s).\n", pattern, *errmsg);
 			goto error;
@@ -3416,7 +3416,7 @@ struct tcpcheck_rule *parse_tcpcheck_expect(char **args, int cur_arg, struct pro
 				goto error;
 		}
 		else if (chk->expect.flags & TCPCHK_EXPT_FL_HTTP_HNAME_FMT) {
-			px->conf.args.ctx = ARGC_SRV;
+			px->conf.args.ctx = ARGC_TCK;
 			lf_expr_init(&chk->expect.hdr.name_fmt);
 			if (!parse_logformat_string(npat, px, &chk->expect.hdr.name_fmt, 0, SMP_VAL_BE_CHK_RUL, errmsg)) {
 				memprintf(errmsg, "'%s' invalid log-format string (%s).\n", npat, *errmsg);
@@ -3446,7 +3446,7 @@ struct tcpcheck_rule *parse_tcpcheck_expect(char **args, int cur_arg, struct pro
 				goto error;
 		}
 		else if (chk->expect.flags & TCPCHK_EXPT_FL_HTTP_HVAL_FMT) {
-			px->conf.args.ctx = ARGC_SRV;
+			px->conf.args.ctx = ARGC_TCK;
 			lf_expr_init(&chk->expect.hdr.value_fmt);
 			if (!parse_logformat_string(vpat, px, &chk->expect.hdr.value_fmt, 0, SMP_VAL_BE_CHK_RUL, errmsg)) {
 				memprintf(errmsg, "'%s' invalid log-format string (%s).\n", vpat, *errmsg);
