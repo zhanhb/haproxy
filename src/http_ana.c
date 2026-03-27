@@ -2721,7 +2721,7 @@ static enum rule_result http_req_get_intercept_rule(struct proxy *px, struct lis
 		/* Always call the action function if defined */
 		if (rule->action_ptr) {
 			if ((s->scf->flags & SC_FL_ERROR) ||
-			    ((s->scf->flags & (SC_FL_EOS|SC_FL_ABRT_DONE)) &&
+			    ((s->scf->flags & (SC_FL_EOS)) &&
 			     (px->options & PR_O_ABRT_CLOSE)))
 				act_opts |= ACT_OPT_FINAL;
 
@@ -2854,6 +2854,7 @@ static enum rule_result http_res_get_intercept_rule(struct proxy *px, struct lis
 
 	if (final)
 		act_opts |= ACT_OPT_FINAL;
+
 	/* If "the current_rule_list" match the executed rule list, we are in
 	 * resume condition. If a resume is needed it is always in the action
 	 * and never in the ACL or converters. In this case, we initialise the
@@ -2895,7 +2896,7 @@ resume_execution:
 		/* Always call the action function if defined */
 		if (rule->action_ptr) {
 			if ((s->scf->flags & SC_FL_ERROR) ||
-			    ((s->scf->flags & (SC_FL_EOS|SC_FL_ABRT_DONE)) &&
+			    ((s->scf->flags & (SC_FL_EOS)) &&
 			     (px->options & PR_O_ABRT_CLOSE)))
 				act_opts |= ACT_OPT_FINAL;
 
@@ -4171,7 +4172,7 @@ enum rule_result http_wait_for_msg_body(struct stream *s, struct channel *chn,
 	/* we get here if we need to wait for more data */
 
 	if ((s->scf->flags & SC_FL_ERROR) ||
-	    ((s->scf->flags & (SC_FL_EOS|SC_FL_ABRT_DONE)) &&
+	    ((s->scf->flags & (SC_FL_EOS)) &&
 	     (s->be->options & PR_O_ABRT_CLOSE)))
 		ret = HTTP_RULE_RES_CONT;
 	else if (!(chn_prod(chn)->flags & (SC_FL_ERROR|SC_FL_EOS|SC_FL_ABRT_DONE))) {
