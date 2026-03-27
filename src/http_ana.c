@@ -2701,7 +2701,7 @@ static enum rule_result http_req_get_intercept_rule(struct proxy *px, struct lis
 		/* Always call the action function if defined */
 		if (rule->action_ptr) {
 			if ((s->scf->flags & SC_FL_ERROR) ||
-			    ((s->scf->flags & (SC_FL_EOS|SC_FL_ABRT_DONE)) &&
+			    ((s->scf->flags & (SC_FL_EOS)) &&
 			     (px->options & PR_O_ABRT_CLOSE)))
 				act_opts |= ACT_OPT_FINAL;
 
@@ -2873,7 +2873,7 @@ resume_execution:
 		/* Always call the action function if defined */
 		if (rule->action_ptr) {
 			if ((s->scf->flags & SC_FL_ERROR) ||
-			    ((s->scf->flags & (SC_FL_EOS|SC_FL_ABRT_DONE)) &&
+			    ((s->scf->flags & (SC_FL_EOS)) &&
 			     (px->options & PR_O_ABRT_CLOSE)))
 				act_opts |= ACT_OPT_FINAL;
 
