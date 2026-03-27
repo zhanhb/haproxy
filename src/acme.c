@@ -2665,7 +2665,7 @@ err:
 /* start an ACME task */
 static int acme_start_task(struct ckch_store *store, char **errmsg)
 {
-	struct task *task;
+	struct task *task = NULL;
 	struct acme_ctx *ctx = NULL;
 	struct acme_cfg *cfg;
 	struct ckch_store *newstore = NULL;
@@ -2750,6 +2750,8 @@ err:
 		HA_RWLOCK_WRUNLOCK(OTHER_LOCK, &acme_lock);
 		acme_ctx_destroy(ctx);
 	}
+	if (task)
+		task_destroy(task);
 	memprintf(errmsg, "%sCan't start the ACME client.", *errmsg ? *errmsg : "");
 	return 1;
 }
