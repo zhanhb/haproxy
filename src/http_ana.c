@@ -2760,7 +2760,7 @@ static enum rule_result http_req_get_intercept_rule(struct proxy *px, struct lis
 	int act_opts = 0;
 
 	if ((s->scf->flags & SC_FL_ERROR) ||
-	    ((s->scf->flags & (SC_FL_EOS|SC_FL_ABRT_DONE)) &&
+	    ((s->scf->flags & (SC_FL_EOS)) &&
 	     (px->options & PR_O_ABRT_CLOSE)))
 		act_opts |= ACT_OPT_FINAL | ACT_OPT_FINAL_EARLY;
 
@@ -2951,7 +2951,7 @@ static enum rule_result http_res_get_intercept_rule(struct proxy *px, struct lis
 	if (final)
 		act_opts |= ACT_OPT_FINAL;
 	if ((s->scf->flags & SC_FL_ERROR) ||
-	    ((s->scf->flags & (SC_FL_EOS|SC_FL_ABRT_DONE)) &&
+	    ((s->scf->flags & (SC_FL_EOS)) &&
 	     (px->options & PR_O_ABRT_CLOSE)))
 		act_opts |= ACT_OPT_FINAL | ACT_OPT_FINAL_EARLY;
 
@@ -4276,7 +4276,7 @@ enum rule_result http_wait_for_msg_body(struct stream *s, struct channel *chn,
 	/* we get here if we need to wait for more data */
 
 	if ((s->scf->flags & SC_FL_ERROR) ||
-	    ((s->scf->flags & (SC_FL_EOS|SC_FL_ABRT_DONE)) &&
+	    ((s->scf->flags & (SC_FL_EOS)) &&
 	     (s->be->options & PR_O_ABRT_CLOSE)))
 		ret = HTTP_RULE_RES_CONT;
 	else if (!(chn_prod(chn)->flags & (SC_FL_ERROR|SC_FL_EOS|SC_FL_ABRT_DONE))) {
