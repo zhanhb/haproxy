@@ -604,6 +604,9 @@ static int cli_parse_get_map(char **args, char *payload, struct appctx *appctx, 
 {
 	struct show_map_ctx *ctx = applet_reserve_svcctx(appctx, sizeof(*ctx));
 
+	if ((appctx->cli_level & ACCESS_LVL_MASK) < ACCESS_LVL_ADMIN)
+		ha_warning("'%s %s' accessed without admin rights, this won't be supported anymore starting from haproxy 3.3\n", args[0], args[1]);
+
 	if (strcmp(args[1], "map") == 0 || strcmp(args[1], "acl") == 0) {
 		/* Set flags. */
 		if (args[1][0] == 'm')
@@ -647,6 +650,9 @@ static int cli_parse_prepare_map(char **args, char *payload, struct appctx *appc
 {
 	struct show_map_ctx *ctx = applet_reserve_svcctx(appctx, sizeof(*ctx));
 
+	if ((appctx->cli_level & ACCESS_LVL_MASK) < ACCESS_LVL_ADMIN)
+		ha_warning("'%s %s' accessed without admin rights, this won't be supported anymore starting from haproxy 3.3\n", args[0], args[1]);
+
 	if (strcmp(args[1], "map") == 0 ||
 	    strcmp(args[1], "acl") == 0) {
 		uint next_gen;
@@ -688,6 +694,9 @@ static void cli_release_show_map(struct appctx *appctx)
 static int cli_parse_show_map(char **args, char *payload, struct appctx *appctx, void *private)
 {
 	struct show_map_ctx *ctx = applet_reserve_svcctx(appctx, sizeof(*ctx));
+
+	if ((appctx->cli_level & ACCESS_LVL_MASK) < ACCESS_LVL_ADMIN)
+		ha_warning("'%s %s' accessed without admin rights, this won't be supported anymore starting from haproxy 3.3\n", args[0], args[1]);
 
 	if (strcmp(args[1], "map") == 0 ||
 	    strcmp(args[1], "acl") == 0) {
@@ -742,6 +751,9 @@ static int cli_parse_show_map(char **args, char *payload, struct appctx *appctx,
 static int cli_parse_set_map(char **args, char *payload, struct appctx *appctx, void *private)
 {
 	struct show_map_ctx *ctx = applet_reserve_svcctx(appctx, sizeof(*ctx));
+
+	if ((appctx->cli_level & ACCESS_LVL_MASK) < ACCESS_LVL_ADMIN)
+		ha_warning("'%s %s' accessed without admin rights, this won't be supported anymore starting from haproxy 3.3\n", args[0], args[1]);
 
 	if (strcmp(args[1], "map") == 0) {
 		char *err;
@@ -814,6 +826,9 @@ static int cli_parse_set_map(char **args, char *payload, struct appctx *appctx, 
 static int cli_parse_add_map(char **args, char *payload, struct appctx *appctx, void *private)
 {
 	struct show_map_ctx *ctx = applet_reserve_svcctx(appctx, sizeof(*ctx));
+
+	if ((appctx->cli_level & ACCESS_LVL_MASK) < ACCESS_LVL_ADMIN)
+		ha_warning("'%s %s' accessed without admin rights, this won't be supported anymore starting from haproxy 3.3\n", args[0], args[1]);
 
 	if (strcmp(args[1], "map") == 0 ||
 	    strcmp(args[1], "acl") == 0) {
@@ -945,6 +960,9 @@ static int cli_parse_del_map(char **args, char *payload, struct appctx *appctx, 
 {
 	struct show_map_ctx *ctx = applet_reserve_svcctx(appctx, sizeof(*ctx));
 
+	if ((appctx->cli_level & ACCESS_LVL_MASK) < ACCESS_LVL_ADMIN)
+		ha_warning("'%s %s' accessed without admin rights, this won't be supported anymore starting from haproxy 3.3\n", args[0], args[1]);
+
 	if (args[1][0] == 'm')
 		ctx->display_flags = PAT_REF_MAP;
 	else
@@ -1040,6 +1058,9 @@ static int cli_parse_clear_map(char **args, char *payload, struct appctx *appctx
 {
 	struct show_map_ctx *ctx = applet_reserve_svcctx(appctx, sizeof(*ctx));
 
+	if ((appctx->cli_level & ACCESS_LVL_MASK) < ACCESS_LVL_ADMIN)
+		ha_warning("'%s %s' accessed without admin rights, this won't be supported anymore starting from haproxy 3.3\n", args[0], args[1]);
+
 	if (strcmp(args[1], "map") == 0 || strcmp(args[1], "acl") == 0) {
 		const char *gen = NULL;
 
@@ -1095,6 +1116,9 @@ static int cli_parse_clear_map(char **args, char *payload, struct appctx *appctx
 static int cli_parse_commit_map(char **args, char *payload, struct appctx *appctx, void *private)
 {
 	struct show_map_ctx *ctx = applet_reserve_svcctx(appctx, sizeof(*ctx));
+
+	if ((appctx->cli_level & ACCESS_LVL_MASK) < ACCESS_LVL_ADMIN)
+		ha_warning("'%s %s' accessed without admin rights, this won't be supported anymore starting from haproxy 3.3\n", args[0], args[1]);
 
 	if (strcmp(args[1], "map") == 0 || strcmp(args[1], "acl") == 0) {
 		const char *gen = NULL;
