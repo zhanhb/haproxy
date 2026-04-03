@@ -4409,6 +4409,7 @@ static void h1_detach(struct sedesc *sd)
 
 	if (h1c->state == H1_CS_RUNNING && !(h1c->flags & H1C_F_IS_BACK) && h1s->req.state != H1_MSG_DONE) {
 		h1c->state = H1_CS_DRAINING;
+		h1c->flags &= ~H1C_F_WANT_FASTFWD;
 		TRACE_DEVEL("Deferring H1S destroy to drain message", H1_EV_STRM_END, h1s->h1c->conn, h1s);
 		/* If we have a pending data, process it immediately or
 		 * subscribe for reads waiting for new data
