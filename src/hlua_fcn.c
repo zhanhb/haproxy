@@ -2779,7 +2779,7 @@ int hlua_patref_add(lua_State *L)
 
 
 	if (!ret) {
-		ret = hlua_error(L, errmsg);
+		ret = hlua_error(L, "%s", errmsg);
 		ha_free(&errmsg);
 		return ret;
 	}
@@ -2828,7 +2828,7 @@ static int _hlua_patref_add_bulk(lua_State *L, int status, lua_KContext ctx)
 
 		if (!pat_ref_load(ref->ptr, curr_gen, key, value, -1, &errmsg)) {
 			HA_RWLOCK_WRUNLOCK(PATREF_LOCK, &ref->ptr->lock);
-			ret = hlua_error(L, errmsg);
+			ret = hlua_error(L, "%s", errmsg);
 			ha_free(&errmsg);
 			return ret;
 		}
@@ -2932,7 +2932,7 @@ int hlua_patref_set(lua_State *L)
 	HA_RWLOCK_WRUNLOCK(PATREF_LOCK, &ref->ptr->lock);
 
 	if (!ret) {
-		ret = hlua_error(L, errmsg);
+		ret = hlua_error(L, "%s", errmsg);
 		ha_free(&errmsg);
 		return ret;
 	}
