@@ -28,3 +28,6 @@ if test -f /opt/homebrew/include/pcre2.h; then
 else
    make -j${CPUS} FLAGS="-O2 -s -Wall"
 fi
+
+mkdir -p "${DESTDIR}"
+cp "${TMPDIR}/vtest/vtest" "${DESTDIR}"
