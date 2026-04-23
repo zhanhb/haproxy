@@ -1,6 +1,105 @@
 ChangeLog :
 ===========
 
+2026/04/23 : 3.2.16
+    - BUG/MINOR: mworker: fix sort order of mworker_proc in 'show proc'
+    - BUG/MINOR: sock: adjust accept() error messages for ENFILE and ENOMEM
+    - BUG/MINOR: qpack: fix 62-bit overflow and 1-byte OOB reads in decoding
+    - MEDIUM: sched: do not run a same task multiple times in series
+    - MINOR: sched: do not requeue a tasklet into the current queue
+    - MINOR: sched: do not punish self-waking tasklets anymore
+    - MEDIUM: sched: do not punish self-waking tasklets if TASK_WOKEN_ANY
+    - MEDIUM: sched: change scheduler budgets to lower TL_BULK
+    - MINOR: mux-h2: assign a limited frames processing budget
+    - BUILD: sched: fix leftover of debugging test in single-run changes
+    - BUG/MEDIUM: acme: fix multiple resource leaks in acme_x509_req()
+    - BUG/MINOR: acme: leak of ext_san upon insertion error
+    - BUG/MINOR: acme: wrong error when checking for duplicate section
+    - BUG/MINOR: acme/cli: wrong argument check in 'acme renew'
+    - Revert "BUG/MEDIUM: mux-h2: make sure to always report pending errors to the stream"
+    - DOC: config: Add missing 'status-code' param for 'http-check expect' directive
+    - DOC: config: Reorder params for 'tcp-check expect' directive
+    - BUG/MINOR: acme: acme_ctx_destroy() leaks auth->dns
+    - BUG/MINOR: acme: wrong labels logic always memprintf errmsg
+    - BUG/MINOR: acme: fix incorrect number of arguments allowed in config
+    - BUG/MEDIUM: spoe: Acquire context buffer in applet before consuming a frame
+    - MINOR: ncbmbuf: improve itbmap_next() code
+    - BUG/MINOR: acme: free() DER buffer on a2base64url error path
+    - BUG/MINOR: acme: replace atol with len-bounded __strl2uic() for retry-after
+    - BUG/MINOR: acme/cli: fix argument check and error in 'acme challenge_ready'
+    - BUILD: tools: potential null pointer dereference in dl_collect_libs_cb
+    - BUG/MINOR: acme: permission checks on the CLI
+    - BUG/MINOR: config: Properly test warnif_misplaced_* return values
+    - BUG/MINOR: http-ana: Only consider client abort for abortonclose
+    - BUG/MEDIUM: acme: skip doing challenge if it is already valid
+    - BUG/MINOR: acme: fix task allocation leaked upon error
+    - CI: github: fix tag listing by implementing proper API pagination
+    - BUG/MINOR: quic: close conn on packet reception with incompatible frame
+    - BUG/MINOR: stconn: Always declare the SC created from healthchecks as a back SC
+    - MINOR: stconn: flag the stream endpoint descriptor when the app has started
+    - MINOR: mux-h2: report glitches on early RST_STREAM
+    - SCRIPTS: git-show-backports: list new commits and how to review them with -L
+    - BUG/MEDIUM: ssl/cli: tls-keys commands warn when accessed without admin level
+    - BUG/MEDIUM: ssl/ocsp: ocsp commands warn when accessed without admin level
+    - BUG/MEDIUM: map/cli: map/acl commands warn when accessed without admin level
+    - BUG/MEDIUM: mux-h1: Don't set MSG_MORE on bodyless responses forwarded to client
+    - BUG/MINOR: tcpcheck: Remove unexpected flag on tcpcheck rules for httchck option
+    - BUG/MINOR: tcpcheck: Don't enable http_needed when parsing HTTP samples
+    - BUG/MINOR: tcpcheck: Use tcpcheck context for expressions parsing
+    - BUG/MINOR: quic: fix documentation for transport params decoding
+    - BUG/MINOR: cfgcond: properly set the error pointer on evaluation error
+    - BUG/MINOR: cfgcond: always set the error string on openssl_version checks
+    - BUG/MINOR: cfgcond: fail cleanly on missing argument for "feature"
+    - DOC: config: fix ambiguous info in log-steps directive description
+    - BUG/MEDIUM: mux-h1: Disable 0-copy forwarding when draining the request
+    - BUG/MINOR: http-act: fix a typo in the "pause" action error message
+    - BUG/MEDIUM: payload: validate SNI name_len in req.ssl_sni
+    - BUG/MEDIUM: jwt: fix heap overflow in ECDSA signature DER conversion
+    - BUG: hlua: fix stack overflow in httpclient headers conversion
+    - BUG/MINOR: hlua: fix stack overflow in httpclient headers conversion
+    - BUG/MINOR: hlua: fix format-string vulnerability in Patref error path
+    - BUG/MINOR: peers: fix OOB heap write in dictionary cache update
+    - BUG/MAJOR: slz: always make sure to limit fixed output to less than worst case literals
+    - BUG/MINOR: resolvers: fix memory leak on AAAA additional records
+    - BUG/MINOR: spoe: fix pointer arithmetic overflow in spoe_decode_buffer()
+    - BUG/MEDIUM: samples: Fix handling of SMP_T_METH samples
+    - BUG/MINOR: sample: fix info leak in regsub when exp_replace fails
+    - BUG/MEDIUM: mux-fcgi: prevent record-length truncation with large bufsize
+    - BUG/MINOR: hlua: fix use-after-free of HTTP reason string
+    - BUG/MINOR: ot: fixed wrong NULL check in flt_ot_parse_cfg_group()
+    - BUG/MINOR: log: Fix error message when using unavailable fetch in logfmt
+    - BUG/MEDIUM: cli: Properly handle too big payload on a command line
+    - BUG/MEDIUM: htx: Fix function used to change part of a block value when defrag
+    - BUG/MEDIUM: htx: Don't count delta twice when block value is replaced
+    - BUG/MINOR: acme: don't pass NULL into format string
+    - BUG/MEDIUM: peers: trash of expired entries delayed after fullresync
+    - BUG/MEDIUM: mux-h2: ignore conn->owner when deciding if a connection is dead
+    - BUG/MINOR: task: fix uninitialised read in run_tasks_from_lists()
+    - BUG/MINOR: log: consider format expression dependencies to decide when to log
+    - MINOR: sample: make RQ/RS stats available everywhere
+    - BUG/MINOR: sample: adjust dependencies for channel output bytes counters
+    - BUG/MAJOR: sched: protect task->expire on 32-bit platforms
+    - reg-tests/ssl/ssl_dh.vtc: fix syntax error
+    - REGTESTS: ssl: mark ssl_dh.vtc as broken
+    - BUG/MINOR: mux-h2: count a protocol error when failing to parse a trailer
+    - BUG/MINOR: mux-h2: count a proto error when rejecting a stream on parsing error
+    - BUG/MEDIUM: tasks: Make sure we don't schedule a task already running
+    - BUG/MINOR: h2: make tune.h2.log-errors actually work
+    - BUG/MINOR: h2: Don't look at the exclusive bit for PRIORITY frame
+    - BUG/MINOR: H2: Don't forget to free shared_rx_bufs on failure
+    - BUG/MINOR: log: also wait for the response when logging response headers
+    - BUG/MINOR: mux-h1: Fix condition to send null-chunk for bodyless message
+    - BUG/MINOR: mux-h1: Fix test to skip trailers from chunked messages
+    - REGTESTS: Never reuse server connection in jwt/jws_verify.vtc
+    - REGTESTS: Never reuse server connection in server/cli_delete_dynamic_server.vtc
+    - SCRIPTS: build-vtest: allow to set a TMPDIR and a DESTDIR
+    - CI: VTest build with git clone + cache
+    - CI: github: only enable OS X on development branches
+    - BUG/MINOR: compression: properly disable request when setting response
+    - BUG/MINOR: debug: properly mark the entire libs archive read-only
+    - BUG/MAJOR: mux-h2: detect incomplete transfers on HEADERS frames as well
+    - BUG/MEDIUM: mux-h1: Force close mode for bodyless message announcing a C-L
+
 2026/03/19 : 3.2.15
     - BUG/MINOR: mworker: don't set the PROC_O_LEAVING flag on master process
     - BUG/MINOR: tcpcheck: Fix typo in error error message for `http-check expect`
