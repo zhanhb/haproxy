@@ -1,6 +1,33 @@
 ChangeLog :
 ===========
 
+2026/04/23 : 2.6.26
+    - BUG/MINOR: sock: adjust accept() error messages for ENFILE and ENOMEM
+    - BUG/MINOR: qpack: fix 62-bit overflow and 1-byte OOB reads in decoding
+    - DOC: config: Add missing 'status-code' param for 'http-check expect' directive
+    - DOC: config: Reorder params for 'tcp-check expect' directive
+    - BUG/MINOR: config: Properly test warnif_misplaced_* return values
+    - SCRIPTS: git-show-backports: list new commits and how to review them with -L
+    - BUG/MINOR: cfgcond: properly set the error pointer on evaluation error
+    - BUG/MINOR: cfgcond: always set the error string on openssl_version checks
+    - BUG/MINOR: cfgcond: fail cleanly on missing argument for "feature"
+    - BUG/MEDIUM: payload: validate SNI name_len in req.ssl_sni
+    - BUG/MEDIUM: jwt: fix heap overflow in ECDSA signature DER conversion
+    - BUG: hlua: fix stack overflow in httpclient headers conversion
+    - BUG/MINOR: hlua: fix stack overflow in httpclient headers conversion
+    - BUG/MINOR: peers: fix OOB heap write in dictionary cache update
+    - BUG/MAJOR: slz: always make sure to limit fixed output to less than worst case literals
+    - BUG/MINOR: spoe: fix pointer arithmetic overflow in spoe_decode_buffer()
+    - BUG/MEDIUM: samples: Fix handling of SMP_T_METH samples
+    - BUG/MINOR: sample: fix info leak in regsub when exp_replace fails
+    - BUG/MEDIUM: mux-fcgi: prevent record-length truncation with large bufsize
+    - BUG/MINOR: hlua: fix use-after-free of HTTP reason string
+    - SCRIPTS: build-vtest: allow to set a TMPDIR and a DESTDIR
+    - CI: VTest build with git clone + cache
+    - CI: github: only enable OS X on development branches
+    - BUG/MAJOR: mux-h2: detect incomplete transfers on HEADERS frames as well
+    - BUG/MEDIUM: mux-h1: Force close mode for bodyless message announcing a C-L
+
 2026/03/20 : 2.6.25
     - CI: github: treat vX.Y.Z release tags as stable like haproxy-* branches
     - BUG/MINOR: tcpcheck: Fix typo in error error message for `http-check expect`
