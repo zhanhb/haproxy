@@ -1,6 +1,34 @@
 ChangeLog :
 ===========
 
+2026/04/23 : 2.4.32
+    - BUG/MINOR: tcpcheck: Fix typo in error error message for `http-check expect`
+    - DOC: configuration: http-check expect example typo
+    - BUG/MINOR: mworker: fix typo &= instead of & in proc list serialization
+    - BUG/MINOR: h2/h3: Only test number of trailers inserted in HTX message
+    - MINOR: htx: Add function to truncate all blocks after a specific block
+    - BUG/MINOR: h2/h3: Never insert partial headers/trailers in an HTX message
+    - BUG/MINOR: mjson: make mystrtod() length-aware to prevent out-of-bounds reads
+    - BUG/MEDIUM: peers: enforce check on incoming table key type
+    - BUG/MINOR: mux-h2: properly ignore R bit in GOAWAY stream ID
+    - BUG/MINOR: mux-h2: properly ignore R bit in WINDOW_UPDATE increments
+    - BUG/MINOR: sock: adjust accept() error messages for ENFILE and ENOMEM
+    - DOC: config: Add missing 'status-code' param for 'http-check expect' directive
+    - DOC: config: Reorder params for 'tcp-check expect' directive
+    - BUG/MINOR: config: Properly test warnif_misplaced_* return values
+    - SCRIPTS: git-show-backports: list new commits and how to review them with -L
+    - BUG/MEDIUM: payload: validate SNI name_len in req.ssl_sni
+    - BUG/MINOR: peers: fix OOB heap write in dictionary cache update
+    - BUG/MAJOR: slz: always make sure to limit fixed output to less than worst case literals
+    - BUG/MINOR: spoe: fix pointer arithmetic overflow in spoe_decode_buffer()
+    - BUG/MEDIUM: samples: Fix handling of SMP_T_METH samples
+    - BUG/MINOR: sample: fix info leak in regsub when exp_replace fails
+    - BUG/MEDIUM: mux-fcgi: prevent record-length truncation with large bufsize
+    - SCRIPTS: build-vtest: allow to set a TMPDIR and a DESTDIR
+    - CI: VTest build with git clone + cache
+    - CI: github: only enable OS X on development branches
+    - BUG/MAJOR: mux-h2: detect incomplete transfers on HEADERS frames as well
+
 2026/03/09 : 2.4.31
     - BUG/MEDIUM: ssl: take care of second client hello
     - BUG/MINOR: ssl: always clear the remains of the first hello for the second one
