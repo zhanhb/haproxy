@@ -5283,7 +5283,6 @@ int proxy_parse_spop_check_opt(char **args, int cur_arg, struct proxy *curpx, co
 	return err_code;
 
   error:
-	free_tcpcheck_ruleset(rs);
 	err_code |= ERR_ALERT | ERR_FATAL;
 	goto out;
 }
