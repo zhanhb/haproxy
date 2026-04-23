@@ -1,6 +1,62 @@
 ChangeLog :
 ===========
 
+2026/04/23 : 3.0.20
+    - BUG/MINOR: sock: adjust accept() error messages for ENFILE and ENOMEM
+    - BUG/MINOR: qpack: fix 62-bit overflow and 1-byte OOB reads in decoding
+    - DOC: config: Add missing 'status-code' param for 'http-check expect' directive
+    - DOC: config: Reorder params for 'tcp-check expect' directive
+    - MINOR: ncbmbuf: improve itbmap_next() code
+    - BUG/MINOR: config: Properly test warnif_misplaced_* return values
+    - Revert "BUG/MEDIUM: mux-h2: make sure to always report pending errors to the stream"
+    - BUG/MINOR: http-ana: Only consider client abort for abortonclose
+    - BUG/MINOR: quic: close conn on packet reception with incompatible frame
+    - BUG/MINOR: stconn: Always declare the SC created from healthchecks as a back SC
+    - SCRIPTS: git-show-backports: list new commits and how to review them with -L
+    - BUG/MEDIUM: ssl/cli: tls-keys commands warn when accessed without admin level
+    - BUG/MEDIUM: ssl/ocsp: ocsp commands warn when accessed without admin level
+    - BUG/MEDIUM: map/cli: map/acl commands warn when accessed without admin level
+    - BUG/MEDIUM: mux-h1: Don't set MSG_MORE on bodyless responses forwarded to client
+    - BUG/MINOR: tcpcheck: Remove unexpected flag on tcpcheck rules for httchck option
+    - BUG/MINOR: tcpcheck: Don't enable http_needed when parsing HTTP samples
+    - BUG/MINOR: tcpcheck: Use tcpcheck context for expressions parsing
+    - BUG/MINOR: quic: fix documentation for transport params decoding
+    - BUG/MINOR: cfgcond: properly set the error pointer on evaluation error
+    - BUG/MINOR: cfgcond: always set the error string on openssl_version checks
+    - BUG/MINOR: cfgcond: fail cleanly on missing argument for "feature"
+    - BUG/MEDIUM: mux-h1: Disable 0-copy forwarding when draining the request
+    - BUG/MEDIUM: payload: validate SNI name_len in req.ssl_sni
+    - BUG/MEDIUM: jwt: fix heap overflow in ECDSA signature DER conversion
+    - BUG: hlua: fix stack overflow in httpclient headers conversion
+    - BUG/MINOR: hlua: fix stack overflow in httpclient headers conversion
+    - BUG/MINOR: peers: fix OOB heap write in dictionary cache update
+    - BUG/MAJOR: slz: always make sure to limit fixed output to less than worst case literals
+    - BUG/MINOR: spoe: fix pointer arithmetic overflow in spoe_decode_buffer()
+    - BUG/MEDIUM: samples: Fix handling of SMP_T_METH samples
+    - BUG/MINOR: sample: fix info leak in regsub when exp_replace fails
+    - BUG/MEDIUM: mux-fcgi: prevent record-length truncation with large bufsize
+    - BUG/MINOR: hlua: fix use-after-free of HTTP reason string
+    - BUG/MINOR: ot: fixed wrong NULL check in flt_ot_parse_cfg_group()
+    - BUG/MINOR: log: Fix error message when using unavailable fetch in logfmt
+    - BUG/MEDIUM: htx: Fix function used to change part of a block value when defrag
+    - BUG/MEDIUM: htx: Don't count delta twice when block value is replaced
+    - BUG/MEDIUM: peers: trash of expired entries delayed after fullresync
+    - BUG/MEDIUM: mux-h2: ignore conn->owner when deciding if a connection is dead
+    - reg-tests/ssl/ssl_dh.vtc: fix syntax error
+    - REGTESTS: ssl: mark ssl_dh.vtc as broken
+    - BUG/MINOR: mux-h2: count a proto error when rejecting a stream on parsing error
+    - BUG/MEDIUM: tasks: Make sure we don't schedule a task already running
+    - BUG/MINOR: h2: Don't look at the exclusive bit for PRIORITY frame
+    - BUG/MINOR: mux-h1: Fix condition to send null-chunk for bodyless message
+    - REGTESTS: Never reuse server connection in jwt/jws_verify.vtc
+    - REGTESTS: Never reuse server connection in server/cli_delete_dynamic_server.vtc
+    - SCRIPTS: build-vtest: allow to set a TMPDIR and a DESTDIR
+    - CI: VTest build with git clone + cache
+    - CI: github: only enable OS X on development branches
+    - BUG/MINOR: compression: properly disable request when setting response
+    - BUG/MAJOR: mux-h2: detect incomplete transfers on HEADERS frames as well
+    - BUG/MEDIUM: mux-h1: Force close mode for bodyless message announcing a C-L
+
 2026/03/19 : 3.0.19
     - MINOR: mworker/cli: extract worker "show proc" row printer
     - BUG/MINOR: mworker/cli: fix show proc pagination losing entries on resume
