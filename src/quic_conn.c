@@ -5237,8 +5237,11 @@ struct task *quic_conn_app_io_cb(struct task *t, void *context, unsigned int sta
 	qel = &qc->els[QUIC_TLS_ENC_LEVEL_APP];
 	TRACE_STATE("connection handshake state", QUIC_EV_CONN_IO_CB, qc, &qc->state);
 
-	if (qc_test_fd(qc))
-		qc_rcv_buf(qc);
+	if (qc_test_fd(qc) && qc_rcv_buf(qc) < 0) {
+		TRACE_ERROR("recvmsg fatal error", QUIC_EV_CONN_SPPKTS, qc);
+		qc_kill_conn(qc);
+		goto no_rx_pkts;
+	}
 
 	/* Prepare post-handshake frames
 	 * - after connection is instantiated (accept is done)
@@ -5265,6 +5268,7 @@ struct task *quic_conn_app_io_cb(struct task *t, void *context, unsigned int sta
 		goto out;
 	}
 
+ no_rx_pkts:
 	if (qc->flags & QUIC_FL_CONN_TO_KILL) {
 		TRACE_DEVEL("connection to be killed", QUIC_EV_CONN_IO_CB, qc);
 		goto out;
@@ -5327,8 +5331,16 @@ struct task *quic_conn_io_cb(struct task *t, void *context, unsigned int state)
 		quic_tls_has_rx_sec(eqel) &&
 		(!LIST_ISEMPTY(&eqel->rx.pqpkts) || qc_el_rx_pkts(eqel));
 
-	if (qc_test_fd(qc))
-		qc_rcv_buf(qc);
+	if (qc_test_fd(qc) && qc_rcv_buf(qc) < 0) {
+		TRACE_ERROR("recvmsg fatal error", QUIC_EV_CONN_SPPKTS, qc);
+		qc_kill_conn(qc);
+		goto out;
+	}
+
+	if (qc->flags & QUIC_FL_CONN_TO_KILL) {
+		TRACE_DEVEL("connection to be killed", QUIC_EV_CONN_PHPKTS, qc);
+		goto out;
+	}
 
 	if (st >= QUIC_HS_ST_COMPLETE &&
 	    qc_el_rx_pkts(&qc->els[QUIC_TLS_ENC_LEVEL_HANDSHAKE])) {
