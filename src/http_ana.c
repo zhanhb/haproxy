@@ -345,7 +345,7 @@ int http_wait_for_request(struct stream *s, struct channel *req, int an_bit)
 	_HA_ATOMIC_INC(&sess->fe->fe_counters.internal_errors);
 	if (sess->listener && sess->listener->counters)
 		_HA_ATOMIC_INC(&sess->listener->counters->internal_errors);
-	stream_report_term_evt(s->scb, strm_tevt_type_internal_err);
+	stream_report_term_evt(s->scf, strm_tevt_type_internal_err);
 	goto return_prx_cond;
 
  return_bad_req:
@@ -353,7 +353,7 @@ int http_wait_for_request(struct stream *s, struct channel *req, int an_bit)
 	_HA_ATOMIC_INC(&sess->fe->fe_counters.failed_req);
 	if (sess->listener && sess->listener->counters)
 		_HA_ATOMIC_INC(&sess->listener->counters->failed_req);
-	stream_report_term_evt(s->scb, strm_tevt_type_proto_err);
+	stream_report_term_evt(s->scf, strm_tevt_type_proto_err);
 	/* fall through */
 
  return_prx_cond:
