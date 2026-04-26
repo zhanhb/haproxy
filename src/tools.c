@@ -4692,7 +4692,8 @@ char *indent_msg(char **out, int level)
 	needed = 1 + level * (lf + 1) + len + 1;
 	p = ret = malloc(needed);
 	if (unlikely(!ret))
-		return NULL;
+		goto leave;
+
 	in = *out;
 
 	/* skip initial LFs */
@@ -4712,6 +4713,7 @@ char *indent_msg(char **out, int level)
 	}
 	*p = 0;
 
+ leave:
 	free(*out);
 	*out = ret;
 
