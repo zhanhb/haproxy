@@ -264,7 +264,7 @@ static int cfg_parse_quic_time(char **args, int section_type,
 	else if (strcmp(name + prefix_len, "backend.max-idle-timeout") == 0)
 		global.tune.quic_backend_max_idle_timeout = time;
 	else {
-		memprintf(err, "'%s' keyword not unhandled (please report this bug).", args[0]);
+		memprintf(err, "'%s' keyword not handled (please report this bug).", args[0]);
 		return -1;
 	}
 
@@ -361,7 +361,7 @@ static int cfg_parse_quic_tune_setting(char **args, int section_type,
 	else if (strcmp(suffix, "retry-threshold") == 0)
 		global.tune.quic_retry_threshold = arg;
 	else {
-		memprintf(err, "'%s' keyword not unhandled (please report this bug).", args[0]);
+		memprintf(err, "'%s' keyword not handled (please report this bug).", args[0]);
 		return -1;
 	}
 
@@ -482,7 +482,7 @@ static int quic_parse_quic_initial(char **args, int section_type, struct proxy *
 	}
 
 	if (!(curpx->mode & PR_MODE_HTTP)) {
-		memprintf(err, "'%s' : proxy '%s' does not used HTTP mode",
+		memprintf(err, "'%s' : proxy '%s' does not use HTTP mode",
 		          args[0], curpx->id);
 		return -1;
 	}
