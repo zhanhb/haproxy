@@ -2043,7 +2043,7 @@ static void ssl_sock_switchctx_set(SSL *ssl, SSL_CTX *ctx)
  *
  * This function does a lookup in the bind_conf sni tree so the caller should lock its tree.
  */
-struct sni_ctx *ssl_sock_chose_sni_ctx(struct bind_conf *s, const char *servername,
+struct sni_ctx *ssl_sock_choose_sni_ctx(struct bind_conf *s, const char *servername,
                                                              int have_rsa_sig, int have_ecdsa_sig)
 {
 	struct ebmb_node *node, *n, *node_ecdsa = NULL, *node_rsa = NULL, *node_anonymous = NULL;
@@ -2368,7 +2368,7 @@ sni_lookup:
 	trash.area[i] = 0;
 
 	HA_RWLOCK_RDLOCK(SNI_LOCK, &s->sni_lock);
-	sni_ctx = ssl_sock_chose_sni_ctx(s, trash.area, has_rsa_sig, has_ecdsa_sig);
+	sni_ctx = ssl_sock_choose_sni_ctx(s, trash.area, has_rsa_sig, has_ecdsa_sig);
 	if (sni_ctx) {
 		/* switch ctx */
 		struct ssl_bind_conf *conf = sni_ctx->conf;
@@ -2647,7 +2647,7 @@ sni_lookup:
 	servername = trash.area;
 
 	HA_RWLOCK_RDLOCK(SNI_LOCK, &s->sni_lock);
-	sni_ctx = ssl_sock_chose_sni_ctx(s, servername, has_rsa_sig, has_ecdsa_sig);
+	sni_ctx = ssl_sock_choose_sni_ctx(s, servername, has_rsa_sig, has_ecdsa_sig);
 	if (sni_ctx) {
 		/* switch ctx */
 		struct ssl_bind_conf *conf = sni_ctx->conf;
@@ -5425,7 +5425,7 @@ int ssl_sock_prepare_bind_conf(struct bind_conf *bind_conf)
 		struct sni_ctx *sni_ctx;
 
 		/* if we use the generate-certificates option, look for the first default cert available */
-		sni_ctx = ssl_sock_chose_sni_ctx(bind_conf, "", 1, 1);
+		sni_ctx = ssl_sock_choose_sni_ctx(bind_conf, "", 1, 1);
 		if (!sni_ctx) {
 			ha_alert("Proxy '%s': no SSL certificate specified for bind '%s' and 'generate-certificates' option at [%s:%d] (use 'crt').\n",
 				 px->id, bind_conf->arg, bind_conf->file, bind_conf->line);

@@ -277,7 +277,7 @@ static int vars_hash_name(const char *name, int len, enum vars_scope *scope,
 		*scope = SCOPE_CHECK;
 	}
 	else {
-		memprintf(err, "invalid variable name '%.*s'. A variable name must be start by its scope. "
+		memprintf(err, "invalid variable name '%.*s'. A variable name must be start with its scope. "
 		               "The scope can be 'proc', 'sess', 'txn', 'req', 'res' or 'check'", len, name);
 		return 0;
 	}

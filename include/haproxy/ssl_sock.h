@@ -120,7 +120,7 @@ int ssl_sock_switchctx_cbk(SSL *ssl, int *al, void *priv);
 
 int increment_sslconn();
 void ssl_sock_load_cert_sni(struct ckch_inst *ckch_inst, struct bind_conf *bind_conf);
-struct sni_ctx *ssl_sock_chose_sni_ctx(struct bind_conf *s, const char *servername,
+struct sni_ctx *ssl_sock_choose_sni_ctx(struct bind_conf *s, const char *servername,
                                                              int have_rsa_sig, int have_ecdsa_sig);
 #ifdef SSL_MODE_ASYNC
 void ssl_async_fd_handler(int fd);
