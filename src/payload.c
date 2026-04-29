@@ -1748,6 +1748,8 @@ smp_fetch_distcc_param(const struct arg *arg_p, struct sample *smp, const char *
 				return 1;
 			}
 		}
+		if (body > ci_data(chn) - ofs)
+			goto no_match;
 		ofs += body;
 	}
 
@@ -1840,6 +1842,8 @@ smp_fetch_distcc_body(const struct arg *arg_p, struct sample *smp, const char *k
 				return 1;
 			}
 		}
+		if (body > ci_data(chn) - ofs)
+			goto no_match;
 		ofs += body;
 	}
 
