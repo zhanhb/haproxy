@@ -1911,6 +1911,7 @@ int acme_res_neworder(struct task *task, struct acme_ctx *ctx, char **errmsg)
 
 		auth->auth = istdup(ist2(trash.area, trash.data));
 		if (!isttest(auth->auth)) {
+			free(auth);
 			memprintf(errmsg, "out of memory");
 			goto error;
 		}
@@ -1923,6 +1924,11 @@ int acme_res_neworder(struct task *task, struct acme_ctx *ctx, char **errmsg)
 		auth->next = ctx->auths;
 		ctx->auths = auth;
 		ctx->next_auth = auth;
+	}
+
+	if (!ctx->auths) {
+		memprintf(errmsg, "no authorizations found in newOrder response");
+		goto error;
 	}
 
 	if ((ret = mjson_get_string(hc->res.buf.area, hc->res.buf.data, "$.finalize", trash.area, trash.size)) <= 0) {
