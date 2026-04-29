@@ -1890,10 +1890,25 @@ int acme_res_neworder(struct task *task, struct acme_ctx *ctx, char **errmsg)
 		goto error;
 	}
 
+	/* if the order already has a certificate URL, the validation was
+	 * already done: skip the auth/challenge steps entirely */
+	ret = mjson_get_string(hc->res.buf.area, hc->res.buf.data, "$.certificate", trash.area, trash.size);
+	if (ret != -1) {
+		trash.data = ret;
+		istfree(&ctx->certificate);
+		ctx->certificate = istdup(ist2(trash.area, trash.data));
+		if (!isttest(ctx->certificate)) {
+			memprintf(errmsg, "out of memory");
+			goto error;
+		}
+		goto end;
+	}
+
 	if (!isttest(ctx->order)) {
 		memprintf(errmsg, "couldn't get an order Location during newOrder");
 		goto error;
 	}
+
 	/* get the multiple authorizations URL and tokens */
 	for (i = 0; ; i++) {
 		struct acme_auth *auth;
@@ -1947,7 +1962,7 @@ int acme_res_neworder(struct task *task, struct acme_ctx *ctx, char **errmsg)
 		memprintf(errmsg, "out of memory");
 		goto error;
 	}
-
+end:
 	ret = 0;
 
 error:
@@ -2265,7 +2280,7 @@ re:
 				if (acme_res_neworder(task, ctx, &errmsg) != 0) {
 					goto retry;
 				}
-				st = ACME_AUTH;
+				st = isttest(ctx->certificate) ? ACME_CERTIFICATE : ACME_AUTH;
 				goto nextreq;
 			}
 		break;
