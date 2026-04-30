@@ -1,6 +1,19 @@
 ChangeLog :
 ===========
 
+2026/04/30 : 2.8.22
+    - DOC: config: Fix log-format example with last rule expressions
+    - BUG/MINOR: tools: my_memspn/my_memcspn wrong cast causing incorrect byte reading
+    - BUG/MINOR: tools: fix memory leak in indent_msg() on out of memory
+    - BUILD: 51d: fix bool definition on dummy lib v4
+    - BUG/MAJOR: http-htx: Store new host in a chunk for scheme-based normalization
+    - BUG/MEDIUM: http-htx: Don't use data from HTX message to update authority
+    - BUG/MEDIUM: http-htx: Loop on full host value during scheme based normalization
+    - BUG/MEDIUM: tasks: Do not loop in task_schedule() if a task is running
+    - BUG/MINOR: payload: prevent integer overflow in distcc token parsing
+    - BUG/MEDIUM: mux-fcgi: Properly handle full buffer for FCGI_PARAM record
+    - BUG/MINOR: http-htx: Don't normalize emtpy path for OPTIONS requests
+
 2026/04/23 : 2.8.21
     - BUG/MINOR: sock: adjust accept() error messages for ENFILE and ENOMEM
     - BUG/MINOR: qpack: fix 62-bit overflow and 1-byte OOB reads in decoding
