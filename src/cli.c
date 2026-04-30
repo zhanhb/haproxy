@@ -3312,8 +3312,11 @@ int mworker_cli_proxy_create()
 		goto error_proxy;
 
 	mworker_proxy->mode = PR_MODE_CLI;
-	mworker_proxy->maxconn = 10;                 /* default to 10 concurrent connections */
+	/* default to 10 concurrent connections */
+	mworker_proxy->maxconn = 10;
 	mworker_proxy->timeout.client = 0; /* no timeout */
+	mworker_proxy->timeout.serverfin = MS_TO_TICKS(1000); /* 1s timeout in case worker is not responding on shutdown */
+
 	mworker_proxy->conf.file = strdup("MASTER");
 	mworker_proxy->conf.line = 0;
 	mworker_proxy->accept = frontend_accept;
