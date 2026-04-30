@@ -285,7 +285,7 @@ static int vars_hash_name(const char *name, int len, enum vars_scope *scope,
 	/* Check variable name syntax. */
 	for (tmp = name; tmp < name + len; tmp++) {
 		if (!isalnum((unsigned char)*tmp) && *tmp != '_' && *tmp != '.') {
-			memprintf(err, "invalid syntax at char '%s'", tmp);
+			memprintf(err, "invalid syntax at char '%c'", *tmp);
 			return 0;
 		}
 	}
