@@ -2280,12 +2280,13 @@ static void qcc_wait_for_hs(struct qcc *qcc)
 /* Proceed on receiving. Loop through all streams from <qcc> and use decode_qcs
  * operation.
  *
- * Returns 0 on success else non-zero.
+ * Returns the number of newly transcoded bytes.
  */
 static int qcc_io_recv(struct qcc *qcc)
 {
 	struct eb64_node *node;
 	struct qcs *qcs;
+	int total = 0, ret;
 
 	TRACE_ENTER(QMUX_EV_QCC_RECV, qcc->conn);
 
@@ -2315,12 +2316,14 @@ static int qcc_io_recv(struct qcc *qcc)
 			continue;
 		}
 
-		qcc_decode_qcs(qcc, qcs);
+		ret = qcc_decode_qcs(qcc, qcs);
+		if (ret > 0)
+			total += ret;
 		node = eb64_next(node);
 	}
 
 	TRACE_LEAVE(QMUX_EV_QCC_RECV, qcc->conn);
-	return 0;
+	return total;
 }
 
 
@@ -2553,20 +2556,22 @@ static void qcc_release(struct qcc *qcc)
 struct task *qcc_io_cb(struct task *t, void *ctx, unsigned int status)
 {
 	struct qcc *qcc = ctx;
+	int total = 0;
 
 	TRACE_ENTER(QMUX_EV_QCC_WAKE, qcc->conn);
 
 	if (!(qcc->wait_event.events & SUB_RETRY_SEND))
-		qcc_io_send(qcc);
+		total += qcc_io_send(qcc);
 
-	qcc_io_recv(qcc);
+	total += qcc_io_recv(qcc);
 
 	if (qcc_io_process(qcc)) {
 		TRACE_STATE("releasing dead connection", QMUX_EV_QCC_WAKE, qcc->conn);
 		goto release;
 	}
 
-	qcc_refresh_timeout(qcc);
+	if (total)
+		qcc_refresh_timeout(qcc);
 
  end:
 	TRACE_LEAVE(QMUX_EV_QCC_WAKE, qcc->conn);
