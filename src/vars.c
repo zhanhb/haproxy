@@ -807,7 +807,6 @@ static enum act_return action_store(struct act_rule *rule, struct proxy *px,
 		smp_set_owner(&smp, px, sess, s, 0);
 		smp.data.type = SMP_T_STR;
 		smp.data.u.str = *fmtstr;
-		var_set(rule->arg.vars.name_hash, rule->arg.vars.scope, &smp, rule->arg.vars.conditions);
 	}
 	else {
 		/* an expression is used */
