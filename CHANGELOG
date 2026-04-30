@@ -1,6 +1,33 @@
 ChangeLog :
 ===========
 
+2026/04/30 : 3.2.17
+    - BUG/MINOR: tcpcheck: Allow connection reuse without prior traffic
+    - BUG/MINOR: ssl: fix memory leaks on realloc failure in ssl_ckch.c
+    - DOC: config: Fix log-format example with last rule expressions
+    - BUG/MINOR: tools: my_memspn/my_memcspn wrong cast causing incorrect byte reading
+    - BUG/MINOR: tools: fix memory leak in indent_msg() on out of memory
+    - BUG/MINOR: tools: free previously allocated strings on strdup failure in backup_env()
+    - BUG/MINOR: sample: fix memory leak in check_when_cond() when ACL is not found
+    - BUG/MINOR: sample: fix NULL strm dereference in sample_conv_when
+    - BUG/MINOR: peers: fix logical "and" when checking for local in PEER_APP_ST_STARTING
+    - BUG/MINOR: peers: fix wrong flag reported twice for dump_flags
+    - BUG/MEDIUM: mux_h1: fix stack buffer overflow in h1_append_chunk_size()
+    - BUG/MINOR: http_ana: use scf to report term_evts in http_wait_for_request()
+    - BUILD: 51d: fix bool definition on dummy lib v4
+    - BUG/MAJOR: http-htx: Store new host in a chunk for scheme-based normalization
+    - BUG/MEDIUM: http-htx: Don't use data from HTX message to update authority
+    - BUG/MEDIUM: http-htx: Loop on full host value during scheme based normalization
+    - BUG/MAJOR: mux-h1: Deal with true 64-bits integer to emit chunks size
+    - BUG/MEDIUM: tasks: Do not loop in task_schedule() if a task is running
+    - BUG/MINOR: fix various typos and spelling mistakes in user-visible messages
+    - BUG/MINOR: payload: validate minimum keyshare_len in smp_fetch_ssl_keyshare_groups
+    - BUG/MINOR: payload: prevent integer overflow in distcc token parsing
+    - BUG/MEDIUM: mux-fcgi: Properly handle full buffer for FCGI_PARAM record
+    - BUG/MINOR: http-htx: Don't normalize emtpy path for OPTIONS requests
+    - BUG/MEDIUM: acme: fix segfault on newOrder with empty authorizations
+    - BUG/MINOR: acme: skip auth/challenge steps when newOrder returns a certificate
+
 2026/04/23 : 3.2.16
     - BUG/MINOR: mworker: fix sort order of mworker_proc in 'show proc'
     - BUG/MINOR: sock: adjust accept() error messages for ENFILE and ENOMEM
