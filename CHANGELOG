@@ -1,6 +1,17 @@
 ChangeLog :
 ===========
 
+2026/04/30 : 2.6.27
+    - BUG/MINOR: tools: my_memspn/my_memcspn wrong cast causing incorrect byte reading
+    - BUG/MAJOR: http-htx: Store new host in a chunk for scheme-based normalization
+    - BUG/MEDIUM: http-htx: Don't use data from HTX message to update authority
+    - BUG/MEDIUM: http-htx: Loop on full host value during scheme based normalization
+    - BUG/MINOR: payload: prevent integer overflow in distcc token parsing
+    - BUG/MEDIUM: mux-fcgi: Properly handle full buffer for FCGI_PARAM record
+    - REGTESTS: ssl: mark ssl_dh.vtc as broken
+    - REGTESTS: ssl: Fix reg-tests curve check
+    - BUG/MINOR: http-htx: Don't normalize emtpy path for OPTIONS requests
+
 2026/04/23 : 2.6.26
     - BUG/MINOR: sock: adjust accept() error messages for ENFILE and ENOMEM
     - BUG/MINOR: qpack: fix 62-bit overflow and 1-byte OOB reads in decoding
