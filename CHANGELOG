@@ -1,6 +1,12 @@
 ChangeLog :
 ===========
 
+2026/04/30 : 2.4.33
+    - BUG/MAJOR: http-htx: Store new host in a chunk for scheme-based normalization
+    - BUG/MEDIUM: http-htx: Don't use data from HTX message to update authority
+    - BUG/MEDIUM: http-htx: Loop on full host value during scheme based normalization
+    - BUG/MEDIUM: mux-fcgi: Properly handle full buffer for FCGI_PARAM record
+
 2026/04/23 : 2.4.32
     - BUG/MINOR: tcpcheck: Fix typo in error error message for `http-check expect`
     - DOC: configuration: http-check expect example typo
