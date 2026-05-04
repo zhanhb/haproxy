@@ -2915,7 +2915,7 @@ static struct h2s *h2c_frt_handle_headers(struct h2c *h2c, struct h2s *h2s)
 	if (h2s->st != H2_SS_IDLE) {
 		/* The stream exists/existed, this must be a trailers frame */
 		if (h2s->st != H2_SS_CLOSED) {
-			error = h2c_decode_headers(h2c, &h2s->rxbuf, &h2s->flags, &body_len, NULL);
+			error = h2c_decode_headers(h2c, &h2s->rxbuf, &h2s->flags, &h2s->body_len, NULL);
 			/* unrecoverable error ? */
 			if (h2c->st0 >= H2_CS_ERROR) {
 				TRACE_USER("Unrecoverable error decoding H2 trailers", H2_EV_RX_FRAME|H2_EV_RX_HDR|H2_EV_STRM_NEW|H2_EV_STRM_END, h2c->conn, 0, &rxbuf);
