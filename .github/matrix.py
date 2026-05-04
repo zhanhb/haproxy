@@ -192,19 +192,18 @@ for CC in ["gcc","clang"]:
     )
 
 # macOS on dev branches
-if "haproxy-" not in ref_name:
-    os = "macos-26"     # development branch
-    TARGET = "osx"
-    for CC in ["clang"]:
-        matrix.append(
-            {
-                "name": "{}, {}, no features".format(os, CC),
-                "os": os,
-                "TARGET": TARGET,
-                "CC": CC,
-                "FLAGS": [],
-            }
-        )
+os = "macos-26"     # development branch
+TARGET = "osx"
+for CC in ["clang"]:
+    matrix.append(
+        {
+            "name": "{}, {}, no features".format(os, CC),
+            "os": os,
+            "TARGET": TARGET,
+            "CC": CC,
+            "FLAGS": [],
+        }
+    )
 
 # Print matrix
 
