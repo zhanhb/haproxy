@@ -2434,10 +2434,16 @@ int pcli_parse_request(struct stream *s, struct channel *req, char **errmsg, int
 		if (pcli_has_level(s, ACCESS_LVL_ADMIN)) {
 			goto end;
 		} else if (pcli_has_level(s, ACCESS_LVL_OPER)) {
-			ci_insert_line2(req, 0, "operator -", strlen("operator -"));
+			if (!ci_insert_line2(req, 0, "operator -", strlen("operator -"))) {
+				ret = -1;
+				goto end;
+			}
 			ret += strlen("operator -") + 2;
 		} else if (pcli_has_level(s, ACCESS_LVL_USER)) {
-			ci_insert_line2(req, 0, "user -", strlen("user -"));
+			if (!ci_insert_line2(req, 0, "user -", strlen("user -"))) {
+				ret = -1;
+				goto end;
+			}
 			ret += strlen("user -") + 2;
 		}
 	}
