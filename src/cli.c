@@ -3320,27 +3320,42 @@ int pcli_parse_request(struct stream *s, struct channel *req, char **errmsg, int
 		/* the mcli-debug-mode is only sent to the applet of the master */
 		if ((s->pcli_flags & ACCESS_MCLI_DEBUG) && *next_pid <= 0) {
 			const char *cmd = "mcli-debug-mode on -;";
-			ci_insert(req, 0, cmd, strlen(cmd));
+			if (!ci_insert(req, 0, cmd, strlen(cmd))) {
+				ret = -1;
+				goto end;
+			}
 			ret += strlen(cmd);
 		}
 		if (s->pcli_flags & ACCESS_EXPERIMENTAL) {
 			const char *cmd = "experimental-mode on -;";
-			ci_insert(req, 0, cmd, strlen(cmd));
+			if (!ci_insert(req, 0, cmd, strlen(cmd))) {
+				ret = -1;
+				goto end;
+			}
 			ret += strlen(cmd);
 		}
 		if (s->pcli_flags & ACCESS_EXPERT) {
 			const char *cmd = "expert-mode on -;";
-			ci_insert(req, 0, cmd, strlen(cmd));
+			if (!ci_insert(req, 0, cmd, strlen(cmd))) {
+				ret = -1;
+				goto end;
+			}
 			ret += strlen(cmd);
 		}
 		if (s->pcli_flags & ACCESS_MCLI_SEVERITY_STR) {
 			const char *cmd = "set severity-output string -;";
-			ci_insert(req, 0, cmd, strlen(cmd));
+			if (!ci_insert(req, 0, cmd, strlen(cmd))) {
+				ret = -1;
+				goto end;
+			}
 			ret += strlen(cmd);
 		}
 		if (s->pcli_flags & ACCESS_MCLI_SEVERITY_NB) {
 			const char *cmd = "set severity-output number -;";
-			ci_insert(req, 0, cmd, strlen(cmd));
+			if (!ci_insert(req, 0, cmd, strlen(cmd))) {
+				ret = -1;
+				goto end;
+			}
 			ret += strlen(cmd);
 		}
 
@@ -3348,11 +3363,17 @@ int pcli_parse_request(struct stream *s, struct channel *req, char **errmsg, int
 			goto end;
 		} else if (pcli_has_level(s, ACCESS_LVL_OPER)) {
 			const char *cmd = "operator -;";
-			ci_insert(req, 0, cmd, strlen(cmd));
+			if (!ci_insert(req, 0, cmd, strlen(cmd))) {
+				ret = -1;
+				goto end;
+			}
 			ret += strlen(cmd);
 		} else if (pcli_has_level(s, ACCESS_LVL_USER)) {
 			const char *cmd = "user -;";
-			ci_insert(req, 0, cmd, strlen(cmd));
+			if (!ci_insert(req, 0, cmd, strlen(cmd))) {
+				ret = -1;
+				goto end;
+			}
 			ret += strlen(cmd);
 		}
 	}
