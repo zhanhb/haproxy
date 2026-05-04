@@ -421,6 +421,7 @@ static void tcpcheck_expect_onerror_message(struct buffer *msg, struct check *ch
 					    int match, struct ist info)
 {
 	struct sample *smp;
+	int check_type;
 
 	/* Follows these step to produce the info message:
 	 *     1. if info field is already provided, copy it
@@ -438,9 +439,11 @@ static void tcpcheck_expect_onerror_message(struct buffer *msg, struct check *ch
 		goto comment;
 	}
 
-       if (check->type == PR_O2_TCPCHK_CHK &&
-	   (check->tcpcheck_rules->flags & TCPCHK_RULES_PROTO_CHK) != TCPCHK_RULES_TCP_CHK)
-	       goto comment;
+	check_type = (check->tcpcheck_rules->flags & TCPCHK_RULES_PROTO_CHK);
+	if (check->type == PR_O2_TCPCHK_CHK &&
+	    check_type != TCPCHK_RULES_TCP_CHK && check_type !=TCPCHK_RULES_HTTP_CHK) {
+		goto comment;
+	}
 
 	chunk_strcat(msg, (match ? "TCPCHK matched unwanted content" : "TCPCHK did not match content"));
 	switch (rule->expect.type) {
@@ -475,6 +478,7 @@ static void tcpcheck_expect_onerror_message(struct buffer *msg, struct check *ch
 		break;
 	case TCPCHK_EXPECT_HTTP_HEADER:
 		chunk_appendf(msg, " (header pattern) at step %d", tcpcheck_get_step_id(check, rule));
+		break;
 	case TCPCHK_EXPECT_UNDEF:
 		/* Should never happen. */
 		return;
