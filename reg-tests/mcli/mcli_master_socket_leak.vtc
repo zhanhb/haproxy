@@ -61,6 +61,6 @@ shell {
 # still marked occupied and this connect is refused or times out.
 haproxy h1 -mcli {
     send "show version"
-    expect ~ "3."
+    expect ~ "2."
 }
 
