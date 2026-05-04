@@ -2709,35 +2709,56 @@ int pcli_parse_request(struct stream *s, struct channel *req, char **errmsg, int
 
 		/* the mcli-debug-mode is only sent to the applet of the master */
 		if ((s->pcli_flags & ACCESS_MCLI_DEBUG) && *next_pid <= 0) {
-			ci_insert(req, 0, "mcli-debug-mode on -;", strlen("mcli-debug-mode on -;"));
+			if (!ci_insert(req, 0, "mcli-debug-mode on -;", strlen("mcli-debug-mode on -;"))) {
+				ret = -1;
+				goto end;
+			}
 			ret += strlen("mcli-debug-mode on -;");
 		}
 		if (s->pcli_flags & ACCESS_EXPERIMENTAL) {
-			ci_insert(req, 0, "experimental-mode on -;", strlen("experimental-mode on -;"));
+			if (!ci_insert(req, 0, "experimental-mode on -;", strlen("experimental-mode on -;"))) {
+				ret = -1;
+				goto end;
+			}
 			ret += strlen("experimental-mode on -;");
 		}
 		if (s->pcli_flags & ACCESS_EXPERT) {
-			ci_insert(req, 0, "expert-mode on -;", strlen("expert-mode on -;"));
+			if (!ci_insert(req, 0, "expert-mode on -;", strlen("expert-mode on -;"))) {
+				ret = -1;
+				goto end;
+			}
 			ret += strlen("expert-mode on -;");
 		}
 		if (s->pcli_flags & ACCESS_MCLI_SEVERITY_STR) {
 			const char *cmd = "set severity-output string -;";
-			ci_insert(req, 0, cmd, strlen(cmd));
+			if (!ci_insert(req, 0, cmd, strlen(cmd))) {
+				ret = -1;
+				goto end;
+			}
 			ret += strlen(cmd);
 		}
 		if (s->pcli_flags & ACCESS_MCLI_SEVERITY_NB) {
 			const char *cmd = "set severity-output number -;";
-			ci_insert(req, 0, cmd, strlen(cmd));
+			if (!ci_insert(req, 0, cmd, strlen(cmd))) {
+				ret = -1;
+				goto end;
+			}
 			ret += strlen(cmd);
 		}
 
 		if (pcli_has_level(s, ACCESS_LVL_ADMIN)) {
 			goto end;
 		} else if (pcli_has_level(s, ACCESS_LVL_OPER)) {
-			ci_insert(req, 0, "operator -;", strlen("operator -;"));
+			if (!ci_insert(req, 0, "operator -;", strlen("operator -;"))) {
+				ret = -1;
+				goto end;
+			}
 			ret += strlen("operator -;");
 		} else if (pcli_has_level(s, ACCESS_LVL_USER)) {
-			ci_insert(req, 0, "user -;", strlen("user -;"));
+			if (!ci_insert(req, 0, "user -;", strlen("user -;"))) {
+				ret = -1;
+				goto end;
+			}
 			ret += strlen("user -;");
 		}
 	}
