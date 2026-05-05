@@ -250,10 +250,8 @@ static struct htx_sl *h2_prepare_htx_reqline(uint32_t fields, struct ist *phdr, 
 		}
 	}
 	else {
-		/* usual schemes with or without authority, use origin form */
+		/* usual schemes without authority, use origin form */
 		uri = phdr[H2_PHDR_IDX_PATH];
-		if (fields & H2_PHDR_FND_AUTH)
-			flags |= HTX_SL_F_HAS_AUTHORITY;
 	}
 
 	/* The method is a non-empty token (RFC7231#4.1) */
@@ -292,6 +290,19 @@ static struct htx_sl *h2_prepare_htx_reqline(uint32_t fields, struct ist *phdr, 
 	if (!sl)
 		goto fail;
 	sl->info.req.meth = meth;
+	if (!htx_add_header(htx, ist(":method"), phdr[H2_PHDR_IDX_METH])) goto fail;
+	if (fields & H2_PHDR_FND_PROT) {
+		if (!htx_add_header(htx, ist(":protocol"), phdr[H2_PHDR_IDX_PROT])) goto fail;
+	}
+	if (flags & HTX_SL_F_HAS_SCHM) {
+		if (!htx_add_header(htx, ist(":scheme"), phdr[H2_PHDR_IDX_SCHM])) goto fail;
+	}
+	if (fields & H2_PHDR_FND_AUTH) {
+		if (!htx_add_header(htx, ist(":authority"), phdr[H2_PHDR_IDX_AUTH])) goto fail;
+	}
+	if (fields & H2_PHDR_FND_PATH) {
+		if (!htx_add_header(htx, ist(":path"), phdr[H2_PHDR_IDX_PATH])) goto fail;
+	}
 	return sl;
  fail:
 	return NULL;
@@ -476,6 +487,15 @@ int h2_make_htx_request(struct http_hdr *list, struct htx *htx, unsigned int *ms
 		sl = h2_prepare_htx_reqline(fields, phdr_val, htx, msgf);
 		if (!sl)
 			goto fail;
+
+		/* complete with missing Host if needed (we may validate this test if
+		 * no regular header was found).
+		 */
+		if ((fields & (H2_PHDR_FND_HOST|H2_PHDR_FND_AUTH)) == H2_PHDR_FND_AUTH) {
+			/* missing Host field, use :authority instead */
+			if (!htx_add_header(htx, ist("host"), phdr_val[H2_PHDR_IDX_AUTH]))
+				goto fail;
+		}
 	}
 
 	if (*msgf & H2_MSGF_BODY_TUNNEL)
@@ -505,15 +525,6 @@ int h2_make_htx_request(struct http_hdr *list, struct htx *htx, unsigned int *ms
 
 	/* update the start line with last detected header info */
 	sl->flags |= sl_flags;
-
-	/* complete with missing Host if needed (we may validate this test if
-	 * no regular header was found).
-	 */
-	if ((fields & (H2_PHDR_FND_HOST|H2_PHDR_FND_AUTH)) == H2_PHDR_FND_AUTH) {
-		/* missing Host field, use :authority instead */
-		if (!htx_add_header(htx, ist("host"), phdr_val[H2_PHDR_IDX_AUTH]))
-			goto fail;
-	}
 
 	/* now we may have to build a cookie list. We'll dump the values of all
 	 * visited headers.
