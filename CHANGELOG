@@ -1,6 +1,20 @@
 ChangeLog :
 ===========
 
+2026/05/06 : 2.4.34
+    - BUG/MINOR: hpack: validate idx > 0 in hpack_valid_idx()
+    - BUG/MINOR: map: do not leak a map descriptor on load error
+    - CLEANUP: map/cli: fix some map-related help messages
+    - BUG/MEDIUM: mux-h2: fix the body_len to check when parsing request trailers
+    - BUG/MAJOR: mux-h2: preset MSGF_BODY_CL on H2_SF_DATA_CLEN in h2c_dec_hdrs()
+    - BUG/MINOR: resolvers: Free opts on parse error in resolv_parse_do_resolve()
+    - REGTESTS: add a regtest to validate various NTLM transitions
+    - BUG/MINOR: mworker/cli: check ci_insert() return value in pcli_parse_request()
+    - BUG/MEDIUM: cli: fix master CLI connection slot leak on client disconnect
+    - CI: github: fix build matrix after latest osx backport
+    - BUG/MINOR: tcpcheck: Properly report error for http health-checks
+    - REGTEST: Fix scripts testing NTLM to remove configurable timeouts
+
 2026/04/30 : 2.4.33
     - BUG/MAJOR: http-htx: Store new host in a chunk for scheme-based normalization
     - BUG/MEDIUM: http-htx: Don't use data from HTX message to update authority
