@@ -1,6 +1,31 @@
 ChangeLog :
 ===========
 
+2026/05/06 : 2.8.23
+    - BUG/MINOR: vars: make parse_store() return error on var_set() failure
+    - BUG/MINOR: vars: don't store the variable twice with set-var-fmt
+    - BUG/MINOR: vars: only print first invalid char in fill_desc()
+    - BUG/MINOR: hpack: validate idx > 0 in hpack_valid_idx()
+    - BUG/MINOR: map: do not leak a map descriptor on load error
+    - CLEANUP: map/cli: fix some map-related help messages
+    - BUG/MEDIUM: mux-h2: fix the body_len to check when parsing request trailers
+    - BUG/MAJOR: mux-h2: preset MSGF_BODY_CL on H2_SF_DATA_CLEN in h2c_dec_hdrs()
+    - BUG/MINOR: tcpcheck: Properly report error for http health-checks
+    - BUG/MINOR: resolvers: Free new requester on error when linking a resolution
+    - BUG/MINOR: resolvers: Free opts on parse error in resolv_parse_do_resolve()
+    - REGTESTS: add a regtest to validate various NTLM transitions
+    - BUG/MINOR: mworker/cli: check ci_insert() return value in pcli_parse_request()
+    - BUG/MEDIUM: cli: fix master CLI connection slot leak on client disconnect
+    - REGTESTS: mark the master CLI socket leak test as valid
+    - REGTESTS: http-messaging: always send RFC8441 client settings to use ext connect
+    - BUG/MINOR: h2: add decoding for :protocol in traces
+    - BUG/MINOR: mux-h2: condition the processing of 8441 extension to global setting
+    - MINOR: mux-h2: add a new message flag to indicate ext connect support
+    - BUG/MINOR: h2: only accept :protocol with extended CONNECT
+    - BUG/MINOR: http-fetch: Fix http_auth_bearer() when custom header is used
+    - BUG/MEDIUM: h1_htx: Remove reverved block on error during contig chunks parsing
+    - BUG/MAJOR: http: forbid comma character in authority value
+
 2026/04/30 : 2.8.22
     - DOC: config: Fix log-format example with last rule expressions
     - BUG/MINOR: tools: my_memspn/my_memcspn wrong cast causing incorrect byte reading
