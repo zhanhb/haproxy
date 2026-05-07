@@ -681,9 +681,9 @@ static inline void task_schedule(struct task *task, int when)
 			when = tick_first(when, task->expire);
 
 		task->expire = when;
-		task_drop_running(task, 0);
 		if (!task_in_wq(task) || tick_is_lt(task->expire, task->wq.key))
 			__task_queue(task, &tg_ctx->timers);
+		task_drop_running(task, 0);
 		HA_RWLOCK_WRUNLOCK(TASK_WQ_LOCK, &wq_lock);
 	} else
 #endif
