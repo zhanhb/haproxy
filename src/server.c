@@ -5817,7 +5817,8 @@ static int init_srv_requeue(struct server *srv)
 	 * failed to queue itself when brought up, which could happen if
 	 * a memory allocation failed.
 	 */
-	tasklet_wakeup(t);
+	if (srv->cur_state != SRV_ST_STOPPED)
+		tasklet_wakeup(t);
 	return ERR_NONE;
 }
 REGISTER_POST_SERVER_CHECK(init_srv_requeue);
