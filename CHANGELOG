@@ -1,6 +1,20 @@
 ChangeLog :
 ===========
 
+2026/05/11 : 3.3.10
+    - BUG/MINOR: ssl: Use the sequence number with kTLS and TLS 1.2
+    - BUG/MINOR: mux_quic: fix max stream ID reuse estimation
+    - BUG/MEDIUM: mux-h2: Properly consume padding for DATA frames
+    - Revert "BUG/MEDIUM: cli: fix master CLI connection slot leak on client disconnect"
+    - Revert "BUG/MINOR: mux-h2: condition the processing of 8441 extension to global setting"
+    - BUG/MEDIUM: mux-h2: fix the detection of the ext connect support
+    - BUG/MEDIUM: stick-table: properly check permissions on CLI's set/clear cmd
+    - BUG/MEDIUM: mux_quic: adjust qcc_is_dead() to account detached streams
+    - BUG/MINOR: mux_quic: refresh timeout only if I/O performed
+    - BUG/MEDIUM: servers: Only requeue servers if they are up
+    - BUG/MINOR: cfgparse-listen: do not emit extraneous line in rule order warnings
+    - BUG/MEDIUM: tasks: Keep the TASK_RUNNING flag until queued
+
 2026/05/06 : 3.3.9
     - BUG/MINOR: sink: do not free existing sinks on allocation error
     - BUG/MINOR: vars: make parse_store() return error on var_set() failure
