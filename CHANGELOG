@@ -1,6 +1,10 @@
 ChangeLog :
 ===========
 
+2026/05/11 : 2.4.35
+    - Revert "BUG/MEDIUM: cli: fix master CLI connection slot leak on client disconnect"
+    - BUG/MEDIUM: stick-table: properly check permissions on CLI's set/clear cmd
+
 2026/05/06 : 2.4.34
     - BUG/MINOR: hpack: validate idx > 0 in hpack_valid_idx()
     - BUG/MINOR: map: do not leak a map descriptor on load error
