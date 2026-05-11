@@ -1,6 +1,16 @@
 ChangeLog :
 ===========
 
+2026/05/11 : 2.8.24
+    - BUG/MEDIUM: h1: Enforce the authority validation during H1 request parsing
+    - BUG/MEDIUM: mux-h2: Properly consume padding for DATA frames
+    - Revert "BUG/MEDIUM: cli: fix master CLI connection slot leak on client disconnect"
+    - Revert "BUG/MINOR: mux-h2: condition the processing of 8441 extension to global setting"
+    - BUG/MEDIUM: mux-h2: fix the detection of the ext connect support
+    - BUG/MEDIUM: stick-table: properly check permissions on CLI's set/clear cmd
+    - BUG/MINOR: cfgparse-listen: do not emit extraneous line in rule order warnings
+    - BUG/MEDIUM: tasks: Keep the TASK_RUNNING flag until queued
+
 2026/05/06 : 2.8.23
     - BUG/MINOR: vars: make parse_store() return error on var_set() failure
     - BUG/MINOR: vars: don't store the variable twice with set-var-fmt
