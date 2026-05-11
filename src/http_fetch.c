@@ -1315,7 +1315,7 @@ static int smp_fetch_proto_http(const struct arg *args, struct sample *smp, cons
 /* return a valid test if the current request is the first one on the connection */
 static int smp_fetch_http_first_req(const struct arg *args, struct sample *smp, const char *kw, void *private)
 {
-	if (!smp->strm)
+	if (!smp->strm || !smp->strm->txn)
 		return 0;
 
 	smp->data.type = SMP_T_BOOL;
