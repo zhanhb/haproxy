@@ -1,6 +1,16 @@
 ChangeLog :
 ===========
 
+2026/05/11 : 3.2.19
+    - BUG/MEDIUM: mux-h2: Properly consume padding for DATA frames
+    - Revert "BUG/MEDIUM: cli: fix master CLI connection slot leak on client disconnect"
+    - Revert "BUG/MINOR: mux-h2: condition the processing of 8441 extension to global setting"
+    - BUG/MEDIUM: mux-h2: fix the detection of the ext connect support
+    - BUG/MEDIUM: stick-table: properly check permissions on CLI's set/clear cmd
+    - BUG/MEDIUM: servers: Only requeue servers if they are up
+    - BUG/MINOR: cfgparse-listen: do not emit extraneous line in rule order warnings
+    - BUG/MEDIUM: tasks: Keep the TASK_RUNNING flag until queued
+
 2026/05/06 : 3.2.18
     - BUG/MINOR: sink: do not free existing sinks on allocation error
     - BUG/MINOR: vars: make parse_store() return error on var_set() failure
