@@ -858,6 +858,7 @@ static int dns_session_init(struct appctx *appctx)
 	return 0;
 
   error:
+	sockaddr_free(&addr);
 	return -1;
 }
 
