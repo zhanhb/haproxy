@@ -3606,6 +3606,7 @@ err_free_conf_file:
 	ha_free((void **)&r->conf.file);
 err_free_p:
 	free_proxy(p);
+	LIST_DEL_INIT(&r->list);
 err_free_r:
 	ha_free(&r);
 	return err_code;
