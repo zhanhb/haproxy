@@ -3141,6 +3141,10 @@ static int qmux_avail_streams(struct connection *conn)
 		ret = MIN(ret, max_reuse);
 	}
 
+	/* Enforce stream_max_concurrent limit even if peer allows more streams. */
+	if (ret > quic_tune.be.stream_max_concurrent - qcc->nb_hreq)
+		ret = quic_tune.be.stream_max_concurrent - qcc->nb_hreq;
+
 	/* Do not exceed maximum usable stream ID. To simplify the calcul,
 	 * limit is only applied when one or zero stream remains.
 	 */
@@ -3882,6 +3886,10 @@ static void qmux_strm_detach(struct sedesc *sd)
 		TRACE_STATE("remaining data, detaching qcs", QMUX_EV_STRM_END, conn, qcs);
 		qcs->flags |= QC_SF_DETACH;
 		qcc_refresh_timeout(qcc);
+
+		/* TODO on backend side if a QCS is detached, the connection may
+		 * not be reinserted in the correct server pool (idle or avail).
+		 */
 
 		TRACE_LEAVE(QMUX_EV_STRM_END, qcc->conn, qcs);
 		return;
