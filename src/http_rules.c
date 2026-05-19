@@ -478,7 +478,7 @@ struct redirect_rule *http_parse_redirect_rule(const char *file, int linenum, st
 			cap |= (dir ? SMP_VAL_FE_HRS_HDR : SMP_VAL_FE_HRQ_HDR);
 		if (curproxy->cap & PR_CAP_BE)
 			cap |= (dir ? SMP_VAL_BE_HRS_HDR : SMP_VAL_BE_HRQ_HDR);
-		if (!(type == REDIRECT_TYPE_PREFIX && destination[0] == '/' && destination[1] == '\0')) {
+		if (!(type == REDIRECT_TYPE_PREFIX && strcmp(destination, "/") == 0)) {
 			if (!parse_logformat_string(destination, curproxy, &rule->rdr_fmt, LOG_OPT_HTTP, cap, errmsg)) {
 				goto err;
 			}

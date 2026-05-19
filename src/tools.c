@@ -803,7 +803,7 @@ struct sockaddr_storage *str2ip2(const char *str, struct sockaddr_storage *sa, i
 	}
 
 	/* Any IPv6 address */
-	if (str[0] == ':' && str[1] == ':' && !str[2]) {
+	if (strcmp(str, "::") == 0) {
 		if (!sa->ss_family || sa->ss_family == AF_UNSPEC)
 			sa->ss_family = AF_INET6;
 		else if (sa->ss_family != AF_INET6)
@@ -813,7 +813,7 @@ struct sockaddr_storage *str2ip2(const char *str, struct sockaddr_storage *sa, i
 	}
 
 	/* Any address for the family, defaults to IPv4 */
-	if (!str[0] || (str[0] == '*' && !str[1])) {
+	if (!str[0] || strcmp(str, "*") == 0) {
 		if (!sa->ss_family || sa->ss_family == AF_UNSPEC)
 			sa->ss_family = AF_INET;
 		set_host_port(sa, port);

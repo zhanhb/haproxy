@@ -303,7 +303,7 @@ int addr_to_ss(const char *str, struct sockaddr_storage *ss, struct err_msg *err
 		ss->ss_family = AF_INET;
 		((struct sockaddr_in *)ss)->sin_port = htons(atoi(port_str));
 
-		if (*str == '*' || *str == '\0') { /* INADDR_ANY */
+		if (strcmp(str, "*") == 0) { /* INADDR_ANY */
 			((struct sockaddr_in *)ss)->sin_addr.s_addr = INADDR_ANY;
 			return 0;
 		}

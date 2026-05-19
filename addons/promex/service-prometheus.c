@@ -1933,7 +1933,7 @@ static int promex_parse_uri(struct appctx *appctx)
 				goto bad_req_error;
 			else if (*value == 0)
 				ctx->flags &= ~PROMEX_FL_SCOPE_ALL;
-			else if (*value == '*' && *(value+1) == 0)
+			else if (strcmp(value, "*") == 0)
 				ctx->flags |= PROMEX_FL_SCOPE_ALL;
 			else if (strcmp(value, "global") == 0)
 				ctx->flags |= PROMEX_FL_SCOPE_GLOBAL;
