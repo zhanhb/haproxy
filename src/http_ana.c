@@ -208,10 +208,6 @@ int http_wait_for_request(struct stream *s, struct channel *req, int an_bit)
 	/* we can make use of server redirect on GET and HEAD */
 	if (txn->meth == HTTP_METH_GET || txn->meth == HTTP_METH_HEAD)
 		s->flags |= SF_REDIRECTABLE;
-	else if (txn->meth == HTTP_METH_OTHER && isteqi(htx_sl_req_meth(sl), ist("PRI"))) {
-		/* PRI is reserved for the HTTP/2 preface */
-		goto return_bad_req;
-	}
 
 	/*
 	 * 2: check if the URI matches the monitor_uri.  We have to do this for
