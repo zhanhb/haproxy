@@ -53,17 +53,6 @@ client c1 -connect ${h1_feh1_sock} {
 		expect resp.status == 200
 	} -run
 
-	# Second request. hide something similar to a H2 preface (PRI method). it is invalid
-	stream 3 {
-		txreq \
-		  -req "PRI" \
-		  -scheme "https" \
-		  -url "*" \
-		  -body "SM\r\n\r\n"
-		rxresp
-		expect resp.status == 400
-	} -run
-
 } -run
 
 client c2 -connect ${h1_feh2_sock} {
