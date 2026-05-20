@@ -221,10 +221,6 @@ int http_wait_for_request(struct stream *s, struct channel *req, int an_bit)
 	/* we can make use of server redirect on GET and HEAD */
 	if (txn->meth == HTTP_METH_GET || txn->meth == HTTP_METH_HEAD)
 		s->flags |= SF_REDIRECTABLE;
-	else if (txn->meth == HTTP_METH_OTHER && isteqi(htx_sl_req_meth(sl), ist("PRI"))) {
-		/* PRI is reserved for the HTTP/2 preface */
-		goto return_bad_req;
-	}
 
 	/* Note that Expect: is not supported in HTTP/1.0 and must be dropped */
 	if (unlikely(!(msg->flags & HTTP_MSGF_VER_11))) {
