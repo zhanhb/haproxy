@@ -812,6 +812,73 @@ struct htx_ret htx_xfer_blks(struct htx *dst, struct htx *src, uint32_t count,
 	return (struct htx_ret){.ret = ret, .blk = dstblk};
 }
 
+/* Move at most <count> bytes (not including meta-data) of HTX blocks from
+ * <src> to <dst>. It returns the number of bytes moved.
+ */
+size_t htx_move_blks(struct htx *dst, struct htx *src, size_t count)
+{
+	struct htx_blk *blk, *dstblk;
+	size_t ret = 0;
+
+	for (blk = htx_get_head_blk(src); blk && count; blk = htx_remove_blk(src, blk)) {
+		struct ist v;
+		enum htx_blk_type type;
+		uint32_t max, sz;
+
+		/* Ignore unused block */
+		type = htx_get_blk_type(blk);
+		if (type == HTX_BLK_UNUSED)
+			continue;
+
+		max = htx_free_data_space(dst);
+		if (!max)
+			break;
+		if (max  > count)
+			max = count;
+
+		sz = htx_get_blksz(blk);
+		switch (type) {
+		case HTX_BLK_DATA:
+			v = htx_get_blk_value(src, blk);
+			v = isttrim(v, max);
+			v.len = htx_add_data(dst, v);
+			if (!v.len)
+				goto stop;
+			count -= v.len;
+			ret += v.len;
+			if (v.len != sz) {
+				htx_cut_data_blk(src, blk, v.len);
+				goto stop;
+			}
+			break;
+
+		default:
+			if (sz > max)
+				goto stop;
+
+			dstblk = htx_add_blk(dst, type, sz);
+			if (!dstblk)
+				goto stop;
+			dstblk->info = blk->info;
+			htx_memcpy(htx_get_blk_ptr(dst, dstblk), htx_get_blk_ptr(src, blk), sz);
+			count -= sz;
+			ret += sz;
+			break;
+		}
+	}
+
+  stop:
+
+	/* Everything was copied, transfer terminal HTX flags too */
+	if (htx_is_empty(src)) {
+		dst->flags |= (src->flags & (HTX_FL_EOM|HTX_FL_PARSING_ERROR|HTX_FL_PROCESSING_ERROR));
+		src->flags = 0;
+	}
+
+	return ret;
+}
+
+
 /* Replaces an header by a new one. The new header can be smaller or larger than
  * the old one. It returns the new block on success, otherwise it returns NULL.
  * The header name is always lower cased.
