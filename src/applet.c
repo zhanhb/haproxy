@@ -608,7 +608,7 @@ size_t appctx_htx_snd_buf(struct appctx *appctx, struct buffer *buf, size_t coun
 		goto end;
 	}
 
-	htx_xfer_blks(appctx_htx, buf_htx, count, HTX_BLK_UNUSED);
+	htx_move_blks(appctx_htx, buf_htx, count);
 	if (htx_is_empty(buf_htx)) {
 		appctx_htx->flags |= (buf_htx->flags & HTX_FL_EOM);
 	}
