@@ -525,9 +525,6 @@ size_t appctx_rcv_buf(struct stconn *sc, struct buffer *buf, size_t count, unsig
 	if (applet_fl_test(appctx, APPCTX_FL_OUTBLK_ALLOC))
 		goto end;
 
-	if (!count)
-		goto end;
-
 	if (!appctx_get_buf(appctx, &appctx->outbuf)) {
 		TRACE_STATE("waiting for appctx outbuf allocation", APPLET_EV_RECV|APPLET_EV_BLK, appctx);
 		goto end;
@@ -536,7 +533,8 @@ size_t appctx_rcv_buf(struct stconn *sc, struct buffer *buf, size_t count, unsig
 	if (flags & CO_RFL_BUF_FLUSH)
 		applet_fl_set(appctx, APPCTX_FL_FASTFWD);
 
-	ret = appctx->applet->rcv_buf(appctx, buf, count, flags);
+	if (count)
+		ret = appctx->applet->rcv_buf(appctx, buf, count, flags);
 	if (ret)
 		applet_fl_clr(appctx, APPCTX_FL_OUTBLK_FULL);
 
