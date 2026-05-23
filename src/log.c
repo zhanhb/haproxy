@@ -1482,7 +1482,7 @@ struct ist *build_log_header(enum log_fmt format, int level, int facility,
 				break;
 			}
 			else if (metadata && metadata[LOG_META_TIME].len >= LOG_ISOTIME_MINLEN) {
-				int month;
+				uint month;
 				char *timestamp = metadata[LOG_META_TIME].ptr;
 
 				/* iso time always begins like this: '1970-01-01T00:00:00' */
