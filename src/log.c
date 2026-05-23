@@ -5048,7 +5048,7 @@ void parse_log_message(char *buf, size_t buflen, int *level, int *facility,
 			return;
 		fac_level = 10*fac_level + (*p - '0');
 		p++;
-		if ((p - buf) > buflen)
+		if ((p - buf) >= buflen)
 			return;
 	}
 
