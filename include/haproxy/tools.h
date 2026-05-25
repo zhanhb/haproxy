@@ -1073,6 +1073,7 @@ void ha_generate_uuid(struct buffer *output);
 void ha_random_seed(const unsigned char *seed, size_t len);
 void ha_random_jump96(uint32_t dist);
 uint64_t ha_random64(void);
+uint64_t ha_random64_internal(void);
 
 static inline uint32_t ha_random32()
 {
