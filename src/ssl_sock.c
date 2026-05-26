@@ -2850,6 +2850,7 @@ int ssl_sock_switchctx_cbk(SSL *ssl, int *al, void *arg)
 			wildp = &trash.area[i];
 	}
 	trash.area[i] = 0;
+	servername = (uint8_t *)trash.area;
 
 	HA_RWLOCK_RDLOCK(SNI_LOCK, &s->sni_lock);
 
