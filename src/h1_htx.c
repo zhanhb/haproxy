@@ -139,6 +139,8 @@ static unsigned int h1m_htx_sl_flags(struct h1m *h1m)
 	}
 	if (h1m->flags & H1_MF_CONN_UPG)
 		flags |= HTX_SL_F_CONN_UPG;
+	if (h1m->flags & H1_MF_UPG_HDR)
+		flags |= HTX_SL_F_UPG_HDR;
 	return flags;
 }
 
@@ -176,6 +178,30 @@ static int h1_postparse_req_hdrs(struct h1m *h1m, union h1_sl *h1sl, struct htx 
 		h1m->curr_len = h1m->body_len = 0;
 	}
 
+	/* Remove Upgrade header if no 'connection: upgrade' found */
+	if ((h1m->flags & (H1_MF_CONN_UPG|H1_MF_UPG_HDR)) == H1_MF_UPG_HDR) {
+		int i;
+
+		for (i = 0; hdrs[i].n.len; i++) {
+			if (isteqi(hdrs[i].n, ist("upgrade")))
+				hdrs[i].v = IST_NULL;
+		}
+		h1m->flags &=~ (H1_MF_CONN_UPG|H1_MF_UPG_HDR);
+	}
+
+	/* Remove 'Upgrade' value from connection header if not Upgrade header found */
+	if ((h1m->flags & (H1_MF_CONN_UPG|H1_MF_UPG_HDR)) == H1_MF_CONN_UPG) {
+		int i;
+
+		for (i = 0; hdrs[i].n.len; i++) {
+			if (isteqi(hdrs[i].n, ist("connection"))) {
+				http_remove_header_value(&hdrs[i].v, ist("upgrade"));
+				if (!istlen(hdrs[i].v))
+					hdrs[i].v = IST_NULL;
+			}
+		}
+		h1m->flags &=~ (H1_MF_CONN_UPG|H1_MF_UPG_HDR);
+	}
 
 	flags = h1m_htx_sl_flags(h1m);
 
