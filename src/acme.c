@@ -1181,7 +1181,7 @@ int acme_res_certificate(struct task *task, struct acme_ctx *ctx, char **errmsg)
 
 	hdrs = hc->res.hdrs;
 
-	for (hdr = hdrs; isttest(hdr->v); hdr++) {
+	for (hdr = hdrs; hdrs && isttest(hdr->v); hdr++) {
 		if (isteqi(hdr->n, ist("Replay-Nonce"))) {
 			istfree(&ctx->nonce);
 			ctx->nonce = istdup(hdr->v);
@@ -1384,7 +1384,7 @@ int acme_res_finalize(struct task *task, struct acme_ctx *ctx, char **errmsg)
 
 	hdrs = hc->res.hdrs;
 
-	for (hdr = hdrs; isttest(hdr->v); hdr++) {
+	for (hdr = hdrs; hdrs && isttest(hdr->v); hdr++) {
 		if (isteqi(hdr->n, ist("Replay-Nonce"))) {
 			istfree(&ctx->nonce);
 			ctx->nonce = istdup(hdr->v);
@@ -1485,7 +1485,7 @@ enum acme_ret acme_res_challenge(struct task *task, struct acme_ctx *ctx, struct
 
 	TRACE_DATA(__FUNCTION__, ACME_EV_RES, ctx, NULL, &hc->res.buf);
 
-	for (hdr = hdrs; isttest(hdr->v); hdr++) {
+	for (hdr = hdrs; hdrs && isttest(hdr->v); hdr++) {
 		if (isteqi(hdr->n, ist("Replay-Nonce"))) {
 			istfree(&ctx->nonce);
 			ctx->nonce = istdup(hdr->v);
@@ -1611,7 +1611,7 @@ int acme_res_auth(struct task *task, struct acme_ctx *ctx, struct acme_auth *aut
 
 	hdrs = hc->res.hdrs;
 
-	for (hdr = hdrs; isttest(hdr->v); hdr++) {
+	for (hdr = hdrs; hdrs && isttest(hdr->v); hdr++) {
 		if (isteqi(hdr->n, ist("Replay-Nonce"))) {
 			istfree(&ctx->nonce);
 			ctx->nonce = istdup(hdr->v);
@@ -1856,7 +1856,7 @@ int acme_res_neworder(struct task *task, struct acme_ctx *ctx, char **errmsg)
 
 	hdrs = hc->res.hdrs;
 
-	for (hdr = hdrs; isttest(hdr->v); hdr++) {
+	for (hdr = hdrs; hdrs && isttest(hdr->v); hdr++) {
 		if (isteqi(hdr->n, ist("Replay-Nonce"))) {
 			istfree(&ctx->nonce);
 			ctx->nonce = istdup(hdr->v);
@@ -2031,7 +2031,7 @@ int acme_res_account(struct task *task, struct acme_ctx *ctx, int newaccount, ch
 
 	hdrs = hc->res.hdrs;
 
-	for (hdr = hdrs; isttest(hdr->v); hdr++) {
+	for (hdr = hdrs; hdrs && isttest(hdr->v); hdr++) {
 		if (isteqi(hdr->n, ist("Location"))) {
 			istfree(&ctx->kid);
 			ctx->kid = istdup(hdr->v);
@@ -2098,7 +2098,7 @@ int acme_nonce(struct task *task, struct acme_ctx *ctx, char **errmsg)
 
 	hdrs = hc->res.hdrs;
 
-	for (hdr = hdrs; isttest(hdr->v); hdr++) {
+	for (hdr = hdrs; hdrs && isttest(hdr->v); hdr++) {
 		if (isteqi(hdr->n, ist("Replay-Nonce"))) {
 			istfree(&ctx->nonce);
 			ctx->nonce = istdup(hdr->v);
