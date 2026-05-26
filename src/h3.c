@@ -1571,6 +1571,23 @@ static ssize_t h3_rcv_buf(struct qcs *qcs, struct buffer *b, int fin)
 			}
 			break;
 		case H3_FT_CANCEL_PUSH:
+			if (!conn_is_back(qcs->qcc->conn)) {
+				/* RFC 9114 7.2.3. CANCEL_PUSH
+				 *
+				 * If a server receives a CANCEL_PUSH frame for a push ID
+				 * that has not yet been mentioned by a PUSH_PROMISE frame, this MUST be
+				 * treated as a connection error of type H3_ID_ERROR.
+				 */
+				TRACE_ERROR("reject CANCEL_PUSH from client", H3_EV_RX_FRAME, qcs->qcc->conn, qcs);
+				qcc_set_error(qcs->qcc, H3_ERR_ID_ERROR, 1);
+				qcc_report_glitch(qcs->qcc, 1);
+				goto err;
+			}
+			else {
+				/* Not supported */
+				ret = flen;
+			}
+			break;
 		case H3_FT_PUSH_PROMISE:
 		case H3_FT_MAX_PUSH_ID:
 		case H3_FT_GOAWAY:
