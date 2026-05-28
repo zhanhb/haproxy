@@ -1667,9 +1667,12 @@ void thread_detect_count(void)
 	    thr_max > MAX_THREADS_PER_GROUP * grp_max)
 		thr_max = MAX_THREADS_PER_GROUP * grp_max;
 
-	if (grp_min < (thr_min +  MAX_THREADS_PER_GROUP - 1) / MAX_THREADS_PER_GROUP &&
-	    grp_max >= (thr_min +  MAX_THREADS_PER_GROUP - 1) / MAX_THREADS_PER_GROUP)
-		grp_min = (thr_min +  MAX_THREADS_PER_GROUP - 1) / MAX_THREADS_PER_GROUP;
+	if (grp_min < (thr_min +  MAX_THREADS_PER_GROUP - 1) / MAX_THREADS_PER_GROUP) {
+		if (grp_max >= (thr_min +  MAX_THREADS_PER_GROUP - 1) / MAX_THREADS_PER_GROUP)
+			grp_min = (thr_min +  MAX_THREADS_PER_GROUP - 1) / MAX_THREADS_PER_GROUP;
+		else
+			grp_min = grp_max;
+	}
 
 	if (grp_max > thr_max && grp_min <= thr_max)
 		grp_max = thr_max;
