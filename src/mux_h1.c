@@ -2194,11 +2194,17 @@ static size_t h1_process_mux(struct h1c *h1c, struct buffer *buf, size_t count)
 						goto skip_hdr;
 				}
 				else if (isteq(n, ist("connection"))) {
+					/* copy the value because it can be modified, but the HTX blocks will not */
+					memcpy(trash.area, v.ptr, v.len);
+					v.ptr = trash.area;
 					h1_parse_connection_header(h1m, &v);
 					if (!v.len)
 						goto skip_hdr;
 				}
 				else if (isteq(n, ist("upgrade"))) {
+					/* copy the value because it can be modified, but the HTX blocks will not */
+					memcpy(trash.area, v.ptr, v.len);
+					v.ptr = trash.area;
 					h1_parse_upgrade_header(h1m, &v);
 					if (!v.len)
 						goto skip_hdr;
