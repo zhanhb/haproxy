@@ -598,7 +598,7 @@ size_t appctx_htx_snd_buf(struct appctx *appctx, struct buffer *buf, size_t coun
 	}
 
 	appctx_htx->extra = (buf_htx->extra ? (buf_htx->data + buf_htx->extra) : 0);
-	htx_to_buf(appctx_htx, &appctx->outbuf);
+	htx_to_buf(appctx_htx, &appctx->inbuf);
 	htx_to_buf(buf_htx, buf);
 	ret -= buf_htx->data;
 end:
