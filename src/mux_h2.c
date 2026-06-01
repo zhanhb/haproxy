@@ -7098,7 +7098,10 @@ static size_t h2s_snd_bhdrs(struct h2s *h2s, struct htx *htx)
 				/* find the auth part of the URI */
 				auth = ist2(uri.ptr, 0);
 				while (auth.len < uri.len && auth.ptr[auth.len] != '/')
-					auth.len++;
+					if (unlikely(auth.ptr[auth.len++] == '@')) {
+						uri = istadv(uri, auth.len);
+						auth = ist2(uri.ptr, 0);
+					}
 
 				uri = istadv(uri, auth.len);
 			}
