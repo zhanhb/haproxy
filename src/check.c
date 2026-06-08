@@ -1429,7 +1429,20 @@ struct task *process_chk_conn(struct task *t, void *context, unsigned int state)
 
 	check_release_buf(check, &check->bi);
 	check_release_buf(check, &check->bo);
-	_HA_ATOMIC_DEC(&th_ctx->running_checks);
+
+	if (unlikely(LIST_INLIST(&check->check_queue))) {
+		/*
+		 * If that check is still queued, and we're about to
+		 * purge it, then remove it from the queue, as it is
+		 * about to be freed.
+		 * This can happen if a server is deleted while the check
+		 * is queued.
+		 */
+		if (check->state & CHK_ST_PURGE)
+			LIST_DEL_INIT(&check->check_queue);
+	}
+	else
+		_HA_ATOMIC_DEC(&th_ctx->running_checks);
 	_HA_ATOMIC_DEC(&th_ctx->active_checks);
 	check->state &= ~(CHK_ST_INPROGRESS|CHK_ST_IN_ALLOC|CHK_ST_OUT_ALLOC);
 	check->state &= ~CHK_ST_READY;
@@ -1582,6 +1595,7 @@ void free_check(struct check *check)
 		ha_free(&check->tcpcheck_rules);
 	}
 
+	LIST_DEL_INIT(&check->check_queue);
 	ha_free(&check->pool_conn_name);
 	ha_free(&check->alpn_str);
 	task_destroy(check->task);
