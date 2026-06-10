@@ -91,7 +91,7 @@ struct stream;
 #define HLUA_TXN_CTX_MASK 0x00000030 /* Mask to get the execution context */
 
 
-#define HLUA_CONCAT_BLOCSZ 2048
+#define HLUA_CONCAT_BLOCSZ 1024
 
 enum hlua_exec {
 	HLUA_E_OK = 0,
