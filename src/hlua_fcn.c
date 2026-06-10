@@ -419,7 +419,7 @@ static int hlua_concat_add(lua_State *L)
 	 */
 	new = NULL;
 	while (b->size - b->len < l) {
-		b->size += HLUA_CONCAT_BLOCSZ;
+		b->size <<= 1;
 		new = buffer;
 	}
 	if (new) {
