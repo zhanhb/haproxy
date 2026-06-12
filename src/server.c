@@ -4816,6 +4816,22 @@ static int cli_parse_add_server(char **args, char *payload, struct appctx *appct
 		}
 	}
 
+	/* Generate the server ID if not manually specified. This must be
+	 * performed before the server queuing in LB tree (srv_alloc_lb()).
+	 * Proxy tree ID insertion though is only done when all fallible
+	 * operation are completed.
+	 */
+	if (!srv->puid) {
+		next_id = get_next_id(&be->conf.used_server_id, 1);
+		if (!next_id) {
+			ha_alert("Cannot attach server : no id left in proxy\n");
+			goto out;
+		}
+
+		srv->conf.id.key = srv->puid = next_id;
+	}
+	srv->conf.name.key = srv->id;
+
 	if (!srv_alloc_lb(srv, be)) {
 		ha_alert("Failed to initialize load-balancing data.\n");
 		goto out;
@@ -4897,17 +4913,7 @@ static int cli_parse_add_server(char **args, char *payload, struct appctx *appct
 		be->srv = srv;
 	}
 
-	/* generate the server id if not manually specified */
-	if (!srv->puid) {
-		next_id = get_next_id(&be->conf.used_server_id, 1);
-		if (!next_id) {
-			ha_alert("Cannot attach server : no id left in proxy\n");
-			goto out;
-		}
-
-		srv->conf.id.key = srv->puid = next_id;
-	}
-	srv->conf.name.key = srv->id;
+	/* All fallible operations completed, the server can now be made visible. */
 
 	/* insert the server in the backend trees */
 	eb32_insert(&be->conf.used_server_id, &srv->conf.id);
