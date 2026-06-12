@@ -2449,7 +2449,6 @@ int http_apply_redirect_rule(struct redirect_rule *rule, struct stream *s, struc
 		}
 		case REDIRECT_TYPE_LOCATION:
 		default:
-			memset(chunk->area, 0x50, chunk->size);
 			if (rule->rdr_str) { /* this is an old "redirect" rule */
 				/* add location */
 				if (!chunk_memcat(chunk, rule->rdr_str, rule->rdr_len))
