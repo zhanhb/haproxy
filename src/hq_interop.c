@@ -35,12 +35,22 @@ static ssize_t hq_interop_decode_qcs(struct qcs *qcs, struct buffer *b, int fin)
 	}
 
 	if (!data || !HTTP_IS_SPHT(*ptr)) {
+		if (b_size(b) - b_room(b) >= (global.tune.bufsize - NCB_RESERVED_SZ)) {
+			fprintf(stderr, "content too big\n");
+			return -1;
+		}
+
 		fprintf(stderr, "truncated stream\n");
 		return -1;
 	}
 
 	ptr++;
 	if (!--data) {
+		if (b_size(b) - b_room(b) >= (global.tune.bufsize - NCB_RESERVED_SZ)) {
+			fprintf(stderr, "content too big\n");
+			return -1;
+		}
+
 		fprintf(stderr, "truncated stream\n");
 		return -1;
 	}
@@ -58,6 +68,11 @@ static ssize_t hq_interop_decode_qcs(struct qcs *qcs, struct buffer *b, int fin)
 	}
 
 	if (!data) {
+		if (b_size(b) - b_room(b) >= (global.tune.bufsize - NCB_RESERVED_SZ)) {
+			fprintf(stderr, "content too big\n");
+			return -1;
+		}
+
 		fprintf(stderr, "truncated stream\n");
 		return -1;
 	}
