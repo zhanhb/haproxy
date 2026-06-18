@@ -37,12 +37,22 @@ static ssize_t hq_interop_rcv_buf(struct qcs *qcs, struct buffer *b, int fin)
 	}
 
 	if (!data || !HTTP_IS_SPHT(*ptr)) {
+		if (b_size(b) - b_room(b) >= qmux_stream_rx_bufsz()) {
+			fprintf(stderr, "content too big\n");
+			return -1;
+		}
+
 		fprintf(stderr, "truncated stream\n");
 		return 0;
 	}
 
 	ptr++;
 	if (!--data) {
+		if (b_size(b) - b_room(b) >= qmux_stream_rx_bufsz()) {
+			fprintf(stderr, "content too big\n");
+			return -1;
+		}
+
 		fprintf(stderr, "truncated stream\n");
 		return 0;
 	}
@@ -60,6 +70,11 @@ static ssize_t hq_interop_rcv_buf(struct qcs *qcs, struct buffer *b, int fin)
 	}
 
 	if (!data) {
+		if (b_size(b) - b_room(b) >= qmux_stream_rx_bufsz()) {
+			fprintf(stderr, "content too big\n");
+			return -1;
+		}
+
 		fprintf(stderr, "truncated stream\n");
 		return 0;
 	}
