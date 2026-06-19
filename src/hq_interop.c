@@ -106,6 +106,7 @@ static size_t hq_interop_snd_buf(struct qcs *qcs, struct buffer *buf,
 	enum htx_blk_type btype;
 	struct htx *htx = NULL;
 	struct htx_blk *blk;
+	struct htx_sl *sl = NULL;
 	int32_t idx;
 	uint32_t bsize, fsize;
 	struct buffer *res = NULL;
@@ -179,6 +180,14 @@ static size_t hq_interop_snd_buf(struct qcs *qcs, struct buffer *buf,
 
 		/* only body is transferred on HTTP/0.9 */
 		case HTX_BLK_RES_SL:
+			sl = htx_get_blk_ptr(htx, blk);
+			if (!(sl->flags & HTX_SL_F_XFER_LEN))
+				qcs->flags |= QC_SF_UNKNOWN_PL_LENGTH;
+			htx_remove_blk(htx, blk);
+			total += bsize;
+			count -= bsize;
+			break;
+
 		case HTX_BLK_TLR:
 		case HTX_BLK_EOT:
 		default:
