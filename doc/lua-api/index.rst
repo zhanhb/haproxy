@@ -839,7 +839,7 @@ Core class
 
 .. js:function:: core.tcp()
 
-  **context**: init, task, action
+  **context**: task, action
 
   This function returns a new object of a *socket* class.
 
@@ -847,7 +847,7 @@ Core class
 
 .. js:function:: core.httpclient()
 
-  **context**: init, task, action
+  **context**: task, action
 
   This function returns a new object of a *httpclient* class. An *httpclient*
   object must be used to process one and only one request. It must never be
