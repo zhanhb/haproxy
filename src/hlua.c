@@ -6090,6 +6090,7 @@ __LJMP static int hlua_applet_http_send(lua_State *L)
 __LJMP static int hlua_applet_http_addheader(lua_State *L)
 {
 	const char *name;
+	lua_Unsigned hdr_cnt;
 	int ret;
 
 	MAY_LJMP(hlua_checkapplet_http(L, 1));
@@ -6112,6 +6113,10 @@ __LJMP static int hlua_applet_http_addheader(lua_State *L)
 
 		/* Entry not found. */
 		lua_pop(L, 1); /* remove the nil. The "response" table is the top of the stack. */
+
+		lua_pushvalue(L, 2);
+		hdr_cnt = lua_rawlen(L, -2);
+		lua_seti(L, -2, hdr_cnt + 1);
 
 		/* Insert the new header name in the array in the top of the stack.
 		 * It left the new array in the top of the stack.
@@ -6180,6 +6185,7 @@ __LJMP static int hlua_applet_http_send_response(lua_State *L)
 	const char *status, *reason;
 	const char *name, *value;
 	size_t nlen, vlen;
+	lua_Unsigned hdr_cnt;
         unsigned int flags;
 
 	/* outbuf is already allocated in hlua_applet_http_start_response() */
@@ -6217,15 +6223,28 @@ __LJMP static int hlua_applet_http_send_response(lua_State *L)
 	}
 
 	/* Browse the list of headers. */
-	lua_pushnil(L);
-	while(lua_next(L, -2) != 0) {
-		/* We expect a string as -2. */
-		if (lua_type(L, -2) != LUA_TSTRING) {
+	for (hdr_cnt = 1; ; ++hdr_cnt) {
+		int type = lua_rawgeti(L, -1, hdr_cnt);
+
+		/* Break the loop immediately at the first nil value (mimics ipairs behavior) */
+		if (type == LUA_TNIL) {
+			lua_pop(L, 1); /* Remove the nil from the stack. */
+			break;
+		}
+
+		/* We expect a string for the header name. */
+		if (type != LUA_TSTRING) {
 			hlua_pusherror(L, "Lua applet http '%s': AppletHTTP['response'][] element must be a string. got %s.\n",
 				       luactx->appctx->applet->name,
 			               lua_typename(L, lua_type(L, -2)));
 			WILL_LJMP(lua_error(L));
 		}
+
+		/* get the value array */
+		lua_pushvalue(L, -1);
+		lua_rawget(L, -3);
+		/* now name and value are on the stack top. */
+
 		name = lua_tolstring(L, -2, &nlen);
 
 		/* We expect an array as -1. */
@@ -6306,8 +6325,8 @@ __LJMP static int hlua_applet_http_send_response(lua_State *L)
 			lua_pop(L, 1);
 		}
 
-		/* Remove the array from the stack, and get next element with a remaining string. */
-		lua_pop(L, 1);
+		/* Remove the name and the value array from the stack. */
+		lua_pop(L, 2);
 	}
 
 	if (h1m.flags & H1_MF_CHNK)
