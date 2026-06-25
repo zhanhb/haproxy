@@ -1,6 +1,51 @@
 ChangeLog :
 ===========
 
+2026/06/25 : 3.4.1
+    - BUG/MEDIUM: check: Skip tcpcheck post-config for external checks
+    - BUG/MEDIUM: check: Ignore small-buffer option when starting an external check
+    - MINOR: check: Don't dump buffers state in check traces for external checks
+    - BUG/MEDIUM: server/checks: Support healtcheck keyword on default-server lines
+    - BUG/MEDIUM: mux_quic: prevent risk of infinite loop on recv
+    - BUG/MINOR: mux_quic: do not interrupt recv on error/incomplete data
+    - BUG/MINOR: tcpcheck: Override external check if healthcheck section is set
+    - REGTESTS: checks: Add script for external healthchecks
+    - BUG/MEDIUM: regex: initialize the match array earlier during boot
+    - BUG/MEDIUM: threads: Fiw build when using no thread
+    - BUG/MEDIUM: xprt_qmux: implement ->get_ssl_sock_ctx() to get the SSL laye
+    - CLEANUP: sessions: simplify the sess_priv_conns pool name
+    - BUG/MINOR: acl: report "ACL" not "map" in ACL ID lookup failures
+    - BUG/MEDIUM: checks: Dequeue checks on purge
+    - REGTESTS: Fix log matching in healthcheck-section.vtc
+    - BUG/MINOR: quic: fix Initial length value in sent packets
+    - BUG/MEDIUM: acme: stuck ACME task when authz is already "valid"
+    - BUG/MEDIUM: ktls: defer enabling TLS ULP on a socket until connected
+    - MINOR: errors: add ha_diag_notice() to report diag-level notifications
+    - BUG/MINOR: cpu-topo: use ha_diag_notice() to report thread creations
+    - BUG/MEDIUM: h3: Properly handle PUSH_PROMISE on backend connections
+    - BUG/MINOR: server: fix add server with consistent hash balancing
+    - BUG/MINOR: http-ana: Remove a debugging memset on redirect
+    - BUG/MEDIUM: http-ana: Don't ignore L7 retry errors
+    - BUG/MINOR: mux-h1: Properly resolve file path for 'h1-case-adjust-file'
+    - BUG/MINOR: quic: fix rxbuf settings on backend side
+    - BUG/MEDIUM: ssl: Don't free the early data buffer too early
+    - BUG/MINOR: hpack-tbl: add missing NULL check after hpack_dht_defrag()
+    - BUG/MEDIUM: mux_quic: fix freeze transfer after QCS rxbuf realign
+    - BUG/MEDIUM: http-act: Make a copy of the sample expr in (set/add)-headers-bin
+    - BUG/MEDIUM: mux-fcgi: fix uint16_t overflow in drl += drp
+    - BUG/MINOR: hq-interop: reject too big content
+    - BUG/MINOR: hq-interop: prevent reset if missing content-length
+    - BUG/MEDIUM: hlua: Properly report EOS when http applet exits
+    - BUG/MINOR: hq-interop: support full demux buf on large response
+    - BUG/MINOR: hq-interop: support response buffer wrapping
+    - DOC: lua: remove incorrect init tags
+    - BUG/MEDIUM: h3: increment unknown request payload length
+    - REGTESTS: quic: test H3 request without content-length
+    - BUG/MEDIUM: mux-fcgi: Truly drain outgoing HTX data when the stream is closed
+    - BUG/MEDIUM: mux-h2: Truly drain outgoing HTX data when the stream is closed
+    - BUG/MEDIUM: mux-spop: Truly drain outgoing data when the stream is closed
+    - BUG/MEDIUM: mux-quic: Drain the given amount of data in qcs_http_reset_buf()
+
 2026/06/03 : 3.4.0
     - BUG/MINOR: tcpcheck: Check LDAP response to not read more data than available
     - BUG/MINOR: ssl-gencert: validate SNI characters to prevent SAN certificate injection
