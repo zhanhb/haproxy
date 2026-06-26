@@ -1,6 +1,57 @@
 ChangeLog :
 ===========
 
+2026/06/26 : 2.6.30
+    - BUG/MEDIUM: dict: hold read lock while incrementing refcount in dict_insert
+    - BUG/MINOR: backend: correct parameter value validation in get_server_ph_post()
+    - BUG/MEDIUM: dns: fix long loops in additional records parse on name failure
+    - BUG/MEDIUM: resolvers: fix name compression pointer validation in resolv_read_name()
+    - BUG/MEDIUM: dns: fix memory leak of sockaddr in dns_session_init() error path
+    - BUG/MINOR: dns: fix dangling dgram pointer on dns_dgram_init() failure path
+    - BUG/MINOR: resolvers: report the expression error in the do-resolve() action parser
+    - BUG/MINOR: jwt: fix possible memory leak in convert_ecdsa_sig() error path
+    - BUG/MINOR: httpclient-cli: Destroy http-client context if failing to start it
+    - BUG/MEDIUM: h1: Skip all h2c values from Upgrade headers during parsing
+    - BUG/MINOR: h1: Don't mask websocket protocol if multiple protocols used
+    - BUG/MEDIUM: server: Duplicate healthcheck's alpn inherited from default server
+    - BUG/MINOR: hpack-tbl: add missing NULL check after hpack_dht_defrag()
+    - BUG/MEDIUM: mux-fcgi: fix uint16_t overflow in drl += drp
+    - BUG/MEDIUM: resolvers: Fix test on dn label size in resolv_dn_label_to_str()
+    - BUG/MEDIUM: dict: hold lock while decrementing refcount in dict_entry_unref
+    - BUG/MEDIUM: hlua: Fix integer underflow when receiving line from lua cosocket
+    - BUG/MEDIUM: log-forward: make sure the month is unsigned
+    - BUG/MINOR: resolvers: fix room for trailing zero in resolv_dn_label_to_str()
+    - BUG/MINOR: resolvers: fix risk of appending garbage past the domain name
+    - BUG/MINOR: mux-h2: validate HEADERS frame length before reading stream dep
+    - BUG/MINOR: dict: fix refcount race on insert collision
+    - BUG/MINOR: sample: limit the be2hex converter's chunk size
+    - BUG/MEDIUM: cache: always verify the primary hash in get_secondary_entry()
+    - BUG/MINOR: http-fetch: check against the whole token in get_http_auth()
+    - BUG/MINOR: payload: fix the handshake length bounds check smp_client_hello_parse()
+    - BUG/MINOR: ssl-hello: make use of the null-terminated servername
+    - BUG/MINOR: addons/51d: NUL-terminate headers before passing them to Trie API
+    - BUG/MEDIUM: auth: fix unconfigured password NULL deref
+    - BUG/MINOR: hlua: prevent Lua from passing CR/LF/NUL in HTTP headers
+    - BUG/MEDIUM: mux-fcgi: reject stream ID 0 for application records
+    - BUG/MINOR: mux-fcgi: Use relative offset to compute contig data in demux buf
+    - BUG/MINOR: ssl-gencert: validate SNI characters to prevent SAN certificate injection
+    - Revert "BUG/MEDIUM: dns: fix long loops in additional records parse on name failure"
+    - BUG/MINOR: qpack: Fix index calculation in debug functions
+    - BUG/MINOR: qpack: fix potential null-pointer dereference in qpack_dht_insert()
+    - BUG/MINOR: qpack: fix sign bit mask in qpack_decode_fs_pfx()
+    - BUG/MINOR: qpack: fix huff_dec() error handling in qpack_decode_fs()
+    - BUG/MINOR: cache: Fix copy of value when parsing maxage
+    - BUG/MEDIUM: mux-h1: Dup connection/upgrade value to parse it when making headers
+    - BUG/MEDIUM: check: Skip tcpcheck post-config for external checks
+    - BUG/MEDIUM: http-ana: Don't ignore L7 retry errors
+    - BUG/MINOR: mux_h1: handle a possible strdup() failure
+    - BUG/MINOR: mux-h1: Properly resolve file path for 'h1-case-adjust-file'
+    - BUG/MEDIUM: ssl: Don't free the early data buffer too early
+    - BUG/MINOR: server: fix add server with consistent hash balancing
+    - BUG/MEDIUM: mux-fcgi: Truly drain outgoing HTX data when the stream is closed
+    - BUG/MEDIUM: mux-h2: Truly drain outgoing HTX data when the stream is closed
+    - BUG/MEDIUM: mux-quic: Drain the given amount of data in qcs_http_reset_buf()
+
 2026/05/11 : 2.6.29
     - Revert "BUG/MEDIUM: cli: fix master CLI connection slot leak on client disconnect"
     - Revert "BUG/MINOR: mux-h2: condition the processing of 8441 extension to global setting"
