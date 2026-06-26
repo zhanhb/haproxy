@@ -1,6 +1,133 @@
 ChangeLog :
 ===========
 
+2026/06/26 : 3.2.20
+    - BUG/MEDIUM: mux_quic: adjust qcc_is_dead() to account detached streams
+    - BUG/MEDIUM: dict: hold read lock while incrementing refcount in dict_insert
+    - MINOR: htx: Add htx_move_blks() to move blocks from a message to another
+    - BUG/MEDIUM: applet: Fix transfer of HTX data to the applet
+    - REGTESTS: Don't try to use real nameservers for testcases
+    - BUILD: 51d.c: cleanup, fix preprocessor ifdefs
+    - BUG/MINOR: backend: correct parameter value validation in get_server_ph_post()
+    - BUG/MINOR: config/dns: properly fail on duplicate nameserver name detection
+    - BUG/MEDIUM: dns: fix long loops in additional records parse on name failure
+    - BUG/MEDIUM: resolvers: fix name compression pointer validation in resolv_read_name()
+    - BUG/MEDIUM: dns: fix memory leak of sockaddr in dns_session_init() error path
+    - CLEANUP: proxy: fix tiny mistakes in parse error messages
+    - BUG/MINOR: servers: use proper source of pool_conn_name in srv_settings_cpy()
+    - BUG/MEDIUM: server/cli: unlock server lock on failure in cli_parse_set_server
+    - BUG/MINOR: resolvers: fix dangling list pointer in resolvers_new() error paths
+    - BUG/MINOR: dns: fix dangling dgram pointer on dns_dgram_init() failure path
+    - BUG/MINOR: resolvers: report the expression error in the do-resolve() action parser
+    - BUG/MINOR: resolvers: fix leaked dgram and dns_ring struct in parse_resolve_conf()
+    - BUG/MINOR: session/trace: use distinct flags for SESS_EV_END and _ERR
+    - BUG/MINOR: check: properly report errno in chk_report_conn_err()
+    - BUG/MINOR: jwt: fix possible memory leak in convert_ecdsa_sig() error path
+    - DOC: config: further clarify that resolvers "default" exists
+    - BUG/MINOR: jws: fix OpenSSL 3.0 version check from > to >=
+    - BUG/MINOR: jws: Add missing return value check (EVP_PKEY_get_bn_param)
+    - BUG/MINOR: httpclient-cli: Destroy http-client context if failing to start it
+    - BUG/MEDIUM: h1: Skip all h2c values from Upgrade headers during parsing
+    - BUG/MINOR: h1: Don't mask websocket protocol if multiple protocols used
+    - BUG/MINOR: backend: fix balance hash calculation when using hash-type none
+    - BUG/MINOR: server: Properly handle init-state value during haproxy startup
+    - BUG/MINOR: ocsp: Manage date too far away in the future
+    - BUG/MEDIUM: applet: Properly handle receives of size 0
+    - BUG/MEDIUM: resolvers: Fix test on dn label size in resolv_dn_label_to_str()
+    - BUG/MEDIUM: ssl-gencert: Unlock LRU cache if failing to generate certificate
+    - BUG/MINOR: quic: fix ODCID lookup from derived value
+    - BUG/MEDIUM: dict: hold lock while decrementing refcount in dict_entry_unref
+    - BUG/MINOR: tcpchecks: Limit parsing of agent-check reply to the buffer
+    - BUG/MEDIUM: hlua: Fix integer underflow when receiving line from lua cosocket
+    - BUG/MEDIUM: log-forward: make sure the month is unsigned
+    - BUG/MEDIUM: tcpcheck/spoe: bound the SPOP error code to valid values
+    - BUG/MEDIUM: cache: fix a refcount leak for missed secondary entries
+    - BUG/MINOR: resolvers: fix room for trailing zero in resolv_dn_label_to_str()
+    - BUG/MINOR: resolvers: fix risk of appending garbage past the domain name
+    - BUG/MINOR: mux-h2: validate HEADERS frame length before reading stream dep
+    - BUG/MINOR: log: look for the end of priority before the end of the buffer
+    - BUG/MINOR: dict: fix refcount race on insert collision
+    - BUG/MINOR: init: use more than ha_random64() for the cluster secret
+    - BUG/MINOR: sample: limit the be2hex converter's chunk size
+    - BUG/MEDIUM: h1: drop headers whose names contain invalid chars
+    - BUG/MEDIUM: h1: limit status codes to 3 digits by default
+    - BUG/MEDIUM: cache: always verify the primary hash in get_secondary_entry()
+    - BUG/MINOR: cache: also recognize directives in the form "token="
+    - BUG/MINOR: resolvers: relax size checks in authority record parsing
+    - BUG/MINOR: http-fetch: check against the whole token in get_http_auth()
+    - BUG/MEDIUM: acme: protect against risk of null-deref on connection failure
+    - BUG/MINOR: http-ext: always check remaining data when reading rfc7239 nodeport
+    - BUG/MINOR: base64: return empty string for empty input in base64dec()
+    - BUG/MINOR: payload: fix the handshake length bounds check smp_client_hello_parse()
+    - BUG/MINOR: ssl-hello: make use of the null-terminated servername
+    - BUG/MINOR: resolvers: switch to a better PRNG for query IDs
+    - BUG/MINOR: addons/51d: NUL-terminate headers before passing them to Trie API
+    - BUG/MEDIUM: h3: reject client push stream
+    - BUG/MINOR: h3: reject client CANCEL_PUSH frame
+    - BUG/MEDIUM: auth: fix unconfigured password NULL deref
+    - BUG/MINOR: hlua: prevent Lua from passing CR/LF/NUL in HTTP headers
+    - BUG/MINOR: quic: reject packet too short for HP decryption
+    - BUG/MEDIUM: mux-fcgi: reject stream ID 0 for application records
+    - MINOR: http: Add function to remove all occurrences of a value in a header
+    - MINOR: h1: Add  a H1M flag to specify a non-empty 'Upgrade:' header was parsed
+    - BUG/MEDIUM: h1-htx: Sanitize parsing to properly handle upgrade requests
+    - BUG/MINOR: mux-fcgi: Use relative offset to compute contig data in demux buf
+    - BUG/MINOR: mux-spop: Use relative offset to compute contig data in demux buf
+    - BUG/MINOR: tcpcheck: Check LDAP response to not read more data than available
+    - BUG/MINOR: ssl-gencert: validate SNI characters to prevent SAN certificate injection
+    - BUG/MEDIUM: cpu-topo: Enforce thread-hard-limit on policy
+    - Revert "BUG/MEDIUM: dns: fix long loops in additional records parse on name failure"
+    - BUG/MINOR: qpack: Fix index calculation in debug functions
+    - BUG/MINOR: qpack: fix potential null-pointer dereference in qpack_dht_insert()
+    - CLEANUP: qpack: fix copy-paste typo in value Huffman debug string
+    - BUG/MINOR: qpack: fix sign bit mask in qpack_decode_fs_pfx()
+    - CLEANUP: qpack: fix copy-paste typo in value Huffman debug string for WLN
+    - BUG/MINOR: qpack: fix huff_dec() error handling in qpack_decode_fs()
+    - CLEANUP: qpack: move encoded macros to qpack-t.h to avoid duplication
+    - BUG/MEDIUM: quic: handle ECONNREFUSED on RX side
+    - BUG/MINOR: mux-h2: Count padding for connection flow control on error path
+    - BUG/MINOR: quic: fix ack range node pool_free call passing wrong pointer type
+    - BUG/MEDIUM: quic: reset cwnd in slow_start on persistent congestion (cubic)
+    - BUG/MEDIUM: quic: reset consecutive_losses on exit from recovery period (cubic)
+    - BUG/MINOR: quic: update drs->lost before calling on_ack_recv
+    - BUG/MINOR: threads: set at least grp_max when mtpg is too small
+    - BUG/MINOR: cache: fix cache tree iteration
+    - BUG/MEDIUM: resolvers: Wait a bit before calling the xprt prepare_srv
+    - BUG/MINOR: cache: Fix copy of value when parsing maxage
+    - BUG/MEDIUM: mux-h1: Dup connection/upgrade value to parse it when making headers
+    - BUG/MINOR: applet: Commit changes into input buffer after sending HTX data
+    - BUG/MINOR: mux-spop: Fix possible off-by-one OOB read in spop_get_varint()
+    - BUG/MEDIUM: leastconn: Unlock the write lock on allocation failure
+    - BUG/MINOR: tasks: Increase the right niced_task counter
+    - BUG/MINOR: http-act: Properly handle final evaluation in pause action
+    - BUG/MEDIUM: vars: Properly eval set-var-fmt action for emtpy log-format string
+    - BUG/MEDIUM: check: Skip tcpcheck post-config for external checks
+    - MINOR: check: Don't dump buffers state in check traces for external checks
+    - BUG/MEDIUM: mux_quic: prevent risk of infinite loop on recv
+    - BUG/MINOR: mux_quic: do not interrupt recv on error/incomplete data
+    - CLEANUP: sessions: simplify the sess_priv_conns pool name
+    - BUG/MINOR: acl: report "ACL" not "map" in ACL ID lookup failures
+    - BUG/MEDIUM: checks: Dequeue checks on purge
+    - BUG/MINOR: quic: fix Initial length value in sent packets
+    - MINOR: errors: add ha_diag_notice() to report diag-level notifications
+    - BUG/MINOR: cpu-topo: use ha_diag_notice() to report thread creations
+    - BUG/MINOR: http-ana: Remove a debugging memset on redirect
+    - BUG/MEDIUM: http-ana: Don't ignore L7 retry errors
+    - BUG/MINOR: mux-h1: Properly resolve file path for 'h1-case-adjust-file'
+    - BUG/MEDIUM: ssl: Don't free the early data buffer too early
+    - BUG/MINOR: hpack-tbl: add missing NULL check after hpack_dht_defrag()
+    - BUG/MEDIUM: mux_quic: fix freeze transfer after QCS rxbuf realign
+    - BUG/MEDIUM: mux-fcgi: fix uint16_t overflow in drl += drp
+    - BUG/MINOR: server: fix add server with consistent hash balancing
+    - BUG/MINOR: hq-interop: reject too big content
+    - BUG/MINOR: hq-interop: prevent reset if missing content-length
+    - DOC: lua: remove incorrect init tags
+    - BUG/MEDIUM: mux-fcgi: Truly drain outgoing HTX data when the stream is closed
+    - BUG/MEDIUM: mux-h2: Truly drain outgoing HTX data when the stream is closed
+    - BUG/MEDIUM: mux-spop: Truly drain outgoing data when the stream is closed
+    - BUG/MEDIUM: mux-quic: Drain the given amount of data in qcs_http_reset_buf()
+    - BUG/MINOR: mux_quic: refresh timeout only if I/O performed
+
 2026/05/11 : 3.2.19
     - BUG/MEDIUM: mux-h2: Properly consume padding for DATA frames
     - Revert "BUG/MEDIUM: cli: fix master CLI connection slot leak on client disconnect"
