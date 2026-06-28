@@ -1,21 +1,21 @@
-Problème des connexions simultanées avec un backend
+ProblÃ¨me des connexions simultanÃ©es avec un backend
 
 Pour chaque serveur, 3 cas possibles :
 
-  - pas de limite (par défaut)
+  - pas de limite (par dÃ©faut)
   - limite statique (maxconn)
   - limite dynamique (maxconn/(ratio de px->conn), avec minconn)
 
 On a donc besoin d'une limite sur le proxy dans le cas de la limite
 dynamique, afin de fixer un seuil et un ratio. Ce qui compte, c'est
-le point après lequel on passe d'un régime linéaire à un régime
-saturé.
+le point aprÃ¨s lequel on passe d'un rÃ©gime linÃ©aire Ã  un rÃ©gime
+saturÃ©.
 
 On a donc 3 phases :
 
-  - régime minimal  (0..srv->minconn)
-  - régime linéaire (srv->minconn..srv->maxconn)
-  - régime saturé (srv->maxconn..)
+  - rÃ©gime minimal  (0..srv->minconn)
+  - rÃ©gime linÃ©aire (srv->minconn..srv->maxconn)
+  - rÃ©gime saturÃ© (srv->maxconn..)
 
 Le minconn pourrait aussi ressortir du serveur ?
 En pratique, on veut :
@@ -24,19 +24,19 @@ En pratique, on veut :
   - un seuil minimal en-dessous duquel le nb de conn est
     maintenu. Cette limite a un sens par serveur (jamais moins de X conns)
     mais aussi en global (pas la peine de faire du dynamique en dessous de
-    X conns à répartir). La difficulté en global, c'est de savoir comment
-    on calcule le nombre min associé à chaque serveur, vu que c'est un ratio
-    défini à partir du max.
+    X conns Ã  rÃ©partir). La difficultÃ© en global, c'est de savoir comment
+    on calcule le nombre min associÃ© Ã  chaque serveur, vu que c'est un ratio
+    dÃ©fini Ã  partir du max.
 
-Ca revient à peu près à la même chose que de faire 2 états :
+Ca revient Ã  peu prÃ¨s Ã  la mÃªme chose que de faire 2 Ã©tats :
 
-  - régime linéaire avec un offset (srv->minconn..srv->maxconn)
-  - régime saturé (srv->maxconn..)
+  - rÃ©gime linÃ©aire avec un offset (srv->minconn..srv->maxconn)
+  - rÃ©gime saturÃ© (srv->maxconn..)
 
 Sauf que dans ce cas, le min et le max sont bien par serveur, et le seuil est
-global et correspond à la limite de connexions au-delà de laquel on veut
-tourner à plein régime sur l'ensemble des serveurs. On peut donc parler de
-passage en mode "full", "saturated", "optimal". On peut également parler de
+global et correspond Ã  la limite de connexions au-delÃ  de laquel on veut
+tourner Ã  plein rÃ©gime sur l'ensemble des serveurs. On peut donc parler de
+passage en mode "full", "saturated", "optimal". On peut Ã©galement parler de
 la fin de la partie "scalable", "dynamique".
 
 => fullconn 1000 par exemple ?
