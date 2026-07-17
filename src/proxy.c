@@ -1563,7 +1563,7 @@ void proxy_free_defaults(struct proxy *defproxy)
 
 	/* default proxy specific cleanup */
 	if (defproxy->defsrv)
-		ha_free((char **)&defproxy->defsrv->conf.file);
+		srv_free_params(defproxy->defsrv);
 	ha_free(&defproxy->defbe.name);
 	srv_free(&defproxy->defsrv);
 
@@ -2853,7 +2853,7 @@ static int post_section_px_cleanup()
 		 */
 
 		if (curproxy->defsrv) {
-			ha_free((char **)&curproxy->defsrv->conf.file);
+			srv_free_params(curproxy->defsrv);
 			srv_free(&curproxy->defsrv);
 		}
 	}
