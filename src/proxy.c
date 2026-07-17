@@ -1473,7 +1473,7 @@ void proxy_free_defaults(struct proxy *defproxy)
 	proxy_free_common(defproxy);
 
 	/* default proxy specific cleanup */
-	ha_free((char **)&defproxy->defsrv.conf.file);
+	srv_free_params(&defproxy->defsrv);
 	ha_free(&defproxy->defbe.name);
 
 	h = defproxy->req_cap;
