@@ -1109,7 +1109,8 @@ int httpclient_applet_init(struct appctx *appctx)
 	}
 
 	s = appctx_strm(appctx);
-	s->target = target;
+	stream_set_target(s, target);
+
 	/* set the "timeout server" */
 	s->scb->ioto = hc->timeout_server;
 
