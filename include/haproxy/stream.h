@@ -404,10 +404,28 @@ static inline void stream_shutdown(struct stream *s, int why)
 	             0));
 }
 
+/*
+ * Sets the stream's target, and take care of nb_strm and sv_tgcounters if
+ * the target is a server.
+ */
+static inline void stream_set_target(struct stream *s, enum obj_type *target)
+{
+	struct server *o = objt_server(s->target);
+	struct server *n = objt_server(target);
+
+	if (o != n) {
+		if (n)
+			_HA_ATOMIC_INC(&n->per_tgrp[tgid - 1].nb_strm);
+		if (o)
+			_HA_ATOMIC_DEC(&o->per_tgrp[tgid - 1].nb_strm);
+	}
+	s->target = target;
+}
+
 /* Sets the stream's target to the designated server. */
 static inline void stream_set_srv_target(struct stream *s, struct server *srv)
 {
-	s->target = &srv->obj_type;
+	stream_set_target(s, &srv->obj_type);
 }
 
 int stream_set_timeout(struct stream *s, enum act_timeout_name name, int timeout);

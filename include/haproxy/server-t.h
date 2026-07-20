@@ -262,6 +262,7 @@ struct srv_per_thread {
 /* Each server will have one occurrence of this structure per thread group */
 struct srv_per_tgroup {
 	unsigned int next_takeover;             /* thread ID to try to steal connections from next time */
+	unsigned int nb_strm;                   /* nb streams in this tgroup referencing this server */
 };
 
 /* Configure the protocol selection for websocket */

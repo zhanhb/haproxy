@@ -1981,10 +1981,16 @@ static int srv_parse_weight(char **args, int *cur_arg, struct proxy *px, struct 
 static int srv_has_streams(struct server *srv)
 {
 	int thr;
+	int i;
 
 	for (thr = 0; thr < global.nbthread; thr++)
 		if (!MT_LIST_ISEMPTY(&srv->per_thr[thr].streams))
 			return 1;
+
+	for (i = 0; i < global.nbtgroups; i++) {
+		if (_HA_ATOMIC_LOAD(&srv->per_tgrp[i].nb_strm))
+			return 1;
+	}
 	return 0;
 }
 

@@ -727,6 +727,8 @@ void stream_free(struct stream *s)
 	sc_destroy(s->scb);
 	sc_destroy(s->scf);
 
+	stream_set_target(s, NULL);
+
 	pool_free(pool_head_stream, s);
 
 	/* We may want to free the maximum amount of pools if the proxy is stopping */
@@ -1011,7 +1013,7 @@ enum act_return process_use_service(struct act_rule *rule, struct proxy *px,
 	/* Initialises the applet if it is required. */
 	if (flags & ACT_OPT_FIRST) {
 		/* Register applet. this function schedules the applet. */
-		s->target = &rule->applet.obj_type;
+		stream_set_target(s, &rule->applet.obj_type);
 		appctx = sc_applet_create(s->scb, objt_applet(s->target));
 		if (unlikely(!appctx))
 			return ACT_RET_ERR;
