@@ -1986,6 +1986,7 @@ The following keywords are supported in the "global" section :
    - tune.ssl.force-private-cache
    - tune.ssl.hard-maxrecord
    - tune.ssl.keylog
+   - tune.ssl.keyupdate-rate-limit
    - tune.ssl.lifetime
    - tune.ssl.maxrecord
    - tune.ssl.ssl-ctx-cache-size
@@ -5389,6 +5390,13 @@ tune.ssl.keylog { on | off }
                 SERVER_TRAFFIC_SECRET_0 %[ssl_bc_client_random,hex] %[ssl_bc_server_traffic_secret_0]\n
                 EXPORTER_SECRET %[ssl_bc_client_random,hex] %[ssl_bc_exporter_secret]\n
                 EARLY_EXPORTER_SECRET %[ssl_bc_client_random,hex] %[ssl_bc_early_exporter_secret]"
+
+tune.ssl.keyupdate-rate-limit <limit>
+  Limit the amount of KeyUpdate per second we're willing to accept to <limit>
+  before considering it flood, and killing the connection. Dealing with
+  KeyUpdate is cpu-expensive, and there is little reason to receive a lot of
+  them. Using a value of "0" disables the rate limiting.
+  The default value is 100.
 
 tune.ssl.lifetime <timeout>
   Sets how long a cached SSL session may remain valid. This time is expressed
