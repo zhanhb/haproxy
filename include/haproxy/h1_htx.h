@@ -27,6 +27,7 @@
 #include <haproxy/api-t.h>
 #include <haproxy/buf-t.h>
 #include <haproxy/h1.h>
+#include <haproxy/h1_htx-t.h>
 #include <haproxy/htx.h>
 
 int h1_parse_msg_hdrs(struct h1m *h1m, union h1_sl *h1sl, struct htx *dsthtx,

@@ -80,18 +80,6 @@ struct h1s {
 	char ws_key[25];       /* websocket handshake key */
 };
 
-/* Map of headers used to convert outgoing headers */
-struct h1_hdrs_map {
-	char *name;
-	struct eb_root map;
-};
-
-/* An entry in a headers map */
-struct h1_hdr_entry  {
-	struct ist name;
-	struct ebpt_node node;
-};
-
 /* Declare the headers map */
 static struct h1_hdrs_map hdrs_map = { .name = NULL, .map  = EB_ROOT };
 static int accept_payload_with_any_method = 0;
