@@ -553,7 +553,7 @@ static int smp_fetch_hdrs(const struct arg *args, struct sample *smp, const char
 			struct ist n = htx_get_blk_name(htx, blk);
 			struct ist v = htx_get_blk_value(htx, blk);
 
-			if (!h1_format_htx_hdr(n, v, temp))
+			if (!h1_format_htx_hdr(n, v, temp, NULL))
 				return 0;
 		}
 		else if (type == HTX_BLK_EOH) {
