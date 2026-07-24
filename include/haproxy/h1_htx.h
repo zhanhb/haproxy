@@ -64,9 +64,9 @@ static inline struct ist h1_get_uri(const struct htx_sl *sl)
 
 int h1_format_htx_reqline(const struct htx_sl *sl, struct buffer *chk);
 int h1_format_htx_stline(const struct htx_sl *sl, struct buffer *chk);
-int h1_format_htx_hdr(const struct ist n, const struct ist v, struct buffer *chk);
+int h1_format_htx_hdr(const struct ist n, const struct ist v, struct buffer *chk, struct h1_hdrs_map *hdrs_map);
 int h1_format_htx_data(const struct ist data, struct buffer *chk, int chunked);
-int h1_format_htx_msg(const struct htx *htx, struct buffer *outbuf);
+int h1_format_htx_msg(const struct htx *htx, struct buffer *outbuf, struct h1_hdrs_map *hdrs_map);
 
 #endif /* _HAPROXY_H1_HTX_H */
 
