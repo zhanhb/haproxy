@@ -1974,7 +1974,7 @@ static enum act_parse_ret parse_http_set_map(const char **args, int *orig_arg, s
 	/* key pattern */
 	LIST_INIT(&rule->arg.map.key);
 	if (!parse_logformat_string(args[cur_arg], px, &rule->arg.map.key, LOG_OPT_HTTP, cap, err)) {
-		free(rule->arg.map.ref);
+		ha_free(&rule->arg.map.ref);
 		return ACT_RET_PRS_ERR;
 	}
 
@@ -1983,7 +1983,7 @@ static enum act_parse_ret parse_http_set_map(const char **args, int *orig_arg, s
 		cur_arg++;
 		LIST_INIT(&rule->arg.map.value);
 		if (!parse_logformat_string(args[cur_arg], px, &rule->arg.map.value, LOG_OPT_HTTP, cap, err)) {
-			free(rule->arg.map.ref);
+			ha_free(&rule->arg.map.ref);
 			return ACT_RET_PRS_ERR;
 		}
 	}
