@@ -1702,6 +1702,10 @@ struct http_reply *http_parse_http_reply(const char **args, int *orig_arg, struc
 				goto error;
 			}
 			obj = strdup(args[cur_arg]);
+			if (!obj) {
+				memprintf(errmsg, "out of memory");
+				goto error;
+			}
 			objlen = strlen(args[cur_arg]);
 			reply->type = HTTP_REPLY_LOGFMT;
 			LIST_INIT(&reply->body.fmt);
