@@ -1886,7 +1886,7 @@ Queue class
 
   Use :js:func:`core.queue` to get a new Queue object.
 
-.. js:function:: Queue.alarm()
+.. js:function:: Queue.alarm(queue)
 
   **context**: task, action, service
 
@@ -4155,7 +4155,7 @@ Action class
 
   :returns: integer
 
-.. js:function:: act:wake_time(milliseconds)
+.. js:function:: act.wake_time(milliseconds)
 
   **context**: action
 
@@ -4201,7 +4201,7 @@ Filter class
   This attribute is a flag corresponding to the filter flag FLT_CFG_FL_HTX. When
   it is set for a filter, it means the filter is able to filter HTTP streams.
 
-.. js:function:: filter.register_data_filter(chn)
+.. js:function:: filter.register_data_filter(flt, chn)
 
   **context**: filter
 
@@ -4211,7 +4211,7 @@ Filter class
 
   :param class_Channel chn: A :ref:`channel_class`.
 
-.. js:function:: filter.unregister_data_filter(chn)
+.. js:function:: filter.unregister_data_filter(flt, chn)
 
   **context**: filter
 
