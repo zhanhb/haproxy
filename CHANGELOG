@@ -1,6 +1,60 @@
 ChangeLog :
 ===========
 
+2026/07/29 : 3.0.26
+    - BUG/MEDIUM: h3: fix parser desync on error with multiple frames
+    - BUG/MINOR: mux_quic: prevent multiple STOP_SENDING emission per stream
+    - BUG/MEDIUM: fd: Fix a deadlock when closing other tgroups fds
+    - BUG/MINOR: sample: Fix a possible underflow on be2hex for large chunk size
+    - BUG/MINOR: stream: Fix custom timeouts initialization when setting backend
+    - BUG/MINOR: http-conv: Make url-dec failed if no space for trailing null byte
+    - BUG/MINOR: hlua: Apply socket timeout on server side only
+    - REORG: stconn: Move sc_chk_rcv() from sc_strm.h to stconn.c
+    - BUG/MEDIUM: applet: Reenable reads in applet context if requesting a connection
+    - MINOR: stats: factor the proxy vs scope check into its own function
+    - BUG/MEDIUM: stats: subject "stats admin" accesses to "stats scope" filtering
+    - BUG/MINOR: shctx: fix shctx_row_data_get() when offset exceeds a block
+    - MINOR: shctx: clamp shctx_row_data_get() reads against the offset
+    - BUG/MEDIUM: cache: reattach the row when a secondary entry is incomplete
+    - BUG/MEDIUM: stats: Ensure that Origin is valid on POSTs
+    - DOC: stats: Document that stats admin is vulnerable to a CSRF attack
+    - BUG/MEDIUM: ssl-gencert: Don't forget to free memory when done
+    - BUG/MEDIUM: protobuf: adjust sample size capacity after pointer shift
+    - BUG/MEDIUM: protobuf: fix nested path bypass in field lookup
+    - BUG/MINOR: mux-h1: Don't delay send if message with c-l was fully sent
+    - BUG/MEDIUM: sample: Adjust sample size capacity after pointer shift for bytes()
+    - BUG/MEDIUM: sample: Adjust sample size capacity after pointer shift for ltrim()
+    - BUG/MINOR: sample: Fix bytes() when length it greater than remaining data
+    - BUG/MEDIUM: proxy: protect "show servers ..." against server deletion
+    - BUG/MINOR: http-htx: fix the length moved when removing a header value
+    - BUG/MEDIUM: http-fetch: don't parse a non-HTTP check buffer as an HTX message
+    - BUG/MEDIUM: http-fetch: reject a negative capture id in capture.{req,res}.hdr
+    - BUG/MINOR: http: fix an out-of-bounds read in http_get_host_port() on empty host
+    - BUG/MINOR: http-htx: check the trash allocation in http_scheme_based_normalize()
+    - BUG/MINOR: h1: report the right error position on authority/host mismatch
+    - BUG/MINOR: h2: don't use a block pointer to roll back a partial HTX conversion
+    - BUG/MINOR: http-ana: fix a one-byte over-read in the client-side cookie parser
+    - BUG/MINOR: http-act: fix a double free of the regex on a rule parsing error
+    - BUG/MINOR: http-act: fix a double free of the map reference on a parsing error
+    - BUG/MINOR: http-act: restore the response buffer state in the early-hint action
+    - BUG/MINOR: http-act: reject a negative capture id in the capture actions
+    - BUG/MINOR: http-htx: check the strdup() of the "lf-string" http reply argument
+    - BUG/MINOR: htx: Perform raw copy for messages of same size in htx_copy_msg()
+    - BUG/MINOR: htx: Transfer HTX_FL_EOM flag on success in htx_append_msg()
+    - BUG/MINOR: slz: do not read past the end of the input around the match loop
+    - CLEANUP: slz: fix the documented worst case size of flush() and finish()
+    - BUG/MINOR: slz: use the exact switch cost for the last literals of a block
+    - BUG/MEDIUM: slz: bound the bits wasted by the 9-bit literals
+    - BUG/MINOR: slz: do not append a block to an already finished stream
+    - BUG/MINOR: slz: fix the adler32 accumulators signedness on 32-bit
+    - BUG/MINOR: slz: avoid undefined shifts when building the word byte by byte
+    - CLEANUP: slz: clarify that the size promise applies to the stream, not to a call
+    - BUG/MEDIUM: peers: check the available room before encoding dict values
+    - BUG/MEDIUM: sample: reject the deprecated protobuf group wire types
+    - BUG/MAJOR: ssl/ocsp: lock the OCSP response around reads in the stapling callback
+    - MEDIUM: stream: Introduce stream_set_srv_target()
+    - BUG/MEDIUM: server: Properly check for streams before deletion
+
 2026/07/03 : 3.0.25
     - BUG/MEDIUM: mux_quic: fix memory leak of rx app_buf on stream free
     - BUG/MINOR: sample: set SMP_F_CONST on srv_name fetch
