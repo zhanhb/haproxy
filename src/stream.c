@@ -1232,7 +1232,7 @@ static int process_server_rules(struct stream *s, struct channel *req, int an_bi
 			    (px->options & PR_O_PERSIST) ||
 			    (s->flags & SF_FORCE_PRST)) {
 				s->flags |= SF_DIRECT | SF_ASSIGNED;
-				s->target = &srv->obj_type;
+				stream_set_srv_target(s, srv);
 				break;
 			}
 			/* if the server is not UP, let's go on with next rules
@@ -1296,7 +1296,7 @@ static inline void sticking_rule_find_target(struct stream *s,
 	if ((srv->cur_state != SRV_ST_STOPPED) ||
 	    (px->options & PR_O_PERSIST) || (s->flags & SF_FORCE_PRST)) {
 		s->flags |= SF_DIRECT | SF_ASSIGNED;
-		s->target = &srv->obj_type;
+		stream_set_srv_target(s, srv);
 	}
 }
 

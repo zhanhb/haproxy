@@ -2737,7 +2737,7 @@ static int hlua_socket_init(struct appctx *appctx)
 
 	/* Force destination server. */
 	s->flags |= SF_DIRECT | SF_ASSIGNED | SF_BE_ASSIGNED;
-	s->target = &csk_ctx->srv->obj_type;
+	stream_set_srv_target(s, csk_ctx->srv);
 
 	if (csk_ctx->timeout) {
 		s->sess->fe->timeout.connect = csk_ctx->timeout;

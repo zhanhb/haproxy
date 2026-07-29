@@ -3463,7 +3463,7 @@ static void http_manage_client_side_cookies(struct stream *s, struct channel *re
 							txn->flags &= ~TX_CK_MASK;
 							txn->flags |= (srv->cur_state != SRV_ST_STOPPED) ? TX_CK_VALID : TX_CK_DOWN;
 							s->flags |= SF_DIRECT | SF_ASSIGNED;
-							s->target = &srv->obj_type;
+							stream_set_srv_target(s, srv);
 							break;
 						} else {
 							/* we found a server, but it's down,

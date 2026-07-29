@@ -666,7 +666,7 @@ int assign_server(struct stream *s)
 				list_for_each_entry(conn, &pconns->conn_list, sess_el) {
 					if (!(conn->flags & CO_FL_WAIT_XPRT)) {
 						srv = tmpsrv;
-						s->target = &srv->obj_type;
+						stream_set_srv_target(s, srv);
 						if (conn->flags & CO_FL_SESS_IDLE) {
 							conn->flags &= ~CO_FL_SESS_IDLE;
 							s->sess->idle_conns--;
@@ -834,7 +834,7 @@ int assign_server(struct stream *s)
 			_HA_ATOMIC_INC(&s->be->be_counters.cum_lbconn);
 			_HA_ATOMIC_INC(&srv->counters.cum_lbconn);
 		}
-		s->target = &srv->obj_type;
+		stream_set_srv_target(s, srv);
 	}
 	else if (s->be->options & (PR_O_DISPATCH | PR_O_TRANSP)) {
 		s->target = &s->be->obj_type;
@@ -1161,7 +1161,7 @@ int assign_server_and_queue(struct stream *s)
 					pool_free(pool_head_pendconn, p);
 
 					s->flags |= SF_ASSIGNED;
-					s->target = &newserv->obj_type;
+					stream_set_srv_target(s, newserv);
 					s->pend_pos = NULL;
 					sess_change_server(s, newserv);
 					return SRV_STATUS_OK;
@@ -2968,7 +2968,7 @@ int tcp_persist_rdp_cookie(struct stream *s, struct channel *req, int an_bit)
 			if ((srv->cur_state != SRV_ST_STOPPED) || (px->options & PR_O_PERSIST)) {
 				/* we found the server and it is usable */
 				s->flags |= SF_DIRECT | SF_ASSIGNED;
-				s->target = &srv->obj_type;
+				stream_set_srv_target(s, srv);
 				break;
 			}
 		}
