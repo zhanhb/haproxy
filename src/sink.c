@@ -25,6 +25,7 @@
 #include <import/ist.h>
 #include <haproxy/api.h>
 #include <haproxy/applet.h>
+#include <haproxy/stream.h>
 #include <haproxy/cfgparse.h>
 #include <haproxy/cli.h>
 #include <haproxy/errors.h>
@@ -509,7 +510,7 @@ static int sink_forward_session_init(struct appctx *appctx)
 	s->scb->dst = addr;
 	s->scb->flags |= (SC_FL_RCV_ONCE|SC_FL_NOLINGER);
 
-	s->target = &sft->srv->obj_type;
+	stream_set_srv_target(s, sft->srv);
 	s->flags = SF_ASSIGNED;
 
 	s->do_log = NULL;

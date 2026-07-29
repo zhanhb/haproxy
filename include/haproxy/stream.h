@@ -29,6 +29,7 @@
 #include <haproxy/obj_type.h>
 #include <haproxy/pool-t.h>
 #include <haproxy/queue.h>
+#include <haproxy/server.h>
 #include <haproxy/session.h>
 #include <haproxy/stconn.h>
 #include <haproxy/stick_table.h>
@@ -401,6 +402,12 @@ static inline void stream_shutdown(struct stream *s, int why)
 	             (why == SF_ERR_KILLED) ? TASK_F_UEVT2 :
 	             (why == SF_ERR_UP) ? TASK_F_UEVT3 :
 	             0));
+}
+
+/* Sets the stream's target to the designated server. */
+static inline void stream_set_srv_target(struct stream *s, struct server *srv)
+{
+	s->target = &srv->obj_type;
 }
 
 int stream_set_timeout(struct stream *s, enum act_timeout_name name, int timeout);
