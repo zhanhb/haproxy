@@ -1762,7 +1762,7 @@ static int cli_parse_show_fd(char **args, char *payload, struct appctx *appctx, 
 		ctx->show_mask = CLI_SHOWFD_F_ANY;
 
 	if (*args[arg]) {
-		ctx->fd = atoi(args[2]);
+		ctx->fd = atoi(args[arg]);
 		ctx->show_one = 1;
 	}
 
