@@ -375,6 +375,13 @@ static int sample_conv_aes_gcm(const struct arg *arg_p, struct sample *smp, void
 			aead_tag.data.u.str = *smp_trash_alloc;
 		}
 
+		/* the tag length is provided by the caller, hence often by the
+		 * input itself; OpenSSL happily verifies tags as short as one
+		 * byte, so require the full length that the encrypt path emits.
+		 */
+		if (aead_tag.data.u.str.data != 16)
+			goto err;
+
 		EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_TAG, aead_tag.data.u.str.data,
 		                    (void *) aead_tag.data.u.str.area);
 	}
