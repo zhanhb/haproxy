@@ -2030,8 +2030,8 @@ static THREAD_LOCAL char lf_buildbuf[256]; /* fixed size buffer for building sma
 
 /* helper to encode a single byte in hex form
  *
- * Returns the position of the last written byte on success and NULL on
- * error.
+ * Returns the address of the byte immediately after the last written byte
+ * on success, or NULL on error. It will not append terminating NULL byte.
  */
 static char *_encode_byte_hex(char *start, char *stop, unsigned char byte)
 {
@@ -2048,8 +2048,8 @@ static char *_encode_byte_hex(char *start, char *stop, unsigned char byte)
  * The function may only be called under CBOR context (that is when
  * LOG_OPT_ENCODE_CBOR option is set).
  *
- * Returns the position of the last written byte on success and NULL on
- * error.
+ * Returns the address of the byte immediately after the last written byte
+ * on success, or NULL on error. It will not append terminating NULL byte.
  */
 static char *_lf_cbor_encode_byte(struct cbor_encode_ctx *cbor_ctx,
                                   char *start, char *stop, unsigned char byte)
@@ -2095,6 +2095,9 @@ static inline void lf_buildctx_prepare(struct lf_buildctx *ctx,
 
 /* helper function for _lf_encode_bytes() to escape a single byte
  * with <escape>
+ *
+ * Returns the address of the byte immediately after the last written byte
+ * on success, or NULL on error. It will not append terminating NULL byte.
  */
 static inline char *_lf_escape_byte(char *start, char *stop,
                                     char byte, const char escape)
@@ -2110,6 +2113,9 @@ static inline char *_lf_escape_byte(char *start, char *stop,
 
 /* helper function for _lf_encode_bytes() to escape a single byte
  * with <escape> and deal with cbor-specific encoding logic
+ *
+ * Returns the address of the byte immediately after the last written byte
+ * on success, or NULL on error. It will not append terminating NULL byte.
  */
 static inline char *_lf_cbor_escape_byte(char *start, char *stop,
                                          char byte, const char escape,
@@ -2134,8 +2140,8 @@ static inline char *_lf_cbor_escape_byte(char *start, char *stop,
  *
  * The function assumes that at least 1 byte is available for writing
  *
- * Returns the address of the last written byte on success, or NULL
- * on error
+ * Returns the address of the byte immediately after the last written byte
+ * on success, or NULL on error. It will not append terminating NULL byte.
  */
 static inline char *_lf_map_escape_byte(char *start, char *stop,
                                         const char *byte,
@@ -2157,8 +2163,8 @@ static inline char *_lf_map_escape_byte(char *start, char *stop,
  *
  * The function assumes that at least 1 byte is available for writing
  *
- * Returns the address of the last written byte on success, or NULL
- * on error
+ * Returns the address of the byte immediately after the last written byte
+ * on success, or NULL on error. It will not append terminating NULL byte.
  */
 static inline char *_lf_cbor_map_escape_byte(char *start, char *stop,
                                              const char *byte,
@@ -2201,8 +2207,8 @@ static inline char *_lf_cbor_map_escape_byte(char *start, char *stop,
  *
  * The function assumes that at least 1 byte is available for writing
  *
- * Returns the address of the last written byte on success, or NULL
- * on error
+ * Returns the address of the byte immediately after the last written byte
+ * on success, or NULL on error. It will not append terminating NULL byte.
  */
 static inline char *_lf_rfc5424_escape_byte(char *start, char *stop,
                                             const char *byte,
@@ -2232,8 +2238,8 @@ static inline char *_lf_rfc5424_escape_byte(char *start, char *stop,
  *
  * The function assumes that at least 1 byte is available for writing
  *
- * Returns the address of the last written byte on success, or NULL
- * on error
+ * Returns the address of the byte immediately after the last written byte
+ * on success, or NULL on error. It will not append terminating NULL byte.
  */
 static inline char *_lf_json_escape_byte(char *start, char *stop,
                                          const char *byte,
