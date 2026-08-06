@@ -4652,6 +4652,14 @@ static int cli_io_handler_servers_state(struct appctx *appctx)
 	return 1;
 }
 
+/* release handler for "show servers conn|state" */
+static void cli_io_release_show_servers(struct appctx *appctx)
+{
+	struct show_srv_ctx *ctx = appctx->svcctx;
+	watcher_detach(&ctx->px_watch);
+	watcher_detach(&ctx->srv_watch);
+}
+
 /* Parses backend list and simply report backend names. It keeps the proxy
  * pointer in svcctx since there's nothing else to store there.
  */
@@ -4685,6 +4693,14 @@ static int cli_io_handler_show_backend(struct appctx *appctx)
 	}
 
 	return 1;
+}
+
+/* release handler for "show backend" */
+static void cli_io_release_show_backend(struct appctx *appctx)
+{
+	struct show_be_ctx *ctx = appctx->svcctx;
+	if (ctx->px)
+		watcher_detach(&ctx->px_watch);
 }
 
 /* Parses the "enable dynamic-cookies backend" directive, it always returns 1.
@@ -5510,6 +5526,13 @@ static int cli_io_handler_show_errors(struct appctx *appctx)
 	return 0;
 }
 
+/* release handler for "show errors" */
+static void cli_io_release_show_errors(struct appctx *appctx)
+{
+	struct show_errors_ctx *ctx = appctx->svcctx;
+	watcher_detach(&ctx->px_watch);
+}
+
 /* register cli keywords */
 static struct cli_kw_list cli_kws = {{ },{
 	{ { "add", "backend", NULL },                       "add backend <backend>                   : add a new backend",                                              cli_parse_add_backend, NULL, NULL, NULL, 0 },
@@ -5518,15 +5541,15 @@ static struct cli_kw_list cli_kws = {{ },{
 	{ { "enable", "frontend",  NULL },                  "enable frontend <frontend>              : re-enable specific frontend",                                    cli_parse_enable_frontend, NULL, NULL },
 	{ { "publish", "backend",  NULL },                  "publish backend <backend>               : mark backend as ready for traffic",                              cli_parse_publish_backend, NULL, NULL },
 	{ { "set", "maxconn", "frontend",  NULL },          "set maxconn frontend <frontend> <value> : change a frontend's maxconn setting",                            cli_parse_set_maxconn_frontend, NULL },
-	{ { "show","servers", "conn",  NULL },              "show servers conn [<backend>]           : dump server connections status (all or for a single backend)",   cli_parse_show_servers, cli_io_handler_servers_state },
-	{ { "show","servers", "state",  NULL },             "show servers state [<backend>]          : dump volatile server information (all or for a single backend)", cli_parse_show_servers, cli_io_handler_servers_state },
-	{ { "show", "backend", NULL },                      "show backend                            : list backends in the current running config", NULL,              cli_io_handler_show_backend },
+	{ { "show","servers", "conn",  NULL },              "show servers conn [<backend>]           : dump server connections status (all or for a single backend)",   cli_parse_show_servers, cli_io_handler_servers_state, cli_io_release_show_servers, },
+	{ { "show","servers", "state",  NULL },             "show servers state [<backend>]          : dump volatile server information (all or for a single backend)", cli_parse_show_servers, cli_io_handler_servers_state, cli_io_release_show_servers, },
+	{ { "show", "backend", NULL },                      "show backend                            : list backends in the current running config",                    NULL, cli_io_handler_show_backend, cli_io_release_show_backend, },
 	{ { "shutdown", "frontend",  NULL },                "shutdown frontend <frontend>            : stop a specific frontend",                                       cli_parse_shutdown_frontend, NULL, NULL },
 	{ { "set", "dynamic-cookie-key", "backend", NULL }, "set dynamic-cookie-key backend <bk> <k> : change a backend secret key for dynamic cookies",                cli_parse_set_dyncookie_key_backend, NULL },
 	{ { "unpublish", "backend",  NULL },                "unpublish backend <backend>             : remove backend for traffic processing",                          cli_parse_unpublish_backend, NULL, NULL },
 	{ { "enable", "dynamic-cookie", "backend", NULL },  "enable dynamic-cookie backend <bk>      : enable dynamic cookies on a specific backend",                   cli_parse_enable_dyncookie_backend, NULL },
 	{ { "disable", "dynamic-cookie", "backend", NULL }, "disable dynamic-cookie backend <bk>     : disable dynamic cookies on a specific backend",                  cli_parse_disable_dyncookie_backend, NULL },
-	{ { "show", "errors", NULL },                       "show errors [<px>] [request|response]   : report last request and/or response errors for each proxy",      cli_parse_show_errors, cli_io_handler_show_errors, NULL },
+	{ { "show", "errors", NULL },                       "show errors [<px>] [request|response]   : report last request and/or response errors for each proxy",      cli_parse_show_errors, cli_io_handler_show_errors, cli_io_release_show_errors, },
 	{{},}
 }};
 
