@@ -287,6 +287,7 @@ static int sample_conv_aes_gcm(const struct arg *arg_p, struct sample *smp, void
 	struct buffer *smp_trash = NULL, *smp_trash_alloc = NULL;
 	EVP_CIPHER_CTX *ctx = NULL;
 	int size, ret, dec;
+	int outlen = 0;
 
 	smp_trash_alloc = alloc_trash_chunk();
 	if (!smp_trash_alloc)
@@ -357,7 +358,7 @@ static int sample_conv_aes_gcm(const struct arg *arg_p, struct sample *smp, void
 	if (!sample_conv_aes_gcm_init(dec, ctx, NULL, NULL, (unsigned char *) key.data.u.str.area, NULL))
 		goto err;
 
-	if (!sample_conv_aes_gcm_update(dec, ctx, (unsigned char *) smp_trash->area, (int *) &smp_trash->data,
+	if (!sample_conv_aes_gcm_update(dec, ctx, (unsigned char *) smp_trash->area, &outlen,
 	                                (unsigned char *) smp_trash_alloc->area, (int) smp_trash_alloc->data))
 		goto err;
 
@@ -386,12 +387,14 @@ static int sample_conv_aes_gcm(const struct arg *arg_p, struct sample *smp, void
 		                    (void *) aead_tag.data.u.str.area);
 	}
 
+	smp_trash->data = outlen;
 	size = smp_trash->data;
 
 	ret = sample_conv_aes_gcm_final(dec, ctx, (unsigned char *) smp_trash->area + smp_trash->data,
-	                                (int *) &smp_trash->data);
+	                                &outlen);
 	if (ret <= 0)
 		goto err;
+	smp_trash->data = outlen;
 
 	if (!dec) {
 		struct buffer *trash = get_trash_chunk();
