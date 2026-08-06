@@ -2135,8 +2135,9 @@ char *escape_string(char *start, char *stop,
  *
  * CBOR encode ctx is provided in <ctx>
  *
- * Returns the position of the last written byte on success and NULL on
- * error. The function cannot write past <stop>
+ * Returns the address of the byte immediately after the last written byte
+ * on success, or NULL on error. The function cannot write past <stop>.
+ * It will not append terminating NULL byte.
  */
 char *cbor_encode_uint64_prefix(struct cbor_encode_ctx *ctx,
                                 char *start, char *stop, uint64_t value,
@@ -2197,8 +2198,9 @@ char *cbor_encode_uint64_prefix(struct cbor_encode_ctx *ctx,
  *
  * CBOR encode ctx is provided in <ctx>
  *
- * Returns the position of the last written byte on success and NULL on
- * error. The function cannot write past <stop>
+ * Returns the address of the byte immediately after the last written byte
+ * on success, or NULL on error. The function cannot write past <stop>.
+ * It will not append terminating NULL byte.
  */
 char *cbor_encode_int64(struct cbor_encode_ctx *ctx,
                         char *start, char *stop, int64_t value)
@@ -2228,8 +2230,9 @@ char *cbor_encode_int64(struct cbor_encode_ctx *ctx,
  *
  * CBOR encode ctx is provided in <ctx>
  *
- * Returns the position of the last written byte on success and NULL on
- * error. The function cannot write past <stop>
+ * Returns the address of the byte immediately after the last written byte
+ * on success, or NULL on error. The function cannot write past <stop>.
+ * It will not append terminating NULL byte.
  */
 char *cbor_encode_bytes_prefix(struct cbor_encode_ctx *ctx,
                                char *start, char *stop,
@@ -2261,8 +2264,9 @@ char *cbor_encode_bytes_prefix(struct cbor_encode_ctx *ctx,
  *
  * CBOR encode ctx is provided in <ctx>
  *
- * Returns the position of the last written byte on success and NULL on
- * error. The function cannot write past <stop>
+ * Returns the address of the byte immediately after the last written byte
+ * on success, or NULL on error. The function cannot write past <stop>.
+ * It will not append terminating NULL byte.
  */
 char *cbor_encode_text(struct cbor_encode_ctx *ctx,
                        char *start, char *stop,
@@ -2278,8 +2282,9 @@ char *cbor_encode_text(struct cbor_encode_ctx *ctx,
  *
  * CBOR encode ctx is provided in <ctx>
  *
- * Returns the position of the last written byte on success and NULL on
- * error. The function cannot write past <stop>
+ * Returns the address of the byte immediately after the last written byte
+ * on success, or NULL on error. The function cannot write past <stop>.
+ * It will not append terminating NULL byte.
  */
 char *cbor_encode_bytes(struct cbor_encode_ctx *ctx,
                         char *start, char *stop,
