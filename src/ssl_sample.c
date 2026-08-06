@@ -258,6 +258,7 @@ static int sample_conv_aes_gcm_dec(const struct arg *arg_p, struct sample *smp, 
 	struct buffer *smp_trash = NULL, *smp_trash_alloc = NULL;
 	EVP_CIPHER_CTX *ctx = NULL;
 	int dec_size, ret;
+	int outlen = 0;
 
 	smp_trash_alloc = alloc_trash_chunk();
 	if (!smp_trash_alloc)
@@ -325,7 +326,7 @@ static int sample_conv_aes_gcm_dec(const struct arg *arg_p, struct sample *smp, 
 	if (!EVP_DecryptInit_ex(ctx, NULL, NULL, (unsigned char *) key.data.u.str.area, NULL))
 		goto err;
 
-	if (!EVP_DecryptUpdate(ctx, (unsigned char *) smp_trash->area, (int *) &smp_trash->data,
+	if (!EVP_DecryptUpdate(ctx, (unsigned char *) smp_trash->area, &outlen,
 	                       (unsigned char *) smp_trash_alloc->area, (int) smp_trash_alloc->data))
 		goto err;
 
@@ -341,13 +342,15 @@ static int sample_conv_aes_gcm_dec(const struct arg *arg_p, struct sample *smp, 
 		aead_tag.data.u.str = *smp_trash_alloc;
 	}
 
+	smp_trash->data = outlen;
 	dec_size = smp_trash->data;
 
 	EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_TAG, aead_tag.data.u.str.data, (void *) aead_tag.data.u.str.area);
-	ret = EVP_DecryptFinal_ex(ctx, (unsigned char *) smp_trash->area + smp_trash->data, (int *) &smp_trash->data);
+	ret = EVP_DecryptFinal_ex(ctx, (unsigned char *) smp_trash->area + smp_trash->data, &outlen);
 
 	if (ret <= 0)
 		goto err;
+	smp_trash->data = outlen;
 
 	smp->data.u.str.data = dec_size + smp_trash->data;
 	smp->data.u.str.area = smp_trash->area;
