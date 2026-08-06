@@ -5141,7 +5141,7 @@ static int cli_parse_delete_backend(char **args, char *payload, struct appctx *a
 		proxies_list = px->next;
 	}
 	else {
-		for (prev = proxies_list->next; prev && prev->next != px; prev = prev->next)
+		for (prev = proxies_list; prev && prev->next != px; prev = prev->next)
 			;
 		BUG_ON(!prev); /* Proxy instance not found in global list ? */
 		prev->next = px->next;
