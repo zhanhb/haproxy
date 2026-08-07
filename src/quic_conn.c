@@ -3120,6 +3120,18 @@ static enum quic_rx_ret_frm qc_handle_crypto_frm(struct quic_conn *qc,
 	                    crypto_frm->len, NCB_ADD_OVERWRT);
 	BUG_ON(ncb_ret != NCB_RET_OK);
 
+	/* Reject CRYPTO content in case of wrapping. This ensures there is
+	 * no read of out-of-bound read by the SSL stack in
+	 * qc_treat_rx_crypto_frms(). TODO implement proper support for
+	 * CRYPTO wrapping.
+	 */
+	if (ncbmb_head(ncbuf) + ncbmb_data(ncbuf, 0) >= ncbmb_wrap(ncbuf)) {
+		TRACE_ERROR("unsupported wrapping CRYPTO frames", QUIC_EV_CONN_PRSHPKT, qc);
+		quic_set_connection_close(qc, quic_err_transport(QC_ERR_CRYPTO_BUFFER_EXCEEDED));
+		quic_free_ncbuf(ncbuf);
+		goto err;
+	}
+
  done:
 	TRACE_LEAVE(QUIC_EV_CONN_PRSHPKT, qc);
 	return ret;
@@ -4752,6 +4764,8 @@ static inline int qc_treat_rx_crypto_frms(struct quic_conn *qc,
 	/* TODO not working if buffer is wrapping */
 	while ((data = ncbmb_data(ncbuf, 0))) {
 		const unsigned char *cdata = (const unsigned char *)ncbmb_head(ncbuf);
+		/* Currently wrapping CRYPTO content is not supported and rejected on frame reception. */
+		BUG_ON(cdata + data >= (const unsigned char *)ncbmb_wrap(ncbuf));
 
 		if (!qc_provide_cdata(el, ctx, cdata, data, NULL, NULL))
 			goto leave;
