@@ -739,6 +739,8 @@ int qc_ssl_provide_all_quic_data(struct quic_conn *qc, struct ssl_sock_ctx *ctx)
 		/* TODO not working if buffer is wrapping */
 		while ((data = ncbmb_data(ncbuf, 0))) {
 			const unsigned char *cdata = (const unsigned char *)ncbmb_head(ncbuf);
+			/* Currently wrapping CRYPTO content is not supported and rejected on frame reception. */
+			BUG_ON(cdata + data >= (const unsigned char *)ncbmb_wrap(ncbuf));
 
 			if (!qc_ssl_provide_quic_data(&qel->cstream->rx.ncbuf, qel->level,
 			                              ctx, cdata, data))
