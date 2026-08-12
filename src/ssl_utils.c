@@ -152,6 +152,7 @@ int ssl_sock_get_dn_entry(X509_NAME *a, const struct buffer *entry, int pos,
 	ASN1_OBJECT *obj;
 	ASN1_STRING *data;
 	const unsigned char *data_ptr;
+	const unsigned char *nul;
 	int data_len;
 	int i, j, n;
 	int cur = 0;
@@ -192,6 +193,21 @@ int ssl_sock_get_dn_entry(X509_NAME *a, const struct buffer *entry, int pos,
 
 		if (data_len > out->size)
 			return -1;
+
+		/* reject embedded NUL (truncation/injection risk for NUL-terminated
+		 * consumers); trailing NUL(s) carry nothing after them so they're
+		 * harmless padding, just keep one and skip the extra ones
+		 */
+		nul = memchr(data_ptr, 0, data_len);
+		if (nul) {
+			const unsigned char *p;
+
+			for (p = nul; p < data_ptr + data_len; p++) {
+				if (*p)
+					return 0;
+			}
+			data_len = nul - data_ptr + 1;
+		}
 
 		memcpy(out->area, data_ptr, data_len);
 		out->data = data_len;
