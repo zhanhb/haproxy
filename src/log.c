@@ -1083,6 +1083,8 @@ int parse_logsrv(char **args, struct list *logsrvs, int do_del, const char *file
 
   error:
 	free(smp_rgs);
+	if (logsrv && logsrv->lb.smp_rgs == smp_rgs)
+		logsrv->lb.smp_rgs = NULL;
 	free_logsrv(logsrv);
 	return 0;
 }
