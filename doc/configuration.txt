@@ -16439,8 +16439,14 @@ process-vary <on/off>
   Enable or disable the processing of the Vary header. When disabled, a response
   containing such a header will never be cached. When enabled, we need to calculate
   a preliminary hash for a subset of request headers on all the incoming requests
-  (which might come with a cpu cost) which will be used to build a secondary key
-  for a given request (see RFC 7234#4.1). The default value is off (disabled).
+  (which might come with a cpu cost) which will be used to build a secondary
+  key for a given request (see RFC 7234#4.1). The secondary key is built out of
+  the contents of the 'accept-encoding', 'referer' and 'origin' headers for
+  now. Note that the 'origin' and 'referer' headers are single-valued per the
+  RFC, so a request carrying more than one occurrence of either should be
+  considered malformed. For such requests no secondary key is built and the
+  response is never delivered from the cache so that we can let the server
+  decide how to handle the situation. The default value is off (disabled).
 
 max-secondary-entries <number>
   Define the maximum number of simultaneous secondary entries with the same primary
