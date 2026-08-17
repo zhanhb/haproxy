@@ -2540,14 +2540,17 @@ sni_lookup:
 		}
 	}
 	if (!node) {
+		/* Nothing more to look up in the tree, and
+		 * ssl_sock_generate_certificate() takes this same lock in read
+		 * mode, which must not be done recursively.
+		 */
+		HA_RWLOCK_RDUNLOCK(SNI_LOCK, &s->sni_lock);
 #if (!defined SSL_NO_GENERATE_CERTIFICATES)
 		if (s->options & BC_O_GENERATE_CERTS && ssl_sock_generate_certificate(servername, s, ssl)) {
 			/* switch ctx done in ssl_sock_generate_certificate */
-			HA_RWLOCK_RDUNLOCK(SNI_LOCK, &s->sni_lock);
 			return SSL_TLSEXT_ERR_OK;
 		}
 #endif
-		HA_RWLOCK_RDUNLOCK(SNI_LOCK, &s->sni_lock);
 
 		if (!s->strict_sni && !default_lookup) {
 			/* we didn't find a SNI, and we didn't look for a default
@@ -5441,12 +5444,15 @@ int ssl_sock_prepare_bind_conf(struct bind_conf *bind_conf)
 		struct sni_ctx *sni_ctx;
 
 		/* if we use the generate-certificates option, look for the first default cert available */
+		HA_RWLOCK_RDLOCK(SNI_LOCK, &bind_conf->sni_lock);
 		sni_ctx = ssl_sock_choose_sni_ctx(bind_conf, "", 1, 1);
 		if (!sni_ctx) {
+			HA_RWLOCK_RDUNLOCK(SNI_LOCK, &bind_conf->sni_lock);
 			ha_alert("Proxy '%s': no SSL certificate specified for bind '%s' and 'generate-certificates' option at [%s:%d] (use 'crt').\n",
 				 px->id, bind_conf->arg, bind_conf->file, bind_conf->line);
 			return -1;
 		}
+		HA_RWLOCK_RDUNLOCK(SNI_LOCK, &bind_conf->sni_lock);
 	}
 
 	if (!ssl_shctx && global.tune.sslcachesize) {
