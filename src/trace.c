@@ -134,7 +134,7 @@ int __trace_enabled(enum trace_level level, uint64_t mask, struct trace_source *
 #endif
 	if (!sess && strm)
 		sess = strm->sess;
-	else if (!sess && conn && LIST_INLIST(&conn->sess_el))
+	else if (!sess && conn && conn_is_back(conn) && LIST_INLIST(&conn->sess_el))
 		sess = conn->owner;
 	else if (!sess && check)
 		sess = check->sess;
