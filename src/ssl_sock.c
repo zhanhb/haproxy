@@ -1483,7 +1483,7 @@ void ssl_sock_infocbk(const SSL *ssl, int where, int ret)
 			}
 		}
 
-#ifdef TLS1_3_VERSION
+#if defined(TLS1_3_VERSION) && !defined(USE_OPENSSL_WOLFSSL)
 	/* Reduce TLS1.3 session timeout so it doesn't reset at each new
 	 * resumed connection */
 
