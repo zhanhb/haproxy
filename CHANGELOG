@@ -1,6 +1,44 @@
 ChangeLog :
 ===========
 
+2026/08/27 : 2.6.33
+    - BUG/MINOR: server: check strdup return value on server ID
+    - BUG/MEDIUM: hpack: encode long methods and schemes using the long form
+    - BUG/MINOR: hlua: use a local buffer to format the socket addresses
+    - BUG/MINOR: mux-fcgi: don't call fcgi_strm_destroy() on a NULL stream
+    - BUG/MEDIUM: sock: bound the recvmsg() length when receiving old sockets
+    - BUG/MEDIUM: http-ana: check the cookie rewrite result before moving the offsets
+    - BUG/MINOR: mux-fcgi: sanitize the STDERR records before logging them
+    - BUG/MINOR: ssl: reject server certificate names containing a NUL byte
+    - BUG/MINOR: connection: reserve the whole CRC32C TLV before saving its pointer
+    - BUG/MINOR: lb-chash: bound the walk when the saved cursor changed tree
+    - BUG/MINOR: mux-h2: strip the userinfo when deriving :authority for a server
+    - BUG/MEDIUM: lua: resume Channel:send() from the unsent part of the string
+    - DOC: config: clarify req.ssl_sni
+    - BUG/MEDIUM: http: fix authority parsing for absolute-form URI with empty path
+    - BUG/MINOR: payload: fix handshake length off-by-4 in ssl_hello_sni/alpn
+    - BUG/MINOR: spoe: check snprintf() return value in spoe_set_var/spoe_unset_var
+    - BUG/MINOR: qpack: missing shift count check in qpack_get_varint() (UB)
+    - BUG/MINOR: conn: Do not check 'sess_el' list on frontend connections in __trace_enabled
+    - BUG/MINOR: ssl: release the previous client cert reference at depth > 0
+    - BUG/MINOR: ssl: apply tune.ssl.lifetime to TLS1.3 sessions on BoringSSL/AWS-LC
+    - BUG/MEDIUM: ssl: isolate TLS session resumption per X509 server certificate
+    - BUG/MINOR: ssl: isolate TLS session resumption per crt-list filter
+    - BUG/MEDIUM: ssl: isolate TLS session resumption per authentication policy
+    - BUILD: ssl: avoid a potential null-dereference warning on OpenSSL 1.0.2
+    - BUG/MINOR: resolvers: accept fields at the response boundary
+    - BUG/MEDIUM: mux-fcgi: check the room left before appending the index
+    - BUG/MINOR: wurfl: fix memory leak of information list and patch strings at deinit
+    - BUG/MINOR: config: Check buffer pool creation for failures
+    - BUG/MINOR: ot: removed dead code in flt_ot_parse_cfg_str()
+    - BUG/MINOR: http-fetch: make http_first_req() check for HTTP first
+    - BUG/MINOR: http-act: set-status() must check the response message, not the request
+    - BUG/MINOR: tools: fix memory leak in env_expand() error path
+    - BUG/MINOR: auth: free user groups on error paths in userlist_postinit()
+    - BUG/MEDIUM: cache: ignore cache on redundant origin/referer
+    - BUG/MINOR: fcgi-app: allow explicit filter declaration with non-cache/non-compression filters
+    - BUG/MINOR: flt-http-comp: Don't read next block to detect end of data
+
 2026/07/29 : 2.6.32
     - BUG/MINOR: sample: Fix a possible underflow on be2hex for large chunk size
     - BUG/MINOR: http-conv: Make url-dec failed if no space for trailing null byte
