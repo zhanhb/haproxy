@@ -159,7 +159,7 @@ smp_fetch_req_ssl_st_ext(const struct arg *args, struct sample *smp, const char 
 
 	if (hs_len < 4 ||                               /* minimum one cipher */
 	    (ext_len = (data[0] << 8) + data[1]) < 2 || /* minimum 2 bytes for a cipher */
-	    ext_len > hs_len)
+	    ext_len > hs_len - 2)                       /* ciphers must fit after cipher_len */
 		goto not_ssl_hello;
 
 	/* Jump to the compression methods */
@@ -293,7 +293,7 @@ smp_fetch_req_ssl_ec_ext(const struct arg *args, struct sample *smp, const char 
 
 	if (hs_len < 4 ||                               /* minimum one cipher */
 	    (ext_len = (data[0] << 8) + data[1]) < 2 || /* minimum 2 bytes for a cipher */
-	    ext_len > hs_len)
+	    ext_len > hs_len - 2)                       /* ciphers must fit after cipher_len */
 		goto not_ssl_hello;
 
 	/* Jump to the compression methods */
@@ -602,7 +602,7 @@ smp_fetch_ssl_cipherlist(const struct arg *args, struct sample *smp, const char 
 
 	if (hs_len < 4 ||                               /* minimum one cipher */
 	    (ext_len = (data[0] << 8) + data[1]) < 2 ||  /* minimum 2 bytes for a cipher */
-	     ext_len > hs_len)
+	    ext_len > hs_len - 2)                       /* ciphers must fit after cipher_len */
 		goto not_ssl_hello;
 
 	smp->data.type = SMP_T_BIN;
@@ -693,7 +693,7 @@ smp_fetch_ssl_supported_groups(const struct arg *args, struct sample *smp, const
 
 	if (hs_len < 4 ||                               /* minimum one cipher */
 	    (ext_len = (data[0] << 8) + data[1]) < 2 ||  /* minimum 2 bytes for a cipher */
-	     ext_len > hs_len)
+	    ext_len > hs_len - 2)                       /* ciphers must fit after cipher_len */
 		goto not_ssl_hello;
 
 	/* Jump to the compression methods */
@@ -827,7 +827,7 @@ smp_fetch_ssl_sigalgs(const struct arg *args, struct sample *smp, const char *kw
 
 	if (hs_len < 4 ||                               /* minimum one cipher */
 			(ext_len = (data[0] << 8) + data[1]) < 2 || /* minimum 2 bytes for a cipher */
-			ext_len > hs_len)
+	    ext_len > hs_len - 2)                       /* ciphers must fit after cipher_len */
 		goto not_ssl_hello;
 
 	/* Jump to the compression methods */
@@ -964,7 +964,7 @@ smp_fetch_ssl_keyshare_groups(const struct arg *args, struct sample *smp, const 
 
 	if (hs_len < 4 ||                               /* minimum one cipher */
 	    (ext_len = (data[0] << 8) + data[1]) < 2 || /* minimum 2 bytes for a cipher */
-	     ext_len > hs_len)
+	    ext_len > hs_len - 2)                       /* ciphers must fit after cipher_len */
 		goto not_ssl_hello;
 
 	/* Jump to the compression methods */
