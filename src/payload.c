@@ -674,8 +674,8 @@ smp_fetch_ssl_hello_sni(const struct arg *args, struct sample *smp, const char *
 				goto not_ssl_hello;
 
 			srv_len = (data[4] << 8) + data[5];
-			if (srv_len < 4 || srv_len > hs_len - 6)
-				goto not_ssl_hello; /* at least 4 bytes per server name */
+			if (srv_len < 4 || srv_len > ext_len - 2)
+				goto not_ssl_hello; /* at least 4 bytes per server name, and the list must fit in the extension */
 
 			name_type = data[6];
 			name_len = (data[7] << 8) + data[8];
