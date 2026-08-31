@@ -1550,6 +1550,16 @@ static int qc_pkt_decrypt(struct quic_rx_packet *pkt, struct quic_enc_level *qel
 			}
 			else if (pkt->pn > qel->pktns->rx.largest_pn) {
 				/* Next key phase */
+
+				/* The next keys may be missing if a previous
+				 * update failed. Derive them again.
+				 */
+				if ((!qc->ku.nxt_rx.ctx || !qc->ku.nxt_tx.ctx) &&
+				    !quic_tls_key_update(qc)) {
+					TRACE_ERROR("quic_tls_key_update() failed", QUIC_EV_CONN_RXPKT, qc);
+					goto leave;
+				}
+
 				kp_changed = 1;
 				rx_ctx = pkt->qc->ku.nxt_rx.ctx;
 				rx_iv  = pkt->qc->ku.nxt_rx.iv;
@@ -1578,11 +1588,11 @@ static int qc_pkt_decrypt(struct quic_rx_packet *pkt, struct quic_enc_level *qel
 		tls_ctx->flags ^= QUIC_FL_TLS_KP_BIT_SET;
 		/* Store the lowest packet number received for the current key phase */
 		tls_ctx->rx.pn = pkt->pn;
-		/* Prepare the next key update */
-		if (!quic_tls_key_update(pkt->qc)) {
+		/* Prepare the next key update. On failure, the keys are
+		 * derived again at the next key phase change.
+		 */
+		if (!quic_tls_key_update(pkt->qc))
 			TRACE_ERROR("quic_tls_key_update() failed", QUIC_EV_CONN_RXPKT, qc);
-			goto leave;
-		}
 	}
 
 	/* Update the packet length (required to parse the frames). */
