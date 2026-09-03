@@ -154,8 +154,8 @@ struct h3s {
 
 	enum h3s_t type;
 	enum h3s_st_req st_req; /* only used for request streams */
-	uint64_t demux_frame_len;
-	uint64_t demux_frame_type;
+	uint64_t demux_frame_len;  /* current parser frame remaining content to read */
+	uint64_t demux_frame_type; /* current parser frame type */
 
 	unsigned long long body_len; /* known request body length from content-length header if present */
 	unsigned long long data_len; /* total length of all parsed DATA */
@@ -1373,11 +1373,23 @@ static ssize_t h3_decode_qcs(struct qcs *qcs, struct buffer *b, int fin)
 		goto err;
 	}
 
-	if (!b_data(b) && fin && quic_stream_is_bidi(qcs->id)) {
+	if (!b_data(b) && fin) {
 		struct buffer *appbuf;
 		struct htx *htx;
 
 		TRACE_PROTO("received FIN without data", H3_EV_RX_FRAME, qcs->qcc->conn, qcs);
+
+		/* RFC 9114 7.1. Frame Layout
+		 *
+		 * When a stream terminates cleanly, if the last frame on the stream was
+		 * truncated, this MUST be treated as a connection error of type
+		 * H3_FRAME_ERROR.
+		 */
+		if (h3s->demux_frame_len) {
+			TRACE_ERROR("truncated frame on FIN", H3_EV_RX_FRAME, qcs->qcc->conn, qcs);
+			qcc_set_error(qcs->qcc, H3_FRAME_ERROR, 1);
+			goto err;
+		}
 
 		/* FIN received, ensure body length is conform to any content-length header. */
 		if ((h3s->flags & H3_SF_HAVE_CLEN) && h3_check_body_size(qcs, 1)) {
@@ -1386,16 +1398,18 @@ static ssize_t h3_decode_qcs(struct qcs *qcs, struct buffer *b, int fin)
 			goto done;
 		}
 
-		if (!(appbuf = qcs_get_buf(qcs, &qcs->rx.app_buf))) {
-			TRACE_ERROR("data buffer alloc failure", H3_EV_RX_FRAME, qcs->qcc->conn, qcs);
-			h3c->err = H3_INTERNAL_ERROR;
-			goto err;
-		}
+		if (quic_stream_is_bidi(qcs->id)) {
+			if (!(appbuf = qcs_get_buf(qcs, &qcs->rx.app_buf))) {
+				TRACE_ERROR("data buffer alloc failure", H3_EV_RX_FRAME, qcs->qcc->conn, qcs);
+				h3c->err = H3_INTERNAL_ERROR;
+				goto err;
+			}
 
-		htx = htx_from_buf(appbuf);
-		if (!htx_set_eom(htx)) {
-			TRACE_ERROR("cannot set EOM", H3_EV_RX_FRAME, qcs->qcc->conn, qcs);
-			h3c->err = H3_INTERNAL_ERROR;
+			htx = htx_from_buf(appbuf);
+			if (!htx_set_eom(htx)) {
+				TRACE_ERROR("cannot set EOM", H3_EV_RX_FRAME, qcs->qcc->conn, qcs);
+				h3c->err = H3_INTERNAL_ERROR;
+			}
 		}
 		htx_to_buf(htx, appbuf);
 		goto done;
@@ -1431,6 +1445,18 @@ static ssize_t h3_decode_qcs(struct qcs *qcs, struct buffer *b, int fin)
 				qcc_set_error(qcs->qcc, H3_FRAME_UNEXPECTED, 1);
 				goto err;
 			}
+		}
+
+		/* RFC 9114 7.1. Frame Layout
+		 *
+		 * When a stream terminates cleanly, if the last frame on the stream was
+		 * truncated, this MUST be treated as a connection error of type
+		 * H3_FRAME_ERROR.
+		 */
+		if (fin && h3s->demux_frame_len > b_data(b)) {
+			TRACE_ERROR("truncated frame on FIN", H3_EV_RX_FRAME, qcs->qcc->conn, qcs);
+			qcc_set_error(qcs->qcc, H3_FRAME_ERROR, 1);
+			goto err;
 		}
 
 		flen = h3s->demux_frame_len;
