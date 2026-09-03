@@ -1135,6 +1135,7 @@ static ssize_t h3_decode_qcs(struct qcs *qcs, struct buffer *b, int fin)
 			h3s->demux_frame_type = ftype;
 			h3s->demux_frame_len = flen;
 			total += hlen;
+			h3_inc_frame_type_cnt(h3c->prx_counters, ftype);
 
 			/* Check that content-length is not exceeded on a new DATA frame. */
 			if (ftype == H3_FT_DATA) {
@@ -1191,7 +1192,6 @@ static ssize_t h3_decode_qcs(struct qcs *qcs, struct buffer *b, int fin)
 			return -1;
 		}
 
-		h3_inc_frame_type_cnt(h3c->prx_counters, ftype);
 		switch (ftype) {
 		case H3_FT_DATA:
 			ret = h3_data_to_htx(qcs, b, flen, last_stream_frame);
