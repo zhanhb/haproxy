@@ -1220,7 +1220,7 @@ static ssize_t h3_trailers_to_htx(struct qcs *qcs, const struct buffer *buf,
 static ssize_t h3_data_to_htx(struct qcs *qcs, const struct buffer *buf,
                               uint64_t len, char fin)
 {
-	struct buffer *appbuf;
+	struct buffer *appbuf = NULL;
 	struct htx *htx = NULL;
 	size_t htx_sent = 0;
 	int htx_space;
@@ -1228,12 +1228,32 @@ static ssize_t h3_data_to_htx(struct qcs *qcs, const struct buffer *buf,
 
 	TRACE_ENTER(H3_EV_RX_FRAME|H3_EV_RX_DATA, qcs->qcc->conn, qcs);
 
+	if (!len && !fin) {
+		/* Ignore empty frame to prevent unnecessary appbuf alloc. Not
+		 * performed though if FIN is set as HTX EOM must be reported.
+		 */
+		TRACE_STATE("skip parsing of empty DATA frame", H3_EV_RX_FRAME, qcs->qcc->conn, qcs);
+		goto out;
+	}
+
 	if (!(appbuf = qcc_get_stream_rxbuf(qcs))) {
 		TRACE_ERROR("data buffer alloc failure", H3_EV_RX_FRAME|H3_EV_RX_DATA, qcs->qcc->conn, qcs);
 		goto err;
 	}
 
 	htx = htx_from_buf(appbuf);
+
+	if (!len) {
+		/* Ensure EOM is reported when an empty frame is handled. */
+		if (!htx_set_eom(htx)) {
+			TRACE_ERROR("cannot set EOM", H3_EV_RX_FRAME, qcs->qcc->conn, qcs);
+			qcc_set_error(qcs->qcc, H3_ERR_INTERNAL_ERROR, 1);
+			goto err;
+		}
+
+		TRACE_STATE("EOM reported after empty frame", H3_EV_RX_FRAME, qcs->qcc->conn, qcs);
+		goto out;
+	}
 
 	if (len > b_data(buf)) {
 		len = b_data(buf);
@@ -1484,9 +1504,6 @@ static ssize_t h3_rcv_buf(struct qcs *qcs, struct buffer *b, int fin)
 				qcc_report_glitch(qcs->qcc, 1);
 				goto err;
 			}
-
-			if (!b_data(b))
-				break;
 		}
 
 		flen = h3s->demux_frame_len;
