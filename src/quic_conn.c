@@ -1252,6 +1252,7 @@ struct quic_conn *qc_new_conn(const struct quic_version *qv, int ipv4,
 	memset(&qc->rx.params, 0, sizeof(qc->rx.params));
 	qc->rx.buf = b_make(qc->rx.buf.area, QUIC_CONN_RX_BUFSZ, 0, 0);
 	qc->rx.stream_max_uni = qc->rx.stream_max_bidi = 0;
+	qc->rx.auth_fails = 0;
 
 	qc->nb_pkt_for_cc = 1;
 	qc->nb_pkt_since_cc = 0;
