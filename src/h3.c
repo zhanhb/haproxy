@@ -471,6 +471,14 @@ static ssize_t h3_headers_to_htx(struct qcs *qcs, const struct buffer *buf,
 
 	TRACE_ENTER(H3_EV_RX_FRAME|H3_EV_RX_HDR, qcs->qcc->conn, qcs);
 
+	if (!len) {
+		/* Reject empty frame as it lacks at least any mandatory pseudo-header. */
+		TRACE_ERROR("reject empty HEADERS frame", H3_EV_RX_FRAME|H3_EV_RX_HDR, qcs->qcc->conn, qcs);
+		h3c->err = H3_MESSAGE_ERROR;
+		len = -1;
+		goto out;
+	}
+
 	/* TODO support trailer parsing in this function */
 
 	/* TODO support buffer wrapping */
