@@ -491,6 +491,8 @@ int quic_build_post_handshake_frames(struct quic_conn *qc)
 				goto err;
 			}
 
+			LIST_APPEND(&frm_list, &frm->list);
+
 			new_token_frm_len =
 				quic_generate_token(frm->new_token.data,
 				                    sizeof(frm->new_token.data), &qc->peer_addr);
@@ -501,7 +503,6 @@ int quic_build_post_handshake_frames(struct quic_conn *qc)
 
 			BUG_ON(new_token_frm_len != sizeof(frm->new_token.data));
 			frm->new_token.len = new_token_frm_len;
-			LIST_APPEND(&frm_list, &frm->list);
 		}
 #endif
 	}
