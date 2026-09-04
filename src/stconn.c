@@ -420,14 +420,15 @@ int sc_attach_strm(struct stconn *sc, struct stream *strm)
 	return 0;
 }
 
-/* Detaches the stconn from the endpoint, if any. For a connecrion, if a
+/* Detaches the stconn from the endpoint, if any, and replace it with
+ * <newse> (which must be NULL for a pure detach). For a connection, if a
  * mux owns the connection ->detach() callback is called. Otherwise, it means
  * the stream connector owns the connection. In this case the connection is closed
  * and released. For an applet, the appctx is released. If still allocated, the
  * endpoint is reset and flag as detached. If the app layer is also detached,
  * the stream connector is released.
  */
-static void sc_detach_endp(struct stconn **scp)
+static void sc_replace_endp(struct stconn **scp, struct sedesc *newse)
 {
 	struct stconn *sc = *scp;
 	struct xref *peer;
@@ -450,7 +451,7 @@ static void sc_detach_endp(struct stconn **scp)
 				conn->mux->unsubscribe(sc, sc->wait_event.events, &sc->wait_event);
 			se_fl_set(sedesc, SE_FL_ORPHAN);
 			sedesc->sc = NULL;
-			sc->sedesc = NULL;
+			sc->sedesc = newse;
 			CALL_MUX_NO_RET(conn->mux, detach(sedesc));
 		}
 		else {
@@ -469,12 +470,12 @@ static void sc_detach_endp(struct stconn **scp)
 
 		sc_ep_set(sc, SE_FL_ORPHAN);
 		sc->sedesc->sc = NULL;
-		sc->sedesc = NULL;
+		sc->sedesc = newse;
 		se_shutdown(appctx->sedesc, SE_SHR_RESET|SE_SHW_NORMAL);
 		appctx_free(appctx);
 	}
 
-	if (sc->sedesc) {
+	if (sc->sedesc != newse) {
 		/* the SD wasn't used and can be recycled */
 		sc->sedesc->se     = NULL;
 		sc->sedesc->conn   = NULL;
@@ -519,7 +520,7 @@ static void sc_detach_app(struct stconn **scp)
  */
 void sc_destroy(struct stconn *sc)
 {
-	sc_detach_endp(&sc);
+	sc_replace_endp(&sc, NULL);
 	sc_detach_app(&sc);
 	BUG_ON_HOT(sc);
 }
@@ -540,7 +541,7 @@ int sc_reset_endp(struct stconn *sc)
 		 * reset. The app is still attached, the sc will not be
 		 * released.
 		 */
-		sc_detach_endp(&sc);
+		sc_replace_endp(&sc, NULL);
 		return 0;
 	}
 
@@ -551,10 +552,9 @@ int sc_reset_endp(struct stconn *sc)
 		return -1;
 
 	/* The app is still attached, the sc will not be released */
-	sc_detach_endp(&sc);
+	sc_replace_endp(&sc, new_sd);
 	BUG_ON(!sc);
-	BUG_ON(sc->sedesc);
-	sc->sedesc = new_sd;
+	BUG_ON(sc->sedesc != new_sd);
 	sc->sedesc->sc = sc;
 	sc->bytes_in = sc->bytes_out = 0;
 	sc_ep_set(sc, SE_FL_DETACHED);
@@ -564,7 +564,7 @@ int sc_reset_endp(struct stconn *sc)
 
 /* Create an applet to handle a stream connector as a new appctx. The SC will
  * wake it up every time it is solicited. The appctx must be deleted by the task
- * handler using sc_detach_endp(), possibly from within the function itself.
+ * handler using sc_replace_endp(), possibly from within the function itself.
  * It also pre-initializes the applet's context and returns it (or NULL in case
  * it could not be allocated).
  */
@@ -2459,7 +2459,7 @@ void sc_conn_commit_endp_upgrade(struct stconn *sc)
 {
 	if (!sc_ep_test(sc, SE_FL_DETACHED))
 		return;
-	sc_detach_endp(&sc);
+	sc_replace_endp(&sc, NULL);
 	/* Because it was already set as detached, the sedesc must be preserved */
 	BUG_ON(!sc);
 	BUG_ON(!sc->sedesc);
