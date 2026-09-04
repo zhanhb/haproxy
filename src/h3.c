@@ -1659,12 +1659,39 @@ static ssize_t h3_rcv_buf(struct qcs *qcs, struct buffer *b, int fin)
 			h3c->flags |= H3_CF_SETTINGS_RECV;
 			break;
 		default:
-			/* draft-ietf-quic-http34 9. Extensions to HTTP/3
-			 *
-			 * Implementations MUST discard frames [...] that have unknown
-			 * or unsupported types.
-			 */
-			ret = flen;
+			if (quic_stream_is_bidi(qcs->id) && last_stream_frame) {
+				struct buffer *appbuf;
+				struct htx *htx;
+				int eom;
+
+				/* No header seen, HTTP message is malformed. */
+				if (h3s->st_req == H3S_ST_REQ_BEFORE) {
+					TRACE_ERROR("malformed request closed by unknown frame without any header", H3_EV_RX_FRAME, qcs->qcc->conn, qcs);
+					h3s->err = H3_ERR_MESSAGE_ERROR;
+					qcc_report_glitch(qcs->qcc, 1);
+					ret = -1;
+				}
+
+				if (!(appbuf = qcc_get_stream_rxbuf(qcs))) {
+					TRACE_ERROR("data buffer alloc failure", H3_EV_RX_FRAME, qcs->qcc->conn, qcs);
+					qcc_set_error(qcs->qcc, H3_ERR_INTERNAL_ERROR, 1);
+					goto err;
+				}
+
+				/* Reuse wrapper function to easily set EOM on HTX message. */
+				htx = htx_from_buf(appbuf);
+				eom = htx_set_eom(htx);
+				htx_to_buf(htx, appbuf);
+
+				if (!eom) {
+					TRACE_ERROR("cannot set EOM", H3_EV_RX_FRAME, qcs->qcc->conn, qcs);
+					qcc_set_error(qcs->qcc, H3_ERR_INTERNAL_ERROR, 1);
+					goto err;
+				}
+			}
+
+			if (ret >= 0)
+				ret = flen;
 			break;
 		}
 
