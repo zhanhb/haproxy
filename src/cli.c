@@ -945,10 +945,13 @@ size_t cli_snd_buf(struct appctx *appctx, struct buffer *buf, size_t count, unsi
 		 * byte.
 		 */
 		str = b_tail(&appctx->inbuf);
-		if (!(appctx->st1 & APPCTX_CLI_ST1_PAYLOAD))
-			len = b_getdelim(buf, ret, count, str, b_room(&appctx->inbuf) - 1, "\n;", '\\');
-		else
-			len = b_getline(buf, ret, count, str, b_room(&appctx->inbuf) - 1);
+		len = 0;
+		if (b_room(&appctx->inbuf)) {
+			if (!(appctx->st1 & APPCTX_CLI_ST1_PAYLOAD))
+				len = b_getdelim(buf, ret, count, str, b_room(&appctx->inbuf) - 1, "\n;", '\\');
+			else
+				len = b_getline(buf, ret, count, str, b_room(&appctx->inbuf) - 1);
+		}
 
 		if (!len) {
 			if (!b_room(buf) || (count > b_room(&appctx->inbuf) - 1)) {
