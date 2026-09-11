@@ -975,10 +975,13 @@ int cli_parse_cmdline(struct appctx *appctx)
 		 * byte.
 		 */
 		str = b_tail(appctx->cli_ctx.cmdline);
-		if (!(appctx->st1 & APPCTX_CLI_ST1_PAYLOAD))
-			len = b_getdelim(&appctx->inbuf, 0, b_data(&appctx->inbuf), str, b_room(appctx->cli_ctx.cmdline), "\n;", '\\');
-		else
-			len = b_getline(&appctx->inbuf, 0, b_data(&appctx->inbuf), str, b_room(appctx->cli_ctx.cmdline) - 1);
+		len = 0;
+		if (b_room(appctx->cli_ctx.cmdline)) {
+			if (!(appctx->st1 & APPCTX_CLI_ST1_PAYLOAD))
+				len = b_getdelim(&appctx->inbuf, 0, b_data(&appctx->inbuf), str, b_room(appctx->cli_ctx.cmdline), "\n;", '\\');
+			else
+				len = b_getline(&appctx->inbuf, 0, b_data(&appctx->inbuf), str, b_room(appctx->cli_ctx.cmdline) - 1);
+		}
 
 		if (!len) {
 			if (!b_room(appctx->cli_ctx.cmdline) || (b_data(&appctx->inbuf) > b_room(appctx->cli_ctx.cmdline) - 1)) {
