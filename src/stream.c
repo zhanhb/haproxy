@@ -3379,7 +3379,7 @@ void strm_dump_to_buffer(struct buffer *buf, const struct stream *strm, const ch
 		              sdf && sc_ep_snd_ex(scf) ? human_time(TICKS_TO_MS(sc_ep_snd_ex(scf) - now_ms), TICKS_TO_MS(1000)) : "<NEVER>");
 		chunk_appendf(buf, " rto=%s",
 		              sdf && tick_isset(sdf->lra) ? human_time(TICKS_TO_MS(tick_add(sdf->lra, scf->ioto) - now_ms), TICKS_TO_MS(1000)) : "<NEVER>");
-		chunk_appendf(buf, " wto=%s\n",
+		chunk_appendf(buf, " wto=%s",
 		              sdf && tick_isset(sdf->fsb) ? human_time(TICKS_TO_MS(tick_add(sdf->fsb, scf->ioto) - now_ms), TICKS_TO_MS(1000)) : "<NEVER>");
 	}
 
