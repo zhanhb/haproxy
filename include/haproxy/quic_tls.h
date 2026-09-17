@@ -570,7 +570,7 @@ static inline void quic_tls_secrets_keys_free(struct quic_tls_secrets *secs)
 	}
 
 	/* HP protection */
-#ifdef QUIC_AEAD_API
+#if defined(QUIC_AEAD_API) && !defined(OPENSSL_IS_AWSLC)
 	if (secs->hp_ctx != EVP_CIPHER_CTX_CHACHA20)
 		EVP_CIPHER_CTX_free(secs->hp_ctx);
 #else
