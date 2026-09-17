@@ -605,13 +605,23 @@ struct htx_blk *htx_add_data_atonce(struct htx *htx, struct ist data)
 struct htx_blk *htx_replace_blk_value(struct htx *htx, struct htx_blk *blk,
 				      const struct ist old, const struct ist new)
 {
+	enum htx_blk_type type;
 	struct ist n, v;
 	int32_t delta;
 	int ret;
 
+	type = htx_get_blk_type(blk);
 	n  = htx_get_blk_name(htx, blk);
 	v  = htx_get_blk_value(htx, blk);
 	delta = new.len - old.len;
+
+	/* The value length of a header or a trailer is encoded on 20 bits. It
+	 * must not overflow on the other fields of the block descriptor.
+	 */
+	if (unlikely((type == HTX_BLK_HDR || type == HTX_BLK_TLR) &&
+		     v.len + delta > 1048575))
+		return NULL;
+
 	ret = htx_prepare_blk_expansion(htx, blk, delta);
 	if (!ret)
 		return NULL; /* not enough space */
@@ -679,6 +689,7 @@ struct htx_blk *htx_replace_blk_value(struct htx *htx, struct htx_blk *blk,
 			istend(v) - istend(old));
 		memcpy(old.ptr + offset, new.ptr, new.len);
 	}
+
 	return blk;
 }
 
@@ -804,6 +815,9 @@ struct htx_blk *htx_replace_header(struct htx *htx, struct htx_blk *blk,
 
 	type = htx_get_blk_type(blk);
 	if (type != HTX_BLK_HDR)
+		return NULL;
+
+	if (name.len > 255 || value.len > 1048575)
 		return NULL;
 
 	delta = name.len + value.len - htx_get_blksz(blk);
