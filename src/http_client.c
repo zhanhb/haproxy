@@ -446,7 +446,7 @@ error:
 /* Set the 'timeout server' in ms for the next httpclient request */
 void httpclient_set_timeout(struct httpclient *hc, int timeout)
 {
-	hc->timeout_server = timeout;
+	hc->timeout_server = MS_TO_TICKS(timeout);
 }
 
 /*
