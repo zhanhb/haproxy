@@ -1410,8 +1410,8 @@ static ssize_t h3_decode_qcs(struct qcs *qcs, struct buffer *b, int fin)
 				TRACE_ERROR("cannot set EOM", H3_EV_RX_FRAME, qcs->qcc->conn, qcs);
 				h3c->err = H3_INTERNAL_ERROR;
 			}
+			htx_to_buf(htx, appbuf);
 		}
-		htx_to_buf(htx, appbuf);
 		goto done;
 	}
 
