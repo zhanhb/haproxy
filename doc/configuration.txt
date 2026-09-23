@@ -6727,9 +6727,12 @@ http-request capture <sample> [ len <length> | id <id> ]
   to some captured HTTP headers. It will then automatically appear in the logs,
   and it will be possible to extract it using sample fetch rules to feed it
   into headers or anything. The length should be limited given that this size
-  will be allocated for each capture during the whole session life.
-  Please check section 7.3 (Fetching samples) and "capture request header" for
-  more information.
+  will be allocated for each capture during the whole session life. Such a slot
+  only exists in the section which declares it, so when this rule is placed in
+  a "listen" section which is also used as the backend of another frontend, it
+  is ignored for the streams coming from that frontend.  Please check section
+  7.3 (Fetching samples), "capture request header" and "capture response
+  header" for more information.
 
   If the keyword "id" is used instead of "len", the action tries to store the
   captured string in a previously declared capture slot. This is useful to run
@@ -7815,7 +7818,10 @@ http-response capture <sample> id <id> [ { if | unless } <condition> ]
   "capture" slot, so it will possibly appear next to some captured HTTP
   headers. It will then automatically appear in the logs, and it will be
   possible to extract it using sample fetch rules to feed it into headers or
-  anything. Please check section 7.3 (Fetching samples) and
+  anything. Such a slot only exists in the section which declares it, so when
+  this rule is placed in a "listen" section which is also used as the backend
+  of another frontend, it is ignored for the streams coming from that frontend.
+  Please check section 7.3 (Fetching samples), "capture request header" and
   "capture response header" for more information.
 
   The keyword "id" is the id of the capture slot which is used for storing the
@@ -13048,9 +13054,12 @@ tcp-request content capture <sample> len <length>
   to some captured HTTP headers. It will then automatically appear in the logs,
   and it will be possible to extract it using sample fetch rules to feed it
   into headers or anything. The length should be limited given that this size
-  will be allocated for each capture during the whole session life. Please
-  check section 7.3 (Fetching samples) and "capture request header" for more
-  information.
+  will be allocated for each capture during the whole session life. Such a slot
+  only exists in the section which declares it, so when this rule is placed in
+  a "listen" section which is also used as the backend of another frontend, it
+  is ignored for the streams coming from that frontend.  Please check section
+  7.3 (Fetching samples), "capture request header" and "capture response
+  header" for more information.
 
 tcp-request content do-resolve(<var>,<resolvers>,[ipv4,ipv6]) <expr>
 
