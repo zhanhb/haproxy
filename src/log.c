@@ -2625,9 +2625,12 @@ static char *lf_bool_encode(char *dst, size_t size, uint8_t value,
 		return ret;
 	}
 	if (ctx->options & LOG_OPT_ENCODE_CBOR) {
+		/* the cbor encoder doesn't append terminating NULL byte, we
+		 * must reserve 1 byte for that.
+		 */
 		if (value)
-			return _lf_cbor_encode_byte(&ctx->encode.cbor, dst, dst + size, 0xF5);
-		return _lf_cbor_encode_byte(&ctx->encode.cbor, dst, dst + size, 0xF4);
+			return _lf_cbor_encode_byte(&ctx->encode.cbor, dst, dst + size -1, 0xF5);
+		return _lf_cbor_encode_byte(&ctx->encode.cbor, dst, dst + size - 1, 0xF4);
 	}
 
 	return NULL; /* not supported */
@@ -2668,9 +2671,10 @@ static char *lf_int_encode(char *dst, size_t size, int64_t value,
 	}
 	else if (ctx->options & LOG_OPT_ENCODE_CBOR) {
 		/* Always print as a regular int64 number (STR typecast isn't
-		 * supported)
+		 * supported). The cbor encoder doesn't append terminating NULL
+		 * byte, we must reserve 1 byte for that.
 		 */
-		return cbor_encode_int64(&ctx->encode.cbor, dst, dst + size, value);
+		return cbor_encode_int64(&ctx->encode.cbor, dst, dst + size - 1, value);
 	}
 
 	return NULL; /* not supported */
