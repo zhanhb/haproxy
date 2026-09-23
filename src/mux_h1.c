@@ -2585,6 +2585,8 @@ static size_t h1_make_headers(struct h1s *h1s, struct h1m *h1m, struct htx *htx,
 	struct buffer outbuf;
 	enum htx_blk_type type;
 	struct ist n, v;
+	unsigned long long body_len;
+	unsigned int hdr_flags;
 	uint32_t sz;
 	size_t ret = 0;
 
@@ -2603,6 +2605,12 @@ static size_t h1_make_headers(struct h1s *h1s, struct h1m *h1m, struct htx *htx,
 			if (sz > count)
 				goto error;
 
+			/* H1S flags to set once the header is emitted. They must
+			 * not be set before, because if the header does not fit,
+			 * it is processed again on the next call.
+			 */
+			hdr_flags = 0;
+
 			n = htx_get_blk_name(htx, blk);
 			v = htx_get_blk_value(htx, blk);
 
@@ -2618,10 +2626,10 @@ static size_t h1_make_headers(struct h1s *h1s, struct h1m *h1m, struct htx *htx,
 				if (h1s->flags & H1S_F_HAVE_CHNK)
 					goto nextblk;
 				v = ist("chunked");
-				h1s->flags |= H1S_F_HAVE_CHNK;
+				hdr_flags = H1S_F_HAVE_CHNK;
                         }
 			else if (isteq(n, ist("content-length"))) {
-				unsigned long long body_len = h1m->body_len;
+				body_len = h1m->body_len;
 
 				/* Report error for invalid content-length.
 				 * Skip custom content-length headers except "content-length: 0"
@@ -2635,8 +2643,7 @@ static size_t h1_make_headers(struct h1s *h1s, struct h1m *h1m, struct htx *htx,
 					goto nextblk;
 				if (h1s->flags & H1S_F_HAVE_CLEN)
 					goto nextblk;
-				h1m->curr_len = h1m->body_len = body_len;
-				h1s->flags |= H1S_F_HAVE_CLEN;
+				hdr_flags = H1S_F_HAVE_CLEN;
 			}
 			else if (isteq(n, ist("connection"))) {
 				/* copy the value because it can be modified, but the HTX blocks will not */
@@ -2675,6 +2682,10 @@ static size_t h1_make_headers(struct h1s *h1s, struct h1m *h1m, struct htx *htx,
 
 			if (!h1_format_htx_hdr(n, v, &outbuf, hdrs_map))
 				goto full;
+
+			if (hdr_flags & H1S_F_HAVE_CLEN)
+				h1m->curr_len = h1m->body_len = body_len;
+			h1s->flags |= hdr_flags;
 		}
 		else if (type == HTX_BLK_EOH) {
 			h1m->state = H1_MSG_LAST_LF;
