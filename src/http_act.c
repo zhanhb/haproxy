@@ -1407,7 +1407,7 @@ static enum act_return http_action_early_hint(struct act_rule *rule, struct prox
 			goto error;
 		if (!http_forward_proxy_resp(s, 0))
 			goto error;
-		s->txn->status = 0;
+		s->txn->status = -1;
 	}
 
   leave:
@@ -1424,7 +1424,7 @@ static enum act_return http_action_early_hint(struct act_rule *rule, struct prox
 	 * HTTP 103 response from the buffer */
 	channel_htx_truncate(res, htx);
 	ret = ACT_RET_ERR;
-	s->txn->status = 0;
+	s->txn->status = -1;
 	goto leave;
 }
 
