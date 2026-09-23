@@ -3579,8 +3579,15 @@ static int qmux_init(struct connection *conn, struct proxy *prx,
 		proxy_inc_fe_cum_sess_ver_ctr(sess->listener, prx, 3);
 
 	/* Register conn for idle front closing. This is done once everything is allocated. */
-	if (!conn_is_back(conn))
+	if (!conn_is_back(conn)) {
 		LIST_APPEND(&mux_stopping_data[tid].list, &conn->stopping_list);
+
+		if (tick_isset(qcc->task->expire)) {
+			/* Activate client timeout until the first bytes of data are received. */
+			TRACE_DEVEL("activate default timeout", QMUX_EV_QCC_NEW, conn);
+			task_queue(qcc->task);
+		}
+	}
 
 	/* init read cycle */
 	tasklet_wakeup(qcc->wait_event.tasklet);
