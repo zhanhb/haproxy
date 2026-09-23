@@ -1605,6 +1605,15 @@ int qcc_recv_reset_stream(struct qcc *qcc, uint64_t id, uint64_t err, uint64_t f
 	qcs_close_remote(qcs);
 	qcs_free_ncbuf(qcs, &qcs->rx.ncbuf);
 
+	/* Check if RESET_STREAM received before stream layer initialization.
+	 * If true, QCS is closed to be eligible for purgeing.
+	 */
+	if (!qcs_sc(qcs) && !(qcs->flags & QC_SF_DETACH)) {
+		qcs_close_local(qcs);
+		TRACE_STATE("stream fully closed on RESET_STREAM", QMUX_EV_QCC_RECV|QMUX_EV_QCS_RECV, qcc->conn, qcs);
+		tasklet_wakeup(qcs->qcc->wait_event.tasklet);
+	}
+
  out:
 	if (qcc->glitches != prev_glitches)
 		session_add_glitch_ctr(qcc->conn->owner, qcc->glitches - prev_glitches);
