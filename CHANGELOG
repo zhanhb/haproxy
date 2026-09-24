@@ -1,6 +1,57 @@
 ChangeLog :
 ===========
 
+2026/09/24 : 2.8.29
+    - BUG/MINOR: payload: bound ClientHello extension lists by the extension length
+    - BUG/MEDIUM: quic: crash on key update phase change after a failed one
+    - BUG/MINOR: quic: late packets of the first key phase are dropped
+    - BUG/MINOR: resolvers: classify empty truncated responses
+    - MINOR: quic: protect the ChaCha20 header protection context from being freed
+    - BUG/MINOR: qpack: encoder and decoder stream data is never consumed
+    - BUG/MINOR: qpack: accept a Required Insert Count which cannot be reached
+    - BUG/MINOR: quic: delete the wrong CIDs when post-handshake frames fail
+    - MEDIUM: mux-h1: Harden test for short data at end of stream
+    - BUG/MEDIUM: mux-h2: Make sure we remove H2_SF_NOTIFIED on subscribe
+    - BUG/MEDIUM: hlua: Never release a cosocket applet from the GC
+    - BUG/MINOR: hlua: Always return nil if there is no data to dup for HTTP messages
+    - BUG/MEDIUM: h3: do not block FIN on empty DATA frame
+    - BUG/MINOR: h3: handle empty HEADERS frame as specified
+    - BUG/MINOR: h3: only increment frame type counter on new header
+    - BUG/MEDIUM: http-ana: apply tunnel timeout with data filters
+    - BUG/MINOR: ssl: don't pass the address of a size_t as an int* to OpenSSL
+    - BUG/MEDIUM: map: do not overwrite the fetch context in pat_match_regm()
+    - REGTESTS: map: check map_regm inside an ACL over an iterating fetch
+    - BUG/MEDIUM: http_act: fix normalize-uri normalizer selection with a condition
+    - BUG/MINOR: ssl: Fix leak of ca_list in cafile_entry
+    - BUG/MINOR: sample: reject a \0 byte in url_dec, json_query and jwt_*_query
+    - REGTESTS: http-rules: check "-m str" on a sample with an embedded \0
+    - DOC: configuration: clarify the validity ranges of sample types
+    - BUG/MEDIUM: ssl: don't set a 0 timeout on an expired TLS session
+    - BUG/MEDIUM: htx: Reserve a block descriptor for zero-sized blocks
+    - BUG/MEDIUM: limits: properly account for global.maxpipes in compute_ideal_maxconn()
+    - BUILD: quic: Don't check ChaCha20 header context for AWS-LC
+    - BUG/MINOR: log: fix double-free error when error in parse_loger occurs
+    - BUG/MAJOR: h3: reject H3 truncated frames
+    - BUG/MINOR: h3: handle unknown frame type on request stream as specified
+    - BUG/MEDIUM: task: Do not destroy a task that is not ours in task_destroy
+    - BUG/MINOR: tools: Don't try to anonymize a NULL string
+    - BUG/MAJOR: htx: Check the header/trailer length limits when one is updated
+    - BUG/MINOR: hlua: release private Lua rule data on teardown
+    - BUG/MINOR: h3: Fix a misplaced closing brace because of a bad backport
+    - BUILD: h3: Fix a possible uninitialized value
+    - BUG/MINOR: http-client: Convert server timeout ticks when setting it
+    - BUG/MINOR: mux-h2: Don't expect more HTX data on 1xx interim responses
+    - BUG/MEDIUM: http-htx: don't build the new authority in a rotating trash chunk
+    - BUG/MEDIUM: http-act: ignore "capture len" rules evaluated from a backend
+    - BUG/MEDIUM: tcp-rules: ignore "capture len" rules evaluated from a backend
+    - BUG/MINOR: http-ana: count response body failures only once in http_fail_cnt
+    - BUG/MINOR: http-fetch: http_auth_bearer() must not match a missing header
+    - BUG/MINOR: http-fetch: fix the space check of http_auth_bearer(<hdr>)
+    - BUG/MINOR: tcpcheck: refresh the start-line after updating the authority
+    - BUG/MINOR: http-ana: restore the transaction status after early hints
+    - BUG/MAJOR: mux_quic: fix leak on RESET_STREAM reception
+    - BUG/MEDIUM: mux_quic: activate timeout on FE init
+
 2026/08/27 : 2.8.28
     - BUG/MINOR: cli: use the current argument to parse the FD spec in "show fd"
     - BUG/MEDIUM: filter: Disable auto-close on channel during TCP payload filtering
