@@ -1,6 +1,40 @@
 ChangeLog :
 ===========
 
+2026/09/24 : 2.6.34
+    - BUG/MINOR: payload: bound ClientHello extension lists by the extension length
+    - BUG/MEDIUM: quic: crash on key update phase change after a failed one
+    - BUG/MINOR: quic: late packets of the first key phase are dropped
+    - BUG/MINOR: resolvers: classify empty truncated responses
+    - BUG/MINOR: qpack: encoder and decoder stream data is never consumed
+    - BUG/MINOR: qpack: accept a Required Insert Count which cannot be reached
+    - BUG/MEDIUM: hlua: Never release a cosocket applet from the GC
+    - BUG/MINOR: hlua: Always return nil if there is no data to dup for HTTP messages
+    - BUG/MEDIUM: h3: do not block FIN on empty DATA frame
+    - BUG/MINOR: h3: handle empty HEADERS frame as specified
+    - BUG/MINOR: h3: only increment frame type counter on new header
+    - BUG/MINOR: ssl: don't pass the address of a size_t as an int* to OpenSSL
+    - BUG/MEDIUM: map: do not overwrite the fetch context in pat_match_regm()
+    - REGTESTS: map: check map_regm inside an ACL over an iterating fetch
+    - BUG/MEDIUM: http_act: fix normalize-uri normalizer selection with a condition
+    - BUG/MINOR: ssl: Fix leak of ca_list in cafile_entry
+    - BUG/MINOR: sample: reject a \0 byte in url_dec, json_query and jwt_*_query
+    - REGTESTS: http-rules: check "-m str" on a sample with an embedded \0
+    - DOC: configuration: clarify the validity ranges of sample types
+    - BUG/MEDIUM: htx: Reserve a block descriptor for zero-sized blocks
+    - BUG/MEDIUM: limits: properly account for global.maxpipes in compute_ideal_maxconn()
+    - BUG/MAJOR: htx: Check the header/trailer length limits when one is updated
+    - BUG/MINOR: hlua: release private Lua rule data on teardown
+    - BUG/MINOR: http-client: Convert server timeout ticks when setting it
+    - BUG/MEDIUM: http-htx: don't build the new authority in a rotating trash chunk
+    - BUG/MEDIUM: http-act: ignore "capture len" rules evaluated from a backend
+    - BUG/MEDIUM: tcp-rules: ignore "capture len" rules evaluated from a backend
+    - BUG/MINOR: http-fetch: http_auth_bearer() must not match a missing header
+    - BUG/MINOR: http-fetch: fix the space check of http_auth_bearer(<hdr>)
+    - BUG/MINOR: tcpcheck: refresh the start-line after updating the authority
+    - BUG/MINOR: http-ana: restore the transaction status after early hints
+    - BUG/MEDIUM: mux_quic: activate timeout on FE init
+
 2026/08/27 : 2.6.33
     - BUG/MINOR: server: check strdup return value on server ID
     - BUG/MEDIUM: hpack: encode long methods and schemes using the long form
