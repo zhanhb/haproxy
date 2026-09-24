@@ -1423,6 +1423,12 @@ static ssize_t h3_decode_qcs(struct qcs *qcs, struct buffer *b, int fin)
 			/* Switch to a new frame. */
 			size_t hlen = h3_decode_frm_header(&ftype, &flen, b);
 			if (!hlen) {
+				if (fin) {
+					TRACE_ERROR("truncated H3 frame header", H3_EV_RX_FRAME, qcs->qcc->conn, qcs);
+					qcc_set_error(qcs->qcc, H3_FRAME_ERROR, 1);
+					goto err;
+				}
+
 				TRACE_PROTO("pause parsing on incomplete frame header", H3_EV_RX_FRAME, qcs->qcc->conn, qcs);
 				break;
 			}
