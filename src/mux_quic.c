@@ -1605,10 +1605,10 @@ int qcc_recv_reset_stream(struct qcc *qcc, uint64_t id, uint64_t err, uint64_t f
 	qcs_close_remote(qcs);
 	qcs_free_ncbuf(qcs, &qcs->rx.ncbuf);
 
-	/* Check if RESET_STREAM received before stream layer initialization.
-	 * If true, QCS is closed to be eligible for purgeing.
+	/* No more data will be received after peer reset. Close QCS if there
+	 * is nothing to sent on our side to be eligible for purgeing.
 	 */
-	if (!qcs_sc(qcs) && !(qcs->flags & QC_SF_DETACH)) {
+	if (!qcs_sc(qcs) && !LIST_INLIST(&qcs->el_send)) {
 		qcs_close_local(qcs);
 		TRACE_STATE("stream fully closed on RESET_STREAM", QMUX_EV_QCC_RECV|QMUX_EV_QCS_RECV, qcc->conn, qcs);
 		tasklet_wakeup(qcs->qcc->wait_event.tasklet);
@@ -1995,7 +1995,17 @@ void qcc_streams_sent_done(struct qcs *qcs, uint64_t data, uint64_t offset)
 		LIST_DEL_INIT(&qcs->el_send);
 		TRACE_STATE("stream sent done", QMUX_EV_QCS_SEND, qcc->conn, qcs);
 
-		if (qcs->flags & (QC_SF_FIN_STREAM|QC_SF_DETACH)) {
+		/* Everything sent, close the stream if no new data will come.
+		 * This is the case if either FIN has been sent or upper layer
+		 * is detached.
+		 *
+		 * This is also performed if peer has resetted its input as no
+		 * more transfer should occur on this QCS instance.
+		 * TODO this assumption may be invalid depending on QUIC stream
+		 * type - app proto should be responsible to deal with RS.
+		 */
+		if ((qcs->flags & (QC_SF_FIN_STREAM|QC_SF_DETACH)) ||
+		    (!qcs_sc(qcs) && (qcs->flags & QC_SF_RECV_RESET))) {
 			/* Close stream locally. */
 			qcs_close_local(qcs);
 
