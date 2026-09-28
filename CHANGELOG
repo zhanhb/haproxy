@@ -1,6 +1,12 @@
 ChangeLog :
 ===========
 
+2026/09/28 : 3.2.25
+    - MINOR: log: pass the input end to the _lf_encode_bytes() byte encoders
+    - MINOR: log: add the +utf8 encoding option to let valid UTF-8 pass
+    - BUG/MAJOR: mux_quic: fix potential crash on RESET_STREAM receive
+    - BUG/MEDIUM: sink: reconnect attempt not working after session lasted more than ~25 days
+
 2026/09/24 : 3.2.24
     - BUG/MINOR: cache: Manage collisions on primary key
     - BUG/MINOR: cache: Seed cache primary hash
