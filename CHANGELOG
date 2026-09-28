@@ -1,6 +1,15 @@
 ChangeLog :
 ===========
 
+2026/09/28 : 3.3.16
+    - MINOR: log: pass the input end to the _lf_encode_bytes() byte encoders
+    - MINOR: log: add the +utf8 encoding option to let valid UTF-8 pass
+    - BUG/MAJOR: mux_quic: fix potential crash on RESET_STREAM receive
+    - BUG/MEDIUM: sink: reconnect attempt not working after session lasted more than ~25 days
+    - BUG/MEDIUM: server: skip log backend addr checks for internal proxies
+    - REGTESTS: log: check that a ring's internal server may target a UNIX socket
+    - REGTESTS: fix new test for ring UNIX socket usage
+
 2026/09/24 : 3.3.15
     - BUG/MINOR: cache: Manage collisions on primary key
     - BUG/MINOR: cache: Seed cache primary hash
