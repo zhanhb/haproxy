@@ -31,14 +31,6 @@ haproxy h1 -conf {
     .if feature(THREAD)
         thread-groups 1
     .endif
-    # when run as root without an explicit "chroot" directive, haproxy's
-    # automatic "chroot auto" (see 641fe4f11) isolates the process into
-    # an empty directory right after startup. That breaks the ring's own
-    # UNIX-socket "server" connect (a runtime, repeatedly-retried client
-    # connection), unlike the log-forward listener's "bind unix@..."
-    # which is already open before the chroot happens. Pin "chroot /" so
-    # this test behaves the same whether run as root or not.
-    chroot /
 
 	defaults
 		mode http
