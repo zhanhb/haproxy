@@ -1,6 +1,10 @@
 ChangeLog :
 ===========
 
+2026/09/28 : 2.8.30
+    - BUG/MAJOR: mux_quic: fix potential crash on RESET_STREAM receive
+    - BUG/MEDIUM: sink: reconnect attempt not working after session lasted more than ~25 days
+
 2026/09/24 : 2.8.29
     - BUG/MINOR: payload: bound ClientHello extension lists by the extension length
     - BUG/MEDIUM: quic: crash on key update phase change after a failed one
