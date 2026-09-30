@@ -4455,7 +4455,7 @@ static int smp_fetch_quic_enabled(const struct arg *args, struct sample *smp, co
 #else
 	smp->data.u.sint = 0;
 #endif
-	return smp->data.u.sint;
+	return 1;
 }
 
 /* Note: must not be declared <const> as its list will be overwritten.
