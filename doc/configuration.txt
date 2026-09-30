@@ -18659,7 +18659,9 @@ hex
 
 hex2i
   Converts a hex string containing two hex digits per input byte to an
-  integer. If the input value cannot be converted, then zero is returned.
+  integer. If the input value contains a character which is not a
+  hexadecimal digit, the converter fails and returns nothing, which makes it
+  possible to differentiate an invalid input from a valid zero.
 
 htonl
   Converts the input integer value to its 32-bit binary representation in the
