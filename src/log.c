@@ -7026,7 +7026,7 @@ static int px_parse_log_steps(char **args, int section_type, struct proxy *curpx
 
 	if (args[1] == NULL) {
 		memprintf(err, "%s: invalid arguments, expects 'all' or a composition of logging"
-		               "steps separated by spaces.",
+		               "steps separated by commas.",
 		          args[0]);
 		goto end;
 	}
