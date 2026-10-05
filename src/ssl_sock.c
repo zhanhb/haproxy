@@ -7324,8 +7324,10 @@ struct task *ssl_sock_io_cb(struct task *t, void *context, unsigned int state)
 				if (ret < 0)
 					closed_connection = 1;
 			}
-			if (closed_connection)
+			if (closed_connection) {
+				conn = NULL;
 				t = NULL;
+			}
 			goto leave;
 		}
 	}
