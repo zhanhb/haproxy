@@ -7393,6 +7393,7 @@ leave:
 				if (!session_reinsert_idle_conn(conn->owner, conn)) {
 					/* session add conn failure */
 					CALL_MUX_NO_RET(conn->mux, destroy(conn->ctx));
+					conn = NULL;
 					t = NULL;
 				}
 			}
@@ -7405,6 +7406,7 @@ leave:
 		else {
 			/* Do not store an idle conn if server in maintenance. */
 			CALL_MUX_NO_RET(conn->mux, destroy(conn->ctx));
+			conn = NULL;
 			t = NULL;
 		}
 	}
