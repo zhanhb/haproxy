@@ -810,7 +810,12 @@ static int cli_process_cmdline(struct appctx *appctx)
 		appctx->st1 |= APPCTX_CLI_ST1_LASTCMD;
 		payload = appctx->cli_ctx.payload;
 	}
-	if (end+1 == b_tail(appctx->cli_ctx.cmdline))
+
+	/* The command line chunk is filled from its beginning and never wraps.
+	 * Don't use b_tail() to find its end, it wraps to the beginning of the
+	 * area when the command line fills the whole chunk.
+	 */
+	if (end+1 == orig + b_data(appctx->cli_ctx.cmdline))
 		appctx->st1 |= APPCTX_CLI_ST1_LASTCMD;
 
 	/* throw an error if too many args are provided */
