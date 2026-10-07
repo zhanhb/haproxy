@@ -890,8 +890,12 @@ static void h1s_destroy(struct h1s *h1s)
 {
 	if (h1s) {
 		struct h1c *h1c = h1s->h1c;
+		/* after a mux upgrade (e.g. H1 to H2), the connection does not
+		 * belong to us anymore and must not be passed to traces.
+		 */
+		struct connection *conn = (h1c->conn && h1c->conn->ctx == h1c) ? h1c->conn : NULL;
 
-		TRACE_POINT(H1_EV_H1S_END, h1c->conn, h1s);
+		TRACE_POINT(H1_EV_H1S_END, conn, h1s);
 		h1c->h1s = NULL;
 
 		if (h1s->subs)
@@ -913,10 +917,10 @@ static void h1s_destroy(struct h1s *h1s)
 		    (h1s->flags & H1S_F_WANT_KAL) &&                                         /* K/A possible */
 		    h1s->req.state == H1_MSG_DONE && h1s->res.state == H1_MSG_DONE) {        /* req/res in DONE state */
 			h1c->flags |= (H1C_F_ST_IDLE|H1C_F_WAIT_NEXT_REQ);
-			TRACE_STATE("set idle mode on h1c, waiting for the next request", H1_EV_H1C_ERR, h1c->conn, h1s);
+			TRACE_STATE("set idle mode on h1c, waiting for the next request", H1_EV_H1C_ERR, conn, h1s);
 		}
 		else {
-			TRACE_STATE("set shudown on h1c", H1_EV_H1S_END, h1c->conn, h1s);
+			TRACE_STATE("set shudown on h1c", H1_EV_H1S_END, conn, h1s);
 			h1c->flags |= H1C_F_ST_SHUTDOWN;
 		}
 
