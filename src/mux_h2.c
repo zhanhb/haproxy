@@ -2553,6 +2553,12 @@ static int h2c_ack_settings(struct h2c *h2c)
  */
 static int h2c_handle_ping(struct h2c *h2c)
 {
+	/* process full frame only */
+	if (b_data(&h2c->dbuf) < h2c->dfl) {
+		h2c->flags |= H2_CF_DEM_SHORT_READ;
+		return 0;
+	}
+
 	/* schedule a response */
 	if (!(h2c->dff & H2_F_PING_ACK))
 		h2c->st0 = H2_CS_FRAME_A;
