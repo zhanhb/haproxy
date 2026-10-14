@@ -1,6 +1,65 @@
 ChangeLog :
 ===========
 
+2026/10/14 : 3.2.26
+    - BUG/MEDIUM: cli: fix the last command detection on a full command line
+    - REGTESTS: cli: test a command line of exactly tune.bufsize bytes
+    - BUG/MEDIUM: tools: insert an XXH64 layer on the PRNG output
+    - MINOR: quic: implement the AEAD integrity limit
+    - BUG/MEDIUM: flt-http-comp: Block HTX_FL_EOM flag till the end of compression
+    - BUG/MINOR: flt-http-comp: Rely on htx_set_eom() to restore EOM flag
+    - MINOR: stconn: prefer to replace endpoints rather than detaching them
+    - MINOR: stick-table: provide a function to estimate on-wire data size
+    - MINOR: stick-table: calculate the on-wire size of each key
+    - BUG/MEDIUM: stick-table: restrict key sizes to what fits in a buffer
+    - BUG/MEDIUM: pattern: don't dereference static_pattern's data when not filling it
+    - BUG/MINOR: http: do not consume the delimiter of a truncated q-factor
+    - BUG/MINOR: sample: apply the ms_/us_ time offsets in the input unit
+    - BUG/MINOR: sample: zero-pad the fractional part emitted by http_date()
+    - BUG/MINOR: sample: make quic_enabled() always succeed
+    - BUG/MINOR: http-ana: return a 502 when checkcache blocks a response
+    - BUG/MINOR: stick-table: do not count the lookup itself in table_trackers()
+    - BUG/MINOR: payload: always report a boolean from req.ssl_ec_ext
+    - BUG/MINOR: http-fetch: do not count Set-Cookie attributes as cookies
+    - BUG/MEDIUM: tcpcheck: do not run a regex on an unallocated buffer
+    - BUG/MINOR: sample: return the decoded JWT part when no path is given
+    - DOC: config: mention other responses not blocked by option checkcache
+    - DOC: config: fix doc for hex2i() converter on unparsable input
+    - DOC: config: mention that url_ip and url_port fail when passed a name
+    - BUG/MINOR: server: fix "del server" description
+    - BUG/MINOR: log: fix erroneous error message in log-steps parser
+    - BUG/MINOR: hq-interop: prevent double EOM on request with standalone FIN
+    - BUG/MINOR: ssl: fix trace crash on FE conn release in io cb
+    - BUG/MEDIUM: listener: Consider maxconn before waking listeners
+    - BUG/MINOR: mux_quic: extend FINAL_SIZE_ERROR detection on stream
+    - BUG/MINOR: h3: reject frames with truncated header
+    - BUG/MINOR: h3: reject RS/SS for QPACK uni streams
+    - BUG/MINOR: ssl: Fix potential NULL-deref in "dump ssl cert" with AWS-LC
+    - MINOR: doc: elaborate on diagnostic mode behavior
+    - BUG/MINOR: cfgparse-global: add missing gotos to error label in max-spread-checks
+    - BUG/MINOR: cfgparse-global: add missing calloc() check for the global description
+    - BUG/MINOR: cfgparse-listen: release the previous description of the proxy
+    - BUG/MINOR: cfgparse-listen: fix the argument checked by "email-alert"
+    - BUG/MINOR: cfgparse-listen: properly reject extra args in a backend section
+    - BUG/MINOR: proxy: also look for the closest option among cfg_opts3
+    - BUG/MINOR: cfgparse-listen: complete the list of options for the suggestions
+    - BUG/MINOR: spoe: Fix the message list splice with an empty list
+    - BUG/MEDIUM: mux-h2: don't return a freed tasklet from h2_deferred_shut()
+    - BUG/MEDIUM: mux-fcgi: don't return a freed tasklet from fcgi_deferred_shut()
+    - BUG/MEDIUM: mux-h1: don't pass an upgraded connection to traces in h1s_destroy()
+    - BUG/MEDIUM: mux-h2: report a dead rhttp connection in h2_wake()
+    - BUG/MEDIUM: mux-h2: fix a possible crash on rxbuf allocation failure
+    - BUG/MEDIUM: mux-h1: also release the embryonic stream when the error is empty
+    - BUG/MINOR: http-fetch: don't report pseudo-headers in TCP mode
+    - BUG/MEDIUM: mux-h1: only accept the H2 preface on the first request
+    - REGTESTS: http-messaging: Fix http_fail_cnt_body to succeed with small timeouts
+    - BUG/MEDIUM: ssl: crt-list ciphers ignored with AWS-LC
+    - BUG/MEDIUM: ssl: crt-list curves ignored with AWS-LC
+    - REGTEST: ssl: require OpenSSL 1.1.1 for crt-list ciphersuites tests
+    - BUG/MINOR: cfgparse-global: only warn when "localpeer" is set together with -L
+    - BUG/MAJOR: mux-h2: properly handle short reads on PING frames
+    - BUG/MAJOR: h1-htx: report an error on a too long chunk-size line
+
 2026/09/28 : 3.2.25
     - MINOR: log: pass the input end to the _lf_encode_bytes() byte encoders
     - MINOR: log: add the +utf8 encoding option to let valid UTF-8 pass
