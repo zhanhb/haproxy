@@ -1,6 +1,49 @@
 ChangeLog :
 ===========
 
+2026/10/14 : 2.8.31
+    - BUG/MEDIUM: tools: insert an XXH64 layer on the PRNG output
+    - BUG/MEDIUM: flt-http-comp: Block HTX_FL_EOM flag till the end of compression
+    - BUG/MINOR: flt-http-comp: Rely on htx_set_eom() to restore EOM flag
+    - MINOR: stconn: prefer to replace endpoints rather than detaching them
+    - MINOR: stick-table: provide a function to estimate on-wire data size
+    - MINOR: stick-table: calculate the on-wire size of each key
+    - BUG/MEDIUM: stick-table: restrict key sizes to what fits in a buffer
+    - BUG/MEDIUM: pattern: don't dereference static_pattern's data when not filling it
+    - BUG/MINOR: http: do not consume the delimiter of a truncated q-factor
+    - BUG/MINOR: sample: zero-pad the fractional part emitted by http_date()
+    - BUG/MINOR: sample: make quic_enabled() always succeed
+    - BUG/MINOR: http-ana: return a 502 when checkcache blocks a response
+    - BUG/MINOR: stick-table: do not count the lookup itself in table_trackers()
+    - BUG/MINOR: payload: always report a boolean from req.ssl_ec_ext
+    - BUG/MINOR: http-fetch: do not count Set-Cookie attributes as cookies
+    - BUG/MEDIUM: tcpcheck: do not run a regex on an unallocated buffer
+    - BUG/MINOR: sample: return the decoded JWT part when no path is given
+    - DOC: config: mention other responses not blocked by option checkcache
+    - DOC: config: fix doc for hex2i() converter on unparsable input
+    - DOC: config: mention that url_ip and url_port fail when passed a name
+    - BUG/MINOR: server: fix "del server" description
+    - BUG/MEDIUM: listener: Consider maxconn before waking listeners
+    - BUG/MINOR: mux_quic: extend FINAL_SIZE_ERROR detection on stream
+    - BUG/MINOR: h3: reject frames with truncated header
+    - BUG/MINOR: h3: reject RS/SS for QPACK uni streams
+    - MINOR: doc: elaborate on diagnostic mode behavior
+    - BUG/MINOR: cfgparse-global: add missing gotos to error label in max-spread-checks
+    - BUG/MINOR: cfgparse-global: add missing calloc() check for the global description
+    - BUG/MINOR: cfgparse-listen: release the previous description of the proxy
+    - BUG/MINOR: cfgparse-listen: fix the argument checked by "email-alert"
+    - BUG/MINOR: cfgparse-listen: properly reject extra args in a backend section
+    - BUG/MINOR: cfgparse-listen: complete the list of options for the suggestions
+    - BUG/MINOR: spoe: Fix the message list splice with an empty list
+    - BUG/MEDIUM: mux-h2: don't return a freed tasklet from h2_deferred_shut()
+    - BUG/MEDIUM: mux-h1: don't pass an upgraded connection to traces in h1s_destroy()
+    - BUG/MEDIUM: mux-h1: also release the embryonic stream when the error is empty
+    - BUG/MINOR: http-fetch: don't report pseudo-headers in TCP mode
+    - BUG/MEDIUM: mux-h1: only accept the H2 preface on the first request
+    - REGTESTS: http-messaging: Fix http_fail_cnt_body to succeed with small timeouts
+    - BUG/MAJOR: mux-h2: properly handle short reads on PING frames
+    - BUG/MAJOR: h1-htx: report an error on a too long chunk-size line
+
 2026/09/28 : 2.8.30
     - BUG/MAJOR: mux_quic: fix potential crash on RESET_STREAM receive
     - BUG/MEDIUM: sink: reconnect attempt not working after session lasted more than ~25 days
